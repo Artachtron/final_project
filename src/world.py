@@ -23,12 +23,16 @@ def main():
     
     animal_group = pg.sprite.Group()
     animal_group.add(entities.Animal())
+    animal_group.add(entities.Animal())
+    
+    plant_group = pg.sprite.Group()
+    plant_group.add(entities.Plant())
     
     counter = 0
 
     while True:
         drawGrid()
-        drawEntities(animal_group)
+        drawEntities(animal_group, plant_group)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -47,10 +51,11 @@ def drawGrid():
             rect = pg.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
             pg.draw.rect(SCREEN, BLACK, rect, 1)
 
-def drawEntities(animal_group):
+def drawEntities(animal_group, plant_group):
     if counter == 0:
         animal_group.update()    
     animal_group.draw(SCREEN)
-
+    plant_group.draw(SCREEN)
+    
 if __name__ == "__main__":
     main()
