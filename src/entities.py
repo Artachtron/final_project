@@ -39,6 +39,7 @@ class Animal(pg.sprite.Sprite):
         next_move = tuple(map(operator.add, self.position, direction.value))
         if self._check_next_move(next_move=next_move):
             self.grid.update_grid(position=(self.position), value=0)
+            self.grid.update_grid(position=next_move, value=1)
             self.position = next_move
                    
             self.rect.x = next_move[0]  * world.BLOCK_SIZE

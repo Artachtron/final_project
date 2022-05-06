@@ -54,9 +54,9 @@ def main():
     counter = 0
 
     while True:
+        update_world()
         draw_world()
-        update_world(grid=grid)
-        
+           
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -79,16 +79,9 @@ def draw_grid() -> None:
             rect = pg.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
             pg.draw.rect(SCREEN, BLACK, rect, 1)
 
-def update_world(grid: Grid) -> None:
+def update_world() -> None:
     if counter == 0:
         update_entities()
-        update_grid(grid=grid)
-    
-def update_grid(grid: Grid) -> None:
-    for animal in animal_group:
-        grid.update_grid(position=(animal.position), value=1)
-    for tree in tree_group:
-        grid.update_grid(position=(tree.position), value=1)
 
     #print(grid.grid.transpose())
 
