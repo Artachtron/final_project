@@ -1,10 +1,18 @@
+from tkinter import RIGHT
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
-from collections import namedtuple
+import enum
 import world
 
 assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets")
+
+class Direction(enum.Enum):
+    RIGHT = (1,0)
+    LEFT = (-1,0)
+    DOWN = (0,1)
+    UP = (0,-1)
+    
 
 class Animal(pg.sprite.Sprite):
     def __init__(self, size=10, pos_x=0, pos_y=0):
@@ -21,6 +29,11 @@ class Animal(pg.sprite.Sprite):
         if keys[pg.K_UP]:
             pass
         
+    def move(self, direction: Direction):
+        self.rect.x += direction.value[0] * world.BLOCK_SIZE
+        self.rect.y += direction.value[1] * world.BLOCK_SIZE
+        
     def update(self):
-        self.rect.x += 1*world.BLOCK_SIZE
+        self.move(Direction.RIGHT)
+        #self.rect.x += 1*world.BLOCK_SIZE
 
