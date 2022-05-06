@@ -28,6 +28,9 @@ class Grid():
     
     def update_grid(self, position: Tuple[int, int], value: int) -> None:
         self._grid[position] = value
+        
+    def get_position_status(self, position):
+        return self._grid[position]
            
 
 def main():
@@ -42,11 +45,12 @@ def main():
     animal_group = pg.sprite.Group()
 
     animal_group.add(entities.Animal(grid=grid))
-    animal_group.add(entities.Animal(grid=grid))
+    #animal_group.add(entities.Animal(grid=grid))
         
     tree_group = pg.sprite.Group()
     tree_group.add(entities.Tree(grid=grid))
-    
+    tree_group.add(entities.Tree(grid=grid, position=(10,11)))
+  
     counter = 0
 
     while True:
