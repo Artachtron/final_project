@@ -17,18 +17,22 @@ class Direction(enum.Enum):
     DOWN = (0,1)
     UP = (0,-1)
     
-
-class Animal(pg.sprite.Sprite):
-    def __init__(self, grid: world.Grid, size: int=20, position: Tuple[int,int]=(int(world.GRID_WIDTH/2),int(world.GRID_HEIGHT/2))):
+class Entity(pg.sprite.Sprite):
+    def __init__(self,image_filename: str , grid: world.Grid, size: int=20, position: Tuple[int,int]=(int(world.GRID_WIDTH/2),int(world.GRID_HEIGHT/2))):
         super().__init__()
         self.size = size
-        image = pg.image.load(join(assets_path,'Animal.png')).convert_alpha()
+        image = pg.image.load(join(assets_path,image_filename)).convert_alpha()
         self.image = pg.transform.scale(image, (size,size))
         self.position = position
         pos_x, pos_y = self.position
         self.rect = self.image.get_rect(center=(pos_x * world.BLOCK_SIZE + world.BLOCK_SIZE/2, pos_y * world.BLOCK_SIZE + world.BLOCK_SIZE/2))
         self.grid = grid
-        self.grid.update_grid(position=(self.position), value=1)
+        self.grid.update_grid_cell(position=(self.position), value=1)
+    
+
+class Animal(Entity):
+    def __init__(self, *args, **kwargs):
+        super(Animal,self).__init__(image_filename='Animal.png',*args, **kwargs)
         
     """ def tmp_input(self):
         keys = pg.key.get_pressed()
@@ -38,8 +42,8 @@ class Animal(pg.sprite.Sprite):
     def move(self, direction: Direction) -> None:
         next_move = tuple(map(operator.add, self.position, direction.value))
         if self._check_next_move(next_move=next_move):
-            self.grid.update_grid(position=(self.position), value=0)
-            self.grid.update_grid(position=next_move, value=1)
+            self.grid.update_grid_cell(position=(self.position), value=0)
+            self.grid.update_grid_cell(position=next_move, value=1)
             self.position = next_move
                    
             self.rect.x = next_move[0]  * world.BLOCK_SIZE
@@ -62,17 +66,13 @@ class Animal(pg.sprite.Sprite):
         #print(direction)
         self.move(direction=direction)
         
-class Tree(pg.sprite.Sprite):
-    def __init__(self, grid:world.Grid, size=20, position: Tuple[int,int]=(int(world.GRID_WIDTH/2),int(world.GRID_HEIGHT/2))):
-        super().__init__()
-        self.size = size
-        image = pg.image.load(join(assets_path,'Plant.png')).convert_alpha()
-        self.image = pg.transform.scale(image, (size,size))
-        self.position = position
-        pos_x, pos_y = self.position
-        self.rect = self.image.get_rect(center=(pos_x * world.BLOCK_SIZE + world.BLOCK_SIZE/2, pos_y * world.BLOCK_SIZE + world.BLOCK_SIZE/2))
-        self.grid = grid
-        self.grid.update_grid(position=(self.position), value=1)
+class Tree(Entity):
+    def __init__(self, *args, **kwargs):
+        super(Tree, self).__init__(image_filename='Plant.png',*args, **kwargs)
+
+       
+
+
 
         
  
