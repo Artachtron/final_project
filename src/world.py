@@ -11,7 +11,7 @@ GRID_HEIGHT = 20
 GRID_WIDTH = 20
 BLOCK_SIZE = 20
 
-SIM_SPEED = 20
+SIMULATION_SPEED = 20
 
 WINDOW_HEIGHT = BLOCK_SIZE * GRID_HEIGHT
 WINDOW_WIDTH = BLOCK_SIZE * GRID_WIDTH
@@ -34,7 +34,7 @@ class Grid():
            
 
 def main():
-    global SCREEN, CLOCK, counter, animal_group, tree_group
+    global SCREEN, CLOCK, tick_counter, animal_group, tree_group
     
     pg.init()
     SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -48,10 +48,14 @@ def main():
     #animal_group.add(entities.Animal(grid=grid))
         
     tree_group = pg.sprite.Group()
-    tree_group.add(entities.Tree(grid=grid))
-    tree_group.add(entities.Tree(grid=grid, position=(10,11)))
+    #tree_group.add(entities.Tree(grid=grid))
+    """ for i in range(0,5):
+        tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
+        tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
+        tree_group.add(entities.Tree(grid=grid, position=(12,8+i)))
+        tree_group.add(entities.Tree(grid=grid, position=(7+i,12))) """
   
-    counter = 0
+    tick_counter = 0
 
     while True:
         update_world()
@@ -64,9 +68,9 @@ def main():
 
         pg.display.update()
         CLOCK.tick(60)
-        counter += 1
-        if counter == SIM_SPEED:
-            counter = 0
+        tick_counter += 1
+        if tick_counter == SIMULATION_SPEED:
+            tick_counter = 0
             
 def draw_world() -> None:
     draw_grid()
@@ -80,7 +84,7 @@ def draw_grid() -> None:
             pg.draw.rect(SCREEN, BLACK, rect, 1)
 
 def update_world() -> None:
-    if counter == 0:
+    if tick_counter == 0:
         update_entities()
 
     #print(grid.grid.transpose())

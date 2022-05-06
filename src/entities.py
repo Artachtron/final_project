@@ -46,12 +46,12 @@ class Animal(pg.sprite.Sprite):
             self.rect.y = next_move[1]  * world.BLOCK_SIZE
             
     def _check_next_move(self, next_move: Tuple[int,int]) -> bool:
-        return self._check_in_bounds(next_move=next_move) and self._check_empty(next_move=next_move)
+        return self._check_cell_in_bounds(next_move=next_move) and self._check_empty_cell(next_move=next_move)
      
-    def _check_empty(self, next_move: Tuple[int,int])-> bool:
+    def _check_empty_cell(self, next_move: Tuple[int,int])-> bool:
         return not self.grid.get_position_status(position=next_move)
      
-    def _check_in_bounds(self, next_move: Tuple[int,int])-> bool:
+    def _check_cell_in_bounds(self, next_move: Tuple[int,int])-> bool:
         next_x, next_y = next_move
         if next_x < 0 or next_x >= world.GRID_WIDTH or next_y < 0 or next_y >= world.GRID_HEIGHT:
             return False
