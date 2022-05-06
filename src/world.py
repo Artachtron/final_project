@@ -34,33 +34,16 @@ class Grid():
            
 
 def main():
-    global SCREEN, CLOCK, tick_counter, animal_group, tree_group
-    
+    global tick_counter
     pg.init()
-    SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    CLOCK = pg.time.Clock()
-    SCREEN.fill(WHITE)
-    grid = Grid()
-     
-    animal_group = pg.sprite.Group()
-
-    animal_group.add(entities.Animal(grid=grid))
-    #animal_group.add(entities.Animal(grid=grid))
-        
-    tree_group = pg.sprite.Group()
-    #tree_group.add(entities.Tree(grid=grid))
-    """ for i in range(0,5):
-        tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
-        tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
-        tree_group.add(entities.Tree(grid=grid, position=(12,8+i)))
-        tree_group.add(entities.Tree(grid=grid, position=(7+i,12))) """
-  
+    init_world()
+      
     tick_counter = 0
 
     while True:
         update_world()
-        draw_world()
-           
+        #draw_world()
+        
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -71,7 +54,29 @@ def main():
         tick_counter += 1
         if tick_counter == SIMULATION_SPEED:
             tick_counter = 0
-            
+ 
+def init_world():
+    global SCREEN, CLOCK
+    SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    CLOCK = pg.time.Clock()
+    grid = Grid()
+    
+    init_population(grid=grid)
+ 
+def init_population(grid: Grid) -> None:
+    global animal_group, tree_group
+    
+    animal_group = pg.sprite.Group()
+    animal_group.add(entities.Animal(grid=grid))
+        
+    tree_group = pg.sprite.Group()
+    tree_group.add(entities.Tree(grid=grid))
+    """ for i in range(0,5):
+        tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
+        tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
+        tree_group.add(entities.Tree(grid=grid, position=(12,8+i)))
+        tree_group.add(entities.Tree(grid=grid, position=(7+i,12))) """
+           
 def draw_world() -> None:
     draw_grid()
     draw_entities()
