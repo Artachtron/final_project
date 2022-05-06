@@ -7,8 +7,8 @@ from typing import Tuple
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-GRID_HEIGHT = 5
-GRID_WIDTH = 5
+GRID_HEIGHT = 20
+GRID_WIDTH = 20
 BLOCK_SIZE = 20
 
 SIM_SPEED = 20
@@ -23,7 +23,7 @@ class Grid():
         self._grid = np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=int)
     
     @property
-    def grid(self):
+    def grid(self) -> np.array:
         return self._grid
     
     def update_grid(self, position: Tuple[int, int], value: int) -> None:
@@ -64,34 +64,34 @@ def main():
         if counter == SIM_SPEED:
             counter = 0
             
-def draw_world():
+def draw_world() -> None:
     draw_grid()
     draw_entities()
     
-def draw_grid():
+def draw_grid() -> None:
     SCREEN.fill(WHITE)
     for x in range(0, WINDOW_WIDTH, BLOCK_SIZE):
         for y in range(0, WINDOW_HEIGHT, BLOCK_SIZE):
             rect = pg.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
             pg.draw.rect(SCREEN, BLACK, rect, 1)
 
-def update_world(grid: Grid):
+def update_world(grid: Grid) -> None:
     if counter == 0:
         update_entities()
         update_grid(grid=grid)
     
-def update_grid(grid: Grid):
+def update_grid(grid: Grid) -> None:
     for animal in animal_group:
         grid.update_grid(position=(animal.position), value=1)
     for tree in tree_group:
         grid.update_grid(position=(tree.position), value=1)
 
-    print(grid.grid.transpose())
+    #print(grid.grid.transpose())
 
-def update_entities():
+def update_entities() -> None:
     animal_group.update()
         
-def draw_entities():
+def draw_entities() -> None:
     animal_group.draw(SCREEN)
     tree_group.draw(SCREEN)
   
