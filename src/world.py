@@ -2,6 +2,7 @@ import pygame as pg
 import sys
 from entities import Animal, Tree
 from energies import BlueEnergy, RedEnergy
+#import src.entities, src.energies
 import numpy as np
 from typing import Tuple, Final
 
