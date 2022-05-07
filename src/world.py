@@ -19,11 +19,11 @@ WINDOW_HEIGHT: Final[int] = BLOCK_SIZE * GRID_HEIGHT
 WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
 
 class Grid():
-    def __init__(self, height: int = GRID_HEIGHT, width: int = GRID_WIDTH, block_size: int = BLOCK_SIZE):
+    def __init__(self, height: int, width: int, block_size: int = BLOCK_SIZE):
         self._height = height
         self._width = width
         self.dimensions = (self._width, self._height)
-        self._grid: np.array = np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=int)
+        self._grid: np.array = np.zeros(self.dimensions, dtype=int)
         self.BLOCK_SIZE = block_size
     
     @property
@@ -45,7 +45,10 @@ class Grid():
             position (Tuple[int, int]): The coordinates of the cell in the grid
             value (int): The new value to assign
         """
-        self._grid[position] = value
+        try:
+            self._grid[position] = value
+        except IndexError:
+            print("{position} is out of bounds")
         
     def get_position_value(self, position: Tuple[int, int]) -> int:
         """Get the value of a cell
@@ -56,7 +59,12 @@ class Grid():
         Returns:
             int: The value of the cell 0 for empty, 1 for full
         """
-        return self._grid[position]
+        try:
+            return self._grid[position]
+        except IndexError:
+            print(f"{position} is out of bounds")
+            return None
+        
            
 
 def main():
@@ -86,7 +94,7 @@ def init_world() -> None:
     global SCREEN, CLOCK
     SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     CLOCK = pg.time.Clock()
-    grid: Grid = Grid()
+    grid: Grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH)
     
     init_population(grid=grid)
     init_energies(grid=grid)
