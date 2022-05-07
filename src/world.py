@@ -17,9 +17,9 @@ WINDOW_HEIGHT: Final[int] = BLOCK_SIZE * GRID_HEIGHT
 WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
 
 class Grid():
-    def __init__(self):
-        self._height: int = GRID_HEIGHT
-        self._width: int = GRID_WIDTH
+    def __init__(self, height: int = GRID_HEIGHT, width: int = GRID_WIDTH):
+        self._height = height
+        self._width = width
         self.grid_dimensions = (self._width, self._height)
         self._grid: np.array = np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=int)
     
@@ -27,7 +27,15 @@ class Grid():
     def grid(self) -> np.array:
         return self._grid
     
-    def update_grid_cell(self, position: Tuple[int, int], value: int) -> None:
+    @property
+    def height(self) -> int:
+        return self._height
+    
+    @property
+    def width(self) -> int:
+        return self._width
+    
+    def update_grid_cell_value(self, position: Tuple[int, int], value: int) -> None:
         """Update the value of a cell from the grid
 
         Args:
@@ -36,8 +44,8 @@ class Grid():
         """
         self._grid[position] = value
         
-    def get_position_status(self, position: Tuple[int, int]) -> int:
-        """Get the empty/full status of a cell
+    def get_position_value(self, position: Tuple[int, int]) -> int:
+        """Get the value of a cell
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
