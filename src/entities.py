@@ -40,6 +40,11 @@ class Animal(Entity):
             pass """
         
     def move(self, direction: Direction) -> None:
+        """Move the animal in the given direction
+
+        Args:
+            direction (Direction): direction in which to move
+        """
         next_move = tuple(map(operator.add, self.position, direction.value))
         if self._check_next_move(next_move=next_move):
             self.grid.update_grid_cell(position=(self.position), value=0)
@@ -50,18 +55,43 @@ class Animal(Entity):
             self.rect.y = next_move[1]  * world.BLOCK_SIZE
             
     def _check_next_move(self, next_move: Tuple[int,int]) -> bool:
-        return self._check_cell_in_bounds(next_move=next_move) and self._check_empty_cell(next_move=next_move)
+        """Check if the next move is valid
+
+        Args:
+            next_move (Tuple[int,int]): Coordinates of the cell to check
+
+        Returns:
+            bool: Validity of the next move
+        """
+        return self._is_cell_in_bounds(next_move=next_move) and self._is_vacant_cell(next_move=next_move)
      
-    def _check_empty_cell(self, next_move: Tuple[int,int])-> bool:
+    def _is_vacant_cell(self, next_move: Tuple[int,int])-> bool:
+        """Check if a cell is vacant
+
+        Args:
+            next_move (Tuple[int,int]): Coordinates of the cell to check
+
+        Returns:
+            bool: Vacancy of the cell
+        """
         return not self.grid.get_position_status(position=next_move)
      
-    def _check_cell_in_bounds(self, next_move: Tuple[int,int])-> bool:
+    def _is_cell_in_bounds(self, next_move: Tuple[int,int])-> bool:
+        """Check if a cell is in the bounds of the grid
+
+        Args:
+            next_move (Tuple[int,int]): Coordinates of the cell to check
+
+        Returns:
+            bool: Cell is inside the grid
+        """
         next_x, next_y = next_move
         if next_x < 0 or next_x >= world.GRID_WIDTH or next_y < 0 or next_y >= world.GRID_HEIGHT:
             return False
         return True
         
     def update(self) -> None:
+        """Update the Animal"""
         direction = random.choice(list(Direction))
         #print(direction)
         self.move(direction=direction)
