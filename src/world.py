@@ -1,6 +1,8 @@
 import pygame as pg
 import sys
-import entities, energies
+from entities import Animal, Tree
+from energies import BlueEnergy, RedEnergy
+#import src.entities, src.energies
 import numpy as np
 from typing import Tuple, Final
 
@@ -17,27 +19,39 @@ WINDOW_HEIGHT: Final[int] = BLOCK_SIZE * GRID_HEIGHT
 WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
 
 class Grid():
-    def __init__(self):
-        self._height: int = GRID_HEIGHT
-        self._width: int = GRID_WIDTH
-        self.grid_dimensions = (self._width, self._height)
-        self._grid: np.array = np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=int)
+    def __init__(self, height: int, width: int, block_size: int = BLOCK_SIZE):
+        self._height = height
+        self._width = width
+        self.dimensions = (self._width, self._height)
+        self._grid: np.array = np.zeros(self.dimensions, dtype=int)
+        self.BLOCK_SIZE = block_size
     
     @property
     def grid(self) -> np.array:
         return self._grid
     
-    def update_grid_cell(self, position: Tuple[int, int], value: int) -> None:
+    @property
+    def height(self) -> int:
+        return self._height
+    
+    @property
+    def width(self) -> int:
+        return self._width
+    
+    def update_grid_cell_value(self, position: Tuple[int, int], value: int) -> None:
         """Update the value of a cell from the grid
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
             value (int): The new value to assign
         """
-        self._grid[position] = value
+        try:
+            self._grid[position] = value
+        except IndexError:
+            print("{position} is out of bounds")
         
-    def get_position_status(self, position: Tuple[int, int]) -> int:
-        """Get the empty/full status of a cell
+    def get_position_value(self, position: Tuple[int, int]) -> int:
+        """Get the value of a cell
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
@@ -45,7 +59,12 @@ class Grid():
         Returns:
             int: The value of the cell 0 for empty, 1 for full
         """
-        return self._grid[position]
+        try:
+            return self._grid[position]
+        except IndexError:
+            print(f"{position} is out of bounds")
+            return None
+        
            
 
 def main():
@@ -75,7 +94,7 @@ def init_world() -> None:
     global SCREEN, CLOCK
     SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     CLOCK = pg.time.Clock()
-    grid: Grid = Grid()
+    grid: Grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH)
     
     init_population(grid=grid)
     init_energies(grid=grid)
@@ -89,10 +108,10 @@ def init_population(grid: Grid) -> None:
     global animal_group, tree_group
     
     animal_group = pg.sprite.Group()
-    animal_group.add(entities.Animal(grid=grid))
+    animal_group.add(Animal(grid=grid, position=(10,10)))
         
     tree_group = pg.sprite.Group()
-    tree_group.add(entities.Tree(grid=grid))
+    tree_group.add(Tree(grid=grid, position=(10,11)))
     """ for i in range(0,5):
         tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
         tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
@@ -108,8 +127,8 @@ def init_energies(grid: Grid) -> None:
     global energy_group
     energy_group = pg.sprite.Group()
     
-    energy_group.add(energies.BlueEnergy(grid=grid, position=(5,5)))
-    energy_group.add(energies.RedEnergy(grid=grid, position=(5,6)))
+    energy_group.add(BlueEnergy(grid=grid, position=(5,5)))
+    energy_group.add(RedEnergy(grid=grid, position=(5,6)))
            
 def draw_world() -> None:
     """Draw the world, grid and entities"""
