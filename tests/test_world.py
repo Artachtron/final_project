@@ -1,6 +1,8 @@
 import pytest
 import sys, os
 import numpy as np
+import pygame as pg
+
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
 from project.src import world
@@ -46,4 +48,22 @@ class TestGrid:
                 
         assert self.grid.get_position_value(position=pos_1) == None
         assert self.grid.get_position_value(position=pos_2) == None
+        
+class TestWorld:
     
+    def setup_class(self):
+        world.init_pygame()
+        
+    def test_initialization_pygame(self):
+        assert world.CLOCK
+        assert type(world.CLOCK) == type(pg.time.Clock())
+        assert world.SCREEN
+        assert type(world.SCREEN) == pg.Surface
+    
+    def test_initialization_world(self):
+        world.init_world()
+        assert world.animal_group
+        assert world.tree_group
+        
+        assert len(world.animal_group) == 1
+        assert len(world.tree_group) == 1

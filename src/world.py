@@ -2,7 +2,7 @@ import pygame as pg
 import sys
 from entities import Animal, Tree
 from energies import BlueEnergy, RedEnergy
-#import src.entities, src.energies
+import random
 import numpy as np
 from typing import Tuple, Final
 
@@ -17,6 +17,9 @@ SIMULATION_SPEED: Final[int] = 20
 
 WINDOW_HEIGHT: Final[int] = BLOCK_SIZE * GRID_HEIGHT
 WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
+
+INITIAL_ANIMAL_POPULATION: Final[int] = 5
+INITIAL_TREE_POPULATION: Final[int] = 2
 
 class Grid():
     def __init__(self, height: int, width: int, block_size: int = BLOCK_SIZE):
@@ -92,7 +95,7 @@ def init_world() -> None:
     """Initialize the world"""
     grid: Grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH)
     
-    init_population(grid=grid)
+    init_population(grid=grid, counts={'animals_count':INITIAL_ANIMAL_POPULATION, 'trees_count':INITIAL_TREE_POPULATION})
     init_energies(grid=grid)
  
 def init_pygame() -> None:
@@ -101,27 +104,81 @@ def init_pygame() -> None:
     pg.init()
     SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     CLOCK = pg.time.Clock()
-    
+   
  
-def init_population(grid: Grid) -> None:
+def init_population(grid: Grid, counts: dict[str, int]) -> None:
     """Populate the world with the initial population
     
     Args:
             grid (Grid): The grid on which the population will be initialized
-    """
-    global animal_group, tree_group
+    """    
+    animals_count = counts['animals_count']
+    trees_count = counts['trees_count']
     
+    init_animals(grid=grid, count=animals_count)
+    init_trees(grid=grid, count=trees_count)
+    
+def init_animals(grid: Grid, count: int = 0) -> None:
+    """Initialize the population of animals
+
+    Args:
+        grid (Grid): grid on which the population will be initialized
+        count (int, optional): number of animals to create. Defaults to 0.
+    """    
+    global animal_group
     animal_group = pg.sprite.Group()
-    animal_group.add(Animal(grid=grid, position=(10,10)))
-        
+    for _ in range(count):
+        animal: Animal = create_new_animal(grid=grid)
+        animal_group.add(animal)
+    
+def create_new_animal(grid: Grid) -> Animal:
+    """Create a new animal in a vacant cell
+
+    Args:
+        grid (Grid): grid on which the animal will be created
+
+    Returns:
+        Animal: the newly created animal
+    """
+    x, y = get_random_coordinates(grid=grid)
+    
+    while grid.get_position_value((x,y)):
+        x, y = get_random_coordinates(grid=grid)
+    
+    return Animal(grid=grid, position=(x,y))
+   
+def get_random_coordinates(grid: Grid) -> Tuple[int,int]:  
+    return np.random.randint(0,grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
+    
+def init_trees(grid: Grid, count: int=0) -> None:
+    global tree_group
     tree_group = pg.sprite.Group()
-    tree_group.add(Tree(grid=grid, position=(10,11)))
+    
+    for _ in range(count):
+        tree: Tree = create_new_tree(grid=grid)
+        tree_group.add(tree)
     """ for i in range(0,5):
         tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
         tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
         tree_group.add(entities.Tree(grid=grid, position=(12,8+i)))
-        tree_group.add(entities.Tree(grid=grid, position=(7+i,12))) """
+        tree_group.add(entities.Tree(grid=grid, position=(7+i,12))) """  
         
+def create_new_tree(grid: Grid) -> Tree:
+    """Create a new tree in a vacant cell
+
+    Args:
+        grid (Grid): grid on which the tree will be created
+
+    Returns:
+        Tree: the newly created tree
+    """    
+    x, y = get_random_coordinates(grid=grid)
+    
+    while grid.get_position_value((x,y)):
+       x, y = get_random_coordinates(grid=grid)
+    
+    return Tree(grid=grid, position=(x,y))
+    
 def init_energies(grid: Grid) -> None:
     """Initialize the energies on the grid (only for tests)
 
