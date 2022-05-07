@@ -66,14 +66,13 @@ class Grid():
             return None
         
            
-
 def main():
     global tick_counter
-    pg.init()
+    tick_counter = 0
+    
+    init_pygame()
     init_world()
       
-    tick_counter = 0
-
     while True:
         update_world()
         draw_world()
@@ -91,13 +90,18 @@ def main():
  
 def init_world() -> None:
     """Initialize the world"""
-    global SCREEN, CLOCK
-    SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    CLOCK = pg.time.Clock()
     grid: Grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH)
     
     init_population(grid=grid)
     init_energies(grid=grid)
+ 
+def init_pygame() -> None:
+    """Initialize pygame"""
+    global SCREEN, CLOCK
+    pg.init()
+    SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    CLOCK = pg.time.Clock()
+    
  
 def init_population(grid: Grid) -> None:
     """Populate the world with the initial population
