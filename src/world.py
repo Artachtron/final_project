@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
-import entities, energies
+from entities import Animal, Tree
+from energies import BlueEnergy, RedEnergy
 import numpy as np
 from typing import Tuple, Final
 
@@ -17,11 +18,12 @@ WINDOW_HEIGHT: Final[int] = BLOCK_SIZE * GRID_HEIGHT
 WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
 
 class Grid():
-    def __init__(self, height: int = GRID_HEIGHT, width: int = GRID_WIDTH):
+    def __init__(self, height: int = GRID_HEIGHT, width: int = GRID_WIDTH, block_size: int = BLOCK_SIZE):
         self._height = height
         self._width = width
-        self.grid_dimensions = (self._width, self._height)
+        self.dimensions = (self._width, self._height)
         self._grid: np.array = np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=int)
+        self.BLOCK_SIZE = block_size
     
     @property
     def grid(self) -> np.array:
@@ -97,10 +99,10 @@ def init_population(grid: Grid) -> None:
     global animal_group, tree_group
     
     animal_group = pg.sprite.Group()
-    animal_group.add(entities.Animal(grid=grid))
+    animal_group.add(Animal(grid=grid, position=(10,10)))
         
     tree_group = pg.sprite.Group()
-    tree_group.add(entities.Tree(grid=grid))
+    tree_group.add(Tree(grid=grid, position=(10,11)))
     """ for i in range(0,5):
         tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
         tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
@@ -116,8 +118,8 @@ def init_energies(grid: Grid) -> None:
     global energy_group
     energy_group = pg.sprite.Group()
     
-    energy_group.add(energies.BlueEnergy(grid=grid, position=(5,5)))
-    energy_group.add(energies.RedEnergy(grid=grid, position=(5,6)))
+    energy_group.add(BlueEnergy(grid=grid, position=(5,5)))
+    energy_group.add(RedEnergy(grid=grid, position=(5,6)))
            
 def draw_world() -> None:
     """Draw the world, grid and entities"""
