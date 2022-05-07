@@ -60,10 +60,12 @@ class TestWorld:
         assert world.SCREEN
         assert type(world.SCREEN) == pg.Surface
     
-    def test_initialization_world(self):
-        world.init_world()
+    def test_initialization_population(self):
+        grid = world.Grid(height=10,width=10)
+        world.init_population(grid=grid, counts=(3, 2))
+        
         assert world.animal_group
         assert world.tree_group
         
-        assert len(world.animal_group) == 1
-        assert len(world.tree_group) == 1
+        assert len(world.animal_group) == 3
+        assert len(world.tree_group) == 2

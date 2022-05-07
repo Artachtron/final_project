@@ -95,7 +95,7 @@ def init_world() -> None:
     """Initialize the world"""
     grid: Grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH)
     
-    init_population(grid=grid, counts={'animals_count':INITIAL_ANIMAL_POPULATION, 'trees_count':INITIAL_TREE_POPULATION})
+    init_population(grid=grid, counts=(INITIAL_ANIMAL_POPULATION, INITIAL_TREE_POPULATION))
     init_energies(grid=grid)
  
 def init_pygame() -> None:
@@ -106,15 +106,14 @@ def init_pygame() -> None:
     CLOCK = pg.time.Clock()
    
  
-def init_population(grid: Grid, counts: dict[str, int]) -> None:
+def init_population(grid: Grid, **kwargs) -> None:
     """Populate the world with the initial population
     
     Args:
             grid (Grid): The grid on which the population will be initialized
     """    
-    animals_count = counts['animals_count']
-    trees_count = counts['trees_count']
-    
+    animals_count, trees_count = kwargs['counts']
+  
     init_animals(grid=grid, count=animals_count)
     init_trees(grid=grid, count=trees_count)
     
@@ -127,6 +126,7 @@ def init_animals(grid: Grid, count: int = 0) -> None:
     """    
     global animal_group
     animal_group = pg.sprite.Group()
+    
     for _ in range(count):
         animal: Animal = create_new_animal(grid=grid)
         animal_group.add(animal)
@@ -147,10 +147,24 @@ def create_new_animal(grid: Grid) -> Animal:
     
     return Animal(grid=grid, position=(x,y))
    
-def get_random_coordinates(grid: Grid) -> Tuple[int,int]:  
+def get_random_coordinates(grid: Grid) -> Tuple[int,int]:
+    """Get random coordinates of a point on a grid
+
+    Args:
+        grid (Grid): grid from which the coordinates will be chosen
+
+    Returns:
+        Tuple[int,int]: coordinates generated randomly
+    """      
     return np.random.randint(0,grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
     
 def init_trees(grid: Grid, count: int=0) -> None:
+    """Initialize the population of trees
+
+    Args:
+        grid (Grid): grid on which the population will be initialized
+        count (int, optional): number of trees to create. Defaults to 0.
+    """    
     global tree_group
     tree_group = pg.sprite.Group()
     
