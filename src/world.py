@@ -1,6 +1,6 @@
 import pygame as pg
 import sys
-import entities
+import entities, energies
 import numpy as np
 from typing import Tuple, Final
 
@@ -20,6 +20,7 @@ class Grid():
     def __init__(self):
         self._height: int = GRID_HEIGHT
         self._width: int = GRID_WIDTH
+        self.grid_dimensions = (self._width, self._height)
         self._grid: np.array = np.zeros((GRID_WIDTH, GRID_HEIGHT), dtype=int)
     
     @property
@@ -77,6 +78,7 @@ def init_world() -> None:
     grid: Grid = Grid()
     
     init_population(grid=grid)
+    init_energies(grid=grid)
  
 def init_population(grid: Grid) -> None:
     """Populate the world with the initial population
@@ -84,7 +86,6 @@ def init_population(grid: Grid) -> None:
     Args:
             grid (Grid): The grid on which the population will be initialized
     """
-    
     global animal_group, tree_group
     
     animal_group = pg.sprite.Group()
@@ -97,11 +98,24 @@ def init_population(grid: Grid) -> None:
         tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
         tree_group.add(entities.Tree(grid=grid, position=(12,8+i)))
         tree_group.add(entities.Tree(grid=grid, position=(7+i,12))) """
+        
+def init_energies(grid: Grid) -> None:
+    """Initialize the energies on the grid (only for tests)
+
+    Args:
+        grid (Grid): The grid on which the population will be initialized
+    """
+    global energy_group
+    energy_group = pg.sprite.Group()
+    
+    energy_group.add(energies.BlueEnergy(grid=grid, position=(5,5)))
+    energy_group.add(energies.RedEnergy(grid=grid, position=(5,6)))
            
 def draw_world() -> None:
     """Draw the world, grid and entities"""
     draw_grid()
     draw_entities()
+    draw_energies()
     
 def draw_grid() -> None:
     """Draw the grid"""
@@ -126,6 +140,10 @@ def draw_entities() -> None:
     """Draw the entities"""
     animal_group.draw(SCREEN)
     tree_group.draw(SCREEN)
+    
+def draw_energies() -> None:
+    """Draw the energies"""
+    energy_group.draw(SCREEN)
   
 if __name__ == "__main__":
     main()

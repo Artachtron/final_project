@@ -1,4 +1,3 @@
-from tkinter import RIGHT
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
@@ -8,8 +7,7 @@ import random
 import operator
 import world
 
-
-assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets")
+assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/entities")
 
 class Direction(enum.Enum):
     RIGHT = (1,0)
@@ -18,21 +16,28 @@ class Direction(enum.Enum):
     UP = (0,-1)
     
 class Entity(pg.sprite.Sprite):
-    def __init__(self,image_filename: str , grid: world.Grid, size: int=20, position: Tuple[int,int]=(int(world.GRID_WIDTH/2),int(world.GRID_HEIGHT/2))):
+    def __init__(self,
+                 image_filename: str,
+                 grid: world.Grid,
+                 size: int=20,
+                 position: Tuple[int,int]=(int(world.GRID_WIDTH/2), int(world.GRID_HEIGHT/2))
+                 ):
         super().__init__()
         self.size = size
-        image = pg.image.load(join(assets_path,image_filename)).convert_alpha()
-        self.image = pg.transform.scale(image, (size,size))
         self.position = position
+        
+        image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
+        self.image = pg.transform.scale(image, (size,size))
         pos_x, pos_y = self.position
         self.rect = self.image.get_rect(center=(pos_x * world.BLOCK_SIZE + world.BLOCK_SIZE/2, pos_y * world.BLOCK_SIZE + world.BLOCK_SIZE/2))
+        
         self.grid = grid
         self.grid.update_grid_cell(position=(self.position), value=1)
     
 
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
-        super(Animal,self).__init__(image_filename='Animal.png',*args, **kwargs)
+        super(Animal, self).__init__(image_filename='Animal.png',*args, **kwargs)
         
     """ def tmp_input(self):
         keys = pg.key.get_pressed()
