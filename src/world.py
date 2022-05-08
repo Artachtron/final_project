@@ -201,7 +201,7 @@ def init_energies(grid: Grid) -> None:
     """
     global energy_group
     energy_group = pg.sprite.Group()
-    
+
     energy_group.add(BlueEnergy(grid=grid, position=(5,5)))
     energy_group.add(RedEnergy(grid=grid, position=(5,6)))
            
