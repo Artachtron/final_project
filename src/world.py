@@ -234,7 +234,7 @@ def draw_entities() -> None:
     """Draw the entities"""
     animal_group.draw(SCREEN)
     tree_group.draw(SCREEN)
-    
+
 def draw_energies() -> None:
     """Draw the energies"""
     energy_group.draw(SCREEN)

@@ -60,6 +60,8 @@ class TestWorld:
         assert world.SCREEN
         assert type(world.SCREEN) == pg.Surface
     
+    # def test_initialization_worlds(self):
+    
     def test_initialization_population(self):
         grid = world.Grid(height=10,width=10)
         world.init_population(grid=grid, counts=(3, 2))
@@ -69,3 +71,22 @@ class TestWorld:
         
         assert len(world.animal_group) == 3
         assert len(world.tree_group) == 2
+     
+    #def test_world_update(self):
+        
+    def test_entities_update(self):
+        grid = world.Grid(height=10,width=10)
+        world.init_population(grid=grid, counts=(1,0))
+        
+        before_update_position = world.animal_group.sprites()[0].position
+        world.update_entities()
+        after_update_position = world.animal_group.sprites()[0].position
+                
+        assert before_update_position != after_update_position
+    
+    def test_world_drawing(self):
+        grid = world.Grid(height=10,width=10)
+        world.init_population(grid=grid, counts=(3,2))
+        world.init_energies(grid=grid)
+        
+        world.draw_world()
