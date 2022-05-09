@@ -38,3 +38,14 @@ class TestEnergies:
         assert red_energy.grid == self.grid
         assert type(blue_energy.image) == pg.Surface
         assert type(red_energy.image) == pg.Surface
+        
+    def test_energies_on_grid(self):
+        assert self.grid.get_position_value(position=(5,5)) == 0
+        assert self.grid.get_position_value(position=(5,6)) == 0
+        
+        blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
+        red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
+        
+        assert self.grid.get_position_value(position=(5,4)) == 0
+        assert self.grid.get_position_value(position=(5,5)) == 1
+        assert self.grid.get_position_value(position=(5,6)) == 1
