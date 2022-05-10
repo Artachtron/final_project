@@ -7,10 +7,11 @@ from project.src import world, energies
 
 
 class TestEnergies:
-    def setup_class(self):
-        self.grid = world.Grid(width=5, height=10)
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.grid = world.Grid(width=10, height=10)
         world.init_pygame()
-        
+  
     def test_create_energies(self):
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
@@ -38,13 +39,15 @@ class TestEnergies:
         assert red_energy.grid == self.grid
         assert type(blue_energy.image) == pg.Surface
         assert type(red_energy.image) == pg.Surface
+        assert type(blue_energy.rect) == pg.Rect
+        assert type(red_energy.rect) == pg.Rect
         
     def test_energies_on_grid(self):
         assert self.grid.get_position_value(position=(5,5)) == 0
         assert self.grid.get_position_value(position=(5,6)) == 0
         
-        blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
-        red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
+        energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
+        energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
         assert self.grid.get_position_value(position=(5,4)) == 0
         assert self.grid.get_position_value(position=(5,5)) == 1

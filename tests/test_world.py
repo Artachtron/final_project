@@ -3,12 +3,12 @@ import sys, os
 import numpy as np
 import pygame as pg
 
-
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
 from project.src import world
 
 class TestGrid:
-    def setup_class(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.grid = world.Grid(width=5, height=10)      
         
     def test_creation_grid(self):
@@ -53,6 +53,7 @@ class TestWorld:
     
     def setup_class(self):
         world.init_pygame()
+        yield
         
     def test_initialization_pygame(self):
         assert world.CLOCK
