@@ -3,7 +3,7 @@ import sys
 from entities import Animal, Tree, Entity
 from energies import BlueEnergy, RedEnergy, Energy
 import numpy as np
-from typing import Tuple, Final
+from typing import Tuple, Final, Type
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -20,30 +20,16 @@ WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
 INITIAL_ANIMAL_POPULATION: Final[int] = 5
 INITIAL_TREE_POPULATION: Final[int] = 2
 
-class Grid():
-    def __init__(self, height: int, width: int, block_size: int = BLOCK_SIZE):
-        self._height = height
-        self._width = width
+class SubGrid:
+    def __init__(self,dimensions: Tuple[int,int], dtype: str):
         self.dimensions = (self._width, self._height)
-        self._entity_grid: np.array = np.full(self.dimensions, dtype=Entity)
-        self._energy_grid: np.array = np.zeros(self.dimensions, dtype=Energy)
-        self.BLOCK_SIZE = block_size
-    
+        if dtype == 'entity' or dtype == 'entities':
+            self._subgrid: np.array = np.full(self.dimensions, dtype=Entity)
+        elif dtype == 'energy' or dtype == 'energies':
+            self._subgrid: np.array = np.full(self.dimensions, dtype=Energy)
     @property
-    def entitiy_grid(self) -> np.array:
-        return self._entity_grid
-    
-    @property
-    def energy_grid(self) -> np.array:
-        return self._entity_grid
-    
-    @property
-    def height(self) -> int:
-        return self._height
-    
-    @property
-    def width(self) -> int:
-        return self._width
+    def subgrid(self) -> np.array:
+        return self._subgrid
     
     def update_grid_cell_value(self, position: Tuple[int, int], value: int) -> None:
         """Update the value of a cell from the grid
@@ -53,10 +39,10 @@ class Grid():
             value (int): The new value to assign
         """
         try:
-            self._entity_grid[position] = value
+            self._subgrid[position] = value
         except IndexError:
             print("{position} is out of bounds")
-        
+            
     def get_position_value(self, position: Tuple[int, int]) -> int:
         """Get the value of a cell
 
@@ -67,10 +53,31 @@ class Grid():
             int: The value of the cell 0 for empty, 1 for full
         """
         try:
-            return self._entity_grid[position]
+            return self._subgrid[position]
         except IndexError:
             print(f"{position} is out of bounds")
             return None
+
+        
+class Grid:
+    def __init__(self, height: int, width: int, block_size: int = BLOCK_SIZE):
+        self._height = height
+        self._width = width
+        self.dimensions = (self._width, self._height)
+        
+        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='entity')
+        self._energy_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='energy')
+        self.BLOCK_SIZE = block_size
+        
+    @property
+    def height(self) -> int:
+        return self._height
+    
+    @property
+    def width(self) -> int:
+        return self._width
+            
+
         
            
 def main():
