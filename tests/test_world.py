@@ -9,7 +9,9 @@ from project.src import world
 class TestGrid:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.grid = world.Grid(width=5, height=10)      
+        self.grid = world.Grid(width=5, height=10)
+        self.entity_grid = self.grid.entity_grid
+        self.energy_grid = self.grid.energy_grid     
         
     def test_creation_grid(self):
         assert self.grid
@@ -21,11 +23,17 @@ class TestGrid:
         assert self.grid.dimensions == (5,10)
         
     def test_update_cell(self):
-        assert self.grid.get_position_value(position=(2,5)) == 0
-        self.grid.update_grid_cell_value(position=(2,5), value=1)
-        assert self.grid.get_position_value(position=(2,5)) == 1
-        self.grid.update_grid_cell_value(position=(2,5), value=0)
-        assert self.grid.get_position_value(position=(2,5)) == 0
+        assert self.entity_grid.get_position_value(position=(2,5)) == None
+        self.entity_grid.update_grid_cell_value(position=(2,5), value=1)
+        assert self.entity_grid.get_position_value(position=(2,5)) == 1
+        self.entity_grid.update_grid_cell_value(position=(2,5), value=None)
+        assert self.entity_grid.get_position_value(position=(2,5)) == None
+        
+        assert self.energy_grid.get_position_value(position=(2,5)) == None
+        self.energy_grid.update_grid_cell_value(position=(2,5), value=1)
+        assert self.energy_grid.get_position_value(position=(2,5)) == 1
+        self.energy_grid.update_grid_cell_value(position=(2,5), value=None)
+        assert self.energy_grid.get_position_value(position=(2,5)) == None
         
     def test_cell_out_of_bounds_handled(self):
         array = np.zeros(self.grid.dimensions, dtype=int)
@@ -35,19 +43,19 @@ class TestGrid:
         with pytest.raises(IndexError):
             array[pos_1]
         try:
-            self.grid.update_grid_cell_value(position=pos_1, value=1)
+            self.entity_grid.update_grid_cell_value(position=pos_1, value=1)
         except IndexError:
             pytest.fail("Unexpected IndexError")
         
         with pytest.raises(IndexError):
             array[pos_2]
         try:
-            self.grid.update_grid_cell_value(position=pos_2, value=1)
+            self.entity_grid.update_grid_cell_value(position=pos_2, value=1)
         except IndexError:
             pytest.fail("Unexpected IndexError")
                 
-        assert self.grid.get_position_value(position=pos_1) == None
-        assert self.grid.get_position_value(position=pos_2) == None
+        assert self.entity_grid.get_position_value(position=pos_1) == 0
+        assert self.entity_grid.get_position_value(position=pos_2) == 0
         
 class TestWorld:
     

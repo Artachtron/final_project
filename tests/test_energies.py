@@ -27,8 +27,8 @@ class TestEnergies:
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
-        assert set(['type','quantity', 'position', 'image', 'rect', 'grid']).issubset(vars(blue_energy))
-        assert set(['type','quantity', 'position', 'image', 'rect', 'grid']).issubset(vars(red_energy))
+        assert set(['type','quantity', 'position', 'image', 'rect', 'energy_grid']).issubset(vars(blue_energy))
+        assert set(['type','quantity', 'position', 'image', 'rect', 'energy_grid']).issubset(vars(red_energy))
         
         assert blue_energy.type == energies.EnergyType.BLUE
         assert red_energy.type == energies.EnergyType.RED
@@ -36,8 +36,8 @@ class TestEnergies:
         assert red_energy.position == (5,6)
         assert blue_energy.quantity == 5
         assert red_energy.quantity == 10
-        assert blue_energy.grid == self.energy_grid
-        assert red_energy.grid == self.energy_grid
+        assert blue_energy.energy_grid == self.energy_grid
+        assert red_energy.energy_grid == self.energy_grid
         assert type(blue_energy.image) == pg.Surface
         assert type(red_energy.image) == pg.Surface
         assert type(blue_energy.rect) == pg.Rect

@@ -5,6 +5,7 @@ from typing import Tuple
 import enum
 import random
 import operator
+from energies import BlueEnergy, RedEnergy, EnergyType
 
 assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/entities")
 
@@ -31,8 +32,13 @@ class Entity(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=(pos_x * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
         
         self.grid = grid
-        self.grid.update_grid_cell_value(position=(self.position), value=1)
+        self.entity_grid = grid.entity_grid
+        self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
+        
+        self.energies_stock = {"blue energy": 0, "red": 0}
     
+    def drop_energy(self, energy_type: EnergyType, quantity: int):
+        self.energies_stock[energy_type.value] -= quantity
 
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
@@ -51,8 +57,8 @@ class Animal(Entity):
         """
         next_move = tuple(map(operator.add, self.position, direction.value))
         if self._check_next_move(next_move=next_move):
-            self.grid.update_grid_cell_value(position=(self.position), value=0)
-            self.grid.update_grid_cell_value(position=next_move, value=1)
+            self.entity_grid.update_grid_cell_value(position=(self.position), value=None)
+            self.entity_grid.update_grid_cell_value(position=next_move, value=self)
             self.position = next_move
                    
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
@@ -78,7 +84,7 @@ class Animal(Entity):
         Returns:
             bool: Vacancy of the cell
         """
-        return not self.grid.get_position_value(position=next_move)
+        return not self.entity_grid.get_position_value(position=next_move)
      
     def _is_cell_in_bounds(self, next_move: Tuple[int,int])-> bool:
         """Check if a cell is in the bounds of the grid
@@ -90,7 +96,7 @@ class Animal(Entity):
             bool: Cell is inside the grid
         """
         next_x, next_y = next_move
-        if next_x < 0 or next_x >= self.grid.dimensions[0] or next_y < 0 or next_y >= self.grid.dimensions[1]:
+        if next_x < 0 or next_x >= self.entity_grid.dimensions[0] or next_y < 0 or next_y >= self.entity_grid.dimensions[1]:
             return False
         return True
         

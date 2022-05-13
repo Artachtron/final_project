@@ -57,7 +57,7 @@ class SubGrid:
             return self._subgrid[position]
         except IndexError:
             print(f"{position} is out of bounds")
-            return None
+            return 0
 
         
 class Grid:
@@ -125,7 +125,6 @@ def init_pygame() -> None:
     SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     CLOCK = pg.time.Clock()
    
- 
 def init_population(grid: Grid, **kwargs) -> None:
     """Populate the world with the initial population
     
@@ -162,7 +161,7 @@ def create_new_animal(grid: Grid) -> Animal:
     """
     x, y = get_random_coordinates(grid=grid)
     
-    while grid.get_position_value((x,y)):
+    while grid.entity_grid.get_position_value((x,y)):
         x, y = get_random_coordinates(grid=grid)
     
     return Animal(grid=grid, position=(x,y))
@@ -208,7 +207,7 @@ def create_new_tree(grid: Grid) -> Tree:
     """    
     x, y = get_random_coordinates(grid=grid)
     
-    while grid.get_position_value((x,y)):
+    while grid.entity_grid.get_position_value((x,y)):
        x, y = get_random_coordinates(grid=grid)
     
     return Tree(grid=grid, position=(x,y))
