@@ -21,12 +21,13 @@ INITIAL_ANIMAL_POPULATION: Final[int] = 5
 INITIAL_TREE_POPULATION: Final[int] = 2
 
 class SubGrid:
-    def __init__(self,dimensions: Tuple[int,int], dtype: str):
-        self.dimensions = (self._width, self._height)
+    def __init__(self, dimensions: Tuple[int,int], dtype: str):
+        self.dimensions = dimensions
         if dtype == 'entity' or dtype == 'entities':
-            self._subgrid: np.array = np.full(self.dimensions, dtype=Entity)
+            self._subgrid: np.array = np.full(self.dimensions, fill_value=None, dtype=Entity)
         elif dtype == 'energy' or dtype == 'energies':
-            self._subgrid: np.array = np.full(self.dimensions, dtype=Energy)
+            self._subgrid: np.array = np.full(self.dimensions, fill_value=None, dtype=Energy)
+            
     @property
     def subgrid(self) -> np.array:
         return self._subgrid
@@ -68,6 +69,14 @@ class Grid:
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='entity')
         self._energy_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='energy')
         self.BLOCK_SIZE = block_size
+     
+    @property
+    def entity_grid(self) -> np.array:
+        return self._entity_grid
+   
+    @property
+    def energy_grid(self) -> np.array:
+        return self._energy_grid
         
     @property
     def height(self) -> int:

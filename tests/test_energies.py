@@ -10,6 +10,7 @@ class TestEnergies:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.grid = world.Grid(width=10, height=10)
+        self.energy_grid = self.grid.energy_grid
         world.init_pygame()
   
     def test_create_energies(self):
@@ -35,20 +36,20 @@ class TestEnergies:
         assert red_energy.position == (5,6)
         assert blue_energy.quantity == 5
         assert red_energy.quantity == 10
-        assert blue_energy.grid == self.grid
-        assert red_energy.grid == self.grid
+        assert blue_energy.grid == self.energy_grid
+        assert red_energy.grid == self.energy_grid
         assert type(blue_energy.image) == pg.Surface
         assert type(red_energy.image) == pg.Surface
         assert type(blue_energy.rect) == pg.Rect
         assert type(red_energy.rect) == pg.Rect
         
     def test_energies_on_grid(self):
-        assert self.grid.get_position_value(position=(5,5)) == 0
-        assert self.grid.get_position_value(position=(5,6)) == 0
+        assert self.energy_grid.get_position_value(position=(5,5)) == None
+        assert self.energy_grid.get_position_value(position=(5,6)) == None
         
         energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
-        assert self.grid.get_position_value(position=(5,4)) == 0
-        assert self.grid.get_position_value(position=(5,5)) == 1
-        assert self.grid.get_position_value(position=(5,6)) == 1
+        assert self.energy_grid.get_position_value(position=(5,4)) == None
+        assert self.energy_grid.get_position_value(position=(5,5)) == 1
+        assert self.energy_grid.get_position_value(position=(5,6)) == 1

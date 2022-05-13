@@ -8,8 +8,8 @@ from typing import Tuple
 assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/energies")
 
 class EnergyType(enum.Enum):
-    BLUE = 0
-    RED = 1
+    BLUE = "blue energy"
+    RED = "red energy"
 
 class Energy(pg.sprite.Sprite):
     def __init__(self,
@@ -30,7 +30,7 @@ class Energy(pg.sprite.Sprite):
         pos_x, pos_y = self.position
         self.rect = self.image.get_rect(center=(pos_x *grid.BLOCK_SIZE +grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
         
-        self.grid = grid
+        self.grid = grid.energy_grid
         self.grid.update_grid_cell_value(position=(self.position), value=1)
 
 class RedEnergy(Energy):
