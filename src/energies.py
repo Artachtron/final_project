@@ -31,7 +31,7 @@ class Energy(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=(pos_x *grid.BLOCK_SIZE +grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
         
         self.energy_grid = grid.energy_grid
-        self.energy_grid.update_grid_cell_value(position=(self.position), value=1)
+        self.energy_grid.update_grid_cell_value(position=(self.position), value=self)
 
 class RedEnergy(Energy):
     def __init__(self, *args, **kwargs):

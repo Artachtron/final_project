@@ -47,9 +47,9 @@ class TestEnergies:
         assert self.energy_grid.get_position_value(position=(5,5)) == None
         assert self.energy_grid.get_position_value(position=(5,6)) == None
         
-        energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
-        energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
+        blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
+        red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
         assert self.energy_grid.get_position_value(position=(5,4)) == None
-        assert self.energy_grid.get_position_value(position=(5,5)) == 1
-        assert self.energy_grid.get_position_value(position=(5,6)) == 1
+        assert self.energy_grid.get_position_value(position=(5,5)) == blue_energy
+        assert self.energy_grid.get_position_value(position=(5,6)) == red_energy
