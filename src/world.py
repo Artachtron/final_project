@@ -1,8 +1,7 @@
 import pygame as pg
 import sys
-from entities import Animal, Tree
-from energies import BlueEnergy, RedEnergy
-import random
+from entities import Animal, Tree, Entity
+from energies import BlueEnergy, RedEnergy, Energy
 import numpy as np
 from typing import Tuple, Final
 
@@ -26,12 +25,17 @@ class Grid():
         self._height = height
         self._width = width
         self.dimensions = (self._width, self._height)
-        self._grid: np.array = np.zeros(self.dimensions, dtype=int)
+        self._entity_grid: np.array = np.full(self.dimensions, dtype=Entity)
+        self._energy_grid: np.array = np.zeros(self.dimensions, dtype=Energy)
         self.BLOCK_SIZE = block_size
     
     @property
-    def grid(self) -> np.array:
-        return self._grid
+    def entitiy_grid(self) -> np.array:
+        return self._entity_grid
+    
+    @property
+    def energy_grid(self) -> np.array:
+        return self._entity_grid
     
     @property
     def height(self) -> int:
@@ -49,7 +53,7 @@ class Grid():
             value (int): The new value to assign
         """
         try:
-            self._grid[position] = value
+            self._entity_grid[position] = value
         except IndexError:
             print("{position} is out of bounds")
         
@@ -63,7 +67,7 @@ class Grid():
             int: The value of the cell 0 for empty, 1 for full
         """
         try:
-            return self._grid[position]
+            return self._entity_grid[position]
         except IndexError:
             print(f"{position} is out of bounds")
             return None
