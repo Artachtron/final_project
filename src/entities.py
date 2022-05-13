@@ -7,6 +7,7 @@ import random
 import operator
 from energies import BlueEnergy, RedEnergy, EnergyType
 
+
 assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/entities")
 
 class Direction(enum.Enum):
@@ -21,6 +22,8 @@ class Entity(pg.sprite.Sprite):
                  grid,
                  position: Tuple[int,int],
                  size: int=20,
+                 blue_energy: int=0,
+                 red_energy: int=0,
                  ):
         super().__init__()
         self.size = size
@@ -35,10 +38,21 @@ class Entity(pg.sprite.Sprite):
         self.entity_grid = grid.entity_grid
         self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
         
-        self.energies_stock = {"blue energy": 0, "red": 0}
+        self._energies_stock = {"blue energy": blue_energy, "red energy": red_energy}
+        
+    @property
+    def energies_stock(self):
+        return self._energies_stock
+
+    def get_blue_energy(self):
+        return self._energies_stock["blue energy"]
     
-    def drop_energy(self, energy_type: EnergyType, quantity: int):
-        self.energies_stock[energy_type.value] -= quantity
+    def get_red_energy(self):
+        return self._energies_stock["red energy"]
+    
+    def drop_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int,int]):
+        self._energies_stock[energy_type.value] -= quantity
+        self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell)
 
 class Animal(Entity):
     def __init__(self, *args, **kwargs):

@@ -1,7 +1,7 @@
 import pygame as pg
 import sys
 from entities import Animal, Tree, Entity
-from energies import BlueEnergy, RedEnergy, Energy
+from energies import BlueEnergy, RedEnergy, Energy, EnergyType
 import numpy as np
 from typing import Tuple, Final, Type
 
@@ -69,6 +69,9 @@ class Grid:
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='entity')
         self._energy_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='energy')
         self.BLOCK_SIZE = block_size
+        
+        self.energy_group = pg.sprite.Group()
+        self.animal_group = pg.sprite.Group()
      
     @property
     def entity_grid(self) -> np.array:
@@ -85,10 +88,15 @@ class Grid:
     @property
     def width(self) -> int:
         return self._width
+    
+    def create_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int, int]):
+         match energy_type.value:
+            case "blue energy":
+                self.energy_group.add(BlueEnergy(grid=self, position=cell, quantity=quantity))
+            case "red energy":
+                self.energy_group.add(RedEnergy(grid=self, position=cell, quantity=quantity))
             
-
-        
-           
+                  
 def main():
     global tick_counter
     tick_counter = 0
@@ -144,7 +152,7 @@ def init_animals(grid: Grid, count: int = 0) -> None:
         count (int, optional): number of animals to create. Defaults to 0.
     """    
     global animal_group
-    animal_group = pg.sprite.Group()
+    animal_group = grid.animal_group
     
     for _ in range(count):
         animal: Animal = create_new_animal(grid=grid)
@@ -219,7 +227,7 @@ def init_energies(grid: Grid) -> None:
         grid (Grid): The grid on which the population will be initialized
     """
     global energy_group
-    energy_group = pg.sprite.Group()
+    energy_group = grid.energy_group
 
     energy_group.add(BlueEnergy(grid=grid, position=(5,5)))
     energy_group.add(RedEnergy(grid=grid, position=(5,6)))

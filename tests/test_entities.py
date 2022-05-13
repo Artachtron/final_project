@@ -1,6 +1,9 @@
+from contextlib import redirect_stderr
 import pytest
 import sys, os
 import pygame as pg
+
+from project.src.energies import EnergyType
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
 from project.src import world, entities
@@ -126,3 +129,21 @@ class TestAnimal:
         animal2.move(entities.Direction.DOWN)
         assert animal2.position == (4,9)
         assert self.entity_grid.get_position_value(position=(4,9)) == animal2
+        
+    def test_drop_energy(self):
+        animal = entities.Animal(grid=self.grid, position=(0,0), blue_energy=5, red_energy=10)
+        assert animal.energies_stock == {"blue energy": 5, "red energy": 10}
+        assert animal.get_blue_energy() == 5
+        
+        blue_cell = (1,1)
+        assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
+        animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell=blue_cell)
+        assert animal.energies_stock == {"blue energy": 4, "red energy": 10}
+        assert animal.get_blue_energy() == 4
+        assert self.grid.energy_grid.get_position_value(position=blue_cell) != None
+        
+        red_cell = (3,2)
+        assert animal.get_red_energy() == 10
+        animal.drop_energy(energy_type=EnergyType.RED, quantity=3, cell=red_cell)
+        assert animal.energies_stock == {"blue energy": 4, "red energy": 7}
+        assert animal.get_red_energy() == 7
