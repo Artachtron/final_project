@@ -151,7 +151,7 @@ class TestEntityEnergy:
         self.grid = world.Grid(width=5, height=10)
         self.entity_grid = self.grid.entity_grid
         world.init_pygame()
-        self.entity = entities.Entity(grid=self.grid, size=1, position=(0,0), blue_energy=5, red_energy=10, image_filename='Animal.png')
+        self.entity = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
         yield
     
     def test_loose_energy(self):
@@ -211,26 +211,32 @@ class TestEntityEnergy:
         blue_cell = (1,1)
         assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
         self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=10, cell_coordinates=blue_cell)
-        assert self.grid.energy_grid.get_position_value(position=blue_cell) != None
+        blue_energy = self.grid.energy_grid.get_position_value(position=blue_cell)
+        assert  blue_energy != None
+        assert self.grid.energy_group.has(blue_energy)
         
         # Energy picked up
         self.entity.pick_up_energy(cell_coordinates=blue_cell)
         assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 10}
         assert self.entity.get_blue_energy() == 15
+        assert not self.grid.energy_group.has(blue_energy)
         
         # Red energy
         red_cell = (2,2)
         self.entity.get_red_energy() == 10
         assert self.grid.energy_grid.get_position_value(position=red_cell) == None
         self.grid.create_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=red_cell)
-        assert self.grid.energy_grid.get_position_value(position=red_cell) != None
+        red_energy = self.grid.energy_grid.get_position_value(position=red_cell)
+        assert red_energy != None
+        assert self.grid.energy_group.has(red_energy)
         
         # Energy picked up
         self.entity.pick_up_energy(cell_coordinates=red_cell)
         assert self.grid.energy_grid.get_position_value(position=red_cell) == None
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 15}
         assert self.entity.get_red_energy() == 15
+        assert not self.grid.energy_group.has(red_energy)
         
         # Pick up empty cell
         self.entity.pick_up_energy(cell_coordinates=red_cell)
@@ -250,3 +256,14 @@ class TestEntityEnergy:
         assert self.entity.age == 1
         self.entity.increase_age(amount=5)
         assert self.entity.age == 6
+        
+    def test_die(self):
+        assert self.entity
+        position = self.entity.position
+        assert self.grid.entity_grid.get_position_value(position=position) == self.entity
+        assert self.grid.entity_group.has(self.entity)
+        
+        # Die
+        self.entity.die()
+        assert self.grid.entity_grid.get_position_value(position=position) == None
+        assert not self.grid.entity_group.has(self.entity)

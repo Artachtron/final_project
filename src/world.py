@@ -77,7 +77,7 @@ def init_animals(grid: Grid, count: int = 0) -> None:
         count (int, optional): number of animals to create. Defaults to 0.
     """    
     global animal_group
-    animal_group = grid.animal_group
+    animal_group = grid.entity_group
     
     for _ in range(count):
         animal: Animal = create_new_animal(grid=grid)

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Tuple
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType
-from entities import Entity
+from entities import Entity, Animal, Tree
 import pygame as pg
 
 class SubGrid:
@@ -55,7 +55,7 @@ class Grid:
         self.BLOCK_SIZE = block_size
         
         self.energy_group = pg.sprite.Group()
-        self.animal_group = pg.sprite.Group()
+        self.entity_group = pg.sprite.Group()
      
     @property
     def entity_grid(self) -> np.array:
@@ -83,14 +83,41 @@ class Grid:
         """        
         print(f"{energy_type} was created at {cell_coordinates}")
         match energy_type.value:
-            case "blue energy":
+            case EnergyType.BLUE.value:
                 self.energy_group.add(BlueEnergy(grid=self, position=cell_coordinates, quantity=quantity))
-            case "red energy":
+            case EnergyType.RED.value:
                 self.energy_group.add(RedEnergy(grid=self, position=cell_coordinates, quantity=quantity))
                 
-    def remove_energy(self, cell_coordinates: Tuple[int, int]) -> None:
+    def remove_energy(self, energy: Energy) -> None:
+        """Remove energy from the grid
+
+        Args:
+            energy (Energy): energy to remove
+        """
         energy_grid = self.energy_grid
-        energy = energy_grid.get_position_value(position=cell_coordinates)
         self.energy_group.remove(energy)
-        energy_grid.update_grid_cell_value(position=cell_coordinates, value=None)
-        print(f"{energy.type} was deleted at {cell_coordinates}")
+        position = energy.position
+        energy_grid.update_grid_cell_value(position=position, value=None)
+        print(f"{energy.type} was deleted at {position}")
+    
+    def create_entity(self, entity_type: str, position, size=1, blue_energy=5, red_energy=10) -> None:
+        match entity_type:
+            case "animal":
+                entity = Animal(grid=self, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy)
+            case "tree":
+                entity = Tree(grid=self, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy)
+        
+        self.entity_group.add(entity)
+        return entity
+        
+    def remove_entity(self, entity):
+        """Remove entity from the grid
+
+        Args:
+            entity (_type_): entity to remove
+        """
+        entity_grid = self.entity_grid
+        self.entity_group.remove(entity)
+        position = entity.position
+        entity_grid.update_grid_cell_value(position=position, value=None)
+        print(f"{entity} was deleted at {position}")

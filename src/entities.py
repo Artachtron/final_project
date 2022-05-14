@@ -74,7 +74,7 @@ class Entity(pg.sprite.Sprite):
         energy: Energy = energy_grid.get_position_value(position=cell_coordinates)
         if energy:
             self.energies_stock[energy.type.value] += energy.quantity
-            self.grid.remove_energy(cell_coordinates=cell_coordinates)
+            self.grid.remove_energy(energy=energy)
                         
     def loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Loose energy from energies stock
@@ -105,6 +105,9 @@ class Entity(pg.sprite.Sprite):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """        
         self.age += amount
+        
+    def die(self) -> None:
+        self.grid.remove_entity(entity=self)
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
