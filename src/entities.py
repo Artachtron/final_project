@@ -93,6 +93,7 @@ class Entity(pg.sprite.Sprite):
         energy_required = self.size * 10
         if self.energies_stock["red energy"] >= energy_required:
             self.energies_stock["red energy"] -= energy_required
+            self.size += 1
             
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
@@ -163,11 +164,17 @@ class Animal(Entity):
         """Test behaviour by doing random actions"""
         direction = random.choice(list(Direction))
         #print(direction)
-        if np.random.uniform() < 0.01:
+        if np.random.uniform() < 0.1:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
             if self._check_coordinates(cell_coordinates=coordinates, subgrid=self.grid.energy_grid):
                 self.drop_energy(energy_type=np.random.choice(EnergyType), cell_coordinates=coordinates, quantity=1)
+                
+        if np.random.uniform() < 0.5:
+            x, y = np.random.randint(-2,2), np.random.randint(-2,2)
+            coordinates = tuple(np.add(self.position, (x,y)))
+            self.pick_up_energy(cell_coordinates=coordinates)
+        
         self.move(direction=direction)
         
 class Tree(Entity):

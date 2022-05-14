@@ -151,7 +151,7 @@ class TestEntityEnergy:
         self.grid = world.Grid(width=5, height=10)
         self.entity_grid = self.grid.entity_grid
         world.init_pygame()
-        self.entity = entities.Entity(grid=self.grid, position=(0,0), blue_energy=5, red_energy=10, image_filename='Animal.png')
+        self.entity = entities.Entity(grid=self.grid, size=1, position=(0,0), blue_energy=5, red_energy=10, image_filename='Animal.png')
         yield
     
     def test_loose_energy(self):
@@ -235,3 +235,11 @@ class TestEntityEnergy:
         # Pick up empty cell
         self.entity.pick_up_energy(cell_coordinates=red_cell)
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 15}
+        
+    def test_grow(self):
+        assert self.entity.energies_stock == {"blue energy": 5, "red energy": 10}
+        assert self.entity.get_red_energy() == 10
+        assert self.entity.size == 1
+        self.entity.grow()
+        assert self.entity.get_red_energy() == 0
+        assert self.entity.size == 2
