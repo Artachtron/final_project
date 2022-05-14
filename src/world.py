@@ -90,7 +90,8 @@ class Grid:
         return self._width
     
     def create_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int, int]):
-         match energy_type.value:
+        print(f"{energy_type} is created at {cell}")
+        match energy_type.value:
             case "blue energy":
                 self.energy_group.add(BlueEnergy(grid=self, position=cell, quantity=quantity))
             case "red energy":
@@ -229,8 +230,8 @@ def init_energies(grid: Grid) -> None:
     global energy_group
     energy_group = grid.energy_group
 
-    energy_group.add(BlueEnergy(grid=grid, position=(5,5)))
-    energy_group.add(RedEnergy(grid=grid, position=(5,6)))
+    """ energy_group.add(BlueEnergy(grid=grid, position=(5,5)))
+    energy_group.add(RedEnergy(grid=grid, position=(5,6))) """
            
 def draw_world() -> None:
     """Draw the world, grid and entities"""

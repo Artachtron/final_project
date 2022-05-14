@@ -22,7 +22,7 @@ class Energy(pg.sprite.Sprite):
         super().__init__()
         self.type = energy_type
         self.quantity = quantity
-        size = quantity
+        size = max(10, quantity)
         self.position = position
         
         image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
