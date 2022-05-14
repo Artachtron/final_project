@@ -27,6 +27,7 @@ class Entity(pg.sprite.Sprite):
                  ):
         super().__init__()
         self.size = size
+        self.age = 0
         self.position = position
         
         image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
@@ -90,11 +91,21 @@ class Entity(pg.sprite.Sprite):
             self._energies_stock[energy_type.value] = 0 
             
     def grow(self) -> None:
+        """grow the entity to bigger size, consumming red energy
+        """        
         energy_required = self.size * 10
         if self.energies_stock["red energy"] >= energy_required:
             self.energies_stock["red energy"] -= energy_required
             self.size += 1
             
+    def increase_age(self, amount: int=1) -> None:
+        """Increase age of certain amount
+
+        Args:
+            amount (int, optional): amount to increase age by. Defaults to 1.
+        """        
+        self.age += amount
+        
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
 

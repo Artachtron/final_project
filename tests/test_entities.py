@@ -243,3 +243,10 @@ class TestEntityEnergy:
         self.entity.grow()
         assert self.entity.get_red_energy() == 0
         assert self.entity.size == 2
+        
+    def test_age(self):
+        assert self.entity.age == 0
+        self.entity.increase_age()
+        assert self.entity.age == 1
+        self.entity.increase_age(amount=5)
+        assert self.entity.age == 6
