@@ -150,7 +150,7 @@ class TestAnimal:
         # Drop blue energy
         blue_cell = (1,1)
         assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
-        animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell=blue_cell)
+        animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell_coordinates=blue_cell)
         assert animal.energies_stock == {"blue energy": 4, "red energy": 10}
         assert animal.get_blue_energy() == 4
         blue_energy = self.grid.energy_grid.get_position_value(position=blue_cell)
@@ -162,7 +162,7 @@ class TestAnimal:
         red_cell = (3,2)
         assert self.grid.energy_grid.get_position_value(position=red_cell) == None
         assert animal.get_red_energy() == 10
-        animal.drop_energy(energy_type=EnergyType.RED, quantity=3, cell=red_cell)
+        animal.drop_energy(energy_type=EnergyType.RED, quantity=3, cell_coordinates=red_cell)
         assert animal.energies_stock == {"blue energy": 4, "red energy": 7}
         assert animal.get_red_energy() == 7
         red_energy = self.grid.energy_grid.get_position_value(position=red_cell)
@@ -170,11 +170,45 @@ class TestAnimal:
         assert self.grid.energy_group.has(red_energy)
         assert type(red_energy).__name__ == 'RedEnergy'
         
-        # Do not drop energy if cell already contains energy
-        animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell=red_cell)
+        #Drop energy on occupied cell
+        animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell_coordinates=red_cell)
         assert animal.energies_stock == {"blue energy": 4, "red energy": 7}
         assert animal.get_blue_energy() == 4
         red_energy2 = self.grid.energy_grid.get_position_value(position=red_cell)
         assert red_energy2 != None
         assert self.grid.energy_group.has(red_energy2)
         assert type(red_energy2).__name__ == 'RedEnergy' 
+        
+    def test_pick_up_energy(self):
+        animal = entities.Animal(grid=self.grid, position=(0,0), blue_energy=5, red_energy=10)
+        assert animal.energies_stock == {"blue energy": 5, "red energy": 10}
+        assert animal.get_blue_energy() == 5
+        
+        # Blue energy
+        blue_cell = (1,1)
+        assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
+        self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=10, cell=blue_cell)
+        assert self.grid.energy_grid.get_position_value(position=blue_cell) != None
+        
+        # Energy picked up
+        animal.pick_up_energy(cell_coordinates=blue_cell)
+        assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
+        assert animal.energies_stock == {"blue energy": 15, "red energy": 10}
+        assert animal.get_blue_energy() == 15
+        
+        # Red energy
+        red_cell = (2,2)
+        animal.get_red_energy() == 10
+        assert self.grid.energy_grid.get_position_value(position=red_cell) == None
+        self.grid.create_energy(energy_type=EnergyType.RED, quantity=5, cell=red_cell)
+        assert self.grid.energy_grid.get_position_value(position=red_cell) != None
+        
+        # Energy picked up
+        animal.pick_up_energy(cell_coordinates=red_cell)
+        assert self.grid.energy_grid.get_position_value(position=red_cell) == None
+        assert animal.energies_stock == {"blue energy": 15, "red energy": 15}
+        assert animal.get_red_energy() == 15
+        
+        # Pick up empty cell
+        animal.pick_up_energy(cell_coordinates=red_cell)
+        assert animal.energies_stock == {"blue energy": 15, "red energy": 15}

@@ -191,7 +191,7 @@ def get_random_coordinates(grid: Grid) -> Tuple[int,int]:
     Returns:
         Tuple[int,int]: coordinates generated randomly
     """      
-    return np.random.randint(0,grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
+    return np.random.randint(0, grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
     
 def init_trees(grid: Grid, count: int=0) -> None:
     """Initialize the population of trees

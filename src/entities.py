@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Tuple
 import enum
 import random
-from energies import EnergyType
+from energies import EnergyType, Energy
 import numpy as np
 
 
@@ -50,8 +50,15 @@ class Entity(pg.sprite.Sprite):
     def get_red_energy(self):
         return self._energies_stock["red energy"]
     
-    def drop_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int,int]):
-        if self._check_coordinates(coordinates=cell, subgrid=self.grid.energy_grid):
+    def drop_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int,int]) -> None:
+        """Drop some energy on a cell
+
+        Args:
+            energy_type (EnergyType): the type of energy (blue/red) to drop
+            quantity (int): the amount of energy to drop
+            cell_coordinates (Tuple[int,int]): the coordinates of the cell on which to drop energy
+        """        
+        if self._check_coordinates(coordinates=cell_coordinates, subgrid=self.grid.energy_grid):
             energy_amount = self._energies_stock[energy_type.value]
             if  energy_amount - quantity > 0:
                 self._energies_stock[energy_type.value] -= quantity
@@ -59,7 +66,20 @@ class Entity(pg.sprite.Sprite):
                 quantity = energy_amount
                 self._energies_stock[energy_type.value] = 0   
                 
-            self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell)
+            self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell_coordinates)
+            
+    def pick_up_energy(self, cell_coordinates: Tuple[int, int]) -> None:
+        """Pick energy up from a cell
+
+        Args:
+            cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
+        """
+        energy_grid = self.grid.energy_grid
+        energy: Energy = energy_grid.get_position_value(position=cell_coordinates)
+        if energy:
+            self.energies_stock[energy.type.value] += energy.quantity
+            energy_grid.update_grid_cell_value(position=cell_coordinates, value=None)
+        
         
 
 class Animal(Entity):
@@ -134,7 +154,7 @@ class Animal(Entity):
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
             if self._check_coordinates(coordinates=coordinates, subgrid=self.grid.energy_grid):
-                self.drop_energy(energy_type=np.random.choice(EnergyType), cell=coordinates, quantity=1)
+                self.drop_energy(energy_type=np.random.choice(EnergyType), cell_coordinates=coordinates, quantity=1)
         self.move(direction=direction)
         
 class Tree(Entity):
