@@ -73,7 +73,7 @@ class Grid:
     def width(self) -> int:
         return self._width
     
-    def create_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int, int]) -> None:
+    def create_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int, int]):
         """Create energy on the grid
 
         Args:
@@ -84,9 +84,12 @@ class Grid:
         print(f"{energy_type} was created at {cell_coordinates}")
         match energy_type.value:
             case EnergyType.BLUE.value:
-                self.energy_group.add(BlueEnergy(grid=self, position=cell_coordinates, quantity=quantity))
+                energy = BlueEnergy(grid=self, position=cell_coordinates, quantity=quantity)
             case EnergyType.RED.value:
-                self.energy_group.add(RedEnergy(grid=self, position=cell_coordinates, quantity=quantity))
+                energy = RedEnergy(grid=self, position=cell_coordinates, quantity=quantity)
+            
+        self.energy_group.add(energy)
+
                 
     def remove_energy(self, energy: Energy) -> None:
         """Remove energy from the grid

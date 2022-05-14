@@ -1,9 +1,7 @@
-from contextlib import redirect_stderr
-from tkinter import E
+import numpy as np
 import pytest
 import sys, os
 import pygame as pg
-
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
 from project.src import world, entities
@@ -322,3 +320,18 @@ class TestEntityEnergy:
         assert self.grid.entity_group.has(self.entity)
         self.entity.loose_energy(energy_type=EnergyType.BLUE, quantity=5)
         assert not self.grid.entity_group.has(self.entity)
+        
+    def test_drop_energy_on_death(self):
+        # Drop all energy on death
+        position = self.entity.position
+        free_cell = tuple(np.add(position,(-1,-1)))
+        assert self.grid.energy_grid.get_position_value(position=free_cell) == None
+        self.entity.die()
+        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 10
+        
+        # Drop energy left on death
+        self.grid.energy_grid.update_grid_cell_value(position=free_cell, value=None)
+        entity = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
+        entity.drop_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=(3,3))
+        entity.die()
+        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 5

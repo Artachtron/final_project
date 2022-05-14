@@ -129,6 +129,10 @@ class Entity(pg.sprite.Sprite):
     def die(self) -> None:
         """Death of the entity
         """
+        energy_grid = self.grid.energy_grid
+        free_cell = self._find_free_cell(subgrid=energy_grid)
+        self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell) 
+        
         self.grid.remove_entity(entity=self)
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
@@ -166,7 +170,24 @@ class Entity(pg.sprite.Sprite):
         if next_x < 0 or next_x >= subgrid.dimensions[0] or next_y < 0 or next_y >= subgrid.dimensions[1]:
             return False
         return True
-        
+    
+    def _find_free_cell(self, subgrid, radius: int=1) -> Tuple[int,int]:
+        """Find a free cell in range
+
+        Args:
+            subgrid (_type_): subgrid to look for free cell
+            radius (int, optional): radius of search. Defaults to 1.
+
+        Returns:
+            Tuple[int,int]: coordinates of the free cell
+        """        
+        position = self.position
+        for x in range(-radius,radius):
+            for y in range(-radius,radius):
+                coordinate = tuple(np.add(position,(x,y)))
+                if subgrid.get_position_value(position=coordinate) == None:
+                    return coordinate
+        return None
         
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
