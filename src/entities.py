@@ -59,12 +59,7 @@ class Entity(pg.sprite.Sprite):
             cell_coordinates (Tuple[int,int]): the coordinates of the cell on which to drop energy
         """        
         if self._check_coordinates(coordinates=cell_coordinates, subgrid=self.grid.energy_grid):
-            energy_amount = self._energies_stock[energy_type.value]
-            if  energy_amount - quantity > 0:
-                self._energies_stock[energy_type.value] -= quantity
-            else:
-                quantity = energy_amount
-                self._energies_stock[energy_type.value] = 0   
+            self.loose_energy(energy_type=energy_type, quantity=quantity)   
                 
             self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell_coordinates)
             
@@ -79,6 +74,20 @@ class Entity(pg.sprite.Sprite):
         if energy:
             self.energies_stock[energy.type.value] += energy.quantity
             energy_grid.update_grid_cell_value(position=cell_coordinates, value=None)
+            
+    def loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
+        """Loose energy from energies stock
+
+        Args:
+            energy_type (EnergyType): the type of energy to loose
+            quantity (int): amount of energy to loose
+        """
+        energy_amount = self._energies_stock[energy_type.value]
+        if energy_amount - quantity > 0:
+            self._energies_stock[energy_type.value] -= quantity
+        else:
+            quantity = energy_amount
+            self._energies_stock[energy_type.value] = 0 
         
         
 
