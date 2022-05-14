@@ -16,11 +16,17 @@ class TestEnergies:
     def test_create_energies(self):
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
+        self.grid.create_energy(energy_type=energies.EnergyType.BLUE, quantity=10, cell=(4,4))
+        self.grid.create_energy(energy_type=energies.EnergyType.RED, quantity=10, cell=(4,5))
+        blue_energy2 = self.grid.energy_grid.get_position_value(position=(4,4))
+        red_energy2 =self.grid.energy_grid.get_position_value(position=(4,5))
         
         assert type(blue_energy) == energies.BlueEnergy
         assert type(red_energy) == energies.RedEnergy
         assert blue_energy.__class__.__base__ == energies.Energy
         assert red_energy.__class__.__base__ == energies.Energy
+        assert self.grid.energy_group.has(blue_energy2)
+        assert self.grid.energy_group.has(red_energy2)
         #{'_Sprite__g': {}, 'type': <EnergyType.BLUE: 0>, 'quantity': 10, 'position': (4, 5), 'image': <Surface(10x10x32 SW)>, 'rect': <rect(85, 105, 10, 10)>, 'grid': <__main__.Grid object at 0x000001751E453A90>}
         
     def test_energies_fields(self):

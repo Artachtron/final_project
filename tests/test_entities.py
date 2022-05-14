@@ -3,10 +3,9 @@ import pytest
 import sys, os
 import pygame as pg
 
-from project.src.energies import EnergyType
-
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
-from project.src import world, entities
+from project.src import world, entities, energies
+from project.src.energies import EnergyType, BlueEnergy, RedEnergy
 
 class TestTree:
     @pytest.fixture(autouse=True)
@@ -140,10 +139,18 @@ class TestAnimal:
         animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell=blue_cell)
         assert animal.energies_stock == {"blue energy": 4, "red energy": 10}
         assert animal.get_blue_energy() == 4
-        assert self.grid.energy_grid.get_position_value(position=blue_cell) != None
+        blue_energy = self.grid.energy_grid.get_position_value(position=blue_cell)
+        assert blue_energy != None
+        assert self.grid.energy_group.has(blue_energy)
+        assert type(blue_energy).__name__ == 'BlueEnergy'
         
         red_cell = (3,2)
+        assert self.grid.energy_grid.get_position_value(position=red_cell) == None
         assert animal.get_red_energy() == 10
         animal.drop_energy(energy_type=EnergyType.RED, quantity=3, cell=red_cell)
         assert animal.energies_stock == {"blue energy": 4, "red energy": 7}
         assert animal.get_red_energy() == 7
+        red_energy = self.grid.energy_grid.get_position_value(position=red_cell)
+        assert red_energy != None
+        assert self.grid.energy_group.has(red_energy)
+        assert type(red_energy).__name__ == 'RedEnergy'
