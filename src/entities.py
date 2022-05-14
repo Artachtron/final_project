@@ -58,10 +58,10 @@ class Entity(pg.sprite.Sprite):
             quantity (int): the amount of energy to drop
             cell_coordinates (Tuple[int,int]): the coordinates of the cell on which to drop energy
         """        
-        if self._check_coordinates(coordinates=cell_coordinates, subgrid=self.grid.energy_grid):
+        if self._check_coordinates(cell_coordinates=cell_coordinates, subgrid=self.grid.energy_grid):
             self.loose_energy(energy_type=energy_type, quantity=quantity)   
                 
-            self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell_coordinates)
+            self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell_coordinates=cell_coordinates)
             
     def pick_up_energy(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -73,8 +73,8 @@ class Entity(pg.sprite.Sprite):
         energy: Energy = energy_grid.get_position_value(position=cell_coordinates)
         if energy:
             self.energies_stock[energy.type.value] += energy.quantity
-            energy_grid.update_grid_cell_value(position=cell_coordinates, value=None)
-            
+            self.grid.remove_energy(cell_coordinates=cell_coordinates)
+                        
     def loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Loose energy from energies stock
 
@@ -88,34 +88,13 @@ class Entity(pg.sprite.Sprite):
         else:
             quantity = energy_amount
             self._energies_stock[energy_type.value] = 0 
-        
-        
-
-class Animal(Entity):
-    def __init__(self, *args, **kwargs):
-        super(Animal, self).__init__(image_filename='Animal.png',*args, **kwargs)
-        
-    """ def tmp_input(self):
-        keys = pg.key.get_pressed()
-        if keys[pg.K_UP]:
-            pass """
-        
-    def move(self, direction: Direction) -> None:
-        """Move the animal in the given direction
-
-        Args:
-            direction (Direction): direction in which to move
-        """
-        next_move = tuple(np.add(self.position, direction.value))
-        if self._check_coordinates(coordinates=next_move, subgrid=self.grid.entity_grid):
-            self.entity_grid.update_grid_cell_value(position=(self.position), value=None)
-            self.entity_grid.update_grid_cell_value(position=next_move, value=self)
-            self.position = next_move
-                   
-            self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
-            self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
             
-    def _check_coordinates(self, coordinates: Tuple[int,int], subgrid) -> bool:
+    def grow(self) -> None:
+        energy_required = self.size * 10
+        if self.energies_stock["red energy"] >= energy_required:
+            self.energies_stock["red energy"] -= energy_required
+            
+    def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
 
         Args:
@@ -124,7 +103,7 @@ class Animal(Entity):
         Returns:
             bool: Validity of the next move
         """
-        return self._is_cell_in_bounds(next_move=coordinates, subgrid=subgrid) and self._is_vacant_cell(next_move=coordinates, subgrid=subgrid)
+        return self._is_cell_in_bounds(next_move=cell_coordinates, subgrid=subgrid) and self._is_vacant_cell(next_move=cell_coordinates, subgrid=subgrid)
      
     def _is_vacant_cell(self, subgrid, next_move: Tuple[int,int])-> bool:
         """Check if a cell is vacant
@@ -151,6 +130,31 @@ class Animal(Entity):
             return False
         return True
         
+        
+class Animal(Entity):
+    def __init__(self, *args, **kwargs):
+        super(Animal, self).__init__(image_filename='Animal.png',*args, **kwargs)
+        
+    """ def tmp_input(self):
+        keys = pg.key.get_pressed()
+        if keys[pg.K_UP]:
+            pass """
+        
+    def move(self, direction: Direction) -> None:
+        """Move the animal in the given direction
+
+        Args:
+            direction (Direction): direction in which to move
+        """
+        next_move = tuple(np.add(self.position, direction.value))
+        if self._check_coordinates(cell_coordinates=next_move, subgrid=self.grid.entity_grid):
+            self.entity_grid.update_grid_cell_value(position=(self.position), value=None)
+            self.entity_grid.update_grid_cell_value(position=next_move, value=self)
+            self.position = next_move
+                   
+            self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
+            self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
+                    
     def update(self) -> None:
         """Update the Animal"""
         self.test_update()
@@ -162,7 +166,7 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
-            if self._check_coordinates(coordinates=coordinates, subgrid=self.grid.energy_grid):
+            if self._check_coordinates(cell_coordinates=coordinates, subgrid=self.grid.energy_grid):
                 self.drop_energy(energy_type=np.random.choice(EnergyType), cell_coordinates=coordinates, quantity=1)
         self.move(direction=direction)
         

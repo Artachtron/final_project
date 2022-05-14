@@ -16,8 +16,8 @@ class TestEnergies:
     def test_create_energies(self):
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
-        self.grid.create_energy(energy_type=energies.EnergyType.BLUE, quantity=10, cell=(4,4))
-        self.grid.create_energy(energy_type=energies.EnergyType.RED, quantity=10, cell=(4,5))
+        self.grid.create_energy(energy_type=energies.EnergyType.BLUE, quantity=10, cell_coordinates=(4,4))
+        self.grid.create_energy(energy_type=energies.EnergyType.RED, quantity=10, cell_coordinates=(4,5))
         blue_energy2 = self.grid.energy_grid.get_position_value(position=(4,4))
         red_energy2 =self.grid.energy_grid.get_position_value(position=(4,5))
         
