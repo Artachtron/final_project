@@ -246,16 +246,28 @@ class TestEntityEnergy:
         assert self.entity.energies_stock == {"blue energy": 5, "red energy": 10}
         assert self.entity.get_red_energy() == 10
         assert self.entity.size == 1
+        assert self.entity.max_age == self.entity.size*5
+        
+        # Grow
         self.entity.grow()
         assert self.entity.get_red_energy() == 0
         assert self.entity.size == 2
+        assert self.entity.max_age == 10
         
     def test_age(self):
         assert self.entity.age == 0
         self.entity.increase_age()
+        
+        # +1
         assert self.entity.age == 1
-        self.entity.increase_age(amount=5)
-        assert self.entity.age == 6
+        
+        # +5
+        self.entity.increase_age(amount=4)
+        assert self.entity.age == 5
+        
+        # Above max age
+        self.entity.increase_age()
+        assert self.grid.entity_grid.get_position_value(position=self.entity.position) == None
         
     def test_die(self):
         assert self.entity

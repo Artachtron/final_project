@@ -21,6 +21,7 @@ class Entity(pg.sprite.Sprite):
                  image_filename: str,
                  grid,
                  position: Tuple[int,int],
+                 max_age: int = 0,
                  size: int=20,
                  blue_energy: int=10,
                  red_energy: int=10,
@@ -28,6 +29,7 @@ class Entity(pg.sprite.Sprite):
         super().__init__()
         self.size = size
         self.age = 0
+        self.max_age = max_age if max_age else size*5
         self.position = position
         
         image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
@@ -97,6 +99,7 @@ class Entity(pg.sprite.Sprite):
         if self.energies_stock["red energy"] >= energy_required:
             self.energies_stock["red energy"] -= energy_required
             self.size += 1
+            self.max_age += 5
             
     def increase_age(self, amount: int=1) -> None:
         """Increase age of certain amount
@@ -106,7 +109,12 @@ class Entity(pg.sprite.Sprite):
         """        
         self.age += amount
         
+        if self.age > self.max_age:
+            self.die()
+        
     def die(self) -> None:
+        """Death of the entity
+        """
         self.grid.remove_entity(entity=self)
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
