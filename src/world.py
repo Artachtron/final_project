@@ -89,7 +89,14 @@ class Grid:
     def width(self) -> int:
         return self._width
     
-    def create_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int, int]):
+    def create_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int, int]) -> None:
+        """Create energy on the grid
+
+        Args:
+            energy_type (EnergyType): type of energy to be created
+            quantity (int): amount of energy to be created
+            cell (Tuple[int, int]): cell of the grid on which the energy should be created
+        """        
         print(f"{energy_type} is created at {cell}")
         match energy_type.value:
             case "blue energy":

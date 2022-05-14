@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Tuple
 import enum
 import random
-import operator
 from energies import EnergyType
 import numpy as np
 
@@ -52,14 +51,15 @@ class Entity(pg.sprite.Sprite):
         return self._energies_stock["red energy"]
     
     def drop_energy(self, energy_type: EnergyType, quantity: int, cell: Tuple[int,int]):
-        energy_amount = self._energies_stock[energy_type.value]
-        if  energy_amount - quantity > 0:
-            self._energies_stock[energy_type.value] -= quantity
-        else:
-            quantity = energy_amount
-            self._energies_stock[energy_type.value] = 0   
-            
-        self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell)
+        if self._check_coordinates(coordinates=cell, subgrid=self.grid.energy_grid):
+            energy_amount = self._energies_stock[energy_type.value]
+            if  energy_amount - quantity > 0:
+                self._energies_stock[energy_type.value] -= quantity
+            else:
+                quantity = energy_amount
+                self._energies_stock[energy_type.value] = 0   
+                
+            self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell=cell)
         
 
 class Animal(Entity):
@@ -78,7 +78,7 @@ class Animal(Entity):
             direction (Direction): direction in which to move
         """
         next_move = tuple(np.add(self.position, direction.value))
-        if self._check_coordinates(coordinates=next_move):
+        if self._check_coordinates(coordinates=next_move, subgrid=self.grid.entity_grid):
             self.entity_grid.update_grid_cell_value(position=(self.position), value=None)
             self.entity_grid.update_grid_cell_value(position=next_move, value=self)
             self.position = next_move
@@ -86,7 +86,7 @@ class Animal(Entity):
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
             
-    def _check_coordinates(self, coordinates: Tuple[int,int]) -> bool:
+    def _check_coordinates(self, coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
 
         Args:
@@ -95,9 +95,9 @@ class Animal(Entity):
         Returns:
             bool: Validity of the next move
         """
-        return self._is_cell_in_bounds(next_move=coordinates) and self._is_vacant_cell(next_move=coordinates)
+        return self._is_cell_in_bounds(next_move=coordinates, subgrid=subgrid) and self._is_vacant_cell(next_move=coordinates, subgrid=subgrid)
      
-    def _is_vacant_cell(self, next_move: Tuple[int,int])-> bool:
+    def _is_vacant_cell(self, subgrid, next_move: Tuple[int,int])-> bool:
         """Check if a cell is vacant
 
         Args:
@@ -106,9 +106,9 @@ class Animal(Entity):
         Returns:
             bool: Vacancy of the cell
         """
-        return not self.entity_grid.get_position_value(position=next_move)
+        return not subgrid.get_position_value(position=next_move)
      
-    def _is_cell_in_bounds(self, next_move: Tuple[int,int])-> bool:
+    def _is_cell_in_bounds(self, subgrid, next_move: Tuple[int,int])-> bool:
         """Check if a cell is in the bounds of the grid
 
         Args:
@@ -118,7 +118,7 @@ class Animal(Entity):
             bool: Cell is inside the grid
         """
         next_x, next_y = next_move
-        if next_x < 0 or next_x >= self.entity_grid.dimensions[0] or next_y < 0 or next_y >= self.entity_grid.dimensions[1]:
+        if next_x < 0 or next_x >= subgrid.dimensions[0] or next_y < 0 or next_y >= subgrid.dimensions[1]:
             return False
         return True
         
@@ -127,12 +127,13 @@ class Animal(Entity):
         self.test_update()
         
     def test_update(self) -> None:
+        """Test behaviour by doing random actions"""
         direction = random.choice(list(Direction))
         #print(direction)
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
-            if self._check_coordinates(coordinates=coordinates):
+            if self._check_coordinates(coordinates=coordinates, subgrid=self.grid.energy_grid):
                 self.drop_energy(energy_type=np.random.choice(EnergyType), cell=coordinates, quantity=1)
         self.move(direction=direction)
         

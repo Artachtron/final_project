@@ -76,20 +76,27 @@ class TestAnimal:
     def test_move(self):
         animal = entities.Animal(grid=self.grid, position=(3,3))
         
+        # Down
         assert animal.position == (3,3)
         assert self.entity_grid.get_position_value(position=(3,4)) == None
         animal.move(entities.Direction.DOWN)
         assert animal.position == (3,4)
         assert self.entity_grid.get_position_value(position=(3,4)) == animal
         assert self.entity_grid.get_position_value(position=(3,3)) == None
+        
+           # Up
         animal.move(entities.Direction.UP)
         assert animal.position == (3,3)
         assert self.entity_grid.get_position_value(position=(3,3)) == animal
         assert self.entity_grid.get_position_value(position=(2,3)) == None
+        
+         # Left
         animal.move(entities.Direction.LEFT)
         assert animal.position == (2,3)
         assert self.entity_grid.get_position_value(position=(2,3)) == animal
         assert self.entity_grid.get_position_value(position=(3,3)) == None
+        
+        # Right
         animal.move(entities.Direction.RIGHT)
         assert animal.position == (3,3)
         assert self.entity_grid.get_position_value(position=(3,3)) == animal
@@ -98,6 +105,7 @@ class TestAnimal:
         animal = entities.Animal(grid=self.grid, position=(3,3))
         animal2 = entities.Animal(grid=self.grid, position=(3,4))
         
+        # Move on already occupied cell
         assert animal.position == (3,3)
         assert self.entity_grid.get_position_value(position=(3,4)) == animal2
         assert animal2.position == (3,4)
@@ -109,22 +117,27 @@ class TestAnimal:
     def test_move_out_of_bounds_cell(self):
         animal = entities.Animal(grid=self.grid, position=(0,0))
         
+        # Left
         assert animal.position == (0,0)
         assert self.entity_grid.get_position_value(position=(0,0)) == animal
         animal.move(entities.Direction.LEFT)
         assert animal.position == (0,0)
         assert self.entity_grid.get_position_value(position=(0,0)) == animal
         
+        # Up
         animal.move(entities.Direction.UP)
         assert animal.position == (0,0)
         assert self.entity_grid.get_position_value(position=(0,0)) == animal
         
+        # Right
         animal2 = entities.Animal(grid=self.grid, position=(4,9))
         assert animal2.position == (4,9)
         assert self.entity_grid.get_position_value(position=(4,9)) == animal2
         animal2.move(entities.Direction.RIGHT)
         assert animal2.position == (4,9)
         assert self.entity_grid.get_position_value(position=(4,9)) == animal2
+        
+        #Down
         animal2.move(entities.Direction.DOWN)
         assert animal2.position == (4,9)
         assert self.entity_grid.get_position_value(position=(4,9)) == animal2
@@ -134,6 +147,7 @@ class TestAnimal:
         assert animal.energies_stock == {"blue energy": 5, "red energy": 10}
         assert animal.get_blue_energy() == 5
         
+        # Drop blue energy
         blue_cell = (1,1)
         assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
         animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell=blue_cell)
@@ -144,6 +158,7 @@ class TestAnimal:
         assert self.grid.energy_group.has(blue_energy)
         assert type(blue_energy).__name__ == 'BlueEnergy'
         
+        # Drop red energy
         red_cell = (3,2)
         assert self.grid.energy_grid.get_position_value(position=red_cell) == None
         assert animal.get_red_energy() == 10
@@ -154,3 +169,12 @@ class TestAnimal:
         assert red_energy != None
         assert self.grid.energy_group.has(red_energy)
         assert type(red_energy).__name__ == 'RedEnergy'
+        
+        # Do not drop energy if cell already contains energy
+        animal.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell=red_cell)
+        assert animal.energies_stock == {"blue energy": 4, "red energy": 7}
+        assert animal.get_blue_energy() == 4
+        red_energy2 = self.grid.energy_grid.get_position_value(position=red_cell)
+        assert red_energy2 != None
+        assert self.grid.energy_group.has(red_energy2)
+        assert type(red_energy2).__name__ == 'RedEnergy' 
