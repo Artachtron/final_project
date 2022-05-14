@@ -45,7 +45,7 @@ class SubGrid:
 
         
 class Grid:
-    def __init__(self, height: int, width: int, block_size: int):
+    def __init__(self, height: int, width: int, block_size: int=20):
         self._height = height
         self._width = width
         self.dimensions = (self._width, self._height)

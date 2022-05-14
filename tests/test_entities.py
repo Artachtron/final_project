@@ -3,14 +3,16 @@ import pytest
 import sys, os
 import pygame as pg
 
+
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
-from project.src import world, entities, energies
-from project.src.energies import EnergyType, BlueEnergy, RedEnergy
+from project.src import world, entities
+from project.src.energies import EnergyType
+from project.src.grid import Grid
 
 class TestTree:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.grid = world.Grid(width=5, height=10)
+        self.grid = Grid(width=5, height=10)
         self.entity_grid = self.grid.entity_grid
         world.init_pygame()
         yield
