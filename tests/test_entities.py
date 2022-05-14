@@ -170,6 +170,7 @@ class TestEntityEnergy:
     def test_drop_energy(self):
         assert self.entity.energies_stock == {"blue energy": 5, "red energy": 10}
         assert self.entity.get_blue_energy() == 5
+        self.entity.action_cost = 0
         
         # Drop blue energy
         blue_cell = (1,1)
@@ -181,6 +182,7 @@ class TestEntityEnergy:
         assert blue_energy != None
         assert self.grid.energy_group.has(blue_energy)
         assert type(blue_energy).__name__ == 'BlueEnergy'
+        assert blue_energy.quantity == 1
         
         # Drop red energy
         red_cell = (3,2)
@@ -193,8 +195,9 @@ class TestEntityEnergy:
         assert red_energy != None
         assert self.grid.energy_group.has(red_energy)
         assert type(red_energy).__name__ == 'RedEnergy'
+        assert red_energy.quantity == 3
         
-        #Drop energy on occupied cell
+        # Drop energy on occupied cell
         self.entity.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell_coordinates=red_cell)
         assert self.entity.energies_stock == {"blue energy": 4, "red energy": 7}
         assert self.entity.get_blue_energy() == 4
@@ -202,8 +205,41 @@ class TestEntityEnergy:
         assert red_energy2 != None
         assert self.grid.energy_group.has(red_energy2)
         assert type(red_energy2).__name__ == 'RedEnergy' 
+        assert red_energy.quantity == 3
         
+        # Drop too much energy
+        red_cell2 = (3,3)
+        assert self.grid.energy_grid.get_position_value(position=red_cell2) == None
+        assert self.entity.get_red_energy() == 7
+        self.entity.drop_energy(energy_type=EnergyType.RED, quantity=10, cell_coordinates=red_cell2)
+        assert self.entity.energies_stock == {"blue energy": 4, "red energy": 0}
+        assert self.entity.get_red_energy() == 0
+        red_energy2 = self.grid.energy_grid.get_position_value(position=red_cell2)
+        assert red_energy2.quantity == 7
+        
+    def test_actions_cost(self):
+        entity = self.entity
+        entity.energies_stock['blue energy'] = 10
+        
+        assert self.entity.get_blue_energy() == 10
+        
+        entity.move(entities.Direction.LEFT)
+        assert self.entity.get_blue_energy() == 9
+        
+        entity.increase_age()
+        assert self.entity.get_blue_energy() == 8
+        
+        entity.grow()
+        assert self.entity.get_blue_energy() == 7
+                
+        entity.drop_energy(energy_type=EnergyType.RED, quantity=1, cell_coordinates=(1,1))
+        assert self.entity.get_blue_energy() == 5
+        
+        entity.pick_up_energy(cell_coordinates=(1,1))
+        assert self.entity.get_blue_energy() == 3
+
     def test_pick_up_energy(self):
+        self.entity.action_cost = 0
         assert self.entity.energies_stock == {"blue energy": 5, "red energy": 10}
         assert self.entity.get_blue_energy() == 5
         
@@ -247,12 +283,14 @@ class TestEntityEnergy:
         assert self.entity.get_red_energy() == 10
         assert self.entity.size == 1
         assert self.entity.max_age == self.entity.size*5
+        assert self.entity.action_cost == 1
         
         # Grow
         self.entity.grow()
         assert self.entity.get_red_energy() == 0
         assert self.entity.size == 2
         assert self.entity.max_age == 10
+        assert self.entity.action_cost == 2
         
     def test_age(self):
         assert self.entity.age == 0
@@ -278,4 +316,9 @@ class TestEntityEnergy:
         # Die
         self.entity.die()
         assert self.grid.entity_grid.get_position_value(position=position) == None
+        assert not self.grid.entity_group.has(self.entity)
+        
+    def test_run_out_of_energy(self):
+        assert self.grid.entity_group.has(self.entity)
+        self.entity.loose_energy(energy_type=EnergyType.BLUE, quantity=5)
         assert not self.grid.entity_group.has(self.entity)

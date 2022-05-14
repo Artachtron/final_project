@@ -1,3 +1,4 @@
+from tkinter import E
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
@@ -28,6 +29,7 @@ class Entity(pg.sprite.Sprite):
                  ):
         super().__init__()
         self.size = size
+        self.action_cost = 1
         self.age = 0
         self.max_age = max_age if max_age else size*5
         self.position = position
@@ -62,9 +64,11 @@ class Entity(pg.sprite.Sprite):
             cell_coordinates (Tuple[int,int]): the coordinates of the cell on which to drop energy
         """        
         if self._check_coordinates(cell_coordinates=cell_coordinates, subgrid=self.grid.energy_grid):
-            self.loose_energy(energy_type=energy_type, quantity=quantity)   
+            quantity = self.loose_energy(energy_type=energy_type, quantity=quantity)   
                 
             self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell_coordinates=cell_coordinates)
+            
+        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
             
     def pick_up_energy(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -77,6 +81,8 @@ class Entity(pg.sprite.Sprite):
         if energy:
             self.energies_stock[energy.type.value] += energy.quantity
             self.grid.remove_energy(energy=energy)
+            
+        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
                         
     def loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Loose energy from energies stock
@@ -91,15 +97,22 @@ class Entity(pg.sprite.Sprite):
         else:
             quantity = energy_amount
             self._energies_stock[energy_type.value] = 0 
+        
+        if self._energies_stock[EnergyType.BLUE.value] <= 0:
+            self.die()
+            
+        return quantity
             
     def grow(self) -> None:
         """grow the entity to bigger size, consumming red energy
-        """        
+        """  
+        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)      
         energy_required = self.size * 10
         if self.energies_stock["red energy"] >= energy_required:
             self.energies_stock["red energy"] -= energy_required
             self.size += 1
             self.max_age += 5
+            self.action_cost += 1
             
     def increase_age(self, amount: int=1) -> None:
         """Increase age of certain amount
@@ -108,6 +121,7 @@ class Entity(pg.sprite.Sprite):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """        
         self.age += amount
+        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
         
         if self.age > self.max_age:
             self.die()
@@ -177,6 +191,7 @@ class Animal(Entity):
                    
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
+        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
                     
     def update(self) -> None:
         """Update the Animal"""
