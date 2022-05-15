@@ -158,6 +158,38 @@ class TestAnimal:
         animal.die()
         assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 5
         
+class TestEntityMethods:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.grid = world.Grid(width=5, height=10)
+        self.entity_grid = self.grid.entity_grid
+        world.init_pygame()
+        self.entity = self.grid.create_entity(size=1, position=(1,1), blue_energy=5, red_energy=10, entity_type="animal")
+        yield
+        
+    def test_find_free_cell(self):
+        cells = []
+        position = self.entity.position
+        radius = 1
+        for x in range(-radius,radius+1):
+            for y in range(-radius,radius+1):
+                cells.append(tuple(np.add(position,(x,y))))
+        
+        for _ in range(100):
+            free_cell = self.entity._find_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            assert free_cell in cells
+            
+        position = (3,5)
+        self.entity.position = position
+        radius = 2
+        cells = []
+        for x in range(-radius,radius+1):
+            for y in range(-radius,radius+1):
+                cells.append(tuple(np.add(position,(x,y))))
+        
+        for _ in range(100):
+            free_cell = self.entity._find_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            assert free_cell in cells
     
 class TestEntityEnergy:
     @pytest.fixture(autouse=True)

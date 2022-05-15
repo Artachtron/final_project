@@ -43,7 +43,7 @@ class Entity(pg.sprite.Sprite):
         self.entity_grid = grid.entity_grid
         self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
         
-        self._energies_stock = {"blue energy": blue_energy, "red energy": red_energy}
+        self._energies_stock = {EnergyType.BLUE.value: blue_energy, EnergyType.RED.value: red_energy}
         
     @property
     def energies_stock(self):
@@ -133,6 +133,7 @@ class Entity(pg.sprite.Sprite):
         self.grid.remove_entity(entity=self)
         
     def on_death(self):
+        """Event on death"""
         pass
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
@@ -182,12 +183,19 @@ class Entity(pg.sprite.Sprite):
             Tuple[int,int]: coordinates of the free cell
         """        
         position = self.position
+        free_cells = []
         for x in range(-radius,radius+1):
             for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
                 if subgrid.get_position_value(position=coordinate) == None:
-                    return coordinate
+                    free_cells.append(coordinate)
+                    
+        if len(free_cells) != 0:    
+            return random.choice(free_cells)
+        
         return None
+        
+        
         
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
@@ -218,6 +226,8 @@ class Animal(Entity):
         energy_grid = self.grid.energy_grid
         free_cell = self._find_free_cell(subgrid=energy_grid)
         self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell)
+        free_cell = self._find_free_cell(subgrid=energy_grid)
+        self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=self.energies_stock[EnergyType.BLUE.value], cell_coordinates=free_cell)
         print("animal death")
                     
     def update(self) -> None:
@@ -228,18 +238,18 @@ class Animal(Entity):
         """Test behaviour by doing random actions"""
         direction = random.choice(list(Direction))
         #print(direction)
-        if np.random.uniform() < 0.1:
+        if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
             if self._check_coordinates(cell_coordinates=coordinates, subgrid=self.grid.energy_grid):
                 self.drop_energy(energy_type=np.random.choice(EnergyType), cell_coordinates=coordinates, quantity=1)
                 
-        if np.random.uniform() < 0.5:
+        if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
             self.pick_up_energy(cell_coordinates=coordinates)
         
-        self.die()
+        #self.die()
         
         self.move(direction=direction)
         
