@@ -357,14 +357,17 @@ class Tree(Entity):
         
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""
-        Seed(grid=self.grid, position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy())
+        self.grid.create_entity(entity_type="seed", position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy())
+    
+    def update(self):
+        self.die()
 
        
 class Seed(EntitySprite):
     def __init__(self,
                  grid,
                  position: Tuple[int,int],
-                 size: int=10,
+                 size: int=15,
                  blue_energy: int=0,
                  red_energy: int=0,
                  ):

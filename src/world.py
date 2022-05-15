@@ -76,12 +76,12 @@ def init_animals(grid: Grid, count: int = 0) -> None:
         grid (Grid): grid on which the population will be initialized
         count (int, optional): number of animals to create. Defaults to 0.
     """    
-    global animal_group
-    animal_group = grid.entity_group
+    global entity_group
+    entity_group = grid.entity_group
     
     for _ in range(count):
         animal: Animal = create_new_animal(grid=grid)
-        animal_group.add(animal)
+        entity_group.add(animal)
     
 def create_new_animal(grid: Grid) -> Animal:
     """Create a new animal in a vacant cell
@@ -117,12 +117,12 @@ def init_trees(grid: Grid, count: int=0) -> None:
         grid (Grid): grid on which the population will be initialized
         count (int, optional): number of trees to create. Defaults to 0.
     """    
-    global tree_group
-    tree_group = pg.sprite.Group()
+    """ global tree_group
+    tree_group = pg.sprite.Group() """
     
     for _ in range(count):
         tree: Tree = create_new_tree(grid=grid)
-        tree_group.add(tree)
+        entity_group.add(tree)
     """ for i in range(0,5):
         tree_group.add(entities.Tree(grid=grid, position=(7,8+i)))
         tree_group.add(entities.Tree(grid=grid, position=(7+i,8)))
@@ -180,12 +180,13 @@ def update_world() -> None:
 
 def update_entities() -> None:
     """Update the entities"""
-    animal_group.update()
+    entity_group.update()
+    #tree_group.update()
         
 def draw_entities() -> None:
     """Draw the entities"""
-    animal_group.draw(SCREEN)
-    tree_group.draw(SCREEN)
+    entity_group.draw(SCREEN)
+    #tree_group.draw(SCREEN)
 
 def draw_energies() -> None:
     """Draw the energies"""

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Tuple
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType
-from entities import Entity, Animal, Tree
+from entities import Entity, Animal, Tree, Seed
 import pygame as pg
 
 class SubGrid:
@@ -124,6 +124,8 @@ class Grid:
             case "tree":
                 production_type = np.random.choice(list(EnergyType))
                 entity = Tree(grid=self, production_type=production_type, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy)
+            case "seed":
+                entity = Seed(grid=self, position=position, blue_energy=blue_energy,red_energy=red_energy)
         
         self.entity_group.add(entity)
         return entity

@@ -295,8 +295,7 @@ class TestAnimal:
         animal2 = grid2.create_entity(entity_type="animal", position=(0,0), size=10, blue_energy=10, red_energy=10)
         animal2.plant_tree()
         assert len(animal2._find_tree_cells(include_self=True, radius=1)) == 0
-
-        
+       
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)
