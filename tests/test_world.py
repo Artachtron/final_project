@@ -39,6 +39,8 @@ class TestGrid:
         array = np.zeros(self.grid.dimensions, dtype=int)
         pos_1 = (5,0)
         pos_2 = (0,11)
+        pos_3 = (-1,0)
+        pos_4 = (0,-1)
         
         with pytest.raises(IndexError):
             array[pos_1]
@@ -53,9 +55,12 @@ class TestGrid:
             self.entity_grid.update_grid_cell_value(position=pos_2, value=1)
         except IndexError:
             pytest.fail("Unexpected IndexError")
-                
-        assert self.entity_grid.get_position_value(position=pos_1) == 0
-        assert self.entity_grid.get_position_value(position=pos_2) == 0
+                    
+        assert not self.entity_grid.get_position_value(position=pos_1)
+        assert not self.entity_grid.get_position_value(position=pos_2)
+        assert not self.entity_grid.get_position_value(position=pos_3)
+        assert not self.entity_grid.get_position_value(position=pos_4)
+        
         
 class TestWorld:
     

@@ -28,7 +28,7 @@ class SubGrid:
         except IndexError:
             print("{position} is out of bounds")
             
-    def get_position_value(self, position: Tuple[int, int]) -> int:
+    def get_position_value(self, position: Tuple[int, int]) -> Entity|Energy:
         """Get the value of a cell
 
         Args:
@@ -38,10 +38,12 @@ class SubGrid:
             int: The value of the cell 0 for empty, 1 for full
         """
         try:
+            if position[0] < 0 or position[1] < 0:
+                raise IndexError
             return self._subgrid[position]
         except IndexError:
             print(f"{position} is out of bounds")
-            return 0
+            return False
 
         
 class Grid:
@@ -87,7 +89,7 @@ class Grid:
                 energy = BlueEnergy(grid=self, position=cell_coordinates, quantity=quantity)
             case EnergyType.RED.value:
                 energy = RedEnergy(grid=self, position=cell_coordinates, quantity=quantity)
-            
+          
         self.energy_group.add(energy)
 
                 

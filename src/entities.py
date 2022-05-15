@@ -129,11 +129,11 @@ class Entity(pg.sprite.Sprite):
     def die(self) -> None:
         """Death of the entity
         """
-        energy_grid = self.grid.energy_grid
-        free_cell = self._find_free_cell(subgrid=energy_grid)
-        self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell) 
-        
+        self.on_death()
         self.grid.remove_entity(entity=self)
+        
+    def on_death(self):
+        pass
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
@@ -182,8 +182,8 @@ class Entity(pg.sprite.Sprite):
             Tuple[int,int]: coordinates of the free cell
         """        
         position = self.position
-        for x in range(-radius,radius):
-            for y in range(-radius,radius):
+        for x in range(-radius,radius+1):
+            for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
                 if subgrid.get_position_value(position=coordinate) == None:
                     return coordinate
@@ -213,6 +213,12 @@ class Animal(Entity):
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
         self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+    
+    def on_death(self):
+        energy_grid = self.grid.energy_grid
+        free_cell = self._find_free_cell(subgrid=energy_grid)
+        self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell)
+        print("animal death")
                     
     def update(self) -> None:
         """Update the Animal"""
@@ -232,6 +238,8 @@ class Animal(Entity):
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
             self.pick_up_energy(cell_coordinates=coordinates)
+        
+        self.die()
         
         self.move(direction=direction)
         

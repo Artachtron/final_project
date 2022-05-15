@@ -142,6 +142,22 @@ class TestAnimal:
         animal2.move(entities.Direction.DOWN)
         assert animal2.position == (4,9)
         assert self.entity_grid.get_position_value(position=(4,9)) == animal2
+        
+    def test_drop_energy_on_death(self):
+        # Drop all energy on death
+        animal = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
+        free_cell = animal._find_free_cell(subgrid=self.grid.energy_grid)
+        assert self.grid.energy_grid.get_position_value(position=free_cell) == None
+        animal.die()
+        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 10
+        
+        # Drop energy left on death
+        self.grid.energy_grid.update_grid_cell_value(position=free_cell, value=None)
+        animal = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
+        animal.drop_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=(3,3))
+        animal.die()
+        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 5
+        
     
 class TestEntityEnergy:
     @pytest.fixture(autouse=True)
@@ -321,17 +337,4 @@ class TestEntityEnergy:
         self.entity.loose_energy(energy_type=EnergyType.BLUE, quantity=5)
         assert not self.grid.entity_group.has(self.entity)
         
-    def test_drop_energy_on_death(self):
-        # Drop all energy on death
-        position = self.entity.position
-        free_cell = tuple(np.add(position,(-1,-1)))
-        assert self.grid.energy_grid.get_position_value(position=free_cell) == None
-        self.entity.die()
-        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 10
-        
-        # Drop energy left on death
-        self.grid.energy_grid.update_grid_cell_value(position=free_cell, value=None)
-        entity = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
-        entity.drop_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=(3,3))
-        entity.die()
-        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 5
+    
