@@ -195,8 +195,7 @@ class Entity(pg.sprite.Sprite):
             return random.choice(free_cells)
         
         return None
-        
-        
+               
         
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
@@ -251,12 +250,20 @@ class Animal(Entity):
             self.pick_up_energy(cell_coordinates=coordinates)
         
         #self.die()
-        
         self.move(direction=direction)
         
 class Tree(Entity):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, production_type: EnergyType=None, *args, **kwargs):
         super(Tree, self).__init__(image_filename='Plant.png',*args, **kwargs)
+        if production_type:
+            self.production_type = production_type
+        else:
+            self.production_type = np.random.choice(list(EnergyType))
+        
+    def produce_energy(self):
+        self.energies_stock[self.production_type.value] += 5*self.size
+        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+       
 
        
 

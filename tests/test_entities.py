@@ -40,6 +40,26 @@ class TestTree:
 
         assert self.entity_grid.get_position_value(position=(3,4)) == None
         assert self.entity_grid.get_position_value(position=(3,3)) == tree
+    
+    def test_energy_production(self):
+        tree = entities.Tree(grid=self.grid, production_type=EnergyType.RED, position=(0,0), size=1, red_energy=5, blue_energy=5)
+        assert tree.get_red_energy() == 5
+        assert tree.get_blue_energy() == 5
+        tree.produce_energy()
+        assert tree.get_red_energy() == 10
+        assert tree.get_blue_energy() == 4
+        tree.size = 2
+        tree.produce_energy()
+        assert tree.get_red_energy() == 20
+        assert tree.get_blue_energy() == 3
+        
+        tree2 = entities.Tree(grid=self.grid, production_type=EnergyType.BLUE, position=(0,0), size=1, blue_energy=5, action_cost=0)
+        assert tree2.get_blue_energy() == 5
+        tree2.produce_energy()
+        assert tree2.get_blue_energy() == 10
+        tree2.size = 2
+        tree2.produce_energy()
+        assert tree2.get_blue_energy() == 20
 
 class TestAnimal:
     @pytest.fixture(autouse=True)

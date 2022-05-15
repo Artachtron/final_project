@@ -110,7 +110,8 @@ class Grid:
             case "animal":
                 entity = Animal(grid=self, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy)
             case "tree":
-                entity = Tree(grid=self, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy)
+                production_type = np.random.choice(list(EnergyType))
+                entity = Tree(grid=self, production_type=production_type, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy)
         
         self.entity_group.add(entity)
         return entity
