@@ -146,17 +146,65 @@ class TestAnimal:
     def test_drop_energy_on_death(self):
         # Drop all energy on death
         animal = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
-        free_cell = animal._find_free_cell(subgrid=self.grid.energy_grid)
-        assert self.grid.energy_grid.get_position_value(position=free_cell) == None
+        position = animal.position
         animal.die()
-        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 10
+                
+        energies = []
+        types = []
+        radius = 1
+        for x in range(-radius,radius+1):
+            for y in range(-radius,radius+1):
+                coordinate = tuple(np.add(position,(x,y)))
+                energy = self.grid.energy_grid.get_position_value(position=coordinate)
+                if energy:
+                    energies.append(energy)
+                    types.append(energy.type)
+                           
+        assert len(energies) == 2
+        blue = 0
+        red = 0
+        for energy_type, energy in zip(types,energies):
+            if energy_type.value == EnergyType.BLUE.value:
+                assert energy.quantity == 5 
+                blue += 1
+            elif energy_type.value == EnergyType.RED.value:
+                assert energy.quantity == 10  
+                red += 1
+        assert (blue,red) == (1,1)
+                
         
         # Drop energy left on death
-        self.grid.energy_grid.update_grid_cell_value(position=free_cell, value=None)
-        animal = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
-        animal.drop_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=(3,3))
-        animal.die()
-        assert self.grid.energy_grid.get_position_value(position=free_cell).quantity == 5
+        for energy in energies:
+            self.grid.remove_energy(energy=energy)
+            
+        animal2 = self.grid.create_entity(size=1, position=(0,0), blue_energy=6, red_energy=10, entity_type="animal")
+        animal2.action_cost = 0
+        animal2.drop_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=(4,7))
+        position = animal2.position
+        animal2.die()
+        
+        energies = []
+        types = []
+        radius = 1
+        for x in range(-radius,radius+1):
+            for y in range(-radius,radius+1):
+                coordinate = tuple(np.add(position,(x,y)))
+                energy = self.grid.energy_grid.get_position_value(position=coordinate)
+                if energy:
+                    energies.append(energy)
+                    types.append(energy.type)
+                           
+        assert len(energies) == 2
+        blue = 0
+        red = 0
+        for energy_type, energy in zip(types,energies):
+            if energy_type.value == EnergyType.BLUE.value:
+                assert energy.quantity == 6 
+                blue += 1
+            elif energy_type.value == EnergyType.RED.value:
+                assert energy.quantity == 5  
+                red += 1
+        assert (blue,red) == (1,1)
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)
@@ -189,6 +237,7 @@ class TestEntityMethods:
         
         for _ in range(100):
             free_cell = self.entity._find_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            assert free_cell 
             assert free_cell in cells
     
 class TestEntityEnergy:

@@ -26,10 +26,11 @@ class Entity(pg.sprite.Sprite):
                  size: int=20,
                  blue_energy: int=10,
                  red_energy: int=10,
+                 action_cost: int=1,
                  ):
         super().__init__()
         self.size = size
-        self.action_cost = 1
+        self.action_cost = action_cost
         self.age = 0
         self.max_age = max_age if max_age else size*5
         self.position = position
