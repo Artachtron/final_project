@@ -24,6 +24,8 @@ class EntitySprite(pg.sprite.Sprite):
                  grid,
                  position: Tuple[int,int],
                  size: int=20,
+                 blue_energy: int=10,
+                 red_energy: int=10,
                  ):
         super().__init__()
         self.position = position
@@ -32,6 +34,8 @@ class EntitySprite(pg.sprite.Sprite):
         self.image = pg.transform.scale(image, (size,size))
         pos_x, pos_y = self.position
         self.rect = self.image.get_rect(center=(pos_x * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
+        
+        self._energies_stock = {EnergyType.BLUE.value: blue_energy, EnergyType.RED.value: red_energy}
         
         self.grid = grid
         self.entity_grid = grid.entity_grid
@@ -44,17 +48,15 @@ class Entity(EntitySprite):
                  position: Tuple[int,int],
                  max_age: int = 0,
                  size: int=20,
+                 action_cost: int=1,
                  blue_energy: int=10,
                  red_energy: int=10,
-                 action_cost: int=1,
                  ):
-        super(Entity, self).__init__(image_filename=image_filename, size=size, grid=grid, position=position)
+        super(Entity, self).__init__(image_filename=image_filename, size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
         
         self.action_cost = action_cost
         self.age = 0
         self.max_age = max_age if max_age else size*5
-
-        self._energies_stock = {EnergyType.BLUE.value: blue_energy, EnergyType.RED.value: red_energy}
         
     @property
     def energies_stock(self):
@@ -142,11 +144,10 @@ class Entity(EntitySprite):
         """
         self.grid.remove_entity(entity=self)
         self.on_death()
-        
-        
+          
     def on_death(self):
         """Event on death"""
-        pass
+        print(f"{self} died")
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
@@ -284,13 +285,13 @@ class Animal(Entity):
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
         self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
     
-    def on_death(self):
+    def on_death(self) -> None:
+        """Action on animal death, release energy on cells around death position"""
         energy_grid = self.grid.energy_grid
         free_cell = self.select_free_cell(subgrid=energy_grid)
         self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell)
         free_cell = self.select_free_cell(subgrid=energy_grid)
         self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=self.energies_stock[EnergyType.BLUE.value], cell_coordinates=free_cell)
-        print("animal death")
                     
     def update(self) -> None:
         """Update the Animal"""
@@ -329,16 +330,19 @@ class Tree(Entity):
         self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
         
     def on_death(self) -> None:
-        Seed(grid=self.grid, position=self.position)
-        pass
+        """Action on tree death, create a seed on dead tree position"""
+        Seed(grid=self.grid, position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy())
+
        
 class Seed(EntitySprite):
     def __init__(self,
                  grid,
                  position: Tuple[int,int],
                  size: int=10,
+                 blue_energy: int=0,
+                 red_energy: int=0,
                  ):
-        super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position)
+        super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
        
 
 

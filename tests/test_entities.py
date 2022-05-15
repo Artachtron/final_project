@@ -23,13 +23,15 @@ class TestTree:
         assert tree.__class__.__base__ == entities.Entity
         
     def test_fields(self):
-        tree = entities.Tree(grid=self.grid, position=(3,3), size=10)
+        tree = entities.Tree(grid=self.grid, position=(3,3), size=10, blue_energy=7, red_energy=3, production_type=EnergyType.BLUE)
         
-        assert set(['size', 'position', 'image', 'rect', 'grid']).issubset(vars(tree))
+        assert set(['size', 'position', 'image', 'rect', 'grid', '_energies_stock', 'production_type']).issubset(vars(tree))
                
         assert tree.size == 10
         assert tree.position == (3,3)
         assert tree.entity_grid == self.entity_grid
+        assert tree._energies_stock == {EnergyType.BLUE.value: 7, EnergyType.RED.value: 3}
+        assert tree.production_type == EnergyType.BLUE
         assert type(tree.image) == pg.Surface
         assert type(tree.rect) == pg.Rect
         
@@ -84,7 +86,33 @@ class TestTree:
         tree.die()
         cell = self.entity_grid.get_position_value(position=position)
         assert type(cell) == entities.Seed
+ 
         
+class TestSeed:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.grid = Grid(width=5, height=10)
+        self.entity_grid = self.grid.entity_grid
+        world.init_pygame()
+        yield
+        
+    def test_create_seed(self):
+        seed = entities.Seed(grid=self.grid, position=(0,0))
+        assert type(seed) == entities.Seed
+        assert seed.__class__.__base__ == entities.EntitySprite
+        
+    def test_fields(self):
+        seed = entities.Seed(grid=self.grid, position=(3,2), blue_energy=5 ,red_energy=7)
+        
+        assert set(['size', 'position', 'image', 'rect', 'grid', '_energies_stock']).issubset(vars(seed)) 
+        
+        assert seed.size == 10
+        assert seed.position == (3,2)
+        assert seed.entity_grid == self.entity_grid
+        assert seed._energies_stock == {EnergyType.BLUE.value: 5, EnergyType.RED.value: 7}   
+        assert type(seed.image) == pg.Surface
+        assert type(seed.rect) == pg.Rect
+        assert type(seed.rect) == pg.Rect
         
 
 class TestAnimal:
@@ -102,13 +130,14 @@ class TestAnimal:
         assert animal.__class__.__base__ == entities.Entity
         
     def test_fields(self):
-        animal = entities.Animal(grid=self.grid, position=(3,3), size=10)
+        animal = entities.Animal(grid=self.grid, position=(3,3), size=10, blue_energy=1, red_energy=8)
         
-        assert set(['size', 'position', 'image', 'rect', 'grid']).issubset(vars(animal))
+        assert set(['size', 'position', 'image', 'rect', 'grid', '_energies_stock']).issubset(vars(animal))
                
         assert animal.size == 10
         assert animal.position == (3,3)
         assert animal.entity_grid == self.entity_grid
+        assert animal._energies_stock == {EnergyType.BLUE.value: 1, EnergyType.RED.value: 8} 
         assert type(animal.image) == pg.Surface
         assert type(animal.rect) == pg.Rect
         
