@@ -318,7 +318,9 @@ class Tree(Entity):
             self.production_type = np.random.choice(list(EnergyType))
         
     def produce_energy(self):
-        self.energies_stock[self.production_type.value] += 5*self.size
+        count_trees_around = len(self._find_tree_cells())
+        
+        self.energies_stock[self.production_type.value] += int((5*self.size)/2**count_trees_around)
         self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
        
 
