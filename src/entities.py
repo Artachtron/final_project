@@ -300,7 +300,9 @@ class Animal(Entity):
             self.loose_energy(energy_type=EnergyType.RED, quantity=PLANTING_COST)
         
         free_cell = self.select_free_cell(subgrid=self.entity_grid)
-        self.grid.create_entity(entity_type="tree", position=free_cell)
+        if free_cell:
+            self.grid.create_entity(entity_type="tree", position=free_cell)
+            
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
             
     def on_death(self) -> None:
@@ -342,6 +344,12 @@ class Tree(Entity):
             self.production_type = np.random.choice(list(EnergyType))
         
     def produce_energy(self) -> None:
+        """Produce energy
+        """
+        MINUMUM_AGE: Final[int] = 20
+        if self.age < MINUMUM_AGE:
+            pass
+        
         count_trees_around = len(self._find_tree_cells())
         
         self.gain_energy(energy_type=self.production_type, quantity=int((5*self.size)/2**count_trees_around))

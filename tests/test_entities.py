@@ -286,9 +286,17 @@ class TestAnimal:
         assert animal.get_red_energy() == 10
         animal.plant_tree()
         assert animal.get_red_energy() == 0
-        tree_cell, = animal._find_tree_cells(include_self=True, radius=5)
+        tree_cell, = animal._find_tree_cells(include_self=True, radius=1)
         tree = self.grid.entity_grid.get_position_value(position=tree_cell)
         assert tree.__class__.__name__ == "Tree"
+        
+        # No free cells
+        grid2 = Grid(height=1, width=1)
+        animal2 = grid2.create_entity(entity_type="animal", position=(0,0), size=10, blue_energy=10, red_energy=10)
+        animal2.plant_tree()
+        assert len(animal2._find_tree_cells(include_self=True, radius=1)) == 0
+
+        
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)
