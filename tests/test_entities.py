@@ -235,7 +235,7 @@ class TestEntityMethods:
         self.entity = self.grid.create_entity(size=1, position=(1,1), blue_energy=5, red_energy=10, entity_type="animal")
         yield
         
-    def test_find_free_cell(self):
+    def test_find_free_cells(self):
         cells = []
         position = self.entity.position
         radius = 1
@@ -244,7 +244,7 @@ class TestEntityMethods:
                 cells.append(tuple(np.add(position,(x,y))))
         
         for _ in range(100):
-            free_cell = self.entity._find_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            free_cell = self.entity.select_free_cell(subgrid=self.grid.energy_grid,radius=radius)
             assert free_cell in cells
             
         position = (3,5)
@@ -256,9 +256,41 @@ class TestEntityMethods:
                 cells.append(tuple(np.add(position,(x,y))))
         
         for _ in range(100):
-            free_cell = self.entity._find_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            free_cell = self.entity.select_free_cell(subgrid=self.grid.energy_grid,radius=radius)
             assert free_cell 
             assert free_cell in cells
+            
+    def test_find_tree_cells(self):
+        tree1 = self.grid.create_entity(entity_type="tree", position=(1,1))
+        assert len(tree1._find_tree_cells())  == 0
+        tree2 = self.grid.create_entity(entity_type="tree", position=(2,1))
+        
+        assert len(tree1._find_tree_cells())  == 1       
+        assert len(tree1._find_tree_cells(include_self=True))  == 2
+        
+        # Does not detect animal
+        animal = self.grid.create_entity(entity_type="animal", position=(1,2))
+        assert len(tree1._find_tree_cells())  == 1
+        
+        # Handle error if animal and not tree
+        assert len(animal._find_tree_cells())  == 2
+        assert len(animal._find_tree_cells(include_self=True))  == 2
+        
+    def test_find_animal_cells(self):
+        animal1 = self.grid.create_entity(entity_type="animal", position=(1,1))
+        assert len(animal1._find_animal_cells())  == 0
+        animal2 = self.grid.create_entity(entity_type="animal", position=(2,1))
+        
+        assert len(animal1._find_animal_cells())  == 1       
+        assert len(animal1._find_animal_cells(include_self=True))  == 2
+        
+        # Does not detect animal
+        tree = self.grid.create_entity(entity_type="tree", position=(1,2))
+        assert len(animal1._find_animal_cells())  == 1
+        
+        # Handle error if animal and not tree
+        assert len(tree._find_animal_cells())  == 2
+        assert len(tree._find_animal_cells(include_self=True))  == 2
     
 class TestEntityEnergy:
     @pytest.fixture(autouse=True)
