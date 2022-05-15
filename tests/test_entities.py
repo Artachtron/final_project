@@ -55,21 +55,26 @@ class TestTree:
         assert tree.get_blue_energy() == 3
         
         # Blue energy
-        tree2 = entities.Tree(grid=self.grid, production_type=EnergyType.BLUE, position=(0,0), size=1, blue_energy=5, action_cost=0)
+        tree2 = entities.Tree(grid=self.grid, production_type=EnergyType.BLUE, position=(0,0), size=1, blue_energy=5, red_energy=5, action_cost=0)
         assert tree2.get_blue_energy() == 5
+        assert tree2.get_red_energy() == 5
         tree2.produce_energy()
         assert tree2.get_blue_energy() == 10
+        assert tree2.get_red_energy() == 5
         tree2.size = 2
         tree2.produce_energy()
         assert tree2.get_blue_energy() == 20
+        assert tree2.get_red_energy() == 5
         
         tree3 = entities.Tree(grid=self.grid, production_type=EnergyType.BLUE, position=(1,1), size=1, blue_energy=5, action_cost=0)
         tree2.produce_energy()
         assert tree2.get_blue_energy() == 25
+        assert tree2.get_red_energy() == 5
         
         tree4 = entities.Tree(grid=self.grid, production_type=EnergyType.BLUE, position=(0,1), size=1, blue_energy=5, action_cost=0)
         tree2.produce_energy()
         assert tree2.get_blue_energy() == 27
+        assert tree2.get_red_energy() == 5
         
 
 class TestAnimal:

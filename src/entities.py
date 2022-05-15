@@ -17,8 +17,25 @@ class Direction(enum.Enum):
     LEFT = (-1,0)
     DOWN = (0,1)
     UP = (0,-1)
+
+class Sprite(pg.sprite.Sprite):
+    def __init__(self,
+                 image_filename: str,
+                 grid,
+                 position: Tuple[int,int],
+                 size: int=20,
+                 ):
+        super().__init__()
+        self.position = position
+        image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
+        self.size = size
+        self.image = pg.transform.scale(image, (size,size))
+        pos_x, pos_y = self.position
+        self.rect = self.image.get_rect(center=(pos_x * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
+        
+        self.grid = grid
     
-class Entity(pg.sprite.Sprite):
+class Entity(Sprite):
     def __init__(self,
                  image_filename: str,
                  grid,
@@ -29,19 +46,12 @@ class Entity(pg.sprite.Sprite):
                  red_energy: int=10,
                  action_cost: int=1,
                  ):
-        super().__init__()
-        self.size = size
+        super(Entity, self).__init__(image_filename=image_filename, size=size, grid=grid, position=position)
+        
         self.action_cost = action_cost
         self.age = 0
         self.max_age = max_age if max_age else size*5
-        self.position = position
         
-        image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
-        self.image = pg.transform.scale(image, (size,size))
-        pos_x, pos_y = self.position
-        self.rect = self.image.get_rect(center=(pos_x * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
-        
-        self.grid = grid
         self.entity_grid = grid.entity_grid
         self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
         
@@ -317,11 +327,14 @@ class Tree(Entity):
         else:
             self.production_type = np.random.choice(list(EnergyType))
         
-    def produce_energy(self):
+    def produce_energy(self) -> None:
         count_trees_around = len(self._find_tree_cells())
         
         self.energies_stock[self.production_type.value] += int((5*self.size)/2**count_trees_around)
         self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+        
+    def on_death(self) -> None:
+        pass
        
 
        
