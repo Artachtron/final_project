@@ -64,7 +64,8 @@ class TestGrid:
         
 class TestWorld:
     
-    def setup_class(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         world.init_pygame()
         yield
         
