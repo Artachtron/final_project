@@ -3,7 +3,7 @@ from types import NoneType
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
-from typing import Tuple, List, Set
+from typing import Tuple, Set, Final
 import enum
 import random
 from energies import EnergyType, Energy
@@ -81,7 +81,7 @@ class Entity(EntitySprite):
                 
             self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell_coordinates=cell_coordinates)
             
-        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
             
     def pick_up_energy(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -92,13 +92,22 @@ class Entity(EntitySprite):
         energy_grid = self.grid.energy_grid
         energy: Energy = energy_grid.get_position_value(position=cell_coordinates)
         if energy:
-            self.energies_stock[energy.type.value] += energy.quantity
+            self.gain_energy(energy_type=energy.type, quantity=energy.quantity)
             self.grid.remove_energy(energy=energy)
             
-        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
                         
+    def gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
+        """Gain energy from specified type to energies stock
+
+        Args:
+            energy_type (EnergyType): the type of energy to gain
+            quantity (int): amount of energy to gain
+        """        
+        self._energies_stock[energy_type.value] += quantity
+    
     def loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
-        """Loose energy from energies stock
+        """Loose energy of specified type from energies stock
 
         Args:
             energy_type (EnergyType): the type of energy to loose
@@ -119,10 +128,10 @@ class Entity(EntitySprite):
     def grow(self) -> None:
         """grow the entity to bigger size, consumming red energy
         """  
-        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)      
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)      
         energy_required = self.size * 10
-        if self.energies_stock["red energy"] >= energy_required:
-            self.energies_stock["red energy"] -= energy_required
+        if self.energies_stock[EnergyType.RED.value] >= energy_required:
+            self.loose_energy(energy_type=EnergyType.RED, quantity=energy_required)
             self.size += 1
             self.max_age += 5
             self.action_cost += 1
@@ -134,7 +143,7 @@ class Entity(EntitySprite):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """        
         self.age += amount
-        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
         
         if self.age > self.max_age:
             self.die()
@@ -283,8 +292,17 @@ class Animal(Entity):
                    
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
-        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
     
+    def plant_tree(self):
+        PLANTING_COST: Final[int] = 10
+        if self._energies_stock[EnergyType.RED.value] >= PLANTING_COST:
+            self.loose_energy(energy_type=EnergyType.RED, quantity=PLANTING_COST)
+        
+        free_cell = self.select_free_cell(subgrid=self.entity_grid)
+        self.grid.create_entity(entity_type="tree", position=free_cell)
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+            
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
         energy_grid = self.grid.energy_grid
@@ -326,8 +344,8 @@ class Tree(Entity):
     def produce_energy(self) -> None:
         count_trees_around = len(self._find_tree_cells())
         
-        self.energies_stock[self.production_type.value] += int((5*self.size)/2**count_trees_around)
-        self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
+        self.gain_energy(energy_type=self.production_type, quantity=int((5*self.size)/2**count_trees_around))
+        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
         
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""

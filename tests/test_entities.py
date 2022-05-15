@@ -280,6 +280,15 @@ class TestAnimal:
                 assert energy.quantity == 5  
                 red += 1
         assert (blue,red) == (1,1)
+    
+    def test_plant_tree(self):
+        animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=10)
+        assert animal.get_red_energy() == 10
+        animal.plant_tree()
+        assert animal.get_red_energy() == 0
+        tree_cell, = animal._find_tree_cells(include_self=True, radius=5)
+        tree = self.grid.entity_grid.get_position_value(position=tree_cell)
+        assert tree.__class__.__name__ == "Tree"
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)

@@ -91,7 +91,6 @@ class Grid:
                 energy = RedEnergy(grid=self, position=cell_coordinates, quantity=quantity)
           
         self.energy_group.add(energy)
-
                 
     def remove_energy(self, energy: Energy) -> None:
         """Remove energy from the grid
