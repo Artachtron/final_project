@@ -1,4 +1,3 @@
-from tkinter import E
 from types import NoneType
 import pygame as pg
 from os.path import dirname, realpath, join
@@ -17,6 +16,11 @@ class Direction(enum.Enum):
     LEFT = (-1,0)
     DOWN = (0,1)
     UP = (0,-1)
+    
+class EntityType(enum.Enum):
+    Animal = "animal"
+    Tree = "tree"
+    Seed = "seed"
 
 class EntitySprite(pg.sprite.Sprite):
     def __init__(self,
@@ -360,7 +364,7 @@ class Tree(Entity):
         self.grid.create_entity(entity_type="seed", position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy())
     
     def update(self):
-        self.die()
+        pass
 
        
 class Seed(EntitySprite):

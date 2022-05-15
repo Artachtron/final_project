@@ -82,10 +82,10 @@ class TestTree:
         position = (0,0)
         tree = entities.Tree(grid=self.grid, position=position)
         cell = self.entity_grid.get_position_value(position=position)
-        assert type(cell) == entities.Tree
+        assert cell.__class__.__name__ == "Tree"
         tree.die()
         cell = self.entity_grid.get_position_value(position=position)
-        assert type(cell) == entities.Seed
+        assert cell.__class__.__name__ == "Seed"
  
         
 class TestSeed:
@@ -106,7 +106,7 @@ class TestSeed:
         
         assert set(['size', 'position', 'image', 'rect', 'grid', '_energies_stock']).issubset(vars(seed)) 
         
-        assert seed.size == 10
+        assert seed.size == 15
         assert seed.position == (3,2)
         assert seed.entity_grid == self.entity_grid
         assert seed._energies_stock == {EnergyType.BLUE.value: 5, EnergyType.RED.value: 7}   
