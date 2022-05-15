@@ -3,7 +3,7 @@ from types import NoneType
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple, List, Set
 import enum
 import random
 from energies import EnergyType, Energy
@@ -174,7 +174,7 @@ class Entity(pg.sprite.Sprite):
             return False
         return True
     
-    def _find_cells_by_value(self, subgrid, value, radius: int=1) -> List[Tuple[int,int]]:
+    def _find_cells_by_value(self, subgrid, value, radius: int=1) -> Set[Tuple[int,int]]:
         """Find the list of cells in a range with specified value
 
         Args:
@@ -183,18 +183,19 @@ class Entity(pg.sprite.Sprite):
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
-            List[Tuple[int,int]]: list of found cells' coordinates
+            Set[Tuple[int,int]]: set of found cells' coordinates
         """        
         position = self.position
-        cells = []
+        cells =  set()
         for x in range(-radius,radius+1):
             for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
                 if type(subgrid.get_position_value(position=coordinate)) == value:
-                    cells.append(coordinate)
+                    cells.add(coordinate)
+                    
         return cells
     
-    def _find_tree_cells(self, include_self: bool=False, radius: int=1) -> List[Tuple[int,int]]:
+    def _find_tree_cells(self, include_self: bool=False, radius: int=1) -> Set[Tuple[int,int]]:
         """Find the cells at proximity on which trees are located
 
         Args:
@@ -202,14 +203,14 @@ class Entity(pg.sprite.Sprite):
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
-            List[Tuple[int,int]]: list of found trees' cells' coordinates
+            Set[Tuple[int,int]]: set of found trees' cells' coordinates
         """        
-        trees = self._find_cells_by_value(subgrid=self.entity_grid, value=Tree, radius=radius)
+        trees: Set[Tuple[int,int]] = self._find_cells_by_value(subgrid=self.entity_grid, value=Tree, radius=radius)
         if not include_self and self.position in trees:
             trees.remove(self.position)
         return trees
     
-    def _find_animal_cells(self, include_self: bool=False, radius: int=1) -> List[Tuple[int,int]]:
+    def _find_animal_cells(self, include_self: bool=False, radius: int=1) -> Set[Tuple[int,int]]:
         """Find the animals at proximity on which trees are located
 
         Args:
@@ -217,14 +218,14 @@ class Entity(pg.sprite.Sprite):
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
-            List[Tuple[int,int]]: list of found animals' cells' coordinates
+            Set[Tuple[int,int]]: set of found animals' cells' coordinates
         """        
-        animals = self._find_cells_by_value(subgrid=self.entity_grid, value=Animal, radius=radius)
+        animals: Set[Tuple[int,int]] = self._find_cells_by_value(subgrid=self.entity_grid, value=Animal, radius=radius)
         if not include_self and self.position in animals:
             animals.remove(self.position)
         return animals
     
-    def _find_free_cells(self, subgrid, radius: int=1) -> List[Tuple[int,int]]:
+    def _find_free_cells(self, subgrid, radius: int=1) -> Set[Tuple[int,int]]:
         """Find a free cell in range
 
         Args:
@@ -232,7 +233,7 @@ class Entity(pg.sprite.Sprite):
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
-            List[Tuple[int,int]]: list of free cells' coordinates
+            Set[Tuple[int,int]]: set of free cells' coordinates
         """        
         return self._find_cells_by_value(subgrid=subgrid, value=NoneType, radius=radius)
         
@@ -246,10 +247,10 @@ class Entity(pg.sprite.Sprite):
         Returns:
             Tuple[int,int]: coordinates of the free cell
         """ 
-        free_cells: List[Tuple[int,int]] = self._find_free_cells(subgrid=subgrid, radius=radius)    
+        free_cells: Set[Tuple[int,int]] = self._find_free_cells(subgrid=subgrid, radius=radius)    
                     
         if len(free_cells) != 0:    
-            return random.choice(free_cells)
+            return random.choice(tuple(free_cells))
         return None
                
         

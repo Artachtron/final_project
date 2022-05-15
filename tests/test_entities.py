@@ -262,7 +262,7 @@ class TestEntityMethods:
             
     def test_find_tree_cells(self):
         tree1 = self.grid.create_entity(entity_type="tree", position=(1,1))
-        assert len(tree1._find_tree_cells())  == 0
+        assert len(tree1._find_tree_cells()) == 0
         tree2 = self.grid.create_entity(entity_type="tree", position=(2,1))
         
         assert len(tree1._find_tree_cells())  == 1       
