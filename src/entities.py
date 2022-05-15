@@ -18,7 +18,7 @@ class Direction(enum.Enum):
     DOWN = (0,1)
     UP = (0,-1)
 
-class Sprite(pg.sprite.Sprite):
+class EntitySprite(pg.sprite.Sprite):
     def __init__(self,
                  image_filename: str,
                  grid,
@@ -34,8 +34,10 @@ class Sprite(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=(pos_x * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
         
         self.grid = grid
-    
-class Entity(Sprite):
+        self.entity_grid = grid.entity_grid
+        self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
+   
+class Entity(EntitySprite):
     def __init__(self,
                  image_filename: str,
                  grid,
@@ -51,10 +53,7 @@ class Entity(Sprite):
         self.action_cost = action_cost
         self.age = 0
         self.max_age = max_age if max_age else size*5
-        
-        self.entity_grid = grid.entity_grid
-        self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
-        
+
         self._energies_stock = {EnergyType.BLUE.value: blue_energy, EnergyType.RED.value: red_energy}
         
     @property
@@ -141,8 +140,9 @@ class Entity(Sprite):
     def die(self) -> None:
         """Death of the entity
         """
-        self.on_death()
         self.grid.remove_entity(entity=self)
+        self.on_death()
+        
         
     def on_death(self):
         """Event on death"""
@@ -268,11 +268,6 @@ class Animal(Entity):
     def __init__(self, *args, **kwargs):
         super(Animal, self).__init__(image_filename='Animal.png',*args, **kwargs)
         
-    """ def tmp_input(self):
-        keys = pg.key.get_pressed()
-        if keys[pg.K_UP]:
-            pass """
-        
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
 
@@ -334,9 +329,16 @@ class Tree(Entity):
         self.loose_energy(EnergyType.BLUE, quantity=self.action_cost)
         
     def on_death(self) -> None:
+        Seed(grid=self.grid, position=self.position)
         pass
        
-
+class Seed(EntitySprite):
+    def __init__(self,
+                 grid,
+                 position: Tuple[int,int],
+                 size: int=10,
+                 ):
+        super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position)
        
 
 

@@ -76,6 +76,16 @@ class TestTree:
         assert tree2.get_blue_energy() == 27
         assert tree2.get_red_energy() == 5
         
+    def test_create_seed_on_death(self):
+        position = (0,0)
+        tree = entities.Tree(grid=self.grid, position=position)
+        cell = self.entity_grid.get_position_value(position=position)
+        assert type(cell) == entities.Tree
+        tree.die()
+        cell = self.entity_grid.get_position_value(position=position)
+        assert type(cell) == entities.Seed
+        
+        
 
 class TestAnimal:
     @pytest.fixture(autouse=True)
