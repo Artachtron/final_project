@@ -13,7 +13,7 @@ class SubGrid:
     def subgrid(self) -> np.array:
         return self._subgrid
     
-    def update_cell_value(self, position: Tuple[int, int], value: int) -> None:
+    def set_cell_value(self, cell_coordinates: Tuple[int, int], value: int) -> None:
         """Update the value of a cell from the grid
 
         Args:
@@ -21,11 +21,11 @@ class SubGrid:
             value (int): The new value to assign
         """
         try:
-            self._subgrid[position] = value
+            self._subgrid[cell_coordinates] = value
         except IndexError:
-            print("{position} is out of bounds")
+            print("{cell_coordinates} is out of bounds")
             
-    def get_position_value(self, position: Tuple[int, int]) -> Entity|Energy:
+    def get_cell_value(self, cell_coordinates: Tuple[int, int]) -> Entity|Energy:
         """Get the value of a cell
 
         Args:
@@ -35,11 +35,11 @@ class SubGrid:
             int: The value of the cell 0 for empty, 1 for full
         """
         try:
-            if position[0] < 0 or position[1] < 0:
+            if cell_coordinates[0] < 0 or cell_coordinates[1] < 0:
                 raise IndexError
-            return self._subgrid[position]
+            return self._subgrid[cell_coordinates]
         except IndexError:
-            print(f"{position} is out of bounds")
+            print(f"{cell_coordinates} is out of bounds")
             return False
 
         
@@ -103,7 +103,7 @@ class Grid:
         resource_grid = self.resource_grid
         self.energy_group.remove(energy)
         position = energy.position
-        resource_grid.update_cell_value(position=position, value=None)
+        resource_grid.set_cell_value(cell_coordinates=position, value=None)
         print(f"{energy} was deleted at {position}")
     
     def create_entity(self, entity_type: str, position, size=20, blue_energy=5, red_energy=10, max_age: int=0) -> Tree|Animal|Seed:
@@ -141,5 +141,5 @@ class Grid:
         entity_grid = self.entity_grid
         self.entity_group.remove(entity)
         position = entity.position
-        entity_grid.update_cell_value(position=position, value=None)
+        entity_grid.set_cell_value(cell_coordinates=position, value=None)
         print(f"{entity} was deleted at {position}")

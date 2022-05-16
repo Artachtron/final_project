@@ -18,8 +18,8 @@ class TestEnergies:
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         self.grid.create_energy(energy_type=energies.EnergyType.BLUE, quantity=10, cell_coordinates=(4,4))
         self.grid.create_energy(energy_type=energies.EnergyType.RED, quantity=10, cell_coordinates=(4,5))
-        blue_energy2 = self.grid.resource_grid.get_position_value(position=(4,4))
-        red_energy2 =self.grid.resource_grid.get_position_value(position=(4,5))
+        blue_energy2 = self.grid.resource_grid.get_cell_value(cell_coordinates=(4,4))
+        red_energy2 =self.grid.resource_grid.get_cell_value(cell_coordinates=(4,5))
         
         assert type(blue_energy) == energies.BlueEnergy
         assert type(red_energy) == energies.RedEnergy
@@ -50,12 +50,12 @@ class TestEnergies:
         assert type(red_energy.rect) == pg.Rect
         
     def test_energies_on_grid(self):
-        assert self.resource_grid.get_position_value(position=(5,5)) == None
-        assert self.resource_grid.get_position_value(position=(5,6)) == None
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,5)) == None
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,6)) == None
         
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
-        assert self.resource_grid.get_position_value(position=(5,4)) == None
-        assert self.resource_grid.get_position_value(position=(5,5)) == blue_energy
-        assert self.resource_grid.get_position_value(position=(5,6)) == red_energy
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,4)) == None
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,5)) == blue_energy
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,6)) == red_energy

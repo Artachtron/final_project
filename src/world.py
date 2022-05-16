@@ -84,7 +84,7 @@ def create_new_animal() -> None:
     """
     x, y = get_random_coordinates()
     
-    while grid.entity_grid.get_position_value((x,y)):
+    while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
         x, y = get_random_coordinates()
     
     grid.create_entity(entity_type="animal", position=(x,y), blue_energy=100)
@@ -112,7 +112,7 @@ def create_new_tree():
     """    
     x, y = get_random_coordinates()
     
-    while grid.entity_grid.get_position_value((x,y)):
+    while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
        x, y = get_random_coordinates()
     
     grid.create_entity(entity_type="tree", position=(x,y))

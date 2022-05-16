@@ -65,7 +65,7 @@ class Seed(EntitySprite):
                  red_energy: int=0,
                  ):
         super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
-        self.grid.resource_grid.update_cell_value(position=(self.position), value=self)
+        self.grid.resource_grid.set_cell_value(cell_coordinates=(self.position), value=self)
         self.max_age = max_age if max_age else size*5            
    
 class Entity(EntitySprite):
@@ -85,7 +85,7 @@ class Entity(EntitySprite):
         self.age = 0
         self.max_age = max_age if max_age else size*5
         
-        self.entity_grid.update_cell_value(position=(self.position), value=self)
+        self.entity_grid.set_cell_value(cell_coordinates=(self.position), value=self)
         
     
     def drop_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int,int]) -> None:
@@ -110,7 +110,7 @@ class Entity(EntitySprite):
             cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
         """
         resource_grid = self.grid.resource_grid
-        resource = resource_grid.get_position_value(position=cell_coordinates)
+        resource = resource_grid.get_cell_value(cell_coordinates=cell_coordinates)
         if resource:
             if type(resource).__base__ == Energy:
                 self.gain_energy(energy_type=resource.type, quantity=resource.quantity)     
@@ -201,7 +201,7 @@ class Entity(EntitySprite):
         Returns:
             bool: Vacancy of the cell
         """
-        return not subgrid.get_position_value(position=next_move)
+        return not subgrid.get_cell_value(cell_coordinates=next_move)
      
     def _is_cell_in_bounds(self, subgrid, next_move: Tuple[int,int])-> bool:
         """Check if a cell is in the bounds of the grid
@@ -233,7 +233,7 @@ class Entity(EntitySprite):
         for x in range(-radius,radius+1):
             for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
-                if issubclass(type(subgrid.get_position_value(position=coordinate)),value):
+                if issubclass(type(subgrid.get_cell_value(cell_coordinates=coordinate)),value):
                     cells.add(coordinate)
                     
         return cells
@@ -333,8 +333,8 @@ class Animal(Entity):
         """
         next_move = tuple(np.add(self.position, direction.value))
         if self._check_coordinates(cell_coordinates=next_move, subgrid=self.grid.entity_grid):
-            self.entity_grid.update_cell_value(position=(self.position), value=None)
-            self.entity_grid.update_cell_value(position=next_move, value=self)
+            self.entity_grid.set_cell_value(cell_coordinates=(self.position), value=None)
+            self.entity_grid.set_cell_value(cell_coordinates=next_move, value=self)
             self.position = next_move
                    
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
@@ -391,7 +391,7 @@ class Animal(Entity):
         self.decompose(entity=self)
                     
     def modify_cell_color(self, cell_coordinates: Tuple[int, int], color: Tuple[int,int,int]) -> None:
-        self.grid.color_grid.update_cell_value(position=cell_coordinates, value=color)
+        self.grid.color_grid.set_cell_value(cell_coordinates=cell_coordinates, value=color)
     
     def update(self) -> None:
         """Update the Animal"""
