@@ -1,6 +1,5 @@
 import pygame as pg
 import sys
-from entities import Animal, Tree
 from grid import Grid
 
 import numpy as np
@@ -131,10 +130,12 @@ def draw_world() -> None:
     
 def draw_grid() -> None:
     """Draw the grid"""
-    SCREEN.fill(WHITE)
+    #SCREEN.fill(WHITE)
+    color_grid = grid.color_grid.subgrid
     for x in range(0, WINDOW_WIDTH, BLOCK_SIZE):
         for y in range(0, WINDOW_HEIGHT, BLOCK_SIZE):
             rect = pg.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
+            pg.draw.rect(SCREEN, color_grid[int(x/BLOCK_SIZE),int(y/BLOCK_SIZE)], rect, 0)
             pg.draw.rect(SCREEN, BLACK, rect, 1)
 
 def update_world() -> None:

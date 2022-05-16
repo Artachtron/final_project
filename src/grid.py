@@ -5,13 +5,10 @@ from entities import Entity, Animal, Tree, Seed, EntityType
 import pygame as pg
 
 class SubGrid:
-    def __init__(self, dimensions: Tuple[int,int], dtype: str):
+    def __init__(self, dimensions: Tuple[int,int], data_type: str, initial_value):
         self.dimensions = dimensions
-        if dtype == 'entity' or dtype == 'entities':
-            self._subgrid: np.array = np.full(self.dimensions, fill_value=None, dtype=Entity)
-        elif dtype == 'energy' or dtype == 'energies':
-            self._subgrid: np.array = np.full(self.dimensions, fill_value=None, dtype=Energy)
-            
+        self._subgrid: np.array = np.full(self.dimensions, fill_value=initial_value, dtype=data_type)
+     
     @property
     def subgrid(self) -> np.array:
         return self._subgrid
@@ -52,8 +49,9 @@ class Grid:
         self._width = width
         self.dimensions = (self._width, self._height)
         
-        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='entity')
-        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='energy')
+        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Entity, initial_value=None)
+        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Energy, initial_value=None)
+        self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3), data_type=np.uint8, initial_value=255)
         self.BLOCK_SIZE = block_size
         
         self.energy_group = pg.sprite.Group()
@@ -66,6 +64,10 @@ class Grid:
     @property
     def resource_grid(self) -> np.array:
         return self._resource_grid
+    
+    @property
+    def color_grid(self) -> np.array:
+        return self._color_grid
         
     @property
     def height(self) -> int:
