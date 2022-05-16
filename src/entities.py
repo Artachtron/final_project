@@ -43,7 +43,17 @@ class EntitySprite(pg.sprite.Sprite):
         
         self.grid = grid
         self.entity_grid = grid.entity_grid
-        
+
+class Seed(EntitySprite):
+    def __init__(self,
+                 grid,
+                 position: Tuple[int,int],
+                 size: int=15,
+                 blue_energy: int=0,
+                 red_energy: int=0,
+                 ):
+        super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
+        self.grid.resource_grid.update_grid_cell_value(position=(self.position), value=self)        
    
 class Entity(EntitySprite):
     def __init__(self,
@@ -96,12 +106,15 @@ class Entity(EntitySprite):
             cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
         """
         resource_grid = self.grid.resource_grid
-        energy: Energy = resource_grid.get_position_value(position=cell_coordinates)
-        if energy:
-            self.gain_energy(energy_type=energy.type, quantity=energy.quantity)
-            self.grid.remove_energy(energy=energy)
-            
-        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
+        resource = resource_grid.get_position_value(position=cell_coordinates)
+        if resource:
+            if type(resource).__base__ == Energy:
+                self.gain_energy(energy_type=resource.type, quantity=resource.quantity)     
+            elif type(resource) == Seed and type(self) == Animal:
+                self.store_seed(seed=resource)
+                pass
+            self.grid.remove_energy(energy=resource)
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
                         
     def gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Gain energy from specified type to energies stock
@@ -279,10 +292,11 @@ class Entity(EntitySprite):
             return random.choice(tuple(free_cells))
         return None
                
-        
+       
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
         super(Animal, self).__init__(image_filename='Animal.png',*args, **kwargs)
+        self.seed_pocket = None
         
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
@@ -300,7 +314,7 @@ class Animal(Entity):
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
         self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
     
-    def plant_tree(self):
+    def plant_tree(self) -> None:
         PLANTING_COST: Final[int] = 10
         if self._energies_stock[EnergyType.RED.value] >= PLANTING_COST:
             self.loose_energy(energy_type=EnergyType.RED, quantity=PLANTING_COST)
@@ -310,6 +324,10 @@ class Animal(Entity):
             self.grid.create_entity(entity_type="tree", position=free_cell)
             
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+        
+    def store_seed(self, seed: Seed):
+        if not self.seed_pocket:
+            self.seed_pocket = seed
             
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
@@ -369,16 +387,6 @@ class Tree(Entity):
         pass
 
        
-class Seed(EntitySprite):
-    def __init__(self,
-                 grid,
-                 position: Tuple[int,int],
-                 size: int=15,
-                 blue_energy: int=0,
-                 red_energy: int=0,
-                 ):
-        super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
-        self.grid.resource_grid.update_grid_cell_value(position=(self.position), value=self)
 
 
 

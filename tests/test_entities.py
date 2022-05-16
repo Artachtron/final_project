@@ -496,6 +496,21 @@ class TestEntityEnergy:
         self.entity.pick_up_energy(cell_coordinates=red_cell)
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 15}
         
+    def test_pick_up_seed(self):
+        seed = self.grid.create_entity(entity_type="seed", position=(1,1))
+        position = seed.position
+        assert self.entity.seed_pocket == None
+        assert self.grid.resource_grid.get_position_value(position=position) == seed
+        self.entity.pick_up_energy(cell_coordinates=position)
+        assert self.entity.seed_pocket == seed
+        assert self.grid.resource_grid.get_position_value(position=position) == None
+        
+        # Can't pick up another seed
+        seed2 = self.grid.create_entity(entity_type="seed", position=(1,2))
+        self.entity.pick_up_energy(cell_coordinates=seed2.position)
+        assert self.entity.seed_pocket != seed2
+        assert self.entity.seed_pocket == seed
+        
     def test_grow(self):
         assert self.entity.energies_stock == {"blue energy": 5, "red energy": 10}
         assert self.entity.get_red_energy() == 10

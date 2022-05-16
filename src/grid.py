@@ -102,9 +102,9 @@ class Grid:
         self.energy_group.remove(energy)
         position = energy.position
         resource_grid.update_grid_cell_value(position=position, value=None)
-        print(f"{energy.type} was deleted at {position}")
+        print(f"{energy} was deleted at {position}")
     
-    def create_entity(self, entity_type: str, position, size=1, blue_energy=5, red_energy=10) -> Tree|Animal:
+    def create_entity(self, entity_type: str, position, size=1, blue_energy=5, red_energy=10) -> Tree|Animal|Seed:
         """Create an entity and add it to the grid
 
         Args:
@@ -115,7 +115,7 @@ class Grid:
             red_energy (int, optional): amout of red energy. Defaults to 10.
 
         Returns:
-            Tree|Animal: entity newly created
+            Tree|Animal|Seed: entity newly created
         """        
               
         match entity_type:
