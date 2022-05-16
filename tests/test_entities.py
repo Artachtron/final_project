@@ -226,23 +226,17 @@ class TestAnimal:
                 
         energies = []
         types = []
-        radius = 1
-        for x in range(-radius,radius+1):
-            for y in range(-radius,radius+1):
-                coordinate = tuple(np.add(position,(x,y)))
-                energy = self.grid.resource_grid.get_position_value(position=coordinate)
-                if energy:
-                    energies.append(energy)
-                    types.append(energy.type)
+        energie_cells = animal._find_energy_cells()
+        energies =  [self.grid.resource_grid.get_position_value(position=energy) for energy in energie_cells]
                            
         assert len(energies) == 2
         blue = 0
         red = 0
-        for energy_type, energy in zip(types,energies):
-            if energy_type.value == EnergyType.BLUE.value:
+        for energy in energies:
+            if energy.type.value == EnergyType.BLUE.value:
                 assert energy.quantity == 5 
                 blue += 1
-            elif energy_type.value == EnergyType.RED.value:
+            elif energy.type.value == EnergyType.RED.value:
                 assert energy.quantity == 10  
                 red += 1
         assert (blue,red) == (1,1)
@@ -260,23 +254,17 @@ class TestAnimal:
         
         energies = []
         types = []
-        radius = 1
-        for x in range(-radius,radius+1):
-            for y in range(-radius,radius+1):
-                coordinate = tuple(np.add(position,(x,y)))
-                energy = self.grid.resource_grid.get_position_value(position=coordinate)
-                if energy:
-                    energies.append(energy)
-                    types.append(energy.type)
+        energie_cells = animal2._find_energy_cells()
+        energies =  [self.grid.resource_grid.get_position_value(position=energy) for energy in energie_cells]
                            
         assert len(energies) == 2
         blue = 0
         red = 0
-        for energy_type, energy in zip(types,energies):
-            if energy_type.value == EnergyType.BLUE.value:
+        for energy in energies:
+            if energy.type.value == EnergyType.BLUE.value:
                 assert energy.quantity == 6 
                 blue += 1
-            elif energy_type.value == EnergyType.RED.value:
+            elif energy.type.value == EnergyType.RED.value:
                 assert energy.quantity == 5  
                 red += 1
         assert (blue,red) == (1,1)
@@ -295,7 +283,29 @@ class TestAnimal:
         animal2 = grid2.create_entity(entity_type="animal", position=(0,0), size=10, blue_energy=10, red_energy=10)
         animal2.plant_tree()
         assert len(animal2._find_tree_cells(include_self=True, radius=1)) == 0
-       
+        
+    def test_recycle_seed(self):
+        seed = entities.Seed(grid=self.grid, position=(3,2), blue_energy=5 ,red_energy=7)
+        animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=10)
+        animal.recycle_seed()
+        assert len(animal._find_energy_cells()) == 0
+        animal.seed_pocket = seed
+        
+        animal.recycle_seed()
+        assert not animal.seed_pocket 
+        energie_cells = animal._find_energy_cells(radius=1)
+        energies =  [self.grid.resource_grid.get_position_value(position=energy) for energy in energie_cells]
+        assert len(energies) == 2
+        
+        blue, red = 0, 0
+        for energy in energies:
+            if energy.type.value == EnergyType.BLUE.value:
+                assert energy.quantity == 5 
+                blue += 1
+            elif energy.type.value == EnergyType.RED.value:
+                assert energy.quantity == 7  
+                red += 1
+        assert (blue,red) == (1,1)
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)

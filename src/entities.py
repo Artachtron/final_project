@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Tuple, Set, Final
 import enum
 import random
-from energies import EnergyType, Energy
+from energies import EnergyType, Energy, BlueEnergy, RedEnergy
 import numpy as np
 
 
@@ -43,6 +43,16 @@ class EntitySprite(pg.sprite.Sprite):
         
         self.grid = grid
         self.entity_grid = grid.entity_grid
+        
+    @property
+    def energies_stock(self):
+        return self._energies_stock
+
+    def get_blue_energy(self):
+        return self._energies_stock["blue energy"]
+    
+    def get_red_energy(self):
+        return self._energies_stock["red energy"]
 
 class Seed(EntitySprite):
     def __init__(self,
@@ -74,15 +84,6 @@ class Entity(EntitySprite):
         
         self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
         
-    @property
-    def energies_stock(self):
-        return self._energies_stock
-
-    def get_blue_energy(self):
-        return self._energies_stock["blue energy"]
-    
-    def get_red_energy(self):
-        return self._energies_stock["red energy"]
     
     def drop_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int,int]) -> None:
         """Drop some energy on a cell
@@ -229,7 +230,7 @@ class Entity(EntitySprite):
         for x in range(-radius,radius+1):
             for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
-                if type(subgrid.get_position_value(position=coordinate)) == value:
+                if issubclass(type(subgrid.get_position_value(position=coordinate)),value):
                     cells.add(coordinate)
                     
         return cells
@@ -264,6 +265,10 @@ class Entity(EntitySprite):
             animals.remove(self.position)
         return animals
     
+    def _find_energy_cells(self, radius: int=1) -> Set[Tuple[int,int]]:
+        energies: Set[Tuple[int,int]] = self._find_cells_by_value(subgrid=self.grid.resource_grid, value=Energy, radius=radius)
+        return energies
+    
     def _find_free_cells(self, subgrid, radius: int=1) -> Set[Tuple[int,int]]:
         """Find a free cell in range
 
@@ -291,7 +296,18 @@ class Entity(EntitySprite):
         if len(free_cells) != 0:    
             return random.choice(tuple(free_cells))
         return None
-               
+    
+    def decompose(self, entity: EntitySprite) -> None:
+        """decompose an entity into its energy components
+
+        Args:
+            entity (EntitySprite): entity to decompose in energy
+        """        
+        resource_grid = self.grid.resource_grid
+        free_cell = self.select_free_cell(subgrid=resource_grid)
+        self.grid.create_energy(energy_type=EnergyType.RED, quantity=entity.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell)
+        free_cell = self.select_free_cell(subgrid=resource_grid)
+        self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=entity.energies_stock[EnergyType.BLUE.value], cell_coordinates=free_cell)         
        
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
@@ -325,17 +341,23 @@ class Animal(Entity):
             
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
         
-    def store_seed(self, seed: Seed):
+    def store_seed(self, seed: Seed)-> None:
         if not self.seed_pocket:
             self.seed_pocket = seed
+        
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+    
+    def recycle_seed(self) -> None:
+        if not self.seed_pocket:
+            return
+    
+        self.decompose(self.seed_pocket)
+        self.seed_pocket = None
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)        
             
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
-        resource_grid = self.grid.resource_grid
-        free_cell = self.select_free_cell(subgrid=resource_grid)
-        self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell)
-        free_cell = self.select_free_cell(subgrid=resource_grid)
-        self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=self.energies_stock[EnergyType.BLUE.value], cell_coordinates=free_cell)
+        self.decompose(entity=self)
                     
     def update(self) -> None:
         """Update the Animal"""

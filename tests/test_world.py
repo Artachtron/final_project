@@ -93,6 +93,8 @@ class TestWorld:
         
         before_update_position = world.grid.entity_group.sprites()[0].position
         world.update_entities()
+        world.update_entities()
+        world.update_entities()
         after_update_position = world.grid.entity_group.sprites()[0].position
                 
         assert before_update_position != after_update_position
