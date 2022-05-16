@@ -320,6 +320,10 @@ class Entity(EntitySprite):
         free_cell = self.select_free_cell(subgrid=resource_grid)
         self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=entity.energies_stock[EnergyType.BLUE.value], cell_coordinates=free_cell)         
        
+    def update(self):
+        self.increase_age()
+        self.test_update()
+
 class Animal(Entity):
     def __init__(self, *args, **kwargs):
         super(Animal, self).__init__(image_filename='Animal.png',*args, **kwargs)
@@ -394,11 +398,7 @@ class Animal(Entity):
         cell_coordinates = cell_coordinates if cell_coordinates else self.position
         self.grid.color_grid.set_cell_value(cell_coordinates=cell_coordinates, value=color)
         self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
-    
-    def update(self) -> None:
-        """Update the Animal"""
-        self.test_update()
-        
+            
     def test_update(self) -> None:
         """Test behaviour by doing random actions"""
         direction = random.choice(list(Direction))
@@ -445,7 +445,7 @@ class Tree(Entity):
         """Action on tree death, create a seed on dead tree position"""
         self.grid.create_entity(entity_type="seed", position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy(), max_age=self.max_age)
     
-    def update(self):
+    def test_update(self):
         pass
 
        
