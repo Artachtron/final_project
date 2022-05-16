@@ -27,9 +27,6 @@ def main():
     tick_counter = 0
     
     init_pygame()
-    
-    global grid
-    grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH, block_size=BLOCK_SIZE)
     init_world()
       
     while True:
@@ -46,11 +43,15 @@ def main():
         tick_counter += 1
         if tick_counter == SIMULATION_SPEED:
             tick_counter = 0
+def init_grid():
+    global grid
+    grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH, block_size=BLOCK_SIZE)
+
  
 def init_world() -> None:
     """Initialize the world
     """    
-    
+    init_grid()
     init_population(counts=(INITIAL_ANIMAL_POPULATION, INITIAL_TREE_POPULATION))
     init_energies()
  

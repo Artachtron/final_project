@@ -78,31 +78,28 @@ class TestWorld:
     # def test_initialization_worlds(self):
     
     def test_initialization_population(self):
-        grid = world.Grid(height=10,width=10)
-        world.init_world(grid=grid, counts=(3, 2))
+        world.init_grid()
+        world.init_population(counts=(3, 2))
         
-        assert world.entity_group
-        """ assert world.animal_group
-        assert world.tree_group """
+        assert world.grid
                 
-        assert len(world.entity_group) == 5
-        #assert len(world.tree_group) == 2
+        assert len(world.grid.entity_group) == 3 + 2
      
     #def test_world_update(self):
         
     def test_entities_update(self):
-        grid = world.Grid(height=10,width=10)
-        world.init_population(grid=grid, counts=(1,0))
+        world.init_grid()
+        world.init_population(counts=(1,0))
         
-        before_update_position = world.entity_group.sprites()[0].position
+        before_update_position = world.grid.entity_group.sprites()[0].position
         world.update_entities()
-        after_update_position = world.entity_group.sprites()[0].position
+        after_update_position = world.grid.entity_group.sprites()[0].position
                 
         assert before_update_position != after_update_position
     
     def test_world_drawing(self):
-        grid = world.Grid(height=10,width=10)
-        world.init_population(grid=grid, counts=(3,2))
-        world.init_energies(grid=grid)
+        world.init_grid()
+        world.init_population(counts=(3,2))
+        world.init_energies()
         
         world.draw_world()
