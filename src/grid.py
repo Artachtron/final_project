@@ -13,7 +13,7 @@ class SubGrid:
     def subgrid(self) -> np.array:
         return self._subgrid
     
-    def update_grid_cell_value(self, position: Tuple[int, int], value: int) -> None:
+    def update_cell_value(self, position: Tuple[int, int], value: int) -> None:
         """Update the value of a cell from the grid
 
         Args:
@@ -103,7 +103,7 @@ class Grid:
         resource_grid = self.resource_grid
         self.energy_group.remove(energy)
         position = energy.position
-        resource_grid.update_grid_cell_value(position=position, value=None)
+        resource_grid.update_cell_value(position=position, value=None)
         print(f"{energy} was deleted at {position}")
     
     def create_entity(self, entity_type: str, position, size=20, blue_energy=5, red_energy=10, max_age: int=0) -> Tree|Animal|Seed:
@@ -141,5 +141,5 @@ class Grid:
         entity_grid = self.entity_grid
         self.entity_group.remove(entity)
         position = entity.position
-        entity_grid.update_grid_cell_value(position=position, value=None)
+        entity_grid.update_cell_value(position=position, value=None)
         print(f"{entity} was deleted at {position}")

@@ -87,7 +87,7 @@ def create_new_animal() -> None:
     while grid.entity_grid.get_position_value((x,y)):
         x, y = get_random_coordinates()
     
-    grid.create_entity(entity_type="animal", position=(x,y))
+    grid.create_entity(entity_type="animal", position=(x,y), blue_energy=100)
        
 def get_random_coordinates() -> Tuple[int,int]:
     """Get random coordinates of a point on a grid
