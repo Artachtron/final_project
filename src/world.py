@@ -42,11 +42,11 @@ def main():
         tick_counter += 1
         if tick_counter == SIMULATION_SPEED:
             tick_counter = 0
+            
 def init_grid():
     global grid
     grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH, block_size=BLOCK_SIZE)
 
- 
 def init_world() -> None:
     """Initialize the world
     """    
@@ -115,7 +115,7 @@ def create_new_tree():
     while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
        x, y = get_random_coordinates()
     
-    grid.create_entity(entity_type="tree", position=(x,y))
+    grid.create_entity(entity_type="tree", position=(x,y), blue_energy=20, max_age=10)
     
 def init_energies() -> None:
     """Initialize the energies on the grid (only for tests)

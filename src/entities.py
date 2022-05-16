@@ -101,7 +101,7 @@ class Entity(EntitySprite):
                 
             self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell_coordinates=cell_coordinates)
             
-        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
             
     def pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -166,7 +166,7 @@ class Entity(EntitySprite):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """        
         self.age += amount
-        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
+       # self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
         
         if self.age > self.max_age:
             self.die()
@@ -176,10 +176,8 @@ class Entity(EntitySprite):
         """
         self.grid.remove_entity(entity=self)
         self.on_death()
-          
-    def on_death(self):
-        """Event on death"""
-        print(f"{self} died")
+        
+        print(f"{self} died at age {self.age}")    
         
     def _check_coordinates(self, cell_coordinates: Tuple[int,int], subgrid) -> bool:
         """Check if the next move is valid
@@ -343,7 +341,7 @@ class Animal(Entity):
                    
             self.rect.x = next_move[0]  * self.grid.BLOCK_SIZE
             self.rect.y = next_move[1]  * self.grid.BLOCK_SIZE
-        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
     
     def plant_tree(self) -> None:
         """Plant a tree nearby, consume red energy
@@ -395,9 +393,16 @@ class Animal(Entity):
         self.decompose(entity=self)
                     
     def modify_cell_color(self, color: Tuple[int,int,int], cell_coordinates: Tuple[int, int]=None) -> None:
+        """Modfify the color of a given cell, usually the cell currently sat on
+
+        Args:
+            color (Tuple[int,int,int]): color to apply
+            cell_coordinates (Tuple[int, int], optional): the coordinates of the cell to modify. Defaults to None.
+        """        
         cell_coordinates = cell_coordinates if cell_coordinates else self.position
         self.grid.color_grid.set_cell_value(cell_coordinates=cell_coordinates, value=color)
-        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
+        
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
             
     def test_update(self) -> None:
         """Test behaviour by doing random actions"""
@@ -439,7 +444,7 @@ class Tree(Entity):
         count_trees_around = len(self._find_tree_cells())
         
         self.gain_energy(energy_type=self.production_type, quantity=int((5*self.size)/2**count_trees_around))
-        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
+        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
         
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""
