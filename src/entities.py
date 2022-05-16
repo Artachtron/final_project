@@ -100,7 +100,7 @@ class Entity(EntitySprite):
             
         self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
             
-    def pick_up_energy(self, cell_coordinates: Tuple[int, int]) -> None:
+    def pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
 
         Args:
@@ -111,9 +111,8 @@ class Entity(EntitySprite):
         if resource:
             if type(resource).__base__ == Energy:
                 self.gain_energy(energy_type=resource.type, quantity=resource.quantity)     
-            elif type(resource) == Seed and type(self) == Animal:
+            elif resource.__class__.__name__ == "Seed" and type(self) == Animal:
                 self.store_seed(seed=resource)
-                pass
             self.grid.remove_energy(energy=resource)
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
                         
@@ -251,7 +250,7 @@ class Entity(EntitySprite):
         return trees
     
     def _find_animal_cells(self, include_self: bool=False, radius: int=1) -> Set[Tuple[int,int]]:
-        """Find the animals at proximity on which trees are located
+        """Find the cells at proximity on which animals are located
 
         Args:
             include_self (bool, optional): include self in the list. Defaults to False.
@@ -266,6 +265,14 @@ class Entity(EntitySprite):
         return animals
     
     def _find_energy_cells(self, radius: int=1) -> Set[Tuple[int,int]]:
+        """Find cells at proximity on which energies are located
+
+        Args:
+            radius (int, optional): radius of search. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int,int]]: set of found energies' cells' coordinates
+        """
         energies: Set[Tuple[int,int]] = self._find_cells_by_value(subgrid=self.grid.resource_grid, value=Energy, radius=radius)
         return energies
     
@@ -331,6 +338,8 @@ class Animal(Entity):
         self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
     
     def plant_tree(self) -> None:
+        """Plant a tree nearby, consume red energy
+        """        
         PLANTING_COST: Final[int] = 10
         if self._energies_stock[EnergyType.RED.value] >= PLANTING_COST:
             self.loose_energy(energy_type=EnergyType.RED, quantity=PLANTING_COST)
@@ -341,7 +350,8 @@ class Animal(Entity):
             
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
         
-    def store_seed(self, seed: Seed)-> None:
+    def store_seed(self, seed: Seed)-> None: 
+        """Pick up a seed and stor it"""
         if not self.seed_pocket:
             self.seed_pocket = seed
         
@@ -376,7 +386,7 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
-            self.pick_up_energy(cell_coordinates=coordinates)
+            self.pick_up_resource(cell_coordinates=coordinates)
         
         #self.die()
         self.move(direction=direction)

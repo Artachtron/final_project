@@ -283,13 +283,24 @@ class TestAnimal:
         animal2 = grid2.create_entity(entity_type="animal", position=(0,0), size=10, blue_energy=10, red_energy=10)
         animal2.plant_tree()
         assert len(animal2._find_tree_cells(include_self=True, radius=1)) == 0
+    
+    def test_pick_up_seed(self):
+        seed = entities.Seed(grid=self.grid, position=(3,2), blue_energy=5 ,red_energy=7)
+        position = seed.position
+        animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=10)
+        assert not animal.seed_pocket
+        assert self.grid.resource_grid.get_position_value(position=position) == seed
+        animal.pick_up_resource(cell_coordinates=position)
+        assert animal.seed_pocket == seed
+        
+        assert not self.grid.resource_grid.get_position_value(position=position)
         
     def test_recycle_seed(self):
         seed = entities.Seed(grid=self.grid, position=(3,2), blue_energy=5 ,red_energy=7)
         animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=10)
         animal.recycle_seed()
         assert len(animal._find_energy_cells()) == 0
-        animal.seed_pocket = seed
+        animal.pick_up_resource(cell_coordinates=seed.position)
         
         animal.recycle_seed()
         assert not animal.seed_pocket 
@@ -463,7 +474,7 @@ class TestEntityEnergy:
         entity.drop_energy(energy_type=EnergyType.RED, quantity=1, cell_coordinates=(1,1))
         assert self.entity.get_blue_energy() == 5
         
-        entity.pick_up_energy(cell_coordinates=(1,1))
+        entity.pick_up_resource(cell_coordinates=(1,1))
         assert self.entity.get_blue_energy() == 3
 
     def test_pick_up_energy(self):
@@ -480,7 +491,7 @@ class TestEntityEnergy:
         assert self.grid.energy_group.has(blue_energy)
         
         # Energy picked up
-        self.entity.pick_up_energy(cell_coordinates=blue_cell)
+        self.entity.pick_up_resource(cell_coordinates=blue_cell)
         assert self.grid.resource_grid.get_position_value(position=blue_cell) == None
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 10}
         assert self.entity.get_blue_energy() == 15
@@ -496,14 +507,14 @@ class TestEntityEnergy:
         assert self.grid.energy_group.has(red_energy)
         
         # Energy picked up
-        self.entity.pick_up_energy(cell_coordinates=red_cell)
+        self.entity.pick_up_resource(cell_coordinates=red_cell)
         assert self.grid.resource_grid.get_position_value(position=red_cell) == None
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 15}
         assert self.entity.get_red_energy() == 15
         assert not self.grid.energy_group.has(red_energy)
         
         # Pick up empty cell
-        self.entity.pick_up_energy(cell_coordinates=red_cell)
+        self.entity.pick_up_resource(cell_coordinates=red_cell)
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 15}
         
     def test_pick_up_seed(self):
@@ -511,13 +522,13 @@ class TestEntityEnergy:
         position = seed.position
         assert self.entity.seed_pocket == None
         assert self.grid.resource_grid.get_position_value(position=position) == seed
-        self.entity.pick_up_energy(cell_coordinates=position)
+        self.entity.pick_up_resource(cell_coordinates=position)
         assert self.entity.seed_pocket == seed
         assert self.grid.resource_grid.get_position_value(position=position) == None
         
         # Can't pick up another seed
         seed2 = self.grid.create_entity(entity_type="seed", position=(1,2))
-        self.entity.pick_up_energy(cell_coordinates=seed2.position)
+        self.entity.pick_up_resource(cell_coordinates=seed2.position)
         assert self.entity.seed_pocket != seed2
         assert self.entity.seed_pocket == seed
         
