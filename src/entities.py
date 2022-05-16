@@ -80,7 +80,7 @@ class Entity(EntitySprite):
             quantity (int): the amount of energy to drop
             cell_coordinates (Tuple[int,int]): the coordinates of the cell on which to drop energy
         """        
-        if self._check_coordinates(cell_coordinates=cell_coordinates, subgrid=self.grid.energy_grid):
+        if self._check_coordinates(cell_coordinates=cell_coordinates, subgrid=self.grid.resource_grid):
             quantity = self.loose_energy(energy_type=energy_type, quantity=quantity)   
                 
             self.grid.create_energy(energy_type=energy_type, quantity=quantity, cell_coordinates=cell_coordinates)
@@ -93,8 +93,8 @@ class Entity(EntitySprite):
         Args:
             cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
         """
-        energy_grid = self.grid.energy_grid
-        energy: Energy = energy_grid.get_position_value(position=cell_coordinates)
+        resource_grid = self.grid.resource_grid
+        energy: Energy = resource_grid.get_position_value(position=cell_coordinates)
         if energy:
             self.gain_energy(energy_type=energy.type, quantity=energy.quantity)
             self.grid.remove_energy(energy=energy)
@@ -311,10 +311,10 @@ class Animal(Entity):
             
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
-        energy_grid = self.grid.energy_grid
-        free_cell = self.select_free_cell(subgrid=energy_grid)
+        resource_grid = self.grid.resource_grid
+        free_cell = self.select_free_cell(subgrid=resource_grid)
         self.grid.create_energy(energy_type=EnergyType.RED, quantity=self.energies_stock[EnergyType.RED.value], cell_coordinates=free_cell)
-        free_cell = self.select_free_cell(subgrid=energy_grid)
+        free_cell = self.select_free_cell(subgrid=resource_grid)
         self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=self.energies_stock[EnergyType.BLUE.value], cell_coordinates=free_cell)
                     
     def update(self) -> None:
@@ -328,7 +328,7 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
-            if self._check_coordinates(cell_coordinates=coordinates, subgrid=self.grid.energy_grid):
+            if self._check_coordinates(cell_coordinates=coordinates, subgrid=self.grid.resource_grid):
                 self.drop_energy(energy_type=np.random.choice(EnergyType), cell_coordinates=coordinates, quantity=1)
                 
         if np.random.uniform() < 0.01:

@@ -11,7 +11,7 @@ class TestGrid:
     def setup(self):
         self.grid = world.Grid(width=5, height=10)
         self.entity_grid = self.grid.entity_grid
-        self.energy_grid = self.grid.energy_grid     
+        self.energy_grid = self.grid.resource_grid     
         
     def test_creation_grid(self):
         assert self.grid

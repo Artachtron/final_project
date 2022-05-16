@@ -230,7 +230,7 @@ class TestAnimal:
         for x in range(-radius,radius+1):
             for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
-                energy = self.grid.energy_grid.get_position_value(position=coordinate)
+                energy = self.grid.resource_grid.get_position_value(position=coordinate)
                 if energy:
                     energies.append(energy)
                     types.append(energy.type)
@@ -264,7 +264,7 @@ class TestAnimal:
         for x in range(-radius,radius+1):
             for y in range(-radius,radius+1):
                 coordinate = tuple(np.add(position,(x,y)))
-                energy = self.grid.energy_grid.get_position_value(position=coordinate)
+                energy = self.grid.resource_grid.get_position_value(position=coordinate)
                 if energy:
                     energies.append(energy)
                     types.append(energy.type)
@@ -315,7 +315,7 @@ class TestEntityMethods:
                 cells.append(tuple(np.add(position,(x,y))))
         
         for _ in range(100):
-            free_cell = self.entity.select_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            free_cell = self.entity.select_free_cell(subgrid=self.grid.resource_grid,radius=radius)
             assert free_cell in cells
             
         position = (3,5)
@@ -327,7 +327,7 @@ class TestEntityMethods:
                 cells.append(tuple(np.add(position,(x,y))))
         
         for _ in range(100):
-            free_cell = self.entity.select_free_cell(subgrid=self.grid.energy_grid,radius=radius)
+            free_cell = self.entity.select_free_cell(subgrid=self.grid.resource_grid,radius=radius)
             assert free_cell 
             assert free_cell in cells
             
@@ -392,11 +392,11 @@ class TestEntityEnergy:
         
         # Drop blue energy
         blue_cell = (1,1)
-        assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
+        assert self.grid.resource_grid.get_position_value(position=blue_cell) == None
         self.entity.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell_coordinates=blue_cell)
         assert self.entity.energies_stock == {"blue energy": 4, "red energy": 10}
         assert self.entity.get_blue_energy() == 4
-        blue_energy = self.grid.energy_grid.get_position_value(position=blue_cell)
+        blue_energy = self.grid.resource_grid.get_position_value(position=blue_cell)
         assert blue_energy != None
         assert self.grid.energy_group.has(blue_energy)
         assert type(blue_energy).__name__ == 'BlueEnergy'
@@ -404,12 +404,12 @@ class TestEntityEnergy:
         
         # Drop red energy
         red_cell = (3,2)
-        assert self.grid.energy_grid.get_position_value(position=red_cell) == None
+        assert self.grid.resource_grid.get_position_value(position=red_cell) == None
         assert self.entity.get_red_energy() == 10
         self.entity.drop_energy(energy_type=EnergyType.RED, quantity=3, cell_coordinates=red_cell)
         assert self.entity.energies_stock == {"blue energy": 4, "red energy": 7}
         assert self.entity.get_red_energy() == 7
-        red_energy = self.grid.energy_grid.get_position_value(position=red_cell)
+        red_energy = self.grid.resource_grid.get_position_value(position=red_cell)
         assert red_energy != None
         assert self.grid.energy_group.has(red_energy)
         assert type(red_energy).__name__ == 'RedEnergy'
@@ -419,7 +419,7 @@ class TestEntityEnergy:
         self.entity.drop_energy(energy_type=EnergyType.BLUE, quantity=1, cell_coordinates=red_cell)
         assert self.entity.energies_stock == {"blue energy": 4, "red energy": 7}
         assert self.entity.get_blue_energy() == 4
-        red_energy2 = self.grid.energy_grid.get_position_value(position=red_cell)
+        red_energy2 = self.grid.resource_grid.get_position_value(position=red_cell)
         assert red_energy2 != None
         assert self.grid.energy_group.has(red_energy2)
         assert type(red_energy2).__name__ == 'RedEnergy' 
@@ -427,12 +427,12 @@ class TestEntityEnergy:
         
         # Drop too much energy
         red_cell2 = (3,3)
-        assert self.grid.energy_grid.get_position_value(position=red_cell2) == None
+        assert self.grid.resource_grid.get_position_value(position=red_cell2) == None
         assert self.entity.get_red_energy() == 7
         self.entity.drop_energy(energy_type=EnergyType.RED, quantity=10, cell_coordinates=red_cell2)
         assert self.entity.energies_stock == {"blue energy": 4, "red energy": 0}
         assert self.entity.get_red_energy() == 0
-        red_energy2 = self.grid.energy_grid.get_position_value(position=red_cell2)
+        red_energy2 = self.grid.resource_grid.get_position_value(position=red_cell2)
         assert red_energy2.quantity == 7
         
     def test_actions_cost(self):
@@ -463,15 +463,15 @@ class TestEntityEnergy:
         
         # Blue energy
         blue_cell = (1,1)
-        assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
+        assert self.grid.resource_grid.get_position_value(position=blue_cell) == None
         self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=10, cell_coordinates=blue_cell)
-        blue_energy = self.grid.energy_grid.get_position_value(position=blue_cell)
+        blue_energy = self.grid.resource_grid.get_position_value(position=blue_cell)
         assert  blue_energy != None
         assert self.grid.energy_group.has(blue_energy)
         
         # Energy picked up
         self.entity.pick_up_energy(cell_coordinates=blue_cell)
-        assert self.grid.energy_grid.get_position_value(position=blue_cell) == None
+        assert self.grid.resource_grid.get_position_value(position=blue_cell) == None
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 10}
         assert self.entity.get_blue_energy() == 15
         assert not self.grid.energy_group.has(blue_energy)
@@ -479,15 +479,15 @@ class TestEntityEnergy:
         # Red energy
         red_cell = (2,2)
         self.entity.get_red_energy() == 10
-        assert self.grid.energy_grid.get_position_value(position=red_cell) == None
+        assert self.grid.resource_grid.get_position_value(position=red_cell) == None
         self.grid.create_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=red_cell)
-        red_energy = self.grid.energy_grid.get_position_value(position=red_cell)
+        red_energy = self.grid.resource_grid.get_position_value(position=red_cell)
         assert red_energy != None
         assert self.grid.energy_group.has(red_energy)
         
         # Energy picked up
         self.entity.pick_up_energy(cell_coordinates=red_cell)
-        assert self.grid.energy_grid.get_position_value(position=red_cell) == None
+        assert self.grid.resource_grid.get_position_value(position=red_cell) == None
         assert self.entity.energies_stock == {"blue energy": 15, "red energy": 15}
         assert self.entity.get_red_energy() == 15
         assert not self.grid.energy_group.has(red_energy)

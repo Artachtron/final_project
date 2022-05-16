@@ -53,7 +53,7 @@ class Grid:
         self.dimensions = (self._width, self._height)
         
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='entity')
-        self._energy_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='energy')
+        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions, dtype='energy')
         self.BLOCK_SIZE = block_size
         
         self.energy_group = pg.sprite.Group()
@@ -64,8 +64,8 @@ class Grid:
         return self._entity_grid
    
     @property
-    def energy_grid(self) -> np.array:
-        return self._energy_grid
+    def resource_grid(self) -> np.array:
+        return self._resource_grid
         
     @property
     def height(self) -> int:
@@ -98,10 +98,10 @@ class Grid:
         Args:
             energy (Energy): energy to remove
         """
-        energy_grid = self.energy_grid
+        resource_grid = self.resource_grid
         self.energy_group.remove(energy)
         position = energy.position
-        energy_grid.update_grid_cell_value(position=position, value=None)
+        resource_grid.update_grid_cell_value(position=position, value=None)
         print(f"{energy.type} was deleted at {position}")
     
     def create_entity(self, entity_type: str, position, size=1, blue_energy=5, red_energy=10) -> Tree|Animal:
