@@ -43,7 +43,7 @@ class EntitySprite(pg.sprite.Sprite):
         
         self.grid = grid
         self.entity_grid = grid.entity_grid
-        self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
+        
    
 class Entity(EntitySprite):
     def __init__(self,
@@ -61,6 +61,8 @@ class Entity(EntitySprite):
         self.action_cost = action_cost
         self.age = 0
         self.max_age = max_age if max_age else size*5
+        
+        self.entity_grid.update_grid_cell_value(position=(self.position), value=self)
         
     @property
     def energies_stock(self):
@@ -376,7 +378,7 @@ class Seed(EntitySprite):
                  red_energy: int=0,
                  ):
         super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
-       
+        self.grid.resource_grid.update_grid_cell_value(position=(self.position), value=self)
 
 
 

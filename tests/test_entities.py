@@ -84,7 +84,7 @@ class TestTree:
         cell = self.entity_grid.get_position_value(position=position)
         assert cell.__class__.__name__ == "Tree"
         tree.die()
-        cell = self.entity_grid.get_position_value(position=position)
+        cell = self.grid.resource_grid.get_position_value(position=position)
         assert cell.__class__.__name__ == "Seed"
  
         
