@@ -221,11 +221,9 @@ class TestAnimal:
     def test_drop_energy_on_death(self):
         # Drop all energy on death
         animal = self.grid.create_entity(size=1, position=(0,0), blue_energy=5, red_energy=10, entity_type="animal")
-        position = animal.position
         animal.die()
                 
         energies = []
-        types = []
         energie_cells = animal._find_energy_cells()
         energies =  [self.grid.resource_grid.get_position_value(position=energy) for energy in energie_cells]
                            
@@ -249,11 +247,9 @@ class TestAnimal:
         animal2 = self.grid.create_entity(size=1, position=(0,0), blue_energy=6, red_energy=10, entity_type="animal")
         animal2.action_cost = 0
         animal2.drop_energy(energy_type=EnergyType.RED, quantity=5, cell_coordinates=(4,7))
-        position = animal2.position
         animal2.die()
         
         energies = []
-        types = []
         energie_cells = animal2._find_energy_cells()
         energies =  [self.grid.resource_grid.get_position_value(position=energy) for energy in energie_cells]
                            
@@ -290,9 +286,9 @@ class TestAnimal:
         animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=10)
         assert not animal.seed_pocket
         assert self.grid.resource_grid.get_position_value(position=position) == seed
+        
         animal.pick_up_resource(cell_coordinates=position)
         assert animal.seed_pocket == seed
-        
         assert not self.grid.resource_grid.get_position_value(position=position)
         
     def test_recycle_seed(self):
@@ -317,6 +313,32 @@ class TestAnimal:
                 assert energy.quantity == 7  
                 red += 1
         assert (blue,red) == (1,1)
+        
+    def test_replant_seed(self):
+        tree = entities.Tree(grid=self.grid, position=(3,2), blue_energy=12 ,red_energy=27, max_age=30)
+        max_age, blue_energy, red_energy = tree.max_age, tree.get_blue_energy(), tree.get_red_energy()
+        tree.die()
+        animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=20)
+        animal.pick_up_resource(cell_coordinates=tree.position)
+        animal.get_red_energy() == 10
+        animal.get_blue_energy() == 10
+        animal.plant_tree()
+        animal.get_red_energy() == 0
+        animal.get_blue_energy() == 9
+        
+        cell, = animal._find_tree_cells()
+        tree = self.grid.entity_grid.get_position_value(position=cell)
+        assert tree.max_age == max_age
+        assert tree.get_blue_energy() == blue_energy
+        assert tree.get_red_energy() == red_energy
+        
+        tree.die()
+        animal.plant_tree()
+        cell, = animal._find_tree_cells()
+        tree = self.grid.entity_grid.get_position_value(position=cell)
+        assert not tree.max_age == max_age
+        assert not tree.get_blue_energy() == blue_energy
+        assert not tree.get_red_energy() == red_energy
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)

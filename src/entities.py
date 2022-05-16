@@ -1,3 +1,4 @@
+import re
 from types import NoneType
 import pygame as pg
 from os.path import dirname, realpath, join
@@ -58,12 +59,14 @@ class Seed(EntitySprite):
     def __init__(self,
                  grid,
                  position: Tuple[int,int],
+                 max_age: int=0,
                  size: int=15,
                  blue_energy: int=0,
                  red_energy: int=0,
                  ):
         super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
-        self.grid.resource_grid.update_grid_cell_value(position=(self.position), value=self)        
+        self.grid.resource_grid.update_grid_cell_value(position=(self.position), value=self)
+        self.max_age = max_age if max_age else size*5            
    
 class Entity(EntitySprite):
     def __init__(self,
@@ -114,6 +117,7 @@ class Entity(EntitySprite):
             elif resource.__class__.__name__ == "Seed" and type(self) == Animal:
                 self.store_seed(seed=resource)
             self.grid.remove_energy(energy=resource)
+            
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
                         
     def gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
@@ -343,12 +347,27 @@ class Animal(Entity):
         PLANTING_COST: Final[int] = 10
         if self._energies_stock[EnergyType.RED.value] >= PLANTING_COST:
             self.loose_energy(energy_type=EnergyType.RED, quantity=PLANTING_COST)
-        
-        free_cell = self.select_free_cell(subgrid=self.entity_grid)
-        if free_cell:
-            self.grid.create_entity(entity_type="tree", position=free_cell)
-            
-        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+       
+            free_cell = self.select_free_cell(subgrid=self.entity_grid)
+            if free_cell:
+                if self.seed_pocket:
+                    self.replant_seed(position=free_cell)
+                else:
+                    self.grid.create_entity(entity_type="tree", position=free_cell)
+                
+            self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+ 
+    def replant_seed(self, position: Tuple[int, int]) -> None:
+        """Replant seed store in pockect
+
+        Args:
+            position (Tuple[int, int]): cell coordinates on which to plant seed
+        """
+        if not self.seed_pocket:
+            return
+        seed = self.seed_pocket
+        self.grid.create_entity(entity_type="tree", position=position, blue_energy=seed.get_blue_energy(), red_energy=seed.get_red_energy(), max_age=seed.max_age)
+        self.seed_pocket = None
         
     def store_seed(self, seed: Seed)-> None: 
         """Pick up a seed and stor it"""
@@ -364,7 +383,7 @@ class Animal(Entity):
         self.decompose(self.seed_pocket)
         self.seed_pocket = None
         self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)        
-            
+                  
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
         self.decompose(entity=self)
@@ -413,7 +432,7 @@ class Tree(Entity):
         
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""
-        self.grid.create_entity(entity_type="seed", position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy())
+        self.grid.create_entity(entity_type="seed", position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy(), max_age=self.max_age)
     
     def update(self):
         pass
