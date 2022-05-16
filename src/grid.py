@@ -104,7 +104,7 @@ class Grid:
         resource_grid.update_grid_cell_value(position=position, value=None)
         print(f"{energy} was deleted at {position}")
     
-    def create_entity(self, entity_type: str, position, size=1, blue_energy=5, red_energy=10) -> Tree|Animal|Seed:
+    def create_entity(self, entity_type: str, position, size=20, blue_energy=5, red_energy=10) -> Tree|Animal|Seed:
         """Create an entity and add it to the grid
 
         Args:

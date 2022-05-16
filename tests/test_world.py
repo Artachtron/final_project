@@ -79,7 +79,7 @@ class TestWorld:
     
     def test_initialization_population(self):
         grid = world.Grid(height=10,width=10)
-        world.init_population(grid=grid, counts=(3, 2))
+        world.init_world(grid=grid, counts=(3, 2))
         
         assert world.entity_group
         """ assert world.animal_group
