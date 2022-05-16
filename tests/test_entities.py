@@ -1,3 +1,4 @@
+from hashlib import new
 import numpy as np
 import pytest
 import sys, os
@@ -339,6 +340,21 @@ class TestAnimal:
         assert not tree.max_age == max_age
         assert not tree.get_blue_energy() == blue_energy
         assert not tree.get_red_energy() == red_energy
+        
+    def test_modify_cell_color(self):
+        animal = self.grid.create_entity(entity_type="animal", position=(3,3), size=10, blue_energy=10, red_energy=10)
+        cell_color = self.grid._color_grid.get_cell_value(cell_coordinates=animal.position)
+        assert np.array_equal(cell_color, np.array([255,255,255], dtype=np.uint8))
+        
+        new_color = tuple(np.random.choice(range(256), size=3))
+        animal.modify_cell_color(cell_coordinates=animal.position, color=new_color)
+        cell_color = self.grid._color_grid.get_cell_value(cell_coordinates=animal.position)
+        assert np.array_equal(cell_color, np.array(new_color, dtype=np.uint8))
+        
+        new_color2 = tuple(np.random.choice(range(256), size=3))
+        animal.modify_cell_color(color=new_color2)
+        cell_color = self.grid._color_grid.get_cell_value(cell_coordinates=animal.position)
+        assert np.array_equal(cell_color, np.array(new_color2, dtype=np.uint8))
         
 class TestEntityMethods:
     @pytest.fixture(autouse=True)

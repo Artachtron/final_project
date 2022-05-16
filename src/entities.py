@@ -390,8 +390,10 @@ class Animal(Entity):
         """Action on animal death, release energy on cells around death position"""
         self.decompose(entity=self)
                     
-    def modify_cell_color(self, cell_coordinates: Tuple[int, int], color: Tuple[int,int,int]) -> None:
+    def modify_cell_color(self, color: Tuple[int,int,int], cell_coordinates: Tuple[int, int]=None) -> None:
+        cell_coordinates = cell_coordinates if cell_coordinates else self.position
         self.grid.color_grid.set_cell_value(cell_coordinates=cell_coordinates, value=color)
+        self.loose_energy(energy_type=EnergyType.BLUE.BLUE, quantity=self.action_cost)
     
     def update(self) -> None:
         """Update the Animal"""
