@@ -10,24 +10,31 @@ class TestEnergies:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.grid = world.Grid(width=10, height=10)
+        self.resource_grid = self.grid.resource_grid
         world.init_pygame()
   
     def test_create_energies(self):
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
+        self.grid.create_energy(energy_type=energies.EnergyType.BLUE, quantity=10, cell_coordinates=(4,4))
+        self.grid.create_energy(energy_type=energies.EnergyType.RED, quantity=10, cell_coordinates=(4,5))
+        blue_energy2 = self.grid.resource_grid.get_cell_value(cell_coordinates=(4,4))
+        red_energy2 =self.grid.resource_grid.get_cell_value(cell_coordinates=(4,5))
         
         assert type(blue_energy) == energies.BlueEnergy
         assert type(red_energy) == energies.RedEnergy
         assert blue_energy.__class__.__base__ == energies.Energy
         assert red_energy.__class__.__base__ == energies.Energy
+        assert self.grid.energy_group.has(blue_energy2)
+        assert self.grid.energy_group.has(red_energy2)
         #{'_Sprite__g': {}, 'type': <EnergyType.BLUE: 0>, 'quantity': 10, 'position': (4, 5), 'image': <Surface(10x10x32 SW)>, 'rect': <rect(85, 105, 10, 10)>, 'grid': <__main__.Grid object at 0x000001751E453A90>}
         
     def test_energies_fields(self):
         blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
         red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
-        assert set(['type','quantity', 'position', 'image', 'rect', 'grid']).issubset(vars(blue_energy))
-        assert set(['type','quantity', 'position', 'image', 'rect', 'grid']).issubset(vars(red_energy))
+        assert set(['type','quantity', 'position', 'image', 'rect', 'resource_grid']).issubset(vars(blue_energy))
+        assert set(['type','quantity', 'position', 'image', 'rect', 'resource_grid']).issubset(vars(red_energy))
         
         assert blue_energy.type == energies.EnergyType.BLUE
         assert red_energy.type == energies.EnergyType.RED
@@ -35,20 +42,20 @@ class TestEnergies:
         assert red_energy.position == (5,6)
         assert blue_energy.quantity == 5
         assert red_energy.quantity == 10
-        assert blue_energy.grid == self.grid
-        assert red_energy.grid == self.grid
+        assert blue_energy.resource_grid == self.resource_grid
+        assert red_energy.resource_grid == self.resource_grid
         assert type(blue_energy.image) == pg.Surface
         assert type(red_energy.image) == pg.Surface
         assert type(blue_energy.rect) == pg.Rect
         assert type(red_energy.rect) == pg.Rect
         
     def test_energies_on_grid(self):
-        assert self.grid.get_position_value(position=(5,5)) == 0
-        assert self.grid.get_position_value(position=(5,6)) == 0
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,5)) == None
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,6)) == None
         
-        energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
-        energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
+        blue_energy = energies.BlueEnergy(grid=self.grid, position=(5,5), quantity=5)
+        red_energy = energies.RedEnergy(grid=self.grid, position=(5,6), quantity=10)
         
-        assert self.grid.get_position_value(position=(5,4)) == 0
-        assert self.grid.get_position_value(position=(5,5)) == 1
-        assert self.grid.get_position_value(position=(5,6)) == 1
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,4)) == None
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,5)) == blue_energy
+        assert self.resource_grid.get_cell_value(cell_coordinates=(5,6)) == red_energy
