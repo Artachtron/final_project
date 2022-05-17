@@ -497,17 +497,19 @@ class TestEntityEnergy:
     def test_actions_cost(self):
         entity = self.entity
         entity.energies_stock['blue energy'] = 10
+        entity.energies_stock['red energy'] = 100
         
         assert self.entity.get_blue_energy() == 10
         
         entity.move(entities.Direction.LEFT)
         assert self.entity.get_blue_energy() == 9
         
-        entity.increase_age()
+        entity.plant_tree()
         assert self.entity.get_blue_energy() == 8
         
         entity.grow()
         assert self.entity.get_blue_energy() == 7
+        assert self.entity.action_cost == 2
                 
         entity.drop_energy(energy_type=EnergyType.RED, quantity=1, cell_coordinates=(1,1))
         assert self.entity.get_blue_energy() == 5
