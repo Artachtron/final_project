@@ -5,7 +5,6 @@ import pygame as pg
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
 from project.src import world, energies
 
-
 class TestEnergies:
     @pytest.fixture(autouse=True)
     def setup(self):

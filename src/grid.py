@@ -37,7 +37,7 @@ class SubGrid:
         try:
             if cell_coordinates[0] < 0 or cell_coordinates[1] < 0:
                 raise IndexError
-            return self._subgrid[cell_coordinates]
+            return self._subgrid[tuple(cell_coordinates)]
         except IndexError:
             print(f"{cell_coordinates} is out of bounds")
             return False
