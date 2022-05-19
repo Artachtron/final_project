@@ -59,6 +59,7 @@ class Seed(EntitySprite):
     def __init__(self,
                  grid,
                  position: Tuple[int,int],
+                 production_type: EnergyType, 
                  max_age: int=0,
                  size: int=15,
                  blue_energy: int=0,
@@ -66,7 +67,8 @@ class Seed(EntitySprite):
                  ):
         super(Seed, self).__init__(image_filename="Seed.png", size=size, grid=grid, position=position, blue_energy=blue_energy, red_energy=red_energy)
         self.grid.resource_grid.set_cell_value(cell_coordinates=(self.position), value=self)
-        self.max_age = max_age if max_age else size*5            
+        self.max_age = max_age if max_age else size*5
+        self.production_type = production_type           
    
 class Entity(EntitySprite):
     def __init__(self,
@@ -368,7 +370,12 @@ class Animal(Entity):
         if not self.seed_pocket:
             return
         seed = self.seed_pocket
-        self.grid.create_entity(entity_type="tree", position=position, blue_energy=seed.get_blue_energy(), red_energy=seed.get_red_energy(), max_age=seed.max_age)
+        self.grid.create_entity(entity_type="tree",
+                                position=position,
+                                blue_energy=seed.get_blue_energy(),
+                                red_energy=seed.get_red_energy(),
+                                max_age=seed.max_age,
+                                production_type=seed.production_type)
         self.seed_pocket = None
         
     def store_seed(self, seed: Seed)-> None: 
@@ -411,8 +418,11 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
             coordinates = tuple(np.add(self.position, (x,y)))
-            if self._check_coordinates(cell_coordinates=coordinates, subgrid=self.grid.resource_grid):
-                self.drop_energy(energy_type=np.random.choice(EnergyType), cell_coordinates=coordinates, quantity=1)
+            if self._check_coordinates(cell_coordinates=coordinates,
+                                       subgrid=self.grid.resource_grid):
+                self.drop_energy(energy_type=np.random.choice(EnergyType),
+                                 cell_coordinates=coordinates,
+                                 quantity=1)
                 
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2,2), np.random.randint(-2,2)
@@ -421,18 +431,20 @@ class Animal(Entity):
         
         if np.random.uniform() < 0.1:
             color = tuple(np.random.choice(range(256), size=3))
-            self.modify_cell_color(cell_coordinates=self.position, color=color)
+            self.modify_cell_color(cell_coordinates=self.position,
+                                   color=color)
         
         #self.die()
         self.move(direction=direction)
         
 class Tree(Entity):
-    def __init__(self, production_type: EnergyType=None, *args, **kwargs):
+    def __init__(self,
+                 production_type: EnergyType=None,
+                 *args,
+                 **kwargs
+                 ):
         super(Tree, self).__init__(image_filename='Plant.png',*args, **kwargs)
-        if production_type:
-            self.production_type = production_type
-        else:
-            self.production_type = np.random.choice(list(EnergyType))
+        self.production_type = production_type if production_type else np.random.choice(list(EnergyType))
         
     def produce_energy(self) -> None:
         """Produce energy
@@ -443,12 +455,18 @@ class Tree(Entity):
         
         count_trees_around = len(self._find_tree_cells())
         
-        self.gain_energy(energy_type=self.production_type, quantity=int((5*self.size)/2**count_trees_around))
-        self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+        self.gain_energy(energy_type=self.production_type,
+                         quantity=int((5*self.size)/2**count_trees_around))
+        self.loose_energy(energy_type=EnergyType.BLUE,
+                          quantity=self.action_cost)
         
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""
-        self.grid.create_entity(entity_type="seed", position=self.position, blue_energy=self.get_blue_energy(),red_energy=self.get_red_energy(), max_age=self.max_age)
+        self.grid.create_entity(entity_type="seed",
+                                position=self.position,
+                                blue_energy=self.get_blue_energy(),
+                                red_energy=self.get_red_energy(),
+                                max_age=self.max_age)
     
     def test_update(self):
         pass
