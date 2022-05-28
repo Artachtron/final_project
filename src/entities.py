@@ -88,15 +88,21 @@ class Seed(EntitySprite):
                                    red_energy=red_energy)
         self.grid.resource_grid.set_cell_value(
             cell_coordinates=(self.position), value=self)
-        self.max_age = max_age if max_age else size * 5
+        self._max_age = max_age if max_age else size * 5
         self.production_type = production_type
 
 
 class Entity(EntitySprite):
+    MAX_AGE_SIZE_COEFFICIENT: Final[int] = 5
+    GROWTH_ENERGY_REQUIRED: Final[int] = 10
+    CHILD_ENERGY_COST_DIVISOR: Final[int] = 2
+    CHILD_GROWTH_ENERGY_REQUIRED: Final[int] = GROWTH_ENERGY_REQUIRED/CHILD_ENERGY_COST_DIVISOR
+    
     def __init__(self,
                  image_filename: str,
                  grid,
                  position: Tuple[int, int],
+                 adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
                  action_cost: int = 1,
@@ -110,13 +116,22 @@ class Entity(EntitySprite):
                                      blue_energy=blue_energy,
                                      red_energy=red_energy)
 
-        self.action_cost = action_cost
-        self.age = 0
-        self.max_age = max_age if max_age else size * 5
+        self._age = 0
+        self._max_age = max_age if max_age else size * Entity.MAX_AGE_SIZE_COEFFICIENT
+        self._adult_size = adult_size
+        self.reached_adulthood()
 
         self.entity_grid.set_cell_value(cell_coordinates=(self.position),
                                         value=self)
+        
+        
+        self._action_cost = action_cost if self.is_adult else action_cost
 
+    def reached_adulthood(self) -> None:
+        """Check if the entity reached maturity size and assign the result in the is_adult instance variable
+        """
+        self.is_adult = self.size >= self._adult_size
+   
     def drop_energy(self, energy_type: EnergyType, quantity: int,
                     cell_coordinates: Tuple[int, int]) -> None:
         """Drop some energy on a cell
@@ -139,7 +154,7 @@ class Entity(EntitySprite):
 
         self.loose_energy(
             energy_type=EnergyType.BLUE,
-            quantity=self.action_cost)
+            quantity=self._action_cost)
 
     def pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -161,7 +176,7 @@ class Entity(EntitySprite):
 
         self.loose_energy(
             energy_type=EnergyType.BLUE,
-            quantity=self.action_cost)
+            quantity=self._action_cost)
 
     def gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Gain energy from specified type to energies stock
@@ -195,14 +210,21 @@ class Entity(EntitySprite):
         """grow the entity to bigger size, consumming red energy
         """
         self.loose_energy(energy_type=EnergyType.BLUE,
-                          quantity=self.action_cost)
-        energy_required = self.size * 10
+                          quantity=self._action_cost)
+        if self.is_adult:
+            energy_required = self.size * Entity.GROWTH_ENERGY_REQUIRED
+        else:
+            energy_required = self.size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
+            
         if self.energies_stock[EnergyType.RED.value] >= energy_required:
             self.loose_energy(energy_type=EnergyType.RED,
                               quantity=energy_required)
             self.size += 1
-            self.max_age += 5
-            self.action_cost += 1
+            self._max_age += 5
+            self._action_cost += 1
+        
+        if not self.is_adult:
+            self.reached_adulthood()
 
     def increase_age(self, amount: int = 1) -> None:
         """Increase age of certain amount
@@ -210,10 +232,10 @@ class Entity(EntitySprite):
         Args:
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
-        self.age += amount
+        self._age += amount
        # self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
 
-        if self.age > self.max_age:
+        if self._age > self._max_age:
             self.die()
 
     def die(self) -> None:
@@ -222,7 +244,7 @@ class Entity(EntitySprite):
         self.grid.remove_entity(entity=self)
         self.on_death()
 
-        print(f"{self} died at age {self.age}")
+        print(f"{self} died at age {self._age}")
 
     def _check_coordinates(
             self, cell_coordinates: Tuple[int, int], subgrid) -> bool:
@@ -420,7 +442,7 @@ class Animal(Entity):
             self.rect.y = next_move[1] * self.grid.BLOCK_SIZE
         self.loose_energy(
             energy_type=EnergyType.BLUE,
-            quantity=self.action_cost)
+            quantity=self._action_cost)
 
     def plant_tree(self) -> None:
         """Plant a tree nearby, consume red energy
@@ -441,7 +463,7 @@ class Animal(Entity):
 
             self.loose_energy(
                 energy_type=EnergyType.BLUE,
-                quantity=self.action_cost)
+                quantity=self._action_cost)
 
     def replant_seed(self, position: Tuple[int, int]) -> None:
         """Replant seed store in pockect
@@ -456,7 +478,7 @@ class Animal(Entity):
                                 position=position,
                                 blue_energy=seed.get_blue_energy(),
                                 red_energy=seed.get_red_energy(),
-                                max_age=seed.max_age,
+                                max_age=seed._max_age,
                                 production_type=seed.production_type)
         self.seed_pocket = None
 
@@ -467,7 +489,7 @@ class Animal(Entity):
 
         self.loose_energy(
             energy_type=EnergyType.BLUE,
-            quantity=self.action_cost)
+            quantity=self._action_cost)
 
     def recycle_seed(self) -> None:
         """Destroy seed stored and drop energy content
@@ -479,7 +501,7 @@ class Animal(Entity):
         self.seed_pocket = None
         self.loose_energy(
             energy_type=EnergyType.BLUE,
-            quantity=self.action_cost)
+            quantity=self._action_cost)
 
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
@@ -504,7 +526,7 @@ class Animal(Entity):
 
         self.loose_energy(
             energy_type=EnergyType.BLUE,
-            quantity=self.action_cost)
+            quantity=self._action_cost)
 
     def test_update(self) -> None:
         """Test behaviour by doing random actions"""
@@ -547,7 +569,7 @@ class Tree(Entity):
         """Produce energy
         """
         MINUMUM_AGE: Final[int] = 20
-        if self.age < MINUMUM_AGE:
+        if self._age < MINUMUM_AGE:
             pass
 
         count_trees_around = len(self._find_tree_cells())
@@ -555,7 +577,7 @@ class Tree(Entity):
         self.gain_energy(energy_type=self.production_type,
                          quantity=int((5 * self.size) / 2**count_trees_around))
         self.loose_energy(energy_type=EnergyType.BLUE,
-                          quantity=self.action_cost)
+                          quantity=self._action_cost)
 
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""
@@ -563,7 +585,7 @@ class Tree(Entity):
                                 position=self.position,
                                 blue_energy=self.get_blue_energy(),
                                 red_energy=self.get_red_energy(),
-                                max_age=self.max_age)
+                                max_age=self._max_age)
 
     def test_update(self):
         pass
