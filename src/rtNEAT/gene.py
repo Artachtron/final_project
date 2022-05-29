@@ -17,5 +17,5 @@ class Gene:
         
         self.innovation_number: int = innovation_number
         self.mutation_number: int = mutation_number # Used to see how much mutation has changed the link
-        self.enable = True # When this is off the Gene is disabled
-        self.frozen = False # When frozen, the linkweight cannot be mutated
+        self.enable: bool = True # When this is off the Gene is disabled
+        self.frozen: bool = False # When frozen, the linkweight cannot be mutated

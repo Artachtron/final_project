@@ -6,7 +6,7 @@ class Genome:
                  nodes: np.array,
                  genes: np.array):
         
-        self.id = genome_id
-        self.nodes = nodes
-        self.genes = genes
+        self.id: int = genome_id
+        self.nodes: np.array = nodes # List of Nodes for the Network
+        self.genes: np.array = genes # List of innovation-tracking genes
                 
