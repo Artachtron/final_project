@@ -23,6 +23,7 @@ class Node:
                   node_id: int,
                   node_place: NodePlace = NodePlace.HIDDEN.value,
                   ):
+        
         self.active_flag: bool = False # To make sure outputs are active
         self.activesum: float = 0.0 # The incoming activity before being processed
         self.activation: float = 0.0 # The total activation entering the Node
