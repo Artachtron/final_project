@@ -1,4 +1,5 @@
-import Node
+from node import Node
+from link import Link
 
 class Gene:
     def __init__(self,

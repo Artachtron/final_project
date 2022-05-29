@@ -1,6 +1,6 @@
 import numpy as np
 import enum
-
+from link import Link
 
 from pytest import param
 
