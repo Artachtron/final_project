@@ -1,12 +1,12 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Final
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType
 from entities import Entity, Animal, Tree, Seed, EntityType
 import pygame as pg
 
 class SubGrid:
     def __init__(self, dimensions: Tuple[int,int], data_type: str, initial_value):
-        self.dimensions = dimensions
+        self.dimensions: Tuple[int,int] = dimensions
         self._subgrid: np.array = np.full(self.dimensions, fill_value=initial_value, dtype=data_type)
      
     @property
@@ -45,14 +45,14 @@ class SubGrid:
         
 class Grid:
     def __init__(self, height: int, width: int, block_size: int=20):
-        self._height = height
-        self._width = width
-        self.dimensions = (self._width, self._height)
+        self._height: int = height
+        self._width: int = width
+        self.dimensions: Tuple[int,int] = (self._width, self._height)
         
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Entity, initial_value=None)
         self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Energy, initial_value=None)
         self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3), data_type=np.uint8, initial_value=255)
-        self.BLOCK_SIZE = block_size
+        self.BLOCK_SIZE: Final[int] = block_size
         
         self.energy_group = pg.sprite.Group()
         self.entity_group = pg.sprite.Group()

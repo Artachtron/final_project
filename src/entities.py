@@ -41,18 +41,18 @@ class EntitySprite(pg.sprite.Sprite):
                  red_energy: int = 10,
                  ):
         super().__init__()
-        self.position = position
-        image = pg.image.load(
+        self.position: Tuple[int, int] = position
+        image: pg.Surface = pg.image.load(
             join(assets_path,
                 image_filename)).convert_alpha()
-        self.size = size
-        self.image = pg.transform.scale(image, (size, size))
+        self.size: int = size
+        self.image: pg.Surface = pg.transform.scale(image, (size, size))
         pos_x, pos_y = self.position
-        self.rect = self.image.get_rect(
+        self.rect: pg.Rect = self.image.get_rect(
             center=(pos_x *grid.BLOCK_SIZE + grid.BLOCK_SIZE /2,
                 pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE /2))
 
-        self._energies_stock = {
+        self._energies_stock: dict[EnergyType, int] = {
             EnergyType.BLUE.value: blue_energy,
             EnergyType.RED.value: red_energy}
 
@@ -116,16 +116,16 @@ class Entity(EntitySprite):
                                      blue_energy=blue_energy,
                                      red_energy=red_energy)
 
-        self._age = 0
-        self._max_age = max_age if max_age else size * Entity.MAX_AGE_SIZE_COEFFICIENT
-        self._adult_size = adult_size
+        self._age: int = 0
+        self._max_age: int = max_age if max_age else size * Entity.MAX_AGE_SIZE_COEFFICIENT
+        self._adult_size: int = adult_size
         self._reached_adulthood()
 
         self.entity_grid.set_cell_value(cell_coordinates=(self.position),
                                         value=self)
         
         
-        self._action_cost = action_cost if self.is_adult else action_cost
+        self._action_cost: int = action_cost if self.is_adult else action_cost
 
     def _reached_adulthood(self) -> None:
         """Check if the entity reached maturity size and assign the result in the is_adult instance variable
@@ -445,7 +445,7 @@ class Animal(Entity):
             image_filename='Animal.png',
             *args,
             **kwargs)
-        self.seed_pocket = None
+        self.seed_pocket: Seed = None
 
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
@@ -624,7 +624,7 @@ class Tree(Entity):
                  **kwargs
                  ):
         super(Tree, self).__init__(image_filename='Plant.png', *args, **kwargs)
-        self.production_type = production_type if production_type else np.random.choice(
+        self.production_type: EnergyType = production_type if production_type else np.random.choice(
             list(EnergyType))
 
     def produce_energy(self) -> None:

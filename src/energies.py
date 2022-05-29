@@ -20,15 +20,15 @@ class Energy(pg.sprite.Sprite):
                  quantity: int = 10,
                  ):
         super().__init__()
-        self.type = energy_type
-        self.quantity = quantity
-        size = max(10, quantity)
-        self.position = position
+        self.type: EnergyType = energy_type
+        self.quantity: int = quantity
+        size: int = max(10, quantity)
+        self.position: Tuple[int,int] = position
         
-        image = pg.image.load(join(assets_path, image_filename)).convert_alpha()
-        self.image = pg.transform.scale(image, (size,size))
+        image: pg.Surface = pg.image.load(join(assets_path, image_filename)).convert_alpha()
+        self.image: pg.Surface = pg.transform.scale(image, (size,size))
         pos_x, pos_y = self.position
-        self.rect = self.image.get_rect(center=(pos_x *grid.BLOCK_SIZE +grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
+        self.rect: pg.Rect = self.image.get_rect(center=(pos_x *grid.BLOCK_SIZE +grid.BLOCK_SIZE/2, pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE/2))
         
         self.resource_grid = grid.resource_grid
         self.resource_grid.set_cell_value(cell_coordinates=(self.position), value=self)
