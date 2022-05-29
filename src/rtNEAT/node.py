@@ -102,14 +102,14 @@ class Node:
             
         def add_incoming(self, feednode: Node, weight: float, recur: bool) -> None:          
             new_link: Link = Link(weight, feednode, self, recur)
-            incoming += new_link
-            feednode.outgoing += new_link
+            incoming.append(new_link)
+            feednode.outgoing.append(new_link)
                 
         
         def add_incoming(self, feednode: Node, weight: float) -> None:          
             new_link: Link = Link(weight, feednode, self, False)
-            incoming += new_link
-            feednode.outgoing += new_link
+            incoming.append(new_link)
+            feednode.outgoing.append(new_link)
             
         def get_active_out(self) -> float:
             """Return activation currently in node, if it has been activated
@@ -138,10 +138,10 @@ class Node:
                     self.flush()
                     
             # Flush back recursively
-            for curlink in incoming:
+            for current_link in incoming:
                 # Flush the link itself (For future learning parameters possibility
-                if curlink.in_node.activation_count > 0:
-                    curlink.in_node.flushback()
+                if current_link.in_node.activation_count > 0:
+                    current_link.in_node.flushback()
             
             else:
                 # Flush the sensor
@@ -157,7 +157,7 @@ class Node:
     # including recurrencies
     # Useful for debugging
     def flushback_check(self, seen_list: np.array):
-        innodes = np.array([], dtype=Link)
+        innodes = []
                 
         if self.type == NodeType.SENSOR:
             if self.activation_count > 0:
@@ -169,11 +169,11 @@ class Node:
             if self.last_activation2 > 0:
                 print(f"ALERT: {self} has last activation2 {self.last_activation2}")
                 
-            for curlink in innodes:
-                location = np.where(seen_list==curlink.in_node)
+            for current_link in innodes:
+                location = seen_list.index(current_link.in_node)
                 if location == seen_list.size:
-                    seen_list.append(curlink.in_node)
-                    curlink.in_node.flushback_check(seen_list)
+                    seen_list.append(current_link.in_node)
+                    current_link.in_node.flushback_check(seen_list)
                     
         else:
             # Flush chek the SENSOR
