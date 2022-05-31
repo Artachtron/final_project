@@ -2,8 +2,6 @@ import numpy as np
 import enum
 from link import Link
 
-from pytest import param
-
 class NodeType(enum.Enum):
     NEURON = 0
     SENSOR = 1
@@ -30,27 +28,29 @@ class Node:
         self.output: float = 0.0 # Output of the Node- the value in the Node
         self.last_activation: float = 0.0 # Holds the previous step's activation for recurrency
         self.last_activation2: float = 0.0 # Holds the activation BEFORE the prevous step's
-        self._type: NodeType = node_type # NEURON or SENSOR
+        self._node_type: NodeType = node_type # NEURON or SENSOR
         self.activation_count: int = 0 # Keeps track of which activation the node is currently in
         self.id: int = node_id
-        self.ftype:FuncType = FuncType.SIGMOID
+        self.ftype: FuncType = FuncType.SIGMOID
         """ self.trait: Trait = 0 # Points to a trait of parameters
         self.trait_id: int = 1 # Identify the trait derived by this node """
         self.gen_node_label: NodePlace = node_place # Used for genetic marking of nodes
-        self.dup: Node = 0 # Used for Genome duplication
-        self.analogue: Node = 0 # Used for Gene decoding
+        self.dup: Node = None # Used for Genome duplication
+        self.analogue: Node = None # Used for Gene decoding
         self.frozen: bool = False # When frozen, cannot be mutated (meaning its trait pointer is fixed)
         self.override: bool = False # The Node cannot compute its own output- something is overriding it
         self.override_value: float = 0.0 # Contains the activation value that will override this node's activation
+        self.incoming = np.array([]) # A list of pointers to incoming weighted signals from other nodes
+        self.outgoing = np.array([]) #  A list of pointers to links carrying this node's signal
 
         
         @property
-        def type(self):
-            return self._type
+        def node_type(self):
+            return self._node_type
         
-        @type.setter
-        def type(self, new_type):
-            self._type = new_type
+        @node_type.setter
+        def node_type(self, new_type):
+            self._node_type = new_type
             
         def get_analogue(self) -> Node:
             """Returns the gene that created the node
@@ -102,13 +102,13 @@ class Node:
             
         def add_incoming(self, feednode: Node, weight: float, recur: bool) -> None:          
             new_link: Link = Link(weight, feednode, self, recur)
-            incoming.append(new_link)
+            self.incoming.append(new_link)
             feednode.outgoing.append(new_link)
                 
         
         def add_incoming(self, feednode: Node, weight: float) -> None:          
             new_link: Link = Link(weight, feednode, self, False)
-            incoming.append(new_link)
+            self.incoming.append(new_link)
             feednode.outgoing.append(new_link)
             
         def get_active_out(self) -> float:
@@ -138,7 +138,7 @@ class Node:
                     self.flush()
                     
             # Flush back recursively
-            for current_link in incoming:
+            for current_link in self.incoming:
                 # Flush the link itself (For future learning parameters possibility
                 if current_link.in_node.activation_count > 0:
                     current_link.in_node.flushback()

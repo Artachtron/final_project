@@ -6,9 +6,9 @@ class Gene:
                  weight: float,
                  in_node: Node,
                  out_node: Node,
-                 recurrence: bool,
                  innovation_number: int,
-                 mutation_number: int):
+                 mutation_number: int,
+                 recurrence: bool=False):
         
         self.link = Link(weight=weight,
                     in_node=in_node,

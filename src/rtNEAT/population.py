@@ -4,10 +4,10 @@ from species import Species
 class Population:
     def __init__(self,
                  organisms: np.array,
-                 species: np.array,
-                 size: int):
+                 species: np.array):
         self.organisms = organisms
         self.species = species
+        self.size = len(organisms)
     
     def speciate(self):
         comparison_organism = 0
