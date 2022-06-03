@@ -6,9 +6,9 @@ class NEAT:
     nodetrait_mut_sig: float = 0 # Amount a mutation_num changes on a link connecting a node that changed its trait 
     weight_mut_power: float = 0 # The power of a linkweight mutation 
     recur_prob: float = 0 # Prob. that a link mutation which doesn't have to be recurrent will be made recurrent 
-    disjoint_coeff: float = 0
-    excess_coeff: float = 0
-    mutataion_difference_coeff: float = 0
+    disjoint_coeff: float = 1.0
+    excess_coeff: float = 1.0
+    mutation_difference_coeff: float = 1.0
     compat_threshold: float = 0
     age_significance: float = 0 # How much does age matter? 
     survival_thresh: float = 0 # Percent of ave fitness for survival 

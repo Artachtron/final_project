@@ -1,5 +1,6 @@
 import numpy as np
 from species import Species
+from neat import NEAT
 
 class Population:
     def __init__(self,
