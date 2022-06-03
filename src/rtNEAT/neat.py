@@ -26,7 +26,7 @@ class NEAT:
     mate_multipoint_avg_prob: float = 0
     mate_singlepoint_prob: float = 0
     mate_only_prob: float = 0 # Prob. of mating without mutation 
-    recur_only_prob: float = 0  # Probability of forcing selection of ONLY links that are naturally recurrent 
+    recurrence_only_prob: float = 0  # Probability of forcing selection of ONLY links that are naturally recurrent 
     pop_size: int = 0  # Size of population 
     dropoff_age: int = 0  # Age where Species starts to be penalized 
     newlink_tries: int = 0  # Number of tries mutate_add_link will attempt to find an open link 

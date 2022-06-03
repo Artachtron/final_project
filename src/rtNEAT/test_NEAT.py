@@ -191,6 +191,15 @@ class TestGenome:
         assert genome.nodes.all() == self.nodes.all()
         assert genome.genes.all() == self.genes.all()
         
+    def test_add_genes(self):
+        assert self.genome1.genes.size == 4
+        self.genome1.add_gene(gene=self.genes[1])
+        assert self.genome1.genes.size == 5
+        
+        genes_list = list(self.genome1.genes)
+        genes_list.insert(2, self.genes[1])
+        assert self.genome1.genes.all() == np.array(genes_list).all()
+        
     def test_genome_compatibility(self):
         # Excess
           
