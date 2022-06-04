@@ -221,6 +221,18 @@ class TestGenome:
             genes_list.insert(2, self.genes[1])
             assert self.genome1.genes.all() == np.array(genes_list).all()
             
+        def test_insert_node(self):
+            assert self.genome1.nodes.size == 6
+            node = self.genome1.nodes[3]
+            self.genome1.nodes = self.genome1.insert_node(nodes_list=self.genome1.nodes,
+                                                node=node)
+            assert self.genome1.nodes.size == 7
+            
+            nodes_list = list(self.genome1.nodes)
+            nodes_list.insert(3, self.genome1.nodes[3])
+            assert self.genome1.nodes.all() == np.array(nodes_list).all()
+            
+            
         def test_genome_compatibility(self):
             # Excess
             

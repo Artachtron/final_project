@@ -44,6 +44,11 @@ class Node:
         self.incoming = [] # A list of pointers to incoming weighted signals from other nodes
         self.outgoing = [] #  A list of pointers to links carrying this node's signal
 
+    @classmethod
+    def constructor_from_node(cls, node:Node):
+        return Node(node_type=node.node_type,
+                    node_id=node.id,
+                    gen_node_label=node.node_place)
         
     @property
     def node_type(self):
