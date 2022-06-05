@@ -18,8 +18,8 @@ class Innovation:
                  ):
         
         self.innovation_type: InnovationType = innovation_type # Either NEWNODE or NEWLINK
-        self.node_in: int = node_in_id # Two nodes specify where the innovation took place
-        self.node_out: int = node_out_id
+        self.node_in_id: int = node_in_id # Two nodes specify where the innovation took place
+        self.node_out_id: int = node_out_id
         self.innovation_number1: int = innovation_number1 # The number assigned to the innovation
         self.innovation_number2: int = innovation_number2 # If this is a new node innovation, then there are 2 innovations (links) added for the new node 
         self.weight: float = new_weight # If a link is added, this is its weight  

@@ -111,6 +111,15 @@ class Genome:
         
     def insert_node(nodes_list: np.array,
                     node: Node) -> np.array:
+        """_summary_
+
+        Args:
+            nodes_list (np.array): _description_
+            node (Node): _description_
+
+        Returns:
+            np.array: _description_
+        """        
         
         node_id = node.id
         node_index: int = 0
@@ -244,7 +253,7 @@ class Genome:
                 
         new_nodes = np.array([], dtype=Node) # already added nodes
         np.random.seed(2022)
-        p1_dominant: bool = np.random.choice([True, False]) # Determine which genome will give its excess genes
+        p1_dominant: bool = random.getrandbits(1) # Determine which genome will give its excess genes
         
         new_genes: List[Gene] = [] # already chosen genes
         
@@ -393,31 +402,171 @@ class Genome:
         end_part: float = total_genes * 0.8
         power_mod: float = 1.0       
         
+        severe: bool = random.getrandbits(1)
+        
         for current_gene in self.genes:
+            # Don't mutate weights of frozen links
             if not current_gene.frozen:
-                if total_genes > 10 and number > end_part:
-                    gausspoint = 0.5
-                    cold_gausspoint = 0.3
+                if severe:
+                    gauss_point = 0.3
+                    cold_gauss_point = 0.1
+                    
+                elif total_genes > 10 and number > end_part:
+                    gauss_point = 0.5 # Mutate by modification % of connections
+                    cold_gauss_point = 0.3 # Mutate the rest by replacement % of the time
                     
                 else:
-                    if random.random() > 0.5:
-                        gausspoint = 1.0 - rate
-                        cold_gausspoint = 1.0 - rate - 0.1
+                    # Half the time don't do any cold mutations
+                    if random.getrandbits(1):
+                        gauss_point = 1.0 - rate
+                        cold_gauss_point = 1.0 - rate - 0.1
                     else:
-                        gausspoint = 1.0 - rate
-                        cold_gausspoint = 1.0 - rate
+                        gauss_point = 1.0 - rate
+                        cold_gauss_point = 1.0 - rate
                         
                 random_number = [-1,1][random.randrange(2)] * random.random() * power * power_mod
                 
                 random_choice = random.random()
-                if random_choice > gausspoint:
+                if random_choice > gauss_point:
                     current_gene.link.weight += random_number
-                elif random_choice > cold_gausspoint:
+                elif random_choice > cold_gauss_point:
                     current_gene.link.weight = random_number
                     
                 current_gene.mutation_number = current_gene.link.weight
                 
                 number += 1
+    
+    def _find_random_gene(self) -> Tuple[Gene, bool]:
+        """ Find a random gene containing a node to mutate
+
+        Returns:
+            Tuple[Gene, bool]:  Gene: gene containing the node to mutate
+                                bool: gene was found
+        """     
+                  
+        try_count: int = 0
+        found: bool = False
+        
+        while try_count < 20 and not found:
+            gene_number = random.randint(0, self.genes.size -1)
+            for gene in self.genes[:gene_number]:
+                if not(not gene.enabled or gene.link.in_node.gen_node_label == NodePlace.BIAS):
+                    found = True
+                    the_gene = gene
+                    
+            try_count += 1
+        
+        return the_gene, found
+    
+    def _create_new_node(self, node_id: int, in_node: Node, out_node: Node, recurrence: bool,
+                         innovation_number1: int, innovation_number2: int, old_weight: int
+                         ) -> Tuple[Node, Gene, Gene]:
+        """Create the new node and two genes connecting this node in and out
+
+        Args:
+            node_id (int): _description_
+            in_node (Node): _description_
+            out_node (Node): _description_
+            recurrence (bool): _description_
+            innovation_number1 (int): _description_
+            innovation_number2 (int): _description_
+            old_weight (int): _description_
+
+        Returns:
+            Tuple[Node, Gene, Gene]:    Node: the new node created
+                                        Gene: the gene connecting in the new node
+                                        Gene: the gene connecting out the new node
+        """        
+        new_node = Node(node_type=NodeType.NEURON,
+                                node_id=node_id,
+                                node_place=NodePlace.HIDDEN)
+                
+        new_gene1 = Gene(weight=1.0,
+                            in_node=in_node,
+                            out_node=new_node,
+                            recurrence=recurrence,
+                            innovation_number=innovation_number1,
+                            mutation_number=0)
+        
+        new_gene2 = Gene(weight=old_weight,
+                            in_node=new_node,
+                            out_node=out_node,
+                            recurrence=False,
+                            innovation_number=innovation_number2,
+                            mutation_number=0)
+        
+        return new_node, new_gene1, new_gene2
+    
+    def _check_innovation_novel(self, innovations: List[Innovation], current_innovation: int,
+                                current_node_id: int, the_gene: Gene) -> Tuple[Node, Gene, Gene]:
+        """ Check to see if this innovation has already been done in another genome
+
+        Args:
+            innovations (List[Innovation]): _description_
+            current_node_id (int): _description_
+            the_gene (Gene): _description_
+
+        Returns:
+            Tuple[Node, Gene, Gene]:    Node: the new node created
+                                        Gene: the gene connecting in the new node
+                                        Gene: the gene connecting out the new node
+        """        
+        # Extract the link
+        the_link: Link = the_gene.link
+        old_weight: float = the_link.weight
+        
+        # Extract the nodes
+        in_node: Node = the_link.in_node
+        out_node: Node = the_link.out_node
+        
+        innovation_iter = iter(innovations)
+        the_innovation = next(innovation_iter, None)
+        done = False
+        while not done:
+            recurrence = the_link.is_recurrent
+            
+            # If innovation is novel
+            if not the_innovation:
+                new_node, new_gene1, new_gene2 = self._create_new_node( node_id=current_node_id,
+                                                                        in_node=in_node,
+                                                                        out_node=out_node,
+                                                                        recurrence=recurrence,
+                                                                        innovation_number1=current_innovation,
+                                                                        innovation_number2=current_innovation+1,
+                                                                        old_weight=old_weight)
+
+                new_innovation = Innovation(node_in_id=in_node.id,
+                                            node_out_id=out_node.id,
+                                            innovation_type=InnovationType.NEWNODE,
+                                            innovation_number1=current_innovation-2.0,
+                                            innovation_number2=current_innovation-1.0,
+                                            new_node_id=new_node.id,
+                                            old_innovation_number=the_gene.innovation_number)
+                
+                innovations.append(new_innovation)
+                
+                current_innovation += 2
+                done = True
+            
+            # Innovation already existing    
+            elif(the_innovation.innovation_type == InnovationType.NEWNODE and 
+                 the_innovation.node_in_id == in_node.id and
+                 the_innovation.node_out_id == out_node.id and
+                 the_innovation.old_innovation_number == the_gene.innovation_number):
+                
+                new_node, new_gene1, new_gene2 = self._create_new_node( node_id=the_innovation.new_node_id,
+                                                                        in_node=in_node,
+                                                                        out_node=out_node,
+                                                                        recurrence=recurrence,
+                                                                        innovation_number1=the_innovation.innovation_number1,
+                                                                        innovation_number2=the_innovation.innovation_number2,
+                                                                        old_weight=old_weight)
+                done = True
+                
+            else:
+                the_innovation = next(innovation_iter, None) 
+                
+        return  new_node, new_gene1, new_gene2
                     
     def mutate_add_node(self, innovations: List, current_node_id: int, current_innovation: int) -> True:
         """Mutate genome by adding a node respresentation 
@@ -430,99 +579,23 @@ class Genome:
         Returns:
             True: _description_
         """        
-        try_count: int = 0
-        found: bool = False
         
-        while try_count < 20 and not found:
-            gene_number = random.randint(0, self.genes.size -1)
-            for gene in self.genes[:gene_number]:
-                if not(not gene.enable or gene.link.in_node.gene_node_label == NodePlace.BIAS):
-                    found = True
-                    the_gene = gene
-                    
-            try_count += 1
+        the_gene, found = self._find_random_gene()
                
         if not found:
             return False
         
         # Disabled the gene
-        the_gene.enable = False
-        
-        # Extract the link
-        the_link = the_gene.link
-        old_weight = the_link.weight
-        
-        # Extract the nodes
-        in_node = the_link.in_node
-        out_node = the_link.out_node
-        
-        innovation_iter = iter(innovations)
-        the_innovation = next(innovation_iter, None)
-        done = False
-        while not done:
-            reccurence = the_link.is_recurrent
-            if not the_innovation:
-                new_node = Node(node_type=NodeType.NEURON,
-                                node_id=current_node_id,
-                                node_place=NodePlace.HIDDEN)
+        the_gene.enabled = False
                 
-                new_gene1 = Gene(weight=1.0,
-                                    in_node=in_node,
-                                    out_node=new_node,
-                                    recurrence=reccurence,
-                                    innovation_number=current_innovation,
-                                    mutation_number=0)
+        new_node, new_gene1, new_gene2 = self._check_innovation_novel(innovations=innovations,
+                                                                      current_innovation=current_innovation,
+                                                                      current_node_id=current_node_id,
+                                                                      the_gene=the_gene)
                 
-                new_gene2 = Gene(weight=old_weight,
-                                    in_node=new_node,
-                                    out_node=out_node,
-                                    recurrence=False,
-                                    innovation_number=current_innovation+1,
-                                    mutation_number=0)
-                current_innovation += 2
-                
-                new_innovation = Innovation(node_in_id=in_node.id,
-                                            node_out_id=out_node.id,
-                                            innovation_type=InnovationType.NEWNODE,
-                                            innovation_number1=current_innovation-2.0,
-                                            innovation_number2=current_innovation-1.0,
-                                            new_node_id=new_node.id,
-                                            old_innovation_number=the_gene.innovation_number)
-                innovations.append(new_innovation)
-                
-                done = True
-                
-            elif(the_innovation.innovation_type == InnovationType.NEWNODE and 
-                 the_innovation.node_in_id == in_node.id and
-                 the_innovation.node_out_id == out_node.id and
-                 the_innovation.old_innovation_number == the_gene.innovation_number):
-                
-                new_node = Node(node_type=NodeType.NEURON,
-                                node_id=the_innovation.new_node_id,
-                                node_place=NodePlace.HIDDEN)
-                
-                new_gene1 = Gene(weight=1.0,
-                                    in_node=in_node,
-                                    out_node=new_node,
-                                    recurrence=reccurence,
-                                    innovation_number=the_innovation.innovation_number1,
-                                    mutation_number=0)
-                
-                new_gene2 = Gene(weight=old_weight,
-                                    in_node=new_node,
-                                    out_node=out_node,
-                                    recurrence=False,
-                                    innovation_number=the_innovation.innovation_number2,
-                                    mutation_number=0)
-                
-                done = True
-                
-            else:
-                the_innovation = next(innovation_iter, None)
-                
-        self.add_gene(self.genes, new_gene1)
-        self.add_gene(self.genes, new_gene2)
-        self.node_insert(self.nodes, new_node)
+        self.add_gene(gene=new_gene1)
+        self.add_gene(gene=new_gene2)
+        self.nodes = Genome.insert_node(self.nodes, new_node)
         return True        
     
     def mutate_add_link(self, innovations: List, current_innovation: int, tries: int) -> bool:

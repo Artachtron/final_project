@@ -2,6 +2,7 @@ import pytest
 from gene import Gene
 from node import Node, NodeType, NodePlace, FuncType
 from link import Link
+from innovation import Innovation, InnovationType
 from genome import Genome
 from population import Population
 import numpy as np
@@ -281,8 +282,7 @@ class TestGenome:
                                                                      p1_dominant=True)
             assert skip
             assert chosen_gene == self.genes[3] 
-            
-                   
+                         
         def test_check_gene_conflict(self):            
             genes = self.genes[[0, 1]]
             
@@ -398,10 +398,74 @@ class TestGenome:
         
         def test_mutate_links_weight(self):
             self.genome1.mutate_link_weights(power=0.5, rate=0.5)
+                
+        def test_find_gene(self):
+            gene, found = self.genome1._find_random_gene()
+            assert gene in self.genome1.genes
+            assert found
+            
+        def test_create_new_node(self):
+            in_node, out_node = self.nodes[:2]
+            node, gene1, gene2 = self.genome1._create_new_node(node_id=0,
+                                          in_node=in_node,
+                                          out_node=out_node,
+                                          recurrence=False,
+                                          innovation_number1=0,
+                                          innovation_number2=1,
+                                          old_weight=0.34)
+           
+            assert node.id == 0
+            assert node.node_type == NodeType.NEURON
+            assert node.gen_node_label == NodePlace.HIDDEN
+            assert gene1.link.in_node == in_node
+            assert gene1.link.out_node == node
+            assert gene1.link.weight == 1.0
+            assert gene1.innovation_number == 0
+            assert gene2.link.in_node == node
+            assert gene2.link.out_node == out_node
+            assert gene2.link.weight == 0.34
+            assert gene2.innovation_number == 1
+            
+        def test_check_innovation_novel(self):
+            node_in_id, node_out_id = [node.id for node in self.nodes[:2]]
+            gene = self.genes[0]
+            
+            # New innovation
+            node, gene1, gene2 = self.genome1._check_innovation_novel(innovations=[],
+                                                                      current_innovation=6,
+                                                                      current_node_id=8,
+                                                                      the_gene=gene)
+            assert node.id == 8
+            assert gene1.innovation_number == 6
+            assert gene2.innovation_number == 7
+            
+            # Already existing innovation
+            innovation = Innovation(node_in_id=node_in_id,
+                                    node_out_id=node_out_id,
+                                    innovation_type=InnovationType.NEWNODE,
+                                    innovation_number1=2,
+                                    innovation_number2=3,
+                                    new_node_id=5)
+            innovations = [innovation]
+            
+            node, gene1, gene2 = self.genome1._check_innovation_novel(innovations=innovations,
+                                                                      current_innovation=1,
+                                                                      current_node_id=8,
+                                                                      the_gene=gene)
+            assert node.id == 5
+            assert gene1.innovation_number == 2
+            assert gene2.innovation_number == 3
         
         def test_mutate_add_node(self):
-            #self.genome1.mutate_add_node()
-            pass
+            assert self.genome1.nodes.size == 6
+            assert self.genome1.genes.size == 4
+            success = self.genome1.mutate_add_node(innovations=[],
+                                         current_node_id=2,
+                                         current_innovation=0)
+            assert success
+            assert self.genome1.nodes.size == 7
+            assert self.genome1.genes.size == 6
+            
 
 class TestPopulation:
     @pytest.fixture(autouse=True)

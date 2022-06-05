@@ -569,12 +569,7 @@ class Animal(Entity):
         """Action on animal death, release energy on cells around death position"""
         self._decompose(entity=self)
 
-    def modify_cell_color(self,
-                          color: Tuple[int,
-                                       int,
-                                       int],
-                          cell_coordinates: Tuple[int,
-                                                  int] = None) -> None:
+    def modify_cell_color(self, color: Tuple[int,int,int], cell_coordinates: Tuple[int,int] = None) -> None:
         """Modfify the color of a given cell, usually the cell currently sat on
 
         Args:
