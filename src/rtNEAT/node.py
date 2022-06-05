@@ -48,7 +48,7 @@ class Node:
     def constructor_from_node(cls, node:Node):
         return Node(node_type=node.node_type,
                     node_id=node.id,
-                    gen_node_label=node.node_place)
+                    node_place=node.gen_node_label)
         
     @property
     def node_type(self):

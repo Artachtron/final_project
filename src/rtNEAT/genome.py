@@ -1,4 +1,5 @@
 from __future__ import annotations
+from hashlib import new
 import numpy as np
 from neat import NEAT
 from node import Node, NodePlace, NodeType
@@ -6,7 +7,7 @@ from link import Link
 from gene import Gene
 from innovation import Innovation, InnovationType
 from network import Network
-from typing import List
+from typing import List, Iterator, Tuple
 import random
 
 class Genome:
@@ -92,7 +93,8 @@ class Genome:
         """    
         return self.genes[-1].innovation_number + 1
     
-    def add_gene(self,gene) -> None:
+    def add_gene(self,
+                 gene: Gene) -> None:
         """Adds a new gene that has been created through a mutation in the correct order into the list of genes in the genome
 
         Args:
@@ -107,7 +109,9 @@ class Genome:
             
         self.genes = np.insert(self.genes, gene_index, gene)
         
-    def insert_node(self, nodes_list: np.array, node: Node) -> np.array:
+    def insert_node(nodes_list: np.array,
+                    node: Node) -> np.array:
+        
         node_id = node.id
         node_index: int = 0
         for current_node in nodes_list:
@@ -116,169 +120,202 @@ class Genome:
             node_index += 1
             
         return np.insert(nodes_list, node_index, node)   
-        
-    def mate_multipoint(self, genome_mate: Genome, interspecies_flag: bool= False) -> Genome:
+      
+    def _is_IO_node(node: Node) -> bool:
+        return (node.gen_node_label == NodePlace.INPUT or
+               node.gen_node_label == NodePlace.BIAS or
+               node.gen_node_label == NodePlace.OUTPUT)
+    
+    def _choose_gene(p1_gene: Gene,
+                     p2_gene: Gene,
+                     p1_genes: Iterator,
+                     p2_genes: Iterator,
+                     p1_dominant: bool) -> Tuple[Gene, bool, bool]:
+        """Choose the gene to transmit to offspring
+
+        Args:
+            p1_gene (Gene): _description_
+            p2_gene (Gene): _description_
+            p1_genes (Iterator): _description_
+            p2_genes (Iterator): _description_
+            p1_dominant (bool): _description_
+
+        Returns:
+            Tuple[Gene, bool, bool]: _description_
+        """        
         disable: bool = False
-        new_nodes = []
-        p1_dominant: bool = random.choice([True,False])
+        skip: bool = False
         
+        if not p1_gene: 
+            chosen_gene = p2_gene
+            p2_gene = next(p2_genes, None)
+            if p1_dominant: skip = True
+                    
+        elif not p2_gene:
+            chosen_gene = p1_gene
+            p1_gene = next(p1_genes, None)
+            if not p1_dominant: skip = True
+        
+        else:
+            p1_innovation = p1_gene.innovation_number
+            p2_innovation = p2_gene.innovation_number
+            
+            if p1_innovation == p2_innovation:
+                np.random.seed(2022)
+                chosen_gene = np.random.choice([p1_gene, p2_gene])
+            
+                # If one is disabled, the corresponding gene in the offspring will likely be disabled
+                if not p1_gene.enabled or not p2_gene.enabled:
+                    if random.random() < 0.75:
+                        disable = True
+                
+                p1_gene = next(p1_genes, None)
+                p2_gene = next(p2_genes, None)  
+                
+            elif p1_innovation < p2_innovation:
+                chosen_gene = p1_gene
+                p1_gene = next(p1_genes, None)
+                if not p1_dominant: skip = True
+                    
+            elif p2_innovation < p1_innovation:
+                chosen_gene = p2_gene
+                p2_gene = next(p2_genes, None)
+                if p1_dominant: skip = True
+                    
+        return chosen_gene, skip, disable, p1_gene, p2_gene, p1_genes, p2_genes
+        
+    def _check_gene_conflict(new_genes: List[Gene],
+                             chosen_gene: Gene) -> Gene:
+        """ Check to see if the chosengene conflicts with an already chosen gene
+            i.e. do they represent the same link
+
+        Args:
+            new_genes (List[Gene]): _description_
+            chosen_gene (Gene): _description_
+
+        Returns:
+            Gene: _description_
+        """        
+        
+        iter_genes = iter(new_genes)  
+        current_gene = next(iter_genes, None)
+        while (current_gene and 
+                not(current_gene.link.in_node.id == chosen_gene.link.in_node.id and 
+                    current_gene.link.out_node.id == chosen_gene.link.out_node.id and
+                    current_gene.link.is_recurrent == chosen_gene.link.is_recurrent) and
+                not(current_gene.link.in_node.id == chosen_gene.link.out_node.id and
+                    current_gene.link.out_node.id == chosen_gene.link.in_node.od and
+                    current_gene.link.is_recurrent == chosen_gene.link.is_reccurent) and
+                not chosen_gene.link.is_recurrent):
+            
+            current_gene = next(iter_genes, None)
+        
+        return current_gene 
+    
+    def _check_new_node_existence(new_nodes: np.array,
+                              target_node: Node):
+        """ Find new node to 
+
+        Args:
+            new_nodes (List[Node]): _description_
+            target_node (Node): _description_
+        """        
+        
+        iter_nodes = iter(new_nodes)
+        current_node = next(iter_nodes, None)
+        while (current_node and
+                current_node.id != target_node.id):
+            current_node = next(iter_nodes, None) 
+            
+        if not current_node:
+            # Here we know the node doesn't exist so we have to add it 
+            new_node = Node.constructor_from_node(target_node)
+            new_nodes = Genome.insert_node(nodes_list=new_nodes,
+                                           node=new_node)
+            
+        else:
+            new_node = current_node
+            
+        return new_node, new_nodes
+    
+    def mate_multipoint(self,
+                        genome_mate: Genome,
+                        genome_id: int,) -> Genome:
+                
+        new_nodes = np.array([], dtype=Node) # already added nodes
+        np.random.seed(2022)
+        p1_dominant: bool = np.random.choice([True, False]) # Determine which genome will give its excess genes
+        
+        new_genes: List[Gene] = [] # already chosen genes
+        
+        # Make sure all sensors and outputs are included
         for current_node in genome_mate.nodes:
-            if(current_node.gen_node_label == NodePlace.INPUT or
-               current_node.gen_node_label == NodePlace.BIAS or
-               current_node.gen_node_label == NodePlace.OUTPUT):
+            if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
                 new_output_node = Node.constructor_from_node(current_node)
                 
                 # Add the new node
-                new_nodes = self.insert_node(nodes_list=new_nodes, node=new_output_node)
+                new_nodes = Genome.insert_node(nodes_list=new_nodes, node=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
         p1_genes = iter(self.genes)
         p2_genes =iter(genome_mate.genes)
         p1_gene = next(p1_genes, None)
         p2_gene = next(p2_genes, None)
+        args = (p1_gene, p2_gene, p1_genes, p2_genes)
         while p1_gene or p2_gene:
-            skip=False
+         
+            (chosen_gene, skip, disable, *args) = Genome._choose_gene(*args,
+                                                                      p1_dominant=p1_dominant)
+            p1_gene, p2_gene = args[0:2]           
             
-            if not p1_gene:
-                chosen_gene = p2_gene
-                p2_gene = next(p2_genes, None)  
-                if p1_dominant:
-                    skip = True 
-                    
-            elif not p2_gene:
-                chosen_gene = p1_gene
-                p1_gene = next(p1_genes, None)
-                if not p1_dominant:
-                    skip = True
+            current_gene = Genome._check_gene_conflict(new_genes=new_genes,
+                                                       chosen_gene=chosen_gene)     
+            if current_gene: skip = True
             
-            else:
-                p1_innovation = p1_gene.innovation_number
-                p2_innovation = p2_gene.innovation_number
+            if not skip:
+                # Now add the chosengene to the baby
                 
-                if p1_innovation == p2_innovation:
-                    if random.random() < 0.5:
-                        chosen_gene = p1_gene
-                    else:
-                        chosen_gene = p2_gene
-                
-                    if not p1_gene.enabled or not p2_gene.enabled:
-                        if random.random() < 0.75:
-                            disable = True
-                    
-                    p1_gene = next(p1_genes, None)
-                    p2_gene = next(p2_genes, None)  
-                    
-                elif p1_innovation < p2_innovation:
-                    chosen_gene = p1_gene
-                    p1_gene = next(p2_genes, None)
-                    
-                    if not p1_dominant:
-                        skip = True
-                        
-                elif p2_innovation < p1_innovation:
-                    chosen_gene = p2_gene
-                    p2_gene = next(p2_genes, None)
-                    
-                    if p1_dominant:
-                        skip = True
-                        
-                # Check to see if the chosengene conflicts with an already chosen gene
-			    # i.e. do they represent the same link
-                new_genes = []
-                iter_genes = iter(new_genes)  
-                current_gene2 = next(iter_genes, None)
-                while (current_gene2 and 
-                       not(current_gene2.link.in_node.id == chosen_gene.link.in_node.id and 
-                           current_gene2.link.out_node.id == chosen_gene.link.out_node.id and
-                           current_gene2.is_recurrent == chosen_gene.link.is_recurrent) and
-                        not(current_gene2.link.in_node.id == chosen_gene.link.out_node.id and
-                            current_gene2.link.out_node.id == chosen_gene.link.in_node.od and
-                            current_gene2.link.is_recurrent == chosen_gene.link.is_reccurent) and
-                        not chosen_gene.link.is_recurrent):
-                    
-                    current_gene2 = next(iter_genes)
-                    
-                if not current_gene2:
-                    skip = True
-                
-                if not skip:
-                    # Now add the chosengene to the baby
-                    
-                    # Check for the nodes, add them if not in the baby Genome already
-                    in_node = chosen_gene.link.in_node
-                    out_node = chosen_gene.link.out_node 
+                # Check for the nodes, add them if not in the baby Genome already
+                in_node = chosen_gene.link.in_node
+                out_node = chosen_gene.link.out_node 
 
-                    #Check for inode in the newnodes list
-                    if in_node.id < out_node.id:
-                        # inode before onode
+                #Check for inode in the newnodes list
+                if in_node.id < out_node.id:
+                    # inode before onode
 
-                        # Checking for inode's existence
-                        iter_nodes = iter(new_nodes)
-                        current_nodes = next(iter_nodes, None)
-                        while (current_nodes and
-                               current_node.id != in_node.id):
-                            current_node = next(iter_nodes, None) 
-                            
-                        if not current_node:
-                           # Here we know the node doesn't exist so we have to add it 
-                           new_in_node = Node.constructor_from_node(in_node)
-                           new_nodes = self.insert_node(nodes_list=new_nodes, node=new_in_node)
-                           
-                        else:
-                            new_in_node = current_node
-                            
-                        # Checking for onode's existence
-                        iter_nodes = iter(new_nodes)
-                        current_nodes = next(iter_nodes, None)
-                        while (current_nodes and
-                               current_node.id != out_node.id):
-                            current_node = next(iter_nodes, None)
-                        if not current_node:
-                           # Here we know the node doesn't exist so we have to add it    
-                            new_out_node = Node.constructor_from_node(in_node)
-                            new_nodes = self.insert_node(nodes_list=new_nodes, node=new_out_node)
-                        else:
-                            new_out_node = current_node
-                    # If the onode has a higher id than the inode we want to add it first     
-                    else:
-                        # Checking for onode's existence
-                        iter_nodes = iter(new_nodes)
-                        current_nodes = next(iter_nodes, None)
-                        while (current_nodes and
-                               current_node.id != out_node.id):
-                            current_node = next(iter_nodes, None)
-                        if not current_node:
-                           # Here we know the node doesn't exist so we have to add it    
-                            new_out_node = Node.constructor_from_node(in_node)
-                            new_nodes = self.insert_node(nodes_list=new_nodes, node=new_out_node)
-                        else:
-                            new_out_node = current_node
-                            
-                        # Checking for inode's existence
-                        iter_nodes = iter(new_nodes)
-                        current_nodes = next(iter_nodes, None)
-                        while (current_nodes and
-                               current_node.id != in_node.id):
-                            current_node = next(iter_nodes, None) 
-                            
-                        if not current_node:
-                           # Here we know the node doesn't exist so we have to add it 
-                           new_in_node = Node.constructor_from_node(in_node)
-                           new_nodes = self.insert_node(nodes_list=new_nodes, node=new_in_node)
-                           
-                        else:
-                            new_in_node = current_node
+                    # Checking for inode's existence                       
+                    new_in_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
+                                                                             target_node=in_node)
+                        
+                    # Checking for onode's existence
+                    new_out_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
+                                                                              target_node=out_node)
                     
-                    # Add gene        
-                    new_gene = Gene.constructor_from_gene(gene=chosen_gene, in_node=new_in_node, out_node=out_node)
-                    if disable:
-                        new_gene.enabled = False
-                        disable = False
+                # If the onode has a higher id than the inode we want to add it first     
+                else:
+                    new_out_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
+                                                                              target_node=out_node)
                         
-                    new_genes.append(new_gene)
-                        
+                    new_in_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
+                                                                              target_node=in_node)
+                
+                # Add gene        
+                new_gene = Gene.constructor_from_gene(gene=chosen_gene,
+                                                      in_node=new_in_node,
+                                                      out_node=new_out_node)
+                if disable:
+                    new_gene.enabled = False
+                    disable = False
+                    
+                new_genes.append(new_gene)
+        
+        new_genome = Genome(genome_id=genome_id,
+                            nodes=new_nodes,
+                            genes=np.array(new_genes))
+        
+        return new_genome
            
     def genesis(self, network_id: int) -> Network:
         """Generate a network phenotype from this Genome with specified id

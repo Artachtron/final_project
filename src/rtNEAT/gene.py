@@ -23,7 +23,10 @@ class Gene:
      
     @classmethod   
     def constructor_from_gene(cls, gene: Gene, in_node: Node, out_node: Node):
-        return Gene(weight=gene.weight,
+        return Gene(weight=gene.link.weight,
+                    in_node=in_node,
+                    out_node=out_node,
                     innovation_number=gene.innovation_number,
                     mutation_number=gene.mutation_number,
-                    in_node=in_node, out_node=out_node)
+                    recurrence= gene.link.is_recurrent)
+                    

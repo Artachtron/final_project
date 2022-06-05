@@ -205,8 +205,8 @@ class TestGenome:
                     innovation_number=2,
                     mutation_number=1)
             
-            self.nodes = np.array([sensor_node, action_node, sensor_node2, action_node2, sensor_node3, action_node3])
-            self.genes = np.array([gene0, gene1, gene2, gene3])
+            self.nodes = np.array([sensor_node, action_node, sensor_node2, action_node2, sensor_node3, action_node3], dtype=Node)
+            self.genes = np.array([gene0, gene1, gene2, gene3], dtype=Gene)
             self.genome1 = Genome(genome_id=0,
                             nodes=self.nodes,
                             genes=self.genes)
@@ -224,15 +224,129 @@ class TestGenome:
         def test_insert_node(self):
             assert self.genome1.nodes.size == 6
             node = self.genome1.nodes[3]
-            self.genome1.nodes = self.genome1.insert_node(nodes_list=self.genome1.nodes,
+            self.genome1.nodes = Genome.insert_node(nodes_list=self.genome1.nodes,
                                                 node=node)
             assert self.genome1.nodes.size == 7
             
             nodes_list = list(self.genome1.nodes)
             nodes_list.insert(3, self.genome1.nodes[3])
             assert self.genome1.nodes.all() == np.array(nodes_list).all()
+
+        def test_choose_gene(self):
+            genome1 = Genome(genome_id=0,
+                        nodes=self.nodes,
+                        genes=self.genes[[0,1,3]])
             
+            genome2 = Genome(genome_id=1,
+                        nodes=self.nodes,
+                        genes=self.genes[[0,2,1,3]])  
             
+            p1_genes = iter(genome1.genes)
+            p2_genes = iter(genome2.genes)
+            p1_gene = next(p1_genes)
+            p2_gene = next(p2_genes)
+            
+            # same gene
+            chosen_gene, skip, disable, *args = Genome._choose_gene(p1_gene=p1_gene,
+                                                             p2_gene=p2_gene,
+                                                             p1_genes=p1_genes,
+                                                             p2_genes=p2_genes,
+                                                             p1_dominant=True)
+            assert not skip
+            assert type(disable) == bool     
+            assert chosen_gene == self.genes[0]  
+            
+            # innovation1 < innovation 2 non-dominant  genome 1
+            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+                                                                    p1_dominant=False) 
+            assert skip
+            assert chosen_gene == self.genes[1]  
+            
+            # different gene same innovation number
+            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+                                                                     p1_dominant=True)
+            
+            np.random.seed(2022)
+            assert not skip
+            assert chosen_gene == np.random.choice([self.genes[3], self.genes[2]]) 
+            
+            # innovation2 < innovation1 non-dominant genome 2
+            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+                                                                    p1_dominant=True)
+            assert skip
+            assert chosen_gene == self.genes[1]  
+            
+            # same gene in non-dominant genome 2
+            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+                                                                     p1_dominant=True)
+            assert skip
+            assert chosen_gene == self.genes[3] 
+            
+                   
+        def test_check_gene_conflict(self):            
+            genes = self.genes[[0, 1]]
+            
+            # conflict
+            gene = Genome._check_gene_conflict(new_genes=genes,
+                                        chosen_gene=self.genes[0]) 
+            assert gene
+            
+            # no conflict
+            gene = Genome._check_gene_conflict(new_genes=genes,
+                                        chosen_gene=self.genes[2])
+            assert not gene
+        
+        def test_check_node_existence(self):
+            new_nodes = self.nodes[:4]
+            target_node = self.nodes[3]
+            
+            assert len(new_nodes) == 4
+            # node exists
+            new_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
+                                                                target_node=target_node)
+            assert new_node == target_node
+            assert len(new_nodes) == 4
+            
+            # node does not exist
+            target_node = self.nodes[4]
+            new_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
+                                                                target_node=target_node)
+            
+            assert new_node.id == target_node.id
+            assert len(new_nodes) == 5
+            
+        def test_mate_multipoint(self):
+            sensor_node = Node(node_id=6,
+                                    node_type=NodeType.SENSOR,
+                                    node_place=NodePlace.INPUT)
+            
+            action_node = Node(node_id=7,
+                                    node_type=NodeType.NEURON,
+                                    node_place=NodePlace.OUTPUT)
+            
+            gene3 = Gene(in_node=sensor_node,
+                    out_node=action_node,
+                    weight=1.0,
+                    innovation_number=3,
+                    mutation_number=0)
+            self.genes[3] = gene3
+            genome1 = Genome(genome_id=0,
+                        nodes=self.nodes,
+                        genes=self.genes[[0,1,3]])
+            
+            genome2 = Genome(genome_id=1,
+                        nodes=self.nodes,
+                        genes=self.genes[[0,2,3]]) 
+            
+            new_genome = genome1.mate_multipoint(genome_mate=genome2,
+                                                genome_id=2)
+            
+            assert new_genome.id == 2
+            assert new_genome.nodes.size == 8
+            assert new_genome.genes.size == 3
+            genes = [gene.innovation_number for gene in new_genome.genes]
+            assert set(genes) == set([0,2,3])
+        
         def test_genome_compatibility(self):
             # Excess
             
