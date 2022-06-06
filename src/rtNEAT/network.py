@@ -33,5 +33,33 @@ class Network:
             if location == seen_list.size:
                 seen_list.append(current_node)
                 current_node.flush_back_check(seen_list)
-            
+                
+    def is_recurrent(self, potential_in_node: Node, potential_out_node: Node, count: int, threshold: int) -> bool:
+        """ Checks a potential link between a potential in_node and potential out_node to see if it must be recurrent
+
+        Args:
+            potential_in_node (Node): _description_
+            potential_out_node (Node): _description_
+            count (int): _description_
+            threshold (int): _description_
+
+        Returns:
+            bool: found a recurrent link
+        """        
+        count += 1
+        if count > threshold:
+            return False
+        
+        if potential_in_node == potential_out_node:
+            return True
+        else:
+            for current_link in potential_in_node.incoming:
+                if not current_link.is_recurrent:
+                    if self.is_reccurent(potential_in_node=current_link,
+                                         potential_out_node=potential_out_node,
+                                         count=count,
+                                         threshold=threshold):
+                        return True
+                    
+            return False 
         

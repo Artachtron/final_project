@@ -466,7 +466,75 @@ class TestGenome:
             assert self.genome1.nodes.size == 7
             assert self.genome1.genes.size == 6
             
-
+        def test_find_first_non_sensor(self):
+            self.genome1.nodes = self.nodes[[0,2,4,1,3,5]]
+            index = self.genome1._find_first_sensor()
+            assert index == 3
+        
+        def test_select_nodes_for_link(self):
+            self.genome1.nodes = self.nodes[[0,2,4,1,3,5]]
+            
+            for _ in range(10):
+                # Not recurrent link
+                node1, node2 = self.genome1._select_nodes_for_link( loop_recurrence=False,
+                                                                    first_non_sensor=3)
+                assert node1
+                assert node2.node_type != NodeType.SENSOR
+                
+                # Recurrent link
+                node1, node2 = self.genome1._select_nodes_for_link( loop_recurrence=True,
+                                                                    first_non_sensor=3)
+                assert node1 == node2
+                assert node2.node_type != NodeType.SENSOR
+                
+        def test_recurrent_link_already_exists(self):
+            node1 = self.nodes[0]
+            node2 = self.nodes[1]
+            threshold = self.nodes.size ** 2
+            self.genome1.genesis(network_id=0)
+            # Recurrence found
+            found, try_count = self.genome1._link_already_exists(try_count=0,
+                                                                tries=5,
+                                                                threshold=threshold,
+                                                                node1=node1,
+                                                                node2=node2,
+                                                                recurrence=True)
+            assert try_count == 5
+            assert found
+            
+            
+            node3 = self.nodes[1]
+            recurrent_gene = Gene(weight=1.0,
+                                  in_node=node3,
+                                  out_node=node3,
+                                  innovation_number=2,
+                                  mutation_number=0,
+                                  recurrence=True)
+            
+            # Non-recurrence not found
+            found, try_count = self.genome1._link_already_exists(try_count=0,
+                                                                tries=5,
+                                                                threshold=threshold,
+                                                                node1=node1,
+                                                                node2=node2,
+                                                                recurrence=False)
+            assert not found
+            assert try_count == 1
+            
+            genome2 = Genome(genome_id=1, nodes=[node3],
+                             genes=[recurrent_gene])
+            genome2.genesis(network_id=1)
+            found, try_count = genome2._link_already_exists(try_count=0,
+                                                            tries=5,
+                                                            threshold=threshold,
+                                                            node1=node3,
+                                                            node2=node3,
+                                                            recurrence=False)
+            assert try_count == 5
+            assert found
+            
+            
+            
 class TestPopulation:
     @pytest.fixture(autouse=True)
     def setup(self):
