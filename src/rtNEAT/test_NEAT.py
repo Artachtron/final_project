@@ -6,6 +6,7 @@ from innovation import Innovation, InnovationType
 from genome import Genome
 from population import Population
 import numpy as np
+import random
 
 class TestNode:
     def test_create_node(self):
@@ -213,7 +214,7 @@ class TestGenome:
                             genes=self.genes)
         
           
-        def test_add_genes(self):
+        def test_add_gene(self):
             assert self.genome1.genes.size == 4
             self.genome1.add_gene(gene=self.genes[1])
             assert self.genome1.genes.size == 5
@@ -267,7 +268,7 @@ class TestGenome:
             chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
                                                                      p1_dominant=True)
             
-            np.random.seed(2022)
+            np.random.seed(1)
             assert not skip
             assert chosen_gene == np.random.choice([self.genes[3], self.genes[2]]) 
             
@@ -345,7 +346,13 @@ class TestGenome:
             assert new_genome.nodes.size == 8
             assert new_genome.genes.size == 3
             genes = [gene.innovation_number for gene in new_genome.genes]
-            assert set(genes) == set([0,2,3])
+            random.seed(1)
+            p1_dominant = random.getrandbits(1)
+            if not p1_dominant:
+                the_set = set([0,2,3])
+            else:
+                the_set = set([0,1,3])
+            assert set(genes) == the_set
         
         def test_genome_compatibility(self):
             # Excess
@@ -487,20 +494,16 @@ class TestGenome:
                 assert node1 == node2
                 assert node2.node_type != NodeType.SENSOR
                 
-        def test_recurrent_link_already_exists(self):
+        def test_link_already_exists(self):
             node1 = self.nodes[0]
             node2 = self.nodes[1]
             threshold = self.nodes.size ** 2
             self.genome1.genesis(network_id=0)
             # Recurrence found
-            found, try_count = self.genome1._link_already_exists(try_count=0,
-                                                                tries=5,
-                                                                threshold=threshold,
-                                                                node1=node1,
-                                                                node2=node2,
-                                                                recurrence=True)
-            assert try_count == 5
-            assert found
+            found = self.genome1._link_already_exists(node1=node1,
+                                                    node2=node2,
+                                                    recurrence=True)
+            assert not found
             
             
             node3 = self.nodes[1]
@@ -512,28 +515,105 @@ class TestGenome:
                                   recurrence=True)
             
             # Non-recurrence not found
-            found, try_count = self.genome1._link_already_exists(try_count=0,
-                                                                tries=5,
-                                                                threshold=threshold,
-                                                                node1=node1,
-                                                                node2=node2,
-                                                                recurrence=False)
-            assert not found
-            assert try_count == 1
+            found = self.genome1._link_already_exists(node1=node1,
+                                                    node2=node2,
+                                                    recurrence=False)
+            assert found
             
             genome2 = Genome(genome_id=1, nodes=[node3],
                              genes=[recurrent_gene])
             genome2.genesis(network_id=1)
-            found, try_count = genome2._link_already_exists(try_count=0,
-                                                            tries=5,
-                                                            threshold=threshold,
-                                                            node1=node3,
+            found = genome2._link_already_exists(node1=node3,
                                                             node2=node3,
                                                             recurrence=False)
-            assert try_count == 5
-            assert found
+            assert not found
             
+        def test_check_innovation_already_exists(self):
+            innovation_type = InnovationType.NEWLINK
+            node1, node2 = self.nodes[:2]
+            weight = 1.0
+            innovation_number1 = 0
+            recurrence = False
             
+            # exists
+            innovation = Innovation(node_in_id=node1.id,
+                                    node_out_id=node2.id,
+                                    innovation_type=innovation_type,
+                                    new_weight=weight,
+                                    innovation_number1=innovation_number1)
+            
+            exists = Genome._check_innovation_already_exists(the_innovation=innovation,
+                                                                    innovation_type=innovation_type,
+                                                                    node1=node1,
+                                                                    node2=node2,
+                                                                    recurrence=recurrence)
+            assert exists 
+            
+            exists = Genome._check_innovation_already_exists(the_innovation=innovation,
+                                                                    innovation_type=innovation_type,
+                                                                    node1=node1,
+                                                                    node2=node2,
+                                                                    recurrence=not recurrence)  
+            assert not exists
+            
+            exists = Genome._check_innovation_already_exists(the_innovation=innovation,
+                                                                    innovation_type=innovation_type,
+                                                                    node1=node2,
+                                                                    node2=node1,
+                                                                    recurrence=recurrence) 
+            assert not exists
+            
+            exists = Genome._check_innovation_already_exists(the_innovation=innovation,
+                                                                    innovation_type=InnovationType.NEWNODE,
+                                                                    node1=node1,
+                                                                    node2=node2,
+                                                                    recurrence=recurrence) 
+            assert not exists
+            
+        def test_new_link_gene(self):
+            innovation_type = InnovationType.NEWLINK
+            node1, node2 = self.nodes[:2]
+            weight = 0.23
+            innovation_number1 = 3
+            recurrence = False
+            
+            # exists
+            innovation = Innovation(node_in_id=node1.id,
+                                    node_out_id=node2.id,
+                                    innovation_type=innovation_type,
+                                    new_weight=weight,
+                                    innovation_number1=innovation_number1,)
+            
+            gene = self.genome1._new_link_gene(innovations=[innovation],
+                                                recurrence=recurrence,
+                                                node1=node1,
+                                                node2=node2,
+                                                current_innovation=5)
+            
+            assert gene.link.weight == 0.23
+            assert gene.innovation_number == 3
+            
+            # not exists
+            np.random.seed(1)
+            new_weight = np.random.choice([-1,1]) * np.random.random() 
+            innovation.innovation_type = InnovationType.NEWNODE
+            gene = self.genome1._new_link_gene(innovations=[innovation],
+                                                recurrence=recurrence,
+                                                node1=node1,
+                                                node2=node2,
+                                                current_innovation=5)
+            
+            assert gene.link.weight == new_weight
+            
+        def test_mutate_add_link(self):
+            genes_size = self.genes.size
+            assert self.genome1.genes.size == genes_size
+            success = self.genome1.mutate_add_link( innovations=[],
+                                                    current_innovation=0,
+                                                    tries=1)
+            
+            assert success
+            assert self.genome1.genes.size == genes_size + 1   
             
 class TestPopulation:
     @pytest.fixture(autouse=True)

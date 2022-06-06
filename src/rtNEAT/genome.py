@@ -1,5 +1,4 @@
 from __future__ import annotations
-from hashlib import new
 import numpy as np
 from neat import NEAT
 from node import Node, NodePlace, NodeType
@@ -8,7 +7,8 @@ from gene import Gene
 from innovation import Innovation, InnovationType
 from network import Network
 from typing import List, Iterator, Tuple
-from random import choice, randint, random
+from random import getrandbits, randrange, seed
+from numpy.random import choice, randint, random
 
 class Genome:
     def __init__(self,
@@ -171,12 +171,12 @@ class Genome:
             p2_innovation = p2_gene.innovation_number
             
             if p1_innovation == p2_innovation:
-                np.random.seed(2022)
-                chosen_gene = np.random.choice([p1_gene, p2_gene])
+                np.random.seed(1)
+                chosen_gene = choice([p1_gene, p2_gene])
             
                 # If one is disabled, the corresponding gene in the offspring will likely be disabled
                 if not p1_gene.enabled or not p2_gene.enabled:
-                    if random.random() < 0.75:
+                    if random() < 0.75:
                         disable = True
                 
                 p1_gene = next(p1_genes, None)
@@ -253,8 +253,8 @@ class Genome:
                         genome_id: int,) -> Genome:
                 
         new_nodes = np.array([], dtype=Node) # already added nodes
-        np.random.seed(2022)
-        p1_dominant: bool = random.getrandbits(1) # Determine which genome will give its excess genes
+        seed(1)
+        p1_dominant: bool = getrandbits(1) # Determine which genome will give its excess genes
         
         new_genes: List[Gene] = [] # already chosen genes
         
@@ -404,7 +404,7 @@ class Genome:
         end_part: float = total_genes * 0.8
         power_mod: float = 1.0       
         
-        severe: bool = random.getrandbits(1)
+        severe: bool = getrandbits(1)
         
         for current_gene in self.genes:
             # Don't mutate weights of frozen links
@@ -419,16 +419,16 @@ class Genome:
                     
                 else:
                     # Half the time don't do any cold mutations
-                    if random.getrandbits(1):
+                    if getrandbits(1):
                         gauss_point = 1.0 - rate
                         cold_gauss_point = 1.0 - rate - 0.1
                     else:
                         gauss_point = 1.0 - rate
                         cold_gauss_point = 1.0 - rate
                         
-                random_number = [-1,1][random.randrange(2)] * random.random() * power * power_mod
+                random_number = [-1,1][randrange(2)] * random() * power * power_mod
                 
-                random_choice = random.random()
+                random_choice = random()
                 if random_choice > gauss_point:
                     current_gene.link.weight += random_number
                 elif random_choice > cold_gauss_point:
@@ -450,7 +450,7 @@ class Genome:
         found: bool = False
         
         while try_count < 20 and not found:
-            gene_number = random.randint(0, self.genes.size -1)
+            gene_number = randint(0, self.genes.size -1)
             for gene in self.genes[:gene_number]:
                 if not(not gene.enabled or gene.link.in_node.gen_node_label == NodePlace.BIAS):
                     found = True
@@ -623,19 +623,18 @@ class Genome:
                                 Node: the out_node of the link
         """        
         if loop_recurrence:
-            node_number1 = random.randint(first_non_sensor, self.nodes.size - 1)
+            node_number1 = randint(first_non_sensor, self.nodes.size - 1)
             node_number2 = node_number1
         else:
-            node_number1 = random.randint(0, self.nodes.size - 1)
-            node_number2 = random.randint(first_non_sensor, self.nodes.size - 1)
+            node_number1 = randint(0, self.nodes.size - 1)
+            node_number2 = randint(first_non_sensor, self.nodes.size - 1)
             
         node1 = self.nodes[node_number1]
         node2 = self.nodes[node_number2]
         
         return node1, node2
     
-    def _link_already_exists(self, try_count: int, tries: int, threshold: int,
-                             recurrence: bool, node1: Node, node2: Node) -> Tuple[bool, int]:
+    def _link_already_exists(self, recurrence: bool, node1: Node, node2: Node) -> bool:
         """See if a recurrent link already exists
 
         Args:
@@ -650,22 +649,87 @@ class Genome:
             Tuple[bool, int]:   bool:
                                 int:
         """  
-        found: bool = True
-        try_count: int = 0
+        found: bool = False 
         for the_gene in self.genes:
             if (the_gene.link.in_node == node1 and
                 the_gene.link.out_node == node2 and
                 the_gene.link.is_recurrent == recurrence):
                 
-                found = False
-                try_count += 1
+                found = True
                 break
-            
-        if found:
-            try_count = tries
                 
-        return found, try_count
+        return found
 
+    def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,
+                                         node1: Node, node2: Node, recurrence: bool) -> bool:
+        """See if an innovation already exists
+
+        Args:
+            the_innovation (Innovation): _description_
+            innovation_type (InnovationType): _description_
+            node1 (Node): _description_
+            node2 (Node): _description_
+            recurrence (bool): _description_
+
+        Returns:
+            bool: _description_
+        """        
+        return (the_innovation.innovation_type == innovation_type and
+                the_innovation.node_in_id == node1.id and
+                the_innovation.node_out_id == node2.id and
+                the_innovation.recurrence_flag == recurrence)
+        
+    def _new_link_gene(self, innovations: List[Innovation], recurrence: bool,
+                       node1: Node, node2: Node, current_innovation: int) -> Gene:
+        
+        for the_innovation in innovations:          
+            # OTHERWISE, match the innovation in the innovs list
+            if Genome._check_innovation_already_exists( the_innovation=the_innovation,
+                                                        innovation_type=InnovationType.NEWLINK,
+                                                        node1=node1,
+                                                        node2=node2,
+                                                        recurrence=recurrence):
+                
+                new_gene = Gene(weight=the_innovation.weight,
+                                in_node=node1,
+                                out_node=node2,
+                                recurrence=recurrence,
+                                innovation_number=the_innovation.innovation_number1,
+                                mutation_number=0)
+                break
+        else:
+            # The innovation is totally novel
+
+                # If the phenotype does not exist, exit on false,print error
+                # Note: This should never happen- if it does there is a bug
+                if self.phenotype == 0:
+                    return False
+                                        
+                # Choose the new weight
+                np.random.seed(1)
+                new_weight = choice([-1,1]) * random() 
+                # Create the new gene
+                new_gene = Gene(weight=new_weight,
+                                in_node=node1,
+                                out_node=node2,
+                                recurrence=recurrence,
+                                innovation_number=current_innovation,
+                                mutation_number=new_weight)
+                
+                # Add the innovation
+                new_innovation = Innovation(node_in_id=node1.id,
+                                            node_out_id=node2.id,
+                                            innovation_type=InnovationType.NEWLINK,
+                                            innovation_number1=current_innovation,
+                                            new_weight=new_weight,
+                                            )
+                
+                innovations.append(new_innovation)
+                current_innovation += 1
+                
+        return new_gene
+        
+    
     def mutate_add_link(self, innovations: List, current_innovation: int, tries: int) -> bool:
         """Mutate the genome by adding a new link between 2 random Nodes 
 
@@ -678,107 +742,50 @@ class Genome:
             bool: _description_
         """
         
-        threshold: int = self.nodes.size**2
-        count: int = 0
-        
-        # Make attempts to find an unconnected pair
-        try_count: int = 0
-        
         # Decide whether to make this recurrent
-        recurrence: bool = random.random() < NEAT.recurrence_only_prob
+        recurrence: bool = random() < NEAT.recurrence_only_prob
         
         # Find the first non-sensor so that the to-node won't look at sensors as possible destinations
         first_non_sensor = self._find_first_sensor()
 
         if recurrence:
-            while try_count < tries:
-                loop_recurrence:bool  = random.getrandbits(1)
+            for _ in range(tries + 1):
+                loop_recurrence:bool  = getrandbits(1)
                 
-                node1, node2 = self._select_nodes_for_link(loop_recurrence=loop_recurrence,
+                node1, node2 = self._select_nodes_for_link( loop_recurrence=loop_recurrence,
                                                             first_non_sensor=first_non_sensor)
                 
-                found, try_count = self._link_already_exists(try_count=try_count,
-                                                            tries=tries,
-                                                            threshold=threshold,
-                                                            node1=node1,
-                                                            node2=node2,
-                                                            recurrence=True)
-        else:
-            # Loop to find a nonrecurrent link
-            while try_count < tries:
-                # Choose random node 
-                nodes_size = self.nodes_size
-              
-                node1 = np.random.choice(self.nodes[0:nodes_size])
-                node2 = np.random.choice(self.nodes[first_non_sensor:nodes_size])
+                found = not self._link_already_exists(  node1=node1,
+                                                        node2=node2,
+                                                        recurrence=True)
                 
-                found, try_count = self._link_already_exists(try_count=try_count,
-                                                                        tries=tries,
-                                                                        threshold=threshold,
-                                                                        node1=node1,
-                                                                        node2=node2,
-                                                                        recurrence=False)
+                if found: break
+        else:
+            # Choose random node 
+            nodes_size = self.nodes.size
+            # Loop to find a nonrecurrent link
+            for _ in range(tries + 1):
+                node1 = choice(self.nodes[0:nodes_size])
+                node2 = choice(self.nodes[first_non_sensor:nodes_size])
+                
+                found = not self._link_already_exists(  node1=node1,
+                                                        node2=node2,
+                                                        recurrence=False)
+                
+                if found: break
                     
-        innovs = iter(innovations)
-        the_innovation = next(innovs, None)
         # Continue only if an open link was found
         if found:
+            new_gene = self._new_link_gene(innovations=innovations,
+                                           recurrence=recurrence,
+                                           node1=node1,
+                                           node2=node2,
+                                           current_innovation=current_innovation)
             
-            if recurrence:
-                recurrence_flag = True 
-                
-            done = False
-            
-            while not done:
-                # The innovation is totally novel
-                if not the_innovation:
-                        # If the phenotype does not exist, exit on false,print error
-                    # Note: This should never happen- if it does there is a bug
-                    if self.phenotype == 0:
-                        return False
-                                            
-                    # Choose the new weight
-                    new_weight = [-1,1][random.randrange(2)] * random.random() 
-                    # Create the new gene
-                    new_gene = Gene(weight=new_weight,
-                                    in_node=node1,
-                                    out_node=node2,
-                                    recurrence=recurrence_flag,
-                                    innovation_number=current_innovation,
-                                    mutation_number=new_weight)
-                    
-                    # Add the innovation
-                    new_innovation = Innovation(node_in_id=node1.id,
-                                                node_out_id=node2.id,
-                                                innovation_type=InnovationType.NEWLINK,
-                                                innovation_number1=current_innovation,
-                                                weight=new_weight,
-                                                )
-                    innovations.append()
-                    current_innovation += 1
-                    done = True   
-                    
-                # OTHERWISE, match the innovation in the innovs list
-                elif(the_innovation.innvation_type == InnovationType.NEWLINK and
-                    the_innovation.node_in_id == node1.id and
-                    the_innovation.node_out_id == node2.id and
-                    the_innovation.recurrence_flag == recurrence_flag):
-                    
-                    new_gene = Gene(weight=the_innovation.weight,
-                                    in_node=node1,
-                                    out_node=node2,
-                                    recurrence=recurrence_flag,
-                                    innovation_number=the_innovation.innovation_number,
-                                    mutation_number=0)
-                    
-                    done = True
-                    
-                else:
-                    the_innovation = next(innovs, None)
-            
-            self.add_gene(self.genes, new_gene)
+            self.add_gene(new_gene)
+            return True
                                        
-    def mutate_add_sensor(self, innovations: List, current_innovation: int):
+    """ def mutate_add_sensor(self, innovations: List, current_innovation: int):
         
         # Find all the sensors and outputs
         sensors = []
@@ -826,7 +833,7 @@ class Genome:
                 # The innovation is novel
                 if not the_innovation:
                     # Choose the new weight
-                    new_weight = [-1,1][random.randrange(2)]*random.random() * 3.0
+                    new_weight = [-1,1][randrange(2)]*random.random() * 3.0
                     
                     # Create the new gene
                     new_gene = Gene(weight=new_weight,
@@ -861,4 +868,4 @@ class Genome:
                 else:
                     the_innovation = next(innovs, None)
                     
-            self.add_gene(gene=new_gene)
+            self.add_gene(gene=new_gene) """
