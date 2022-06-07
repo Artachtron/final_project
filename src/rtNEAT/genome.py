@@ -533,7 +533,7 @@ class Genome:
         Returns:
             bool: the innovation already exist
         """        
-        return (innovation.innovation_type == InnovationType.NEWNODE and 
+        return (innovation.innovation_type == InnovationType.NEW_NODE and 
                  innovation.node_in_id == in_node.id and
                  innovation.node_out_id == out_node.id and
                  innovation.old_innovation_number == the_gene.innovation_number)
@@ -563,8 +563,9 @@ class Genome:
         
         the_innovation = InnovTable.get_innovation( node_in=in_node,
                                                     node_out=out_node,
-                                                    innovation_type=InnovationType.NEWNODE,
-                                                    recurrence=recurrence)
+                                                    innovation_type=InnovationType.NEW_NODE,
+                                                    recurrence=recurrence,
+                                                    old_innovation_number=the_gene.innovation_number)
      
         new_node, new_gene1, new_gene2 = self._create_new_node( node_id=the_innovation.new_node_id,
                                                                 in_node=in_node,
@@ -709,7 +710,7 @@ class Genome:
         
         the_innovation = InnovTable.get_innovation(node_in=node_in,
                                                     node_out=node_out,
-                                                    innovation_type=InnovationType.NEWLINK,
+                                                    innovation_type=InnovationType.NEW_LINK,
                                                     recurrence=recurrence)
             
         new_gene = Gene(weight=the_innovation.weight,

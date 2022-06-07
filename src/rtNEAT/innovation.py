@@ -5,8 +5,8 @@ from typing import List
 from numpy.random import choice, random
 
 class InnovationType(enum.Enum):
-    NEWNODE = 0
-    NEWLINK = 1
+    NEW_NODE = 0
+    NEW_LINK = 1
 
 class InnovTable:
     history: List[Innovation] = []
@@ -15,38 +15,71 @@ class InnovTable:
      
     @staticmethod    
     def get_innovation_number() -> int:
+        """ Get the current innovation number
+
+        Returns:
+            int: current innovation number
+        """        
         return InnovTable.next_innovation_number
     
     @staticmethod
-    def increment_innov(number: int=1) -> None:
-        InnovTable.next_innovation_number += number
+    def increment_innov(amount: int=1) -> None:
+        """ Increment the current innovation number by a given amount
+
+        Args:
+            number (int, optional): innovation number's increment. Defaults to 1.
+        """        
+        InnovTable.next_innovation_number += amount
     
     @staticmethod    
     def get_node_number() -> int:
+        """ Get the current node number
+
+        Returns:
+            int: current node number
+        """        
         return InnovTable.next_node_number
     
     @staticmethod
-    def increment_node(number: int=1) -> None:
-        InnovTable.next_node_number += number
+    def increment_node(amount: int=1) -> None:
+        """ Increment the current node number by a given amount
+
+        Args:
+            number (int, optional): node number's increment. Defaults to 1.
+        """        
+        InnovTable.next_node_number += amount
     
     @staticmethod
-    def add_innovation(new_innovation:Innovation) -> None:
+    def add_innovation(new_innovation: Innovation) -> None:
+        """ Add an innovation to the history's list of innovations
+
+        Args:
+            new_innovation (Innovation): innovation to add to the list
+        """        
         InnovTable.history.append(new_innovation)
+        
+    @staticmethod
+    def reset_innovation_table() -> None:
+        """ Reset the values of the innovation table
+        """        
+        InnovTable.history = []
+        InnovTable.next_innovation_number = 0
+        InnovTable.next_node_number = 0
     
     @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,
                                          node_in: Node, node_out: Node, recurrence: bool) -> bool:
-        """See if an innovation already exists
+        """ See if an innovation already exists
 
         Args:
-            the_innovation (Innovation): _description_
-            innovation_type (InnovationType): _description_
-            node1 (Node): _description_
-            node2 (Node): _description_
-            recurrence (bool): _description_
+            the_innovation (Innovation):        innovation to check for
+            innovation_type (InnovationType):   type of innovation
+            node_in (Node):                     incoming node
+            node_out (Node):                    outgoing node
+            recurrence (bool):                  recurrence flag
 
         Returns:
-            bool: _description_
+            bool: the innovation already exists
         """        
         return (the_innovation.innovation_type == innovation_type and
                 the_innovation.node_in_id == node_in.id and
@@ -55,21 +88,45 @@ class InnovTable:
            
     @staticmethod    
     def _create_innovation(node_in: Node, node_out: Node, innovation_type: InnovationType, 
-                           recurrence: bool=False) -> Innovation: 
-        current_innovation = InnovTable.get_innovation_number()
+                           recurrence: bool=False, old_innovation_number: int=-1) -> Innovation:
+        """ Create a new innovation
+
+        Args:
+            node_in (Node):                         incoming node
+            node_out (Node):                        outgoing node
+            innovation_type (InnovationType):       type of innovation
+            recurrence (bool, optional):            recurrence flag. Defaults to False.
+            old_innovation_number (int, optional):  innovation number of the disabled gene when creating a new node. Defaults to -1.
+
+        Returns:
+            Innovation: innovation created
+        """         
         
-        new_weight = 0
-        innovation_number2 = 0
-        if innovation_type == InnovationType.NEWNODE:
-            InnovTable.increment_innov(number=2)
-            InnovTable.increment_node()
+        current_innovation: int = InnovTable.get_innovation_number()    # current innovation number
+        # NEWNODE parameters
+        innovation_number2: int = -1                                    # second innovation number  
+        current_node: int = InnovTable.get_node_number()                # current node number 
+        # NEWLINK parameter
+        new_weight: float = -1                                          # new weight
+                            
+        
+        if innovation_type == InnovationType.NEW_NODE:
+            # one innovation number per new link created
             innovation_number2 = current_innovation + 1
-        elif innovation_type == InnovationType.NEWLINK:
-            InnovTable.increment_innov(number=1)
+            # increment the current innovation number by 2 (1 for each new link created)
+            InnovTable.increment_innov(amount=2)
+            # increment the current node number
+            InnovTable.increment_node()
+ 
+        elif innovation_type == InnovationType.NEW_LINK:
+            # increment the current innovation number
+            InnovTable.increment_innov(amount=1)
+            # generate a random weight
             new_weight = choice([-1,1]) * random()
-            old_innovation_number = 0
-        # Choose the new weight
+            # new_node_id not applicable
+            current_node = -1
         
+        # create the new innovation        
         new_innovation = Innovation(node_in_id=node_in.id,
                                     node_out_id=node_out.id,
                                     innovation_type=innovation_type,
@@ -77,15 +134,31 @@ class InnovTable:
                                     innovation_number2=innovation_number2,
                                     new_weight=new_weight,
                                     recurrence=recurrence,
-                                    new_node_id=InnovTable.get_node_number()-1)
+                                    new_node_id=current_node,
+                                    old_innovation_number=old_innovation_number)
         
+        # add the innovation to the table's history
         InnovTable.add_innovation(new_innovation=new_innovation)
         
         return new_innovation
     
     @staticmethod
     def get_innovation(node_in: Node, node_out: Node, innovation_type: InnovationType,
-                        recurrence: bool, new_node: Node=None) -> Innovation:
+                        recurrence: bool, old_innovation_number: int=-1) -> Innovation:
+        """ Look if the innovation already exists in the table else create a new innovation
+
+        Args:
+            node_in (Node):                         incoming node
+            node_out (Node):                        outgoing node
+            innovation_type (InnovationType):       type of innovation
+            recurrence (bool):                      recurrence flag
+            old_innovation_number (int, optional):  innovation number of the disabled gene (when adding node). Defaults to -1.
+
+        Returns:
+            Innovation: the found existing innovation or the created new innovation
+        """  
+        
+        # Check in history if an equivalent innovation already exists      
         for innovation in InnovTable.history:
             if InnovTable._check_innovation_already_exists(the_innovation=innovation,
                                                             innovation_type=innovation_type,
@@ -93,13 +166,15 @@ class InnovTable:
                                                             node_out=node_out,
                                                             recurrence=recurrence):
                 return innovation
-            
+        
+        # No existing innovation wa corresponding    
         else:
-            # novel innovation
+            # Novel innovation
             new_innovation = InnovTable._create_innovation(node_in=node_in,
                                                             node_out=node_out,
                                                             innovation_type=innovation_type,
-                                                            recurrence=recurrence)
+                                                            recurrence=recurrence,
+                                                            old_innovation_number=old_innovation_number)
             return new_innovation       
 
 class Innovation:
@@ -108,20 +183,21 @@ class Innovation:
                  node_out_id: int,
                  innovation_type: InnovationType,
                  innovation_number1: int,
-                 innovation_number2: int=0,
-                 old_innovation_number: int = 0,
-                 new_node_id: int=0,
-                 new_weight: float=0.0,
+                 innovation_number2: int=-1,
+                 old_innovation_number: int = -1,
+                 new_node_id: int=-1,
+                 new_weight: float=-1,
                  recurrence: bool=False
                  ):
         
-        self.innovation_type: InnovationType = innovation_type # Either NEWNODE or NEWLINK
-        self.node_in_id: int = node_in_id # Two nodes specify where the innovation took place
-        self.node_out_id: int = node_out_id
-        self.innovation_number1: int = innovation_number1 # The number assigned to the innovation
-        self.innovation_number2: int = innovation_number2 # If this is a new node innovation, then there are 2 innovations (links) added for the new node 
-        self.weight: float = new_weight # If a link is added, this is its weight  
+        self.innovation_type: InnovationType = innovation_type  # NEW_NODE or NEW_LINK
+        self.node_in_id: int = node_in_id                       # The incoming node's id
+        self.node_out_id: int = node_out_id                     # The outgoing node's id
+        self.innovation_number1: int = innovation_number1       # The number assigned to the innovation
+        self.innovation_number2: int = innovation_number2       # In case of NEW_NODE two links are created
         
-        self.new_node_id: int = new_node_id # If a new node was created, this is its node_id 
-        self.old_innovation_number: int = old_innovation_number # If a new node was created, this is the innovnum of the gene's link it is being stuck inside 
-        self.recurrence_flag: bool = recurrence
+        self.new_node_id: int = new_node_id                     # In case of NEW_NODE the id of the created node
+        self.old_innovation_number: int = old_innovation_number # In case of NEW_NODE a link is being disabled
+        
+        self.weight: float = new_weight                         # In case of NEW_LINK the weight associated to the link 
+        self.recurrence_flag: bool = recurrence                 # In case of NEW_LINK the recurrence flag of the link
