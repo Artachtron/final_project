@@ -7,6 +7,7 @@ from genome import Genome
 from population import Population
 import numpy as np
 import random
+from neat import NEAT
 
 class TestNode:
     def test_create_node(self):
@@ -288,14 +289,14 @@ class TestGenome:
             genes = self.genes[[0, 1]]
             
             # conflict
-            gene = Genome._check_gene_conflict(new_genes=genes,
+            conflict = Genome._check_gene_conflict(new_genes=genes,
                                         chosen_gene=self.genes[0]) 
-            assert gene
+            assert conflict
             
             # no conflict
-            gene = Genome._check_gene_conflict(new_genes=genes,
+            conflict = Genome._check_gene_conflict(new_genes=genes,
                                         chosen_gene=self.genes[2])
-            assert not gene
+            assert not conflict
         
         def test_check_node_existence(self):
             new_nodes = self.nodes[:4]
@@ -397,14 +398,53 @@ class TestGenome:
         def test_get_last_node_info(self):        
             assert self.genome1.get_last_node_id() == 5+1
             assert self.genome1.get_last_gene_innovation_number() == 2+1
+         
+        def test_create_new_link(self):
+            self.genome1.genesis(network_id=0)
+            gene = self.genome1.genes[0]
+            
+            in_node = gene.link.in_node.analogue
+            out_node = gene.link.out_node.analogue
+            
+            assert len(out_node.incoming) == 1
+            assert len(in_node.outgoing) == 1
+            
+            link = self.genome1._create_new_link(gene = gene) 
+            
+            assert link.weight == gene.link.weight
+            assert link.in_node == gene.link.in_node.analogue
+            assert link.out_node == gene.link.out_node.analogue
+            assert link.is_recurrent == gene.link.is_recurrent
+            
+            in_node = gene.link.in_node.analogue
+            out_node = gene.link.out_node.analogue
+            
+            assert link in out_node.incoming
+            assert link in in_node.outgoing
+            
+            assert len(out_node.incoming) == 2
+            assert len(in_node.outgoing) == 2
             
         def test_genesis(self):        
             network = self.genome1.genesis(network_id=0) 
             assert self.genome1.phenotype == network
             assert network.genotype == self.genome1
         
-        def test_mutate_links_weight(self):
-            self.genome1.mutate_link_weights(power=0.5, rate=0.5)
+        def test_mutate_links_weight_simplified(self):
+            NEAT.mutate_link_weights_prob = 1.0
+            NEAT.mutate_new_link_prob = 0.5
+            NEAT.weight_mutation_power = 0.5
+            
+            weights = [gene.link.weight for gene in self.genome1.genes]
+            self.genome1.mutate_link_weights()
+            new_weights = [gene.link.weight for gene in self.genome1.genes]
+            
+            for new_weight, weight in zip(new_weights, weights):
+                assert new_weight != weight
+            
+        
+        """ def test_mutate_links_weight(self):
+            self.genome1.mutate_link_weights(power=0.5, rate=0.5) """
                 
         def test_find_gene(self):
             gene, found = self.genome1._find_random_gene()

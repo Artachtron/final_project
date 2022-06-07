@@ -2,9 +2,9 @@ class NEAT:
     time_alive_minimum: int = 0
     trait_param_mut_prob: float = 0
     trait_mutation_power: float = 0 # Power of mutation on a signle trait param 
-    linktrait_mut_sig: float = 0 # Amount that mutation_num changes for a trait change inside a link
-    nodetrait_mut_sig: float = 0 # Amount a mutation_num changes on a link connecting a node that changed its trait 
-    weight_mut_power: float = 0 # The power of a linkweight mutation 
+    linktrait_mutation_sig: float = 0 # Amount that mutation_num changes for a trait change inside a link
+    nodetrait_mutation_sig: float = 0 # Amount a mutation_num changes on a link connecting a node that changed its trait 
+    weight_mutation_power: float = 0 # The power of a linkweight mutation 
     recur_prob: float = 0 # Prob. that a link mutation which doesn't have to be recurrent will be made recurrent 
     disjoint_coeff: float = 1.0
     excess_coeff: float = 1.0
@@ -17,6 +17,7 @@ class NEAT:
     mutate_link_trait_prob: float = 0
     mutate_node_trait_prob: float = 0
     mutate_link_weights_prob: float = 0
+    mutate_new_link_prob: float = 0.0
     mutate_toggle_enable_prob: float = 0
     mutate_gene_reenable_prob: float = 0
     mutate_add_node_prob: float = 0
