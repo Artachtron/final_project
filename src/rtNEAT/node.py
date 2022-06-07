@@ -23,26 +23,27 @@ class Node:
                   node_place: NodePlace = NodePlace.HIDDEN.value,
                   ):
         
-        self.active_flag: bool = False # To make sure outputs are active
-        self.activesum: float = 0.0 # The incoming activity before being processed
-        self.activation: float = 0.0 # The total activation entering the Node
-        self.output: float = 0.0 # Output of the Node- the value in the Node
-        self.last_activation: float = 0.0 # Holds the previous step's activation for recurrency
-        self.last_activation2: float = 0.0 # Holds the activation BEFORE the prevous step's
-        self._node_type: NodeType = node_type # NEURON or SENSOR
-        self.activation_count: int = 0 # Keeps track of which activation the node is currently in
+        self.active_flag: bool = False              # To make sure outputs are active
+        self.activesum: float = 0.0                 # The incoming activity before being processed
+        self.activation: float = 0.0                # The total activation entering the Node
+        self.output: float = 0.0                    # Output of the Node- the value in the Node
+        self.last_activation: float = 0.0           # Holds the previous step's activation for recurrency
+        self.last_activation2: float = 0.0          # Holds the activation BEFORE the prevous step's
+        self._node_type: NodeType = node_type       # NEURON or SENSOR
+        self.activation_count: int = 0              # Keeps track of which activation the node is currently in
         self.id: int = node_id
         self.ftype: FuncType = FuncType.SIGMOID
+        self.gen_node_label: NodePlace = node_place # Used  for genetic marking of nodes
+        self.dup: Node = None                       # Used for Genome duplication
+        self.analogue: Node = None                  # Used for Gene decoding
+        self.frozen: bool = False                   # When frozen, cannot be mutated (meaning its trait pointer is fixed)
+        self.override: bool = False                 # The Node cannot compute its own output- something is overriding it
+        self.override_value: float = 0.0            # Contains the activation value that will override this node's activation
+        self.incoming = []                          # A list of pointers to incoming weighted signals from other nodes
+        self.outgoing = []                          #  A list of pointers to links carrying this node's signal
+        
         """ self.trait: Trait = 0 # Points to a trait of parameters
         self.trait_id: int = 1 # Identify the trait derived by this node """
-        self.gen_node_label: NodePlace = node_place # Used  for genetic marking of nodes
-        self.dup: Node = None # Used for Genome duplication
-        self.analogue: Node = None # Used for Gene decoding
-        self.frozen: bool = False # When frozen, cannot be mutated (meaning its trait pointer is fixed)
-        self.override: bool = False # The Node cannot compute its own output- something is overriding it
-        self.override_value: float = 0.0 # Contains the activation value that will override this node's activation
-        self.incoming = [] # A list of pointers to incoming weighted signals from other nodes
-        self.outgoing = [] #  A list of pointers to links carrying this node's signal
 
     @classmethod
     def constructor_from_node(cls, node:Node):
