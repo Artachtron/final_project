@@ -469,11 +469,11 @@ class Genome:
                   
         try_count: int = 0  
         found: bool = False
+        the_gene: Gene = None
         
         while try_count < tries and not found:
-            gene_number = randint(0, self.genes.size -1)
-            for gene in self.genes[:gene_number]:
-                if not(not gene.enabled or gene.link.in_node.gen_node_label == NodePlace.BIAS):
+            for gene in self.genes:
+                if gene.enabled and gene.link.in_node.gen_node_label != NodePlace.BIAS:
                     found = True
                     the_gene = gene
                     
@@ -501,22 +501,22 @@ class Genome:
                                         Gene: the gene connecting out the new node
         """        
         new_node = Node(node_type=NodeType.NEURON,
-                                node_id=node_id,
-                                node_place=NodePlace.HIDDEN)
+                        node_id=node_id,
+                        node_place=NodePlace.HIDDEN)
                 
         new_gene1 = Gene(weight=1.0,
-                            in_node=in_node,
-                            out_node=new_node,
-                            recurrence=recurrence,
-                            innovation_number=innovation_number1,
-                            mutation_number=0)
-        
+                        in_node=in_node,
+                        out_node=new_node,
+                        recurrence=recurrence,
+                        innovation_number=innovation_number1,
+                        mutation_number=0)
+    
         new_gene2 = Gene(weight=old_weight,
-                            in_node=new_node,
-                            out_node=out_node,
-                            recurrence=False,
-                            innovation_number=innovation_number2,
-                            mutation_number=0)
+                        in_node=new_node,
+                        out_node=out_node,
+                        recurrence=False,
+                        innovation_number=innovation_number2,
+                        mutation_number=0)
         
         return new_node, new_gene1, new_gene2
     
@@ -538,8 +538,7 @@ class Genome:
                  innovation.node_out_id == out_node.id and
                  innovation.old_innovation_number == the_gene.innovation_number)
     
-    def _new_node_innovation(self, innovations: List[Innovation], current_innovation: int,
-                            current_node_id: int, the_gene: Gene) -> Tuple[Node, Gene, Gene]:
+    def _new_node_innovation(self, the_gene: Gene) -> Tuple[Node, Gene, Gene]:
         """ Check to see if this innovation has already been done in another genome
 
         Args:
@@ -561,7 +560,22 @@ class Genome:
         out_node: Node = the_link.out_node
 
         recurrence = the_link.is_recurrent
-        for innovation in innovations:
+        
+        the_innovation = InnovTable.get_innovation( node_in=in_node,
+                                                    node_out=out_node,
+                                                    innovation_type=InnovationType.NEWNODE,
+                                                    recurrence=recurrence)
+     
+        new_node, new_gene1, new_gene2 = self._create_new_node( node_id=the_innovation.new_node_id,
+                                                                in_node=in_node,
+                                                                out_node=out_node,
+                                                                recurrence=recurrence,
+                                                                innovation_number1=the_innovation.innovation_number1,
+                                                                innovation_number2=the_innovation.innovation_number2,
+                                                                old_weight=old_weight)
+        
+    
+        """ for innovation in InnovTable.history:
             # Innovation already exists    
             if self._check_innovation_identical(innovation=innovation,
                                                 in_node=in_node,
@@ -579,7 +593,7 @@ class Genome:
             
         # If innovation is novel
         else:
-            new_node, new_gene1, new_gene2 = self._create_new_node( node_id=current_node_id,
+            new_node, new_gene1, new_gene2 = self._create_new_node( node_id=InnovTable.get_node_number(),
                                                                     in_node=in_node,
                                                                     out_node=out_node,
                                                                     recurrence=recurrence,
@@ -595,12 +609,13 @@ class Genome:
                                         new_node_id=new_node.id,
                                         old_innovation_number=the_gene.innovation_number)
             
-            innovations.append(new_innovation)
-            current_innovation += 2
+            InnovTable._create_innovation()
+
+            current_innovation += 2 """
                 
         return  new_node, new_gene1, new_gene2
                     
-    def mutate_add_node(self, innovations: List, current_node_id: int, current_innovation: int) -> bool:
+    def mutate_add_node(self) -> bool:
         """Mutate genome by adding a node representation 
 
         Args:
@@ -620,10 +635,7 @@ class Genome:
         # Disabled the gene
         the_gene.enabled = False
                 
-        new_node, new_gene1, new_gene2 = self._new_node_innovation( innovations=innovations,
-                                                                    current_innovation=current_innovation,
-                                                                    current_node_id=current_node_id,
-                                                                    the_gene=the_gene)
+        new_node, new_gene1, new_gene2 = self._new_node_innovation(the_gene=the_gene)
                 
         self.add_gene(gene=new_gene1)
         self.add_gene(gene=new_gene2)
@@ -655,11 +667,11 @@ class Genome:
         if recurrence:
             loop_recurrence: bool  = choice([0,1])     
             if loop_recurrence:
-                node_number1 = randint(first_non_sensor, self.nodes.size - 1)
+                node_number1 = randint(first_non_sensor, self.nodes.size)
                 node_number2 = node_number1
             else:
-                node_number1 = randint(0, self.nodes.size - 1)
-                node_number2 = randint(first_non_sensor, self.nodes.size - 1)
+                node_number1 = randint(0, self.nodes.size)
+                node_number2 = randint(first_non_sensor, self.nodes.size)
                 
             node1 = self.nodes[node_number1]
             node2 = self.nodes[node_number2]
@@ -695,7 +707,7 @@ class Genome:
     def _new_link_gene(self, recurrence: bool,
                        node_in: Node, node_out: Node,) -> Gene:
         
-        the_innovation = InnovTable._get_innovation(node_in=node_in,
+        the_innovation = InnovTable.get_innovation(node_in=node_in,
                                                     node_out=node_out,
                                                     innovation_type=InnovationType.NEWLINK,
                                                     recurrence=recurrence)

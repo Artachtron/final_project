@@ -477,17 +477,35 @@ class TestGenome:
             assert gene2.link.weight == 0.34
             assert gene2.innovation_number == 1
             
-        
-        
         def test_mutate_add_node(self):
-            assert self.genome1.nodes.size == 6
-            assert self.genome1.genes.size == 4
-            success = self.genome1.mutate_add_node(innovations=[],
-                                         current_node_id=2,
-                                         current_innovation=0)
+            genome1 = Genome(genome_id=1,
+                             nodes=self.nodes[:2],
+                             genes=self.genes[:1])
+            
+            genome2 = Genome(genome_id=1,
+                             nodes=self.nodes[:2],
+                             genes=self.genes[:1])
+            
+            # Innovation is novel
+            assert InnovTable.get_innovation_number() == 0
+            assert genome1.nodes.size == 2
+            assert genome1.genes.size == 1
+            success = genome1.mutate_add_node()
             assert success
-            assert self.genome1.nodes.size == 7
-            assert self.genome1.genes.size == 6
+            assert InnovTable.get_innovation_number() == 2
+            assert genome1.nodes.size == 3
+            assert genome1.genes.size == 3
+            
+            # Innovation exists                     
+            genome2.genes[0].enabled = True
+            assert InnovTable.get_innovation_number() == 2
+            assert genome2.nodes.size == 2
+            assert genome2.genes.size == 1
+            success = genome2.mutate_add_node()
+            assert success
+            assert InnovTable.get_innovation_number() == 2
+            assert genome2.nodes.size == 3
+            assert genome2.genes.size == 3
             
         def test_find_first_non_sensor(self):
             self.genome1.nodes = self.nodes[[0,2,4,1,3,5]]
@@ -513,7 +531,7 @@ class TestGenome:
             
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
                                                                 first_non_sensor=3)
-            assert node1 == node2
+            assert node1 != node2
             assert node2.node_type != NodeType.SENSOR
             
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
@@ -659,6 +677,42 @@ class TestInnovTable:
                                                                     recurrence=recurrence) 
             assert not exists
             
+    def test_get_innovation(self):
+        node1, node2 = self.nodes[:2]
+        assert InnovTable.get_innovation_number() == 0
+        # new innovation
+        innovation = InnovTable.get_innovation( node_in=node1,
+                                                node_out=node2,
+                                                innovation_type=InnovationType.NEWNODE,
+                                                recurrence=False)
+        
+        assert innovation.innovation_type == InnovationType.NEWNODE
+        assert innovation.node_in_id == node1.id
+        assert innovation.node_out_id == node2.id
+        assert innovation.recurrence_flag == False
+        """ assert innovation.new_node_id == InnovTable.get_node_number() - 1
+        assert innovation.innovation_number1 == InnovTable.get_innovation_number() - 2
+        assert innovation.innovation_number2 == InnovTable.get_innovation_number() - 1 """
+        assert InnovTable.get_innovation_number() == 2
+        
+        # same innovaiton
+        innovation = InnovTable.get_innovation( node_in=node1,
+                                                node_out=node2,
+                                                innovation_type=InnovationType.NEWNODE,
+                                                recurrence=False)
+        
+        assert innovation.innovation_type == InnovationType.NEWNODE
+        assert innovation.node_in_id == node1.id
+        assert innovation.node_out_id == node2.id
+        assert innovation.recurrence_flag == False
+        assert innovation.new_node_id == InnovTable.get_node_number() - 1
+        assert innovation.innovation_number1 == InnovTable.get_innovation_number() - 2
+        assert innovation.innovation_number2 == InnovTable.get_innovation_number() - 1
+        assert InnovTable.get_innovation_number() == 2
+            
+    def test_create_innovation(self):
+        pass
+    
 class TestPopulation:
     @pytest.fixture(autouse=True)
     def setup(self):

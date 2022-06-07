@@ -18,6 +18,18 @@ class InnovTable:
         return InnovTable.next_innovation_number
     
     @staticmethod
+    def increment_innov(number: int=1) -> None:
+        InnovTable.next_innovation_number += number
+    
+    @staticmethod    
+    def get_node_number() -> int:
+        return InnovTable.next_node_number
+    
+    @staticmethod
+    def increment_node(number: int=1) -> None:
+        InnovTable.next_node_number += number
+    
+    @staticmethod
     def add_innovation(new_innovation:Innovation) -> None:
         InnovTable.history.append(new_innovation)
     
@@ -40,38 +52,55 @@ class InnovTable:
                 the_innovation.node_in_id == node_in.id and
                 the_innovation.node_out_id == node_out.id and
                 the_innovation.recurrence_flag == recurrence)
-    
+           
     @staticmethod    
-    def _create_innovation(node_in: Node, node_out: Node) -> Innovation: 
+    def _create_innovation(node_in: Node, node_out: Node, innovation_type: InnovationType, 
+                           recurrence: bool=False) -> Innovation: 
         current_innovation = InnovTable.get_innovation_number()
+        
+        new_weight = 0
+        innovation_number2 = 0
+        if innovation_type == InnovationType.NEWNODE:
+            InnovTable.increment_innov(number=2)
+            InnovTable.increment_node()
+            innovation_number2 = current_innovation + 1
+        elif innovation_type == InnovationType.NEWLINK:
+            InnovTable.increment_innov(number=1)
+            new_weight = choice([-1,1]) * random()
+            old_innovation_number = 0
         # Choose the new weight
-        new_weight = choice([-1,1]) * random()
+        
         new_innovation = Innovation(node_in_id=node_in.id,
-                                        node_out_id=node_out.id,
-                                        innovation_type=InnovationType.NEWLINK,
-                                        innovation_number1=current_innovation,
-                                        new_weight=new_weight,
-                                        )
+                                    node_out_id=node_out.id,
+                                    innovation_type=innovation_type,
+                                    innovation_number1=current_innovation,
+                                    innovation_number2=innovation_number2,
+                                    new_weight=new_weight,
+                                    recurrence=recurrence,
+                                    new_node_id=InnovTable.get_node_number()-1)
+        
         InnovTable.add_innovation(new_innovation=new_innovation)
         
         return new_innovation
     
     @staticmethod
-    def _get_innovation(node_in: Node, node_out: Node, innovation_type: InnovationType,
-                        recurrence: bool) -> Innovation:
+    def get_innovation(node_in: Node, node_out: Node, innovation_type: InnovationType,
+                        recurrence: bool, new_node: Node=None) -> Innovation:
         for innovation in InnovTable.history:
             if InnovTable._check_innovation_already_exists(the_innovation=innovation,
-                                                       innovation_type=innovation_type,
-                                                       node_in=node_in,
-                                                       node_out=node_out,
-                                                       recurrence=recurrence):
+                                                            innovation_type=innovation_type,
+                                                            node_in=node_in,
+                                                            node_out=node_out,
+                                                            recurrence=recurrence):
                 return innovation
             
         else:
             # novel innovation
             new_innovation = InnovTable._create_innovation(node_in=node_in,
-                                                    node_out=node_out)
-            return new_innovation
+                                                            node_out=node_out,
+                                                            innovation_type=innovation_type,
+                                                            recurrence=recurrence)
+            return new_innovation       
 
 class Innovation:
     def __init__(self,
