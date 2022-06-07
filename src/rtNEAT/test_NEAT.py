@@ -250,23 +250,23 @@ class TestGenome:
             p2_gene = next(p2_genes)
             
             # same gene
-            chosen_gene, skip, disable, *args = Genome._choose_gene(p1_gene=p1_gene,
-                                                             p2_gene=p2_gene,
-                                                             p1_genes=p1_genes,
-                                                             p2_genes=p2_genes,
+            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(parent1_gene=p1_gene,
+                                                             parent2_gene=p2_gene,
+                                                             parent1_genes=p1_genes,
+                                                             parent2_genes=p2_genes,
                                                              p1_dominant=True)
             assert not skip
             assert type(disable) == bool     
             assert chosen_gene == self.genes[0]  
             
             # innovation1 < innovation 2 non-dominant  genome 1
-            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(*args,
                                                                     p1_dominant=False) 
             assert skip
             assert chosen_gene == self.genes[1]  
             
             # different gene same innovation number
-            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(*args,
                                                                      p1_dominant=True)
             
             np.random.seed(1)
@@ -274,13 +274,13 @@ class TestGenome:
             assert chosen_gene == np.random.choice([self.genes[3], self.genes[2]]) 
             
             # innovation2 < innovation1 non-dominant genome 2
-            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(*args,
                                                                     p1_dominant=True)
             assert skip
             assert chosen_gene == self.genes[1]  
             
             # same gene in non-dominant genome 2
-            chosen_gene, skip, disable, *args = Genome._choose_gene(*args,
+            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(*args,
                                                                      p1_dominant=True)
             assert skip
             assert chosen_gene == self.genes[3] 
@@ -473,12 +473,12 @@ class TestGenome:
             assert gene2.link.weight == 0.34
             assert gene2.innovation_number == 1
             
-        def test_check_innovation_novel(self):
+        def test_check_innovation_already_exists(self):
             node_in_id, node_out_id = [node.id for node in self.nodes[:2]]
             gene = self.genes[0]
             
             # New innovation
-            node, gene1, gene2 = self.genome1._check_innovation_novel(innovations=[],
+            node, gene1, gene2 = self.genome1._check_innovation_already_exists(innovations=[],
                                                                       current_innovation=6,
                                                                       current_node_id=8,
                                                                       the_gene=gene)
@@ -495,7 +495,7 @@ class TestGenome:
                                     new_node_id=5)
             innovations = [innovation]
             
-            node, gene1, gene2 = self.genome1._check_innovation_novel(innovations=innovations,
+            node, gene1, gene2 = self.genome1._check_innovation_already_exists(innovations=innovations,
                                                                       current_innovation=1,
                                                                       current_node_id=8,
                                                                       the_gene=gene)
@@ -523,17 +523,28 @@ class TestGenome:
             
             for _ in range(10):
                 # Not recurrent link
-                node1, node2 = self.genome1._select_nodes_for_link( loop_recurrence=False,
+                node1, node2 = self.genome1._select_nodes_for_link( recurrence = False,
                                                                     first_non_sensor=3)
                 assert node1
                 assert node2.node_type != NodeType.SENSOR
                 
-                # Recurrent link
-                node1, node2 = self.genome1._select_nodes_for_link( loop_recurrence=True,
-                                                                    first_non_sensor=3)
-                assert node1 == node2
-                assert node2.node_type != NodeType.SENSOR
-                
+            np.random.seed(100)      
+            # Recurrent link   
+            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
+                                                                first_non_sensor=3)
+            assert node1 != node2
+            assert node2.node_type != NodeType.SENSOR
+            
+            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
+                                                                first_non_sensor=3)
+            assert node1 == node2
+            assert node2.node_type != NodeType.SENSOR
+            
+            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
+                                                                first_non_sensor=3)
+            assert node1 == node2
+            assert node2.node_type != NodeType.SENSOR
+                   
         def test_link_already_exists(self):
             node1 = self.nodes[0]
             node2 = self.nodes[1]

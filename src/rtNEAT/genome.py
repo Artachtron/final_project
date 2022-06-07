@@ -7,7 +7,6 @@ from gene import Gene
 from innovation import Innovation, InnovationType
 from network import Network
 from typing import List, Iterator, Tuple
-from random import getrandbits, seed
 from numpy.random import choice, randint, random, uniform
 
 class Genome:
@@ -155,17 +154,17 @@ class Genome:
                node.gen_node_label == NodePlace.BIAS or
                node.gen_node_label == NodePlace.OUTPUT)
     
-    def _choose_gene(p1_gene: Gene, p2_gene: Gene, p1_genes: Iterator,
-                     p2_genes: Iterator, p1_dominant: bool
-                     ) -> Tuple[Gene, bool, bool, Gene, Gene, Iterator, Iterator]:
+    def _choose_gene_to_transmit(   parent1_gene: Gene, parent2_gene: Gene, parent1_genes: Iterator,
+                                    parent2_genes: Iterator, p1_dominant: bool
+                                ) -> Tuple[Gene, bool, bool, Gene, Gene, Iterator, Iterator]:
         """Choose the gene to transmit to offspring
 
         Args:
-            p1_gene (Gene): the gene from the first genome
-            p2_gene (Gene): the gene from the second genome
-            p1_genes (Iterator): the iterator of genes from first genome
-            p2_genes (Iterator): the iterator of genes from second genome
-            p1_dominant (bool): the first genome is the dominant one
+            parent1_gene (Gene): the gene from the first genome
+            parent2_gene (Gene): the gene from the second genome
+            parent1_genes (Iterator): the iterator of genes from first genome
+            parent2_genes (Iterator): the iterator of genes from second genome
+            parent1_dominant (bool): the first genome is the dominant one
 
         Returns:
             Tuple[Gene, bool, bool, 
@@ -176,46 +175,46 @@ class Genome:
                                             ... : args for the next iteration
                                         
         """        
-        disable: bool = False
-        skip: bool = False
+        disable: bool = False # if the gene must be disabled
+        skip: bool = False # if the gene must be skipped and not transmitted
         
-        if not p1_gene: 
-            chosen_gene = p2_gene
-            p2_gene = next(p2_genes, None)
+        if not parent1_gene: 
+            chosen_gene = parent2_gene
+            parent2_gene = next(parent2_genes, None)
             if p1_dominant: skip = True
                     
-        elif not p2_gene:
-            chosen_gene = p1_gene
-            p1_gene = next(p1_genes, None)
+        elif not parent2_gene:
+            chosen_gene = parent1_gene
+            parent1_gene = next(parent1_genes, None)
             if not p1_dominant: skip = True
         
         else:
-            p1_innovation = p1_gene.innovation_number
-            p2_innovation = p2_gene.innovation_number
+            p1_innovation = parent1_gene.innovation_number
+            p2_innovation = parent2_gene.innovation_number
             
             if p1_innovation == p2_innovation:
                 np.random.seed(1)
-                chosen_gene = choice([p1_gene, p2_gene])
+                chosen_gene = choice([parent1_gene, parent2_gene])
             
                 # If one is disabled, the corresponding gene in the offspring will likely be disabled
-                if not p1_gene.enabled or not p2_gene.enabled:
+                if not parent1_gene.enabled or not parent2_gene.enabled:
                     if random() < 0.75:
                         disable = True
                 
-                p1_gene = next(p1_genes, None)
-                p2_gene = next(p2_genes, None)  
+                parent1_gene = next(parent1_genes, None)
+                parent2_gene = next(parent2_genes, None)  
                 
             elif p1_innovation < p2_innovation:
-                chosen_gene = p1_gene
-                p1_gene = next(p1_genes, None)
+                chosen_gene = parent1_gene
+                parent1_gene = next(parent1_genes, None)
                 if not p1_dominant: skip = True
                     
             elif p2_innovation < p1_innovation:
-                chosen_gene = p2_gene
-                p2_gene = next(p2_genes, None)
+                chosen_gene = parent2_gene
+                parent2_gene = next(parent2_genes, None)
                 if p1_dominant: skip = True
                     
-        return chosen_gene, skip, disable, p1_gene, p2_gene, p1_genes, p2_genes
+        return chosen_gene, skip, disable, parent1_gene, parent2_gene, parent1_genes, parent2_genes
         
     def _check_gene_conflict(new_genes: List[Gene],
                              chosen_gene: Gene) -> bool:
@@ -282,8 +281,7 @@ class Genome:
         """        
                 
         new_nodes = np.array([], dtype=Node) # already added nodes
-        seed(1)
-        p1_dominant: bool = getrandbits(1) # Determine which genome will give its excess genes
+        parent1_dominant: bool = choice([0,1]) # Determine which genome will give its excess genes
         
         new_genes: List[Gene] = [] # already chosen genes
         
@@ -298,16 +296,16 @@ class Genome:
                 new_nodes = Genome.insert_node(nodes_list=new_nodes, node=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
-        p1_genes = iter(self.genes)
-        p2_genes =iter(genome_mate.genes)
-        p1_gene = next(p1_genes, None)
-        p2_gene = next(p2_genes, None)
-        args = (p1_gene, p2_gene, p1_genes, p2_genes)
-        while p1_gene or p2_gene:
+        parent1_genes = iter(self.genes)
+        parent2_genes =iter(genome_mate.genes)
+        parent1_gene = next(parent1_genes, None)
+        parent2_gene = next(parent2_genes, None)
+        args = (parent1_gene, parent2_gene, parent1_genes, parent2_genes)
+        while parent1_gene or parent2_gene:
          
-            (chosen_gene, skip, disable, *args) = Genome._choose_gene(*args,
-                                                                      p1_dominant=p1_dominant)
-            p1_gene, p2_gene = args[0:2]           
+            (chosen_gene, skip, disable, *args) = Genome._choose_gene_to_transmit(*args,
+                                                                      p1_dominant=parent1_dominant)
+            parent1_gene, parent2_gene = args[0:2]           
             
             conflict = Genome._check_gene_conflict( new_genes=new_genes,
                                                     chosen_gene=chosen_gene)     
@@ -350,11 +348,11 @@ class Genome:
                     
                 new_genes.append(new_gene)
         
-        new_genome = Genome(genome_id=genome_id,
+        baby_genome = Genome(genome_id=genome_id,
                             nodes=new_nodes,
                             genes=np.array(new_genes))
         
-        return new_genome
+        return baby_genome
     
     def _create_new_link(self, gene: Gene) -> Link:
         """ Create a new link from a gene's link
@@ -513,14 +511,32 @@ class Genome:
         
         return new_node, new_gene1, new_gene2
     
-    def _check_innovation_novel(self, innovations: List[Innovation], current_innovation: int,
-                                current_node_id: int, the_gene: Gene) -> Tuple[Node, Gene, Gene]:
+    def _check_innovation_identical(self, innovation: Innovation, in_node: Node,
+                                    out_node: Node, the_gene: Gene) -> bool:
+        """Check if the innovation already exists
+
+        Args:
+            innovation (Innovation): innovation to check for
+            in_node (Node): in_node of the innovation
+            out_node (Node): out_node of the innovation
+            the_gene (Gene): the gene with the innovation number
+
+        Returns:
+            bool: the innovation already exist
+        """        
+        return (innovation.innovation_type == InnovationType.NEWNODE and 
+                 innovation.node_in_id == in_node.id and
+                 innovation.node_out_id == out_node.id and
+                 innovation.old_innovation_number == the_gene.innovation_number)
+    
+    def _new_node_innovation(self, innovations: List[Innovation], current_innovation: int,
+                            current_node_id: int, the_gene: Gene) -> Tuple[Node, Gene, Gene]:
         """ Check to see if this innovation has already been done in another genome
 
         Args:
-            innovations (List[Innovation]): _description_
-            current_node_id (int): _description_
-            the_gene (Gene): _description_
+            innovations (List[Innovation]): List of already existing innovations
+            current_node_id (int): the id of the current node
+            the_gene (Gene): the gene which innovation to check
 
         Returns:
             Tuple[Node, Gene, Gene]:    Node: the new node created
@@ -537,11 +553,11 @@ class Genome:
 
         recurrence = the_link.is_recurrent
         for innovation in innovations:
-            # Innovation already existing    
-            if(innovation.innovation_type == InnovationType.NEWNODE and 
-                 innovation.node_in_id == in_node.id and
-                 innovation.node_out_id == out_node.id and
-                 innovation.old_innovation_number == the_gene.innovation_number):
+            # Innovation already exists    
+            if self._check_innovation_identical(innovation=innovation,
+                                                in_node=in_node,
+                                                out_node=out_node,
+                                                the_gene=the_gene):
                 
                 new_node, new_gene1, new_gene2 = self._create_new_node( node_id=innovation.new_node_id,
                                                                         in_node=in_node,
@@ -571,21 +587,20 @@ class Genome:
                                         old_innovation_number=the_gene.innovation_number)
             
             innovations.append(new_innovation)
-            
             current_innovation += 2
                 
         return  new_node, new_gene1, new_gene2
                     
-    def mutate_add_node(self, innovations: List, current_node_id: int, current_innovation: int) -> True:
+    def mutate_add_node(self, innovations: List, current_node_id: int, current_innovation: int) -> bool:
         """Mutate genome by adding a node respresentation 
 
         Args:
-            innovations (List): _description_
-            current_node_id (int): _description_
-            current_innovation (int): _description_
+            innovations (List):         list of innovations already existing
+            current_node_id (int):      the id of the current node
+            current_innovation (int):   current innovation number
 
         Returns:
-            True: _description_
+            bool: mutation worked
         """        
         
         the_gene, found = self._find_random_gene()
@@ -596,7 +611,7 @@ class Genome:
         # Disabled the gene
         the_gene.enabled = False
                 
-        new_node, new_gene1, new_gene2 = self._check_innovation_novel(innovations=innovations,
+        new_node, new_gene1, new_gene2 = self._new_node_innovation(innovations=innovations,
                                                                       current_innovation=current_innovation,
                                                                       current_node_id=current_node_id,
                                                                       the_gene=the_gene)
@@ -610,33 +625,39 @@ class Genome:
         """Find the first non-sensor so that the to-node won't look at sensors as possible destinations
 
         Returns:
-            Tuple[Node, int]:   Node: the first non-sensor found
-                                int: the index
+            Tuple[Node, int]:   Node:   the first non-sensor found
+                                int:    the index
         """                 
         for index, node in enumerate(self.nodes):
             if not node.node_type == NodeType.SENSOR:
                 return index
-            
-    def _select_nodes_for_link(self, loop_recurrence: bool, first_non_sensor: int) -> Tuple[Node,Node]:
+                    
+    def _select_nodes_for_link(self,recurrence: bool, first_non_sensor: int) -> Tuple[Node,Node]:
         """ Select 2 random nodes to link together
 
         Args:
-            loop_recurrence (bool): _description_
-            first_non_sensor (int): _description_
+            loop_recurrence (bool): is a recurrent loop
+            first_non_sensor (int): first index of non-sensor node
 
         Returns:
             Tuple[Node,Node]:   Node: the in_node of the link
                                 Node: the out_node of the link
-        """        
-        if loop_recurrence:
-            node_number1 = randint(first_non_sensor, self.nodes.size - 1)
-            node_number2 = node_number1
+        """ 
+        if recurrence:
+            loop_recurrence: bool  = choice([0,1])     
+            if loop_recurrence:
+                node_number1 = randint(first_non_sensor, self.nodes.size - 1)
+                node_number2 = node_number1
+            else:
+                node_number1 = randint(0, self.nodes.size - 1)
+                node_number2 = randint(first_non_sensor, self.nodes.size - 1)
+                
+            node1 = self.nodes[node_number1]
+            node2 = self.nodes[node_number2]
         else:
-            node_number1 = randint(0, self.nodes.size - 1)
-            node_number2 = randint(first_non_sensor, self.nodes.size - 1)
-            
-        node1 = self.nodes[node_number1]
-        node2 = self.nodes[node_number2]
+            nodes_size = self.nodes.size
+            node1 = choice(self.nodes[0:nodes_size])
+            node2 = choice(self.nodes[first_non_sensor:nodes_size])
         
         return node1, node2
     
@@ -644,16 +665,12 @@ class Genome:
         """See if a recurrent link already exists
 
         Args:
-            try_count (int): _description_
-            tries (int): _description_
-            threshold (int): _description_
-            recurrence (bool): _description_
-            node1 (Node): _description_
-            node2 (Node): _description_
+            recurrence (bool):  is recurrent
+            node1 (Node):       in node
+            node2 (Node):       out node
 
         Returns:
-            Tuple[bool, int]:   bool:
-                                int:
+            Tuple[bool, int]:   bool: found an already existing link  
         """  
         found: bool = False 
         for the_gene in self.genes:
@@ -754,31 +771,28 @@ class Genome:
         # Find the first non-sensor so that the to-node won't look at sensors as possible destinations
         first_non_sensor = self._find_first_sensor()
 
-        if recurrence:
-            for _ in range(tries + 1):
-                loop_recurrence:bool  = getrandbits(1)
-                
-                node1, node2 = self._select_nodes_for_link( loop_recurrence=loop_recurrence,
-                                                            first_non_sensor=first_non_sensor)
-                
-                found = not self._link_already_exists(  node1=node1,
-                                                        node2=node2,
-                                                        recurrence=True)
-                
-                if found: break
-        else:
+        
+        for _ in range(tries + 1):
+            node1, node2 = self._select_nodes_for_link( recurrence=recurrence,
+                                                        first_non_sensor=first_non_sensor)
+            
+            found = not self._link_already_exists(  node1=node1,
+                                                    node2=node2,
+                                                    recurrence=True)
+            if found: break
+        """ else:
             # Choose random node 
             nodes_size = self.nodes.size
             # Loop to find a nonrecurrent link
             for _ in range(tries + 1):
-                node1 = choice(self.nodes[0:nodes_size])
-                node2 = choice(self.nodes[first_non_sensor:nodes_size])
+                node1, node2 = self._select_nodes_for_link( recurrence=recurrence,
+                                                            loop_recurrence=False,
+                                                            first_non_sensor=first_non_sensor)
                 
                 found = not self._link_already_exists(  node1=node1,
                                                         node2=node2,
                                                         recurrence=False)
-                
-                if found: break
+                if found: break """
                     
         # Continue only if an open link was found
         if found:
