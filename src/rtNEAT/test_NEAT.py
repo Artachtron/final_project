@@ -142,14 +142,45 @@ class TestGenome:
         
     def test_create_genome(self):
         genome = Genome(genome_id=0,
-                        nodes=self.nodes,
+                        inputs=self.nodes,
                         genes=self.genes)
         
         assert genome
         assert type(genome) == Genome
+
+    def test_init_genome(self):
+        n_inputs = config.num_inputs
+        n_outputs = config.num_outputs
+        n_total = n_inputs + n_outputs
+        assert InnovTable.get_node_number() == 0
+        genome = Genome(genome_id=0)
+        for i in range(n_total):
+            assert genome.nodes[i].id == i
         
+        for i in range(n_inputs):
+            assert genome.nodes[i].node_type == NodeType.SENSOR
+            assert genome.nodes[i].gen_node_label == NodePlace.INPUT
+        
+        for i in range(n_outputs, n_total):
+            assert genome.nodes[i].node_type == NodeType.NEURON
+            assert genome.nodes[i].gen_node_label == NodePlace.OUTPUT
+            
+        assert genome.nodes.size == n_total
+        assert InnovTable.get_node_number() == n_total
+        
+        assert genome.genes.size == n_inputs * n_outputs
+        for i, gene in enumerate(genome.genes):
+            assert gene.innovation_number == i
+            assert gene.link.in_node.node_type == NodeType.SENSOR
+            assert gene.link.in_node.gen_node_label == NodePlace.INPUT
+            assert gene.link.out_node.node_type == NodeType.NEURON
+            assert gene.link.out_node.gen_node_label == NodePlace.OUTPUT
+        
+        assert InnovTable.get_innovation_number() == n_inputs * n_outputs
+        
+       
     def test_genome_fields(self):
-        genome = Genome(genome_id=0, nodes=self.nodes, genes=self.genes)
+        genome = Genome(genome_id=0, inputs=self.nodes, genes=self.genes)
         assert set(['id', 'genes', 'nodes']).issubset(vars(genome))
         
         assert genome.id == 0
@@ -210,7 +241,7 @@ class TestGenome:
             self.nodes = np.array([sensor_node, action_node, sensor_node2, action_node2, sensor_node3, action_node3], dtype=Node)
             self.genes = np.array([gene0, gene1, gene2, gene3], dtype=Gene)
             self.genome1 = Genome(genome_id=0,
-                            nodes=self.nodes,
+                            inputs=self.nodes,
                             genes=self.genes)
         
           
@@ -236,11 +267,11 @@ class TestGenome:
 
         def test_choose_gene(self):
             genome1 = Genome(genome_id=0,
-                        nodes=self.nodes,
+                        inputs=self.nodes,
                         genes=self.genes[[0,1,3]])
             
             genome2 = Genome(genome_id=1,
-                        nodes=self.nodes,
+                        inputs=self.nodes,
                         genes=self.genes[[0,2,1,3]])  
             
             p1_genes = iter(genome1.genes)
@@ -332,11 +363,11 @@ class TestGenome:
                     mutation_number=0)
             self.genes[3] = gene3
             genome1 = Genome(genome_id=0,
-                        nodes=self.nodes,
+                        inputs=self.nodes,
                         genes=self.genes[[0,1,3]])
             
             genome2 = Genome(genome_id=1,
-                        nodes=self.nodes,
+                        inputs=self.nodes,
                         genes=self.genes[[0,2,3]]) 
             
             np.random.seed(1)
@@ -359,11 +390,11 @@ class TestGenome:
         def test_genome_compatibility(self):
             # Excess
             genome1 = Genome(genome_id=0,
-                        nodes=self.nodes,
+                        inputs=self.nodes,
                         genes=self.genes)
             
             genome2 = Genome(genome_id=1,
-                        nodes=self.nodes[:4],
+                        inputs=self.nodes[:4],
                         genes=self.genes[:2])
             
             compatibility = Genome.compatibility(genome1=genome1,
@@ -372,11 +403,11 @@ class TestGenome:
             
             # Disjoint
             genome3 = Genome(genome_id=2,
-                        nodes=self.nodes[[0,1,4,5]],
+                        inputs=self.nodes[[0,1,4,5]],
                         genes=self.genes[0:3])
             
             genome4 = Genome(genome_id=3,
-                        nodes=self.nodes[2:5],
+                        inputs=self.nodes[2:5],
                         genes=self.genes[1:3])
                     
             compatibility = Genome.compatibility(genome1=genome4,
@@ -385,11 +416,11 @@ class TestGenome:
             
             # Mutation
             genome5 = Genome(genome_id=4,
-                            nodes=self.nodes[2:4],
+                            inputs=self.nodes[2:4],
                             genes=self.genes[2:3])
             
             genome6 = Genome(genome_id=5,
-                            nodes=self.nodes[4:],
+                            inputs=self.nodes[4:],
                             genes=self.genes[3:])
             
             compatibility = Genome.compatibility(genome1=genome5,
@@ -472,11 +503,11 @@ class TestGenome:
             
         def test_mutate_add_node(self):
             genome1 = Genome(genome_id=1,
-                             nodes=self.nodes[:2],
+                             inputs=self.nodes[:2],
                              genes=self.genes[:1])
             
             genome2 = Genome(genome_id=1,
-                             nodes=self.nodes[:2],
+                             inputs=self.nodes[:2],
                              genes=self.genes[:1])
             
             # Innovation is novel
@@ -559,7 +590,7 @@ class TestGenome:
                                                     recurrence=False)
             assert found
             
-            genome2 = Genome(genome_id=1, nodes=[node3],
+            genome2 = Genome(genome_id=1, inputs=[node3],
                              genes=[recurrent_gene])
             genome2.genesis(network_id=1)
             found = genome2._link_already_exists(node1=node3,
@@ -787,11 +818,11 @@ class TestPopulation:
         genes = np.array([gene1, gene2])
         
         genome = Genome(genome_id=0,
-                        nodes=nodes,
+                        inputs=nodes,
                         genes=genes)
         
         genome2 = Genome(genome_id=1,
-                         nodes = np.array([sensor_node, action_node]),
+                         inputs = np.array([sensor_node, action_node]),
                          genes=np.array([gene1]))
         
         self.organisms = np.array([genome, genome2])

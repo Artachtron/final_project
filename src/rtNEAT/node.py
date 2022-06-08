@@ -20,7 +20,7 @@ class Node:
     def __init__(self,
                   node_type: NodeType,
                   node_id: int,
-                  node_place: NodePlace = NodePlace.HIDDEN.value,
+                  node_place: NodePlace = NodePlace.HIDDEN,
                   ):
         
         self.active_flag: bool = False              # To make sure outputs are active

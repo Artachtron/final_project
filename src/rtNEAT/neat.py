@@ -1,7 +1,7 @@
 class config:
     # Network structures
     num_inputs: int = 5
-    num_ouputs: int = 12
+    num_outputs: int = 12
     
     # Mutations
     ## link weight mutation

@@ -1,15 +1,19 @@
 from __future__ import annotations
 from node import Node
 from link import Link
+from numpy.random import uniform
 
 class Gene:
     def __init__(self,
-                 weight: float,
                  in_node: Node,
                  out_node: Node,
                  innovation_number: int,
-                 mutation_number: int,
+                 weight: float=None,
+                 mutation_number: int=0,
                  recurrence: bool=False):
+        
+        if weight is None:
+            weight = uniform(-1,1)
         
         self.link = Link(weight=weight,
                     in_node=in_node,

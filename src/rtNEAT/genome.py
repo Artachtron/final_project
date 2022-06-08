@@ -12,14 +12,48 @@ from numpy.random import choice, randint, random, uniform
 class Genome:
     def __init__(self,
                  genome_id: int,
-                 nodes: np.array,
-                 genes: np.array):
+                 inputs: np.array = None,
+                 genes: np.array = None):
         
         self.id: int = genome_id
-        self.nodes: np.array = nodes # List of Nodes for the Network
-        self.genes: np.array = genes # List of innovation-tracking genes
-        self.size = len(genes)
-        self.phenotype = None # Network associated with genome
+        self.nodes: np.array = inputs   # List of network's nodes 
+        self.genes: np.array = genes    # List of link's genes
+        if genes:
+            self.size = len(genes)
+        self.phenotype = None           # Node network associated with the genome
+    
+        if self.nodes is None:
+            # Initialize inputs
+            inputs = []
+            for _ in range(config.num_inputs):
+                inputs.append(Node(node_id=InnovTable.get_node_number(),
+                                    node_type=NodeType.SENSOR,
+                                    node_place=NodePlace.INPUT))
+                 
+                InnovTable.increment_node()                    
+            
+            # Initialize outputs    
+            outputs = []  
+            for _ in range(config.num_outputs):
+                outputs.append(Node(node_id=InnovTable.get_node_number(),
+                                    node_type=NodeType.NEURON,
+                                    node_place=NodePlace.OUTPUT))
+                
+                InnovTable.increment_node() 
+            else:
+                self.nodes = np.array(inputs + outputs)
+            
+            genes = []
+            for node1 in inputs:
+                for node2 in outputs:
+                    genes.append(Gene(  in_node=node1,
+                                        out_node=node2,
+                                        innovation_number=InnovTable.get_innovation_number()))
+
+                    InnovTable.increment_innov()
+            else:
+                self.genes = np.array(genes)
+                 
    
     def mutate(self) -> None:
         """ Mutate the genome
@@ -369,7 +403,7 @@ class Genome:
                 new_genes.append(new_gene)
         
         baby_genome = Genome(genome_id=genome_id,
-                            nodes=new_nodes,
+                            inputs=new_nodes,
                             genes=np.array(new_genes))
         
         return baby_genome
