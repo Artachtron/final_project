@@ -152,9 +152,7 @@ class Entity(EntitySprite):
                 quantity=quantity,
                 cell_coordinates=cell_coordinates)
 
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._perform_action()
 
     def _pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -174,9 +172,7 @@ class Entity(EntitySprite):
                 self.store_seed(seed=resource)
             self.grid.remove_energy(energy=resource)
 
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._perform_action()
 
     def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Gain energy from specified type to energies stock
@@ -187,6 +183,11 @@ class Entity(EntitySprite):
         """
         self._energies_stock[energy_type.value] += quantity
 
+    def _perform_action(self):
+        self._loose_energy(
+            energy_type=EnergyType.BLUE,
+            quantity=self._action_cost)
+    
     def _loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Loose energy of specified type from energies stock
 
@@ -465,9 +466,7 @@ class Animal(Entity):
 
             self.rect.x = next_move[0] * self.grid.BLOCK_SIZE
             self.rect.y = next_move[1] * self.grid.BLOCK_SIZE
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._perform_action()
 
        
     def reproduce(self, mate: Animal) -> Animal:
@@ -549,9 +548,7 @@ class Animal(Entity):
         if not self.seed_pocket:
             self.seed_pocket = seed
 
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._perform_action()
 
     def recycle_seed(self) -> None:
         """Destroy seed stored and drop energy content
@@ -561,9 +558,7 @@ class Animal(Entity):
 
         self._decompose(self.seed_pocket)
         self.seed_pocket = None
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._perform_action()
 
     def on_death(self) -> None:
         """Action on animal death, release energy on cells around death position"""
@@ -581,9 +576,7 @@ class Animal(Entity):
             cell_coordinates=cell_coordinates,
             value=color)
 
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._perform_action()
 
     def test_update(self) -> None:
         """Test behaviour by doing random actions"""

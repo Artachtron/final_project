@@ -22,11 +22,10 @@ class Node:
         self.activation: float = 0.0                # The total activation entering the Node
         self.output: float = 0.0                    # Output of the Node- the value in the Node
 
-        self.node_place: NodePlace = node_place # HIDDEN, INPUT, OUTPUT, BIAS
+        self.node_place: NodePlace = node_place     # HIDDEN, INPUT, OUTPUT, BIAS
        
         self.ftype: FuncType = FuncType.SIGMOID
-        
-        self.analogue: Node = None                  # Used for Gene decoding
+    
         self.frozen: bool = False                   # When frozen, cannot be mutated (meaning its trait pointer is fixed)
         
         self.incoming = []                          # A list of pointers to incoming weighted signals from other nodes
@@ -39,6 +38,11 @@ class Node:
                     node_place=node.node_place)
         
     def is_sensor(self) -> bool:
+        """ determine if the node is a sensor (INPUT or BIAS)
+
+        Returns:
+            bool: node is a sensor
+        """        
         return (self.node_place == NodePlace.INPUT or 
                 self.node_place == NodePlace.BIAS)
         

@@ -25,20 +25,18 @@ class TestNode:
                            
                            node_place=NodePlace.OUTPUT)
       
-        assert set(['id', 'node_place', 'activation', 'ftype', 'analogue', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
+        assert set(['id', 'node_place', 'activation', 'ftype', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
         
         assert sensor_node.id == 0
         assert sensor_node.node_place == NodePlace.INPUT
         assert sensor_node.activation == 0.0
         assert sensor_node.ftype == FuncType.SIGMOID
-        assert sensor_node.analogue == None
         assert sensor_node.frozen == False
         
         assert action_node.id == 1
         assert action_node.node_place == NodePlace.OUTPUT
         assert action_node.activation == 0.0
         assert action_node.ftype == FuncType.SIGMOID
-        assert action_node.analogue == None
         assert action_node.frozen == False
 
     """ def test_add_incoming_link(self):
@@ -136,7 +134,7 @@ class TestGenome:
         
     def test_create_genome(self):
         genome = Genome(genome_id=0,
-                        inputs=self.nodes,
+                        nodes=self.nodes,
                         genes=self.genes)
         
         assert genome
@@ -160,17 +158,17 @@ class TestGenome:
         assert genome.nodes.size == n_total
         assert InnovTable.get_node_number() == n_total
         
-        assert genome.genes.size == n_inputs * n_outputs
+        assert genome.genes.size == (n_inputs + 1) * n_outputs
         for i, gene in enumerate(genome.genes):
             assert gene.innovation_number == i
-            assert gene.link.in_node.node_place == NodePlace.INPUT
+            assert gene.link.in_node.node_place == NodePlace.INPUT or NodePlace.BIAS
             assert gene.link.out_node.node_place == NodePlace.OUTPUT
         
-        assert InnovTable.get_innovation_number() == n_inputs * n_outputs
+        assert InnovTable.get_innovation_number() == (n_inputs + 1) * n_outputs
         
        
     def test_genome_fields(self):
-        genome = Genome(genome_id=0, inputs=self.nodes, genes=self.genes)
+        genome = Genome(genome_id=0, nodes=self.nodes, genes=self.genes)
         assert set(['id', 'genes', 'nodes']).issubset(vars(genome))
         
         assert genome.id == 0
@@ -226,7 +224,7 @@ class TestGenome:
             self.genes = np.array([gene0, gene1, gene2, gene3], dtype=Gene)
             
             self.genome1 = Genome(genome_id=0,
-                            inputs=self.nodes,
+                            nodes=self.nodes,
                             genes=self.genes)
             
             yield
@@ -255,11 +253,11 @@ class TestGenome:
 
         def test_choose_gene(self):
             genome1 = Genome(genome_id=0,
-                        inputs=self.nodes,
+                        nodes=self.nodes,
                         genes=self.genes[[0,1,3]])
             
             genome2 = Genome(genome_id=1,
-                        inputs=self.nodes,
+                        nodes=self.nodes,
                         genes=self.genes[[0,2,1,3]])  
             
             p1_genes = iter(genome1.genes)
@@ -349,11 +347,11 @@ class TestGenome:
                     mutation_number=0)
             self.genes[3] = gene3
             genome1 = Genome(genome_id=0,
-                        inputs=self.nodes,
+                        nodes=self.nodes,
                         genes=self.genes[[0,1,3]])
             
             genome2 = Genome(genome_id=1,
-                        inputs=self.nodes,
+                        nodes=self.nodes,
                         genes=self.genes[[0,2,3]]) 
             
             np.random.seed(1)
@@ -376,11 +374,11 @@ class TestGenome:
         def test_genome_compatibility(self):
             # Excess
             genome1 = Genome(genome_id=0,
-                        inputs=self.nodes,
+                        nodes=self.nodes,
                         genes=self.genes)
             
             genome2 = Genome(genome_id=1,
-                        inputs=self.nodes[:4],
+                        nodes=self.nodes[:4],
                         genes=self.genes[:2])
             
             compatibility = Genome.compatibility(genome1=genome1,
@@ -389,11 +387,11 @@ class TestGenome:
             
             # Disjoint
             genome3 = Genome(genome_id=2,
-                        inputs=self.nodes[[0,1,4,5]],
+                        nodes=self.nodes[[0,1,4,5]],
                         genes=self.genes[0:3])
             
             genome4 = Genome(genome_id=3,
-                        inputs=self.nodes[2:5],
+                        nodes=self.nodes[2:5],
                         genes=self.genes[1:3])
                     
             compatibility = Genome.compatibility(genome1=genome4,
@@ -402,11 +400,11 @@ class TestGenome:
             
             # Mutation
             genome5 = Genome(genome_id=4,
-                            inputs=self.nodes[2:4],
+                            nodes=self.nodes[2:4],
                             genes=self.genes[2:3])
             
             genome6 = Genome(genome_id=5,
-                            inputs=self.nodes[4:],
+                            nodes=self.nodes[4:],
                             genes=self.genes[3:])
             
             compatibility = Genome.compatibility(genome1=genome5,
@@ -417,8 +415,8 @@ class TestGenome:
             assert self.genome1.get_last_node_id() == 5+1
             assert self.genome1.get_last_gene_innovation_number() == 2+1
          
-        def test_create_new_link(self):
-            self.genome1.genesis(network_id=0)
+        """ def test_create_new_link(self):
+            self.genome1._genesis()
             gene = self.genome1.genes[0]
             
             in_node = gene.link.in_node.analogue
@@ -441,10 +439,10 @@ class TestGenome:
             assert link in in_node.outgoing
             
             assert len(out_node.incoming) == 2
-            assert len(in_node.outgoing) == 2
+            assert len(in_node.outgoing) == 2 """
             
         def test_genesis(self):        
-            network = self.genome1.genesis(network_id=0) 
+            network = self.genome1._genesis() 
             assert self.genome1.phenotype == network
             assert network.genotype == self.genome1
         
@@ -488,11 +486,11 @@ class TestGenome:
             
         def test_mutate_add_node(self):
             genome1 = Genome(genome_id=1,
-                             inputs=self.nodes[:2],
+                             nodes=self.nodes[:2],
                              genes=self.genes[:1])
             
             genome2 = Genome(genome_id=1,
-                             inputs=self.nodes[:2],
+                             nodes=self.nodes[:2],
                              genes=self.genes[:1])
             
             # Innovation is novel
@@ -552,15 +550,23 @@ class TestGenome:
         def test_link_already_exists(self):
             node1 = self.nodes[0]
             node2 = self.nodes[1]
-            threshold = self.nodes.size ** 2
-            self.genome1.genesis(network_id=0)
-            # Recurrence found
-            found = self.genome1._link_already_exists(node1=node1,
-                                                    node2=node2,
-                                                    recurrence=True)
+
+            # Recurrence already exists
+            found = self.genome1._link_already_exists(  node1=node1,
+                                                        node2=node2,
+                                                        recurrence=True)
             assert not found
             
             
+            
+            
+            # Non-recurrence does not exist
+            found = self.genome1._link_already_exists(  node1=node1,
+                                                        node2=node2,
+                                                        recurrence=False)
+            assert found
+            
+            # Non-recurrence already exists
             node3 = self.nodes[1]
             recurrent_gene = Gene(weight=1.0,
                                   in_node=node3,
@@ -569,18 +575,12 @@ class TestGenome:
                                   mutation_number=0,
                                   recurrence=True)
             
-            # Non-recurrence not found
-            found = self.genome1._link_already_exists(node1=node1,
-                                                    node2=node2,
-                                                    recurrence=False)
-            assert found
-            
-            genome2 = Genome(genome_id=1, inputs=[node3],
+            genome2 = Genome(genome_id=1, nodes=[node3],
                              genes=[recurrent_gene])
-            genome2.genesis(network_id=1)
-            found = genome2._link_already_exists(node1=node3,
-                                                            node2=node3,
-                                                            recurrence=False)
+
+            found = genome2._link_already_exists(   node1=node3,
+                                                    node2=node3,
+                                                    recurrence=False)
             assert not found
             
             

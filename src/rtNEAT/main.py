@@ -13,7 +13,7 @@ def function() -> Population:
     nodes = np.array([sensor_node, action_node])
     genes = np.array([gene])
     
-    start_genome = Genome(genome_id=0, inputs=nodes, genes=genes)
+    start_genome = Genome(genome_id=0, nodes=nodes, genes=genes)
 
     organisms = np.array([start_genome])
     population = Population(organisms=organisms, species=np.array([]), size=organisms.size)
@@ -37,4 +37,9 @@ def main():
     
     config.num_inputs = n_inputs
     config.num_outputs = n_outputs
+    
+    genome = Genome(genome_id=0)
+    
+if __name__ == '__main__':
+    main()
     
