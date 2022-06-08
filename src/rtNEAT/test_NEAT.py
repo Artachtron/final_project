@@ -172,8 +172,8 @@ class TestGenome:
         assert set(['id', 'genes', 'nodes']).issubset(vars(genome))
         
         assert genome.id == 0
-        assert genome.nodes.all() == self.nodes.all()
-        assert genome.genes.all() == self.genes.all()
+        assert genome.nodes is self.nodes
+        assert genome.genes is self.genes
     
     class TestGenomeMethods:  
         @pytest.fixture(autouse=True)

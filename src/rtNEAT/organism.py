@@ -5,9 +5,11 @@ from network import Network
 class Organism:
     def __init__(self,
                  genome: Genome,
-                 generation: int):
+                 generation: int=0):
         self.genome: Genome = genome # The Organism's genotype 
         self.network: Network = genome.phenotype
+        
+        
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from
  

@@ -8,6 +8,11 @@ import enum
 import random
 from energies import EnergyType, Energy
 import numpy as np
+import sys, os
+from itertools import combinations
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'rtNEAT')))
+from rtNEAT.organism import Organism
+from rtNEAT.genome import Genome
 
 
 
@@ -304,19 +309,19 @@ class Entity(EntitySprite):
             return False
         return True
 
-    def _find_cells_by_value(self, subgrid, value,
+    def _find_cells_coordinate_by_value(self, subgrid, value,
                              radius: int = 1) -> Set[Tuple[int, int]]:
         """Find the list of cells in a range with specified value
 
         Args:
-            subgrid (_type_): subgrid to look for cells
-            value (_type_): value to search for
+            subgrid (_type_):       subgrid to look for cells
+            value (_type_):         value to search for
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
             Set[Tuple[int,int]]: set of found cells' coordinates
         """
-        position = self.position
+        """ position = self.position
         cells = set()
         for x in range(-radius, radius + 1):
             for y in range(-radius, radius + 1):
@@ -328,8 +333,73 @@ class Entity(EntitySprite):
                         value):
                     cells.add(coordinate)
 
-        return cells
+        return cells """
+        pos = self.position
+        a = list(range(-radius, radius+1))
+        b = combinations(a*2, 2)
+    
+        positions = [coordinate for x, y in set(b) if issubclass(type(subgrid.get_cell_value(coordinate:=tuple(np.add(pos,(x,y))))), value)]
 
+        return positions
+    
+    def _find_occupied_cells_by_value(self, subgrid, value,
+                             radius: int = 1, include_self: bool = False) -> np.array[bool]:
+        """ Find the cells occupied by the given value, return a list of boolean
+
+        Args:
+            subgrid (_type_):               subgrid on which to look for
+            value (_type_):                 value to search for
+            radius (int, optional):         radius of search. Defaults to 1.
+            include_self (bool, optional):  include self in the list. Defaults to False.
+
+        Returns:
+            np.array[bool]: List of occupied (True) and empty cells (False)
+        """        
+        position = self.position
+        occupied_cells = []
+        count = 0
+        
+        for x in range(-radius, radius + 1):
+            for y in range(-radius, radius + 1):
+                if not include_self and x == 0 and y == 0:
+                    continue
+                coordinate = tuple(np.add(position,(x, y)))
+                occupied_cells.append((issubclass(
+                                                    type(
+                                                        subgrid.get_cell_value(
+                                                            cell_coordinates=coordinate)),
+                                                        value)))
+    
+                count += 1
+        return np.array(occupied_cells)         
+           
+    def _find_occupied_cells_by_entities(self, radius: int = 1) -> bool:
+        """ Find the cells occupied by entities, return a list of boolean
+
+        Args:
+            radius (int, optional): radius of search. Defaults to 1.
+
+        Returns:
+            np.array[bool]: List of occupied (True) and empty cells (False)
+        """               
+        return self._find_occupied_cells_by_value(subgrid=self.entity_grid,
+                                                    value=Entity,
+                                                    radius=radius) 
+        
+    def _find_occupied_cells_by_energies(self, radius: int = 1) -> bool:
+        """ Find the cells occupied by energies, return a list of boolean
+
+        Args:
+            radius (int, optional): radius of search. Defaults to 1.
+
+        Returns:
+            np.array[bool]: List of occupied (True) and empty cells (False)
+        """               
+        return self._find_occupied_cells_by_value(subgrid=self.grid.resource_grid,
+                                                    value=Energy,
+                                                    radius=radius)     
+            
+    
     def _find_tree_cells(self, include_self: bool = False,
                          radius: int = 1) -> Set[Tuple[int, int]]:
         """Find the cells at proximity on which trees are located
@@ -341,8 +411,9 @@ class Entity(EntitySprite):
         Returns:
             Set[Tuple[int,int]]: set of found trees' cells' coordinates
         """
-        trees: Set[Tuple[int, int]] = self._find_cells_by_value(
-            subgrid=self.entity_grid, value=Tree, radius=radius)
+        trees: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(subgrid=self.entity_grid,
+                                                                value=Tree,
+                                                                radius=radius)
         if not include_self and self.position in trees:
             trees.remove(self.position)
         return trees
@@ -352,19 +423,36 @@ class Entity(EntitySprite):
         """Find the cells at proximity on which animals are located
 
         Args:
-            include_self (bool, optional): include self in the list. Defaults to False.
-            radius (int, optional): radius of search. Defaults to 1.
+            include_self (bool, optional):  include self in the list. Defaults to False.
+            radius (int, optional):         radius of search. Defaults to 1.
 
         Returns:
             Set[Tuple[int,int]]: set of found animals' cells' coordinates
         """
-        animals: Set[Tuple[int, int]] = self._find_cells_by_value(
+        animals: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
             subgrid=self.entity_grid, value=Animal, radius=radius)
         if not include_self and self.position in animals:
             animals.remove(self.position)
         return animals
 
-    def _find_energy_cells(self, radius: int = 1) -> Set[Tuple[int, int]]:
+    def _find_entities_cells(self, include_self: bool = False,
+                           radius: int = 1) -> Set[Tuple[int, int]]:
+        """Find the cells at proximity on which entities are located
+
+        Args:
+            include_self (bool, optional):  include self in the list. Defaults to False.
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int,int]]: set of found entities' cells' coordinates
+        """
+        entities: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
+            subgrid=self.entity_grid, value=Entity, radius=radius)
+        if not include_self and self.position in entities:
+            entities.remove(self.position)
+        return entities
+
+    def _find_energies_cells(self, radius: int = 1) -> Set[Tuple[int, int]]:
         """Find cells at proximity on which energies are located
 
         Args:
@@ -373,7 +461,7 @@ class Entity(EntitySprite):
         Returns:
             Set[Tuple[int,int]]: set of found energies' cells' coordinates
         """
-        energies: Set[Tuple[int, int]] = self._find_cells_by_value(
+        energies: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
             subgrid=self.grid.resource_grid, value=Energy, radius=radius)
         return energies
 
@@ -388,7 +476,7 @@ class Entity(EntitySprite):
         Returns:
             Set[Tuple[int,int]]: set of free cells' coordinates
         """
-        return self._find_cells_by_value(
+        return self._find_cells_coordinate_by_value(
             subgrid=subgrid, value=NoneType, radius=radius)
 
     def _select_free_cell(self, subgrid, radius: int = 1) -> Tuple[int, int]:
@@ -447,6 +535,7 @@ class Animal(Entity):
             *args,
             **kwargs)
         self.seed_pocket: Seed = None
+        self.organism = Organism(Genome(genome_id=0))
 
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
@@ -578,7 +667,16 @@ class Animal(Entity):
 
         self._perform_action()
 
-    def test_update(self) -> None:
+    def rtNEAT_update(self) -> None:
+        # Internal properties
+        age = self._age
+        size = self.size
+        blue_energy, red_energy = self.energies_stock.values()
+        
+        
+     
+    
+    def random_update(self) -> None:
         """Test behaviour by doing random actions"""
         direction = random.choice(list(Direction))
         # print(direction)
