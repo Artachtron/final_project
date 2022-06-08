@@ -1,6 +1,5 @@
 import numpy as np
-from species import Species
-from neat import NEAT
+
 
 # Might not be necessary
 class Population:

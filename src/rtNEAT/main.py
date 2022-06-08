@@ -1,12 +1,13 @@
 from population import Population
 from genome import Genome
-from node import Node, NodeType, NodePlace
+from node import Node, NodePlace
 from gene import Gene
+from neat import config
 import numpy as np
 
 def function() -> Population:
-    sensor_node = Node(node_type=NodeType.SENSOR, node_id=0, node_place=NodePlace.INPUT)
-    action_node = Node(node_type=NodeType.NEURON, node_id=1, node_place=NodePlace.OUTPUT)
+    sensor_node = Node(node_id=0, node_place=NodePlace.INPUT)
+    action_node = Node(node_id=1, node_place=NodePlace.OUTPUT)
     gene = Gene(in_node=sensor_node, out_node=action_node, weight=1, innovation_number=0, mutation_number=0)
     
     nodes = np.array([sensor_node, action_node])
@@ -21,3 +22,19 @@ def function() -> Population:
 
 def create_a_genome():
     pass
+
+def main():
+    internal_properties = 3
+    see_entities = 8
+    see_energies = 8
+    see_cells = 24 * 3
+    n_inputs = internal_properties + see_entities + see_energies + see_cells
+    
+    move = 2
+    modify_cell_color = 3
+    other_actions = 6
+    n_outputs = move + modify_cell_color + other_actions
+    
+    config.num_inputs = n_inputs
+    config.num_outputs = n_outputs
+    

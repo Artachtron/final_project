@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from neat import config
-from node import Node, NodePlace, NodeType
+from node import Node, NodePlace
 from link import Link
 from gene import Gene
 from innovation import Innovation, InnovationType, InnovTable
@@ -18,16 +18,23 @@ class Genome:
         self.id: int = genome_id
         self.nodes: np.array = inputs   # List of network's nodes 
         self.genes: np.array = genes    # List of link's genes
-        if genes:
+        
+        if genes is not None:
             self.size = len(genes)
         self.phenotype = None           # Node network associated with the genome
     
         if self.nodes is None:
+            # Initialize input
+            bias =[]
+            bias.append(Node(node_id=InnovTable.get_node_number(),
+                            node_place=NodePlace.BIAS))
+            
+            InnovTable.increment_node()
+            
             # Initialize inputs
             inputs = []
             for _ in range(config.num_inputs):
                 inputs.append(Node(node_id=InnovTable.get_node_number(),
-                                    node_type=NodeType.SENSOR,
                                     node_place=NodePlace.INPUT))
                  
                 InnovTable.increment_node()                    
@@ -36,12 +43,11 @@ class Genome:
             outputs = []  
             for _ in range(config.num_outputs):
                 outputs.append(Node(node_id=InnovTable.get_node_number(),
-                                    node_type=NodeType.NEURON,
                                     node_place=NodePlace.OUTPUT))
                 
                 InnovTable.increment_node() 
             else:
-                self.nodes = np.array(inputs + outputs)
+                self.nodes = np.array(bias + inputs + outputs)
             
             genes = []
             for node1 in inputs:
@@ -199,9 +205,9 @@ class Genome:
         Returns:
             bool: is an input or output node
         """        
-        return (node.gen_node_label == NodePlace.INPUT or
-               node.gen_node_label == NodePlace.BIAS or
-               node.gen_node_label == NodePlace.OUTPUT)
+        return (node.node_place == NodePlace.INPUT or
+               node.node_place == NodePlace.BIAS or
+               node.node_place == NodePlace.OUTPUT)
     
     @staticmethod
     def _choose_gene_to_transmit(   parent1_gene: Gene, parent2_gene: Gene, parent1_genes: Iterator,
@@ -448,11 +454,10 @@ class Genome:
         all_list: List[Node] = []
                 
         for current_node in self.nodes:
-            #new_node = Node(node_type=current_node.node_type, node_id=current_node.id, node_place=NodePlace)
             new_node = Node.constructor_from_node(node=current_node)
             
             # Check for input or output designation of node
-            match current_node.gen_node_label:
+            match current_node.node_place:
                 case NodePlace.INPUT:
                     inlist.append(new_node)
                 case NodePlace.OUTPUT:
@@ -518,7 +523,7 @@ class Genome:
         
         while try_count < tries and not found:
             for gene in self.genes:
-                if gene.enabled and gene.link.in_node.gen_node_label != NodePlace.BIAS:
+                if gene.enabled and gene.link.in_node.node_place != NodePlace.BIAS:
                     found = True
                     the_gene = gene
                     
@@ -545,8 +550,7 @@ class Genome:
                                         Gene: the gene connecting in the new node
                                         Gene: the gene connecting out the new node
         """        
-        new_node = Node(node_type=NodeType.NEURON,
-                        node_id=node_id,
+        new_node = Node(node_id=node_id,
                         node_place=NodePlace.HIDDEN)
                 
         new_gene1 = Gene(weight=1.0,
@@ -640,7 +644,8 @@ class Genome:
         self.add_gene(gene=new_gene1)
         self.add_gene(gene=new_gene2)
         self.nodes = Genome.insert_node(self.nodes, new_node)
-        return True        
+        return True  
+          
     
     def _find_first_non_sensor(self) -> Tuple[Node, int]:
         """Find the first non-sensor so that the to-node won't look at sensors as possible destinations
@@ -650,7 +655,7 @@ class Genome:
                                 int:    the index
         """                 
         for index, node in enumerate(self.nodes):
-            if not node.node_type == NodeType.SENSOR:
+            if not node.is_sensor():
                 return index
                     
     def _select_nodes_for_link(self,recurrence: bool, first_non_sensor: int) -> Tuple[Node,Node]:
@@ -790,7 +795,7 @@ class Genome:
         for node in self.nodes:
             if node.node_type == NodeType.SENSOR:
                 sensors.append(node)
-            elif node.gen_node_label == NodeType.OUTPUT:
+            elif node.node_place == NodeType.OUTPUT:
                 outputs.append(node)
         
         # eliminate from contention any sensors that are already connected
@@ -798,7 +803,7 @@ class Genome:
             outputConnections = 0
             
             for gene in self.genes:
-                if gene.link.out_node.gen_node_label == NodeType.OUTPUT:
+                if gene.link.out_node.node_place == NodeType.OUTPUT:
                     outputConnections += 1
             
         if outputConnections == len(outputs):

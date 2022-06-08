@@ -1,16 +1,16 @@
 import pytest
 from gene import Gene
-from node import Node, NodeType, NodePlace, FuncType
+from node import Node, NodePlace, FuncType
 from link import Link
 from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
-from population import Population
 import numpy as np
 from neat import config
 
 class TestNode:
     def test_create_node(self):
-        sensor_node = Node(node_id=0, node_type=NodeType.SENSOR, node_place=NodePlace.INPUT)
+        sensor_node = Node(node_id=0,
+                           node_place=NodePlace.INPUT)
         assert sensor_node
         assert type(sensor_node) == Node
         
@@ -18,54 +18,50 @@ class TestNode:
         
     def test_node_fields(self):
         sensor_node = Node(node_id=0,
-                           node_type=NodeType.SENSOR,
+                           
                            node_place=NodePlace.INPUT)
         
         action_node = Node(node_id=1,
-                           node_type=NodeType.NEURON,
+                           
                            node_place=NodePlace.OUTPUT)
       
-        assert set(['id', '_node_type', 'gen_node_label', 'activation', 'ftype', 'analogue', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
+        assert set(['id', 'node_place', 'activation', 'ftype', 'analogue', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
         
         assert sensor_node.id == 0
-        assert sensor_node._node_type == NodeType.SENSOR
-        assert sensor_node.gen_node_label == NodePlace.INPUT
+        assert sensor_node.node_place == NodePlace.INPUT
         assert sensor_node.activation == 0.0
         assert sensor_node.ftype == FuncType.SIGMOID
         assert sensor_node.analogue == None
         assert sensor_node.frozen == False
         
         assert action_node.id == 1
-        assert action_node._node_type == NodeType.NEURON
-        assert action_node.gen_node_label == NodePlace.OUTPUT
+        assert action_node.node_place == NodePlace.OUTPUT
         assert action_node.activation == 0.0
         assert action_node.ftype == FuncType.SIGMOID
         assert action_node.analogue == None
         assert action_node.frozen == False
 
-    def test_add_incoming_link(self):
+    """ def test_add_incoming_link(self):
         sensor_node = Node(node_id=0,
-                           node_type=NodeType.SENSOR,
                            node_place=NodePlace.INPUT)
         
         action_node = Node(node_id=1,
-                           node_type=NodeType.NEURON,
                            node_place=NodePlace.OUTPUT)
         
         assert len(action_node.incoming) == 0
         action_node.add_incoming(feednode=sensor_node, weight=1.0)
-        assert len(action_node.incoming) == 1
+        assert len(action_node.incoming) == 1 """
                
    
 class TestLink:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.sensor_node = Node(node_id=0,
-                                node_type=NodeType.SENSOR,
+                                
                                 node_place=NodePlace.INPUT)
         
         self.action_node = Node(node_id=1,
-                                node_type=NodeType.NEURON,
+                                
                                 node_place=NodePlace.OUTPUT) 
         
     def test_create_link(self):
@@ -90,11 +86,9 @@ class TestGene:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.sensor_node = Node(node_id=0,
-                                node_type=NodeType.SENSOR,
                                 node_place=NodePlace.INPUT)
         
         self.action_node = Node(node_id=1,
-                                node_type=NodeType.NEURON,
                                 node_place=NodePlace.OUTPUT) 
         
     def test_create_gene(self):
@@ -124,11 +118,11 @@ class TestGenome:
     @pytest.fixture(autouse=True)
     def setup(self):
         sensor_node = Node(node_id=0,
-                                node_type=NodeType.SENSOR,
+                                
                                 node_place=NodePlace.INPUT)
             
         action_node = Node(node_id=1,
-                                node_type=NodeType.NEURON,
+                                
                                 node_place=NodePlace.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
@@ -151,19 +145,17 @@ class TestGenome:
     def test_init_genome(self):
         n_inputs = config.num_inputs
         n_outputs = config.num_outputs
-        n_total = n_inputs + n_outputs
+        n_total = n_inputs + n_outputs + 1
         assert InnovTable.get_node_number() == 0
         genome = Genome(genome_id=0)
         for i in range(n_total):
             assert genome.nodes[i].id == i
         
-        for i in range(n_inputs):
-            assert genome.nodes[i].node_type == NodeType.SENSOR
-            assert genome.nodes[i].gen_node_label == NodePlace.INPUT
+        for i in range(1,n_inputs):
+            assert genome.nodes[i].node_place == NodePlace.INPUT
         
         for i in range(n_outputs, n_total):
-            assert genome.nodes[i].node_type == NodeType.NEURON
-            assert genome.nodes[i].gen_node_label == NodePlace.OUTPUT
+            assert genome.nodes[i].node_place == NodePlace.OUTPUT
             
         assert genome.nodes.size == n_total
         assert InnovTable.get_node_number() == n_total
@@ -171,10 +163,8 @@ class TestGenome:
         assert genome.genes.size == n_inputs * n_outputs
         for i, gene in enumerate(genome.genes):
             assert gene.innovation_number == i
-            assert gene.link.in_node.node_type == NodeType.SENSOR
-            assert gene.link.in_node.gen_node_label == NodePlace.INPUT
-            assert gene.link.out_node.node_type == NodeType.NEURON
-            assert gene.link.out_node.gen_node_label == NodePlace.OUTPUT
+            assert gene.link.in_node.node_place == NodePlace.INPUT
+            assert gene.link.out_node.node_place == NodePlace.OUTPUT
         
         assert InnovTable.get_innovation_number() == n_inputs * n_outputs
         
@@ -191,12 +181,10 @@ class TestGenome:
         @pytest.fixture(autouse=True)
         def setup(self):
             sensor_node = Node(node_id=0,
-                                    node_type=NodeType.SENSOR,
-                                    node_place=NodePlace.INPUT)
+                               node_place=NodePlace.INPUT)
             
             action_node = Node(node_id=1,
-                                    node_type=NodeType.NEURON,
-                                    node_place=NodePlace.OUTPUT)
+                               node_place=NodePlace.OUTPUT)
             
             gene0 = Gene(in_node=sensor_node,
                         out_node=action_node,
@@ -205,11 +193,9 @@ class TestGenome:
                         mutation_number=0)
             
             sensor_node2 = Node(node_id=2,
-                                    node_type=NodeType.SENSOR,
-                                    node_place=NodePlace.INPUT)
+                                node_place=NodePlace.INPUT)
             
             action_node2 = Node(node_id=3,
-                                    node_type=NodeType.NEURON,
                                     node_place=NodePlace.OUTPUT)
             
             gene1 = Gene(in_node=sensor_node2,
@@ -219,12 +205,10 @@ class TestGenome:
                         mutation_number=0)
             
             sensor_node3 = Node(node_id=4,
-                                    node_type=NodeType.SENSOR,
-                                    node_place=NodePlace.INPUT)
+                                node_place=NodePlace.INPUT)
             
             action_node3 = Node(node_id=5,
-                                    node_type=NodeType.NEURON,
-                                    node_place=NodePlace.OUTPUT)
+                                node_place=NodePlace.OUTPUT)
             
             gene2 = Gene(in_node=sensor_node3,
                     out_node=action_node3,
@@ -237,12 +221,16 @@ class TestGenome:
                     weight=1.0,
                     innovation_number=2,
                     mutation_number=1)
-            
+           
             self.nodes = np.array([sensor_node, action_node, sensor_node2, action_node2, sensor_node3, action_node3], dtype=Node)
             self.genes = np.array([gene0, gene1, gene2, gene3], dtype=Gene)
+            
             self.genome1 = Genome(genome_id=0,
                             inputs=self.nodes,
                             genes=self.genes)
+            
+            yield
+            InnovTable.reset_innovation_table()
         
           
         def test_add_gene(self):
@@ -349,11 +337,9 @@ class TestGenome:
             
         def test_mate_multipoint(self):
             sensor_node = Node(node_id=6,
-                                node_type=NodeType.SENSOR,
                                 node_place=NodePlace.INPUT)
             
             action_node = Node(node_id=7,
-                                node_type=NodeType.NEURON,
                                 node_place=NodePlace.OUTPUT)
             
             gene3 = Gene(in_node=sensor_node,
@@ -490,8 +476,7 @@ class TestGenome:
                                           old_weight=0.34)
            
             assert node.id == 0
-            assert node.node_type == NodeType.NEURON
-            assert node.gen_node_label == NodePlace.HIDDEN
+            assert node.node_place == NodePlace.HIDDEN
             assert gene1.link.in_node == in_node
             assert gene1.link.out_node == node
             assert gene1.link.weight == 1.0
@@ -545,24 +530,24 @@ class TestGenome:
                 node1, node2 = self.genome1._select_nodes_for_link( recurrence = False,
                                                                     first_non_sensor=3)
                 assert node1
-                assert node2.node_type != NodeType.SENSOR
+                assert not node2.is_sensor()
                 
             np.random.seed(100)      
             # Recurrent link   
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
                                                                 first_non_sensor=3)
             assert node1 != node2
-            assert node2.node_type != NodeType.SENSOR
+            assert not node2.is_sensor()
             
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
                                                                 first_non_sensor=3)
             assert node1 != node2
-            assert node2.node_type != NodeType.SENSOR
+            assert not node2.is_sensor()
             
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True,
                                                                 first_non_sensor=3)
             assert node1 == node2
-            assert node2.node_type != NodeType.SENSOR
+            assert not node2.is_sensor()
                    
         def test_link_already_exists(self):
             node1 = self.nodes[0]
@@ -644,11 +629,11 @@ class TestInnovTable:
     @pytest.fixture(autouse=True)
     def setup(self):
         sensor_node = Node(node_id=0,
-                                node_type=NodeType.SENSOR,
+                                
                                 node_place=NodePlace.INPUT)
             
         action_node = Node(node_id=1,
-                                node_type=NodeType.NEURON,
+                                
                                 node_place=NodePlace.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
@@ -783,15 +768,15 @@ class TestInnovTable:
         assert innovation.new_node_id == 5
         assert innovation.old_innovation_number == 7
     
-class TestPopulation:
+""" class TestPopulation:
     @pytest.fixture(autouse=True)
     def setup(self):
         sensor_node = Node(node_id=0,
-                                node_type=NodeType.SENSOR,
+                                
                                 node_place=NodePlace.INPUT)
         
         action_node = Node(node_id=1,
-                                node_type=NodeType.NEURON,
+                                
                                 node_place=NodePlace.OUTPUT)
         
         gene1 = Gene(in_node=sensor_node,
@@ -801,11 +786,11 @@ class TestPopulation:
                     mutation_number=0)
         
         sensor_node2 = Node(node_id=2,
-                                node_type=NodeType.SENSOR,
+                                
                                 node_place=NodePlace.INPUT)
         
         action_node2 = Node(node_id=3,
-                                node_type=NodeType.NEURON,
+                                
                                 node_place=NodePlace.OUTPUT)
         
         gene2 = Gene(in_node=sensor_node2,
@@ -833,6 +818,6 @@ class TestPopulation:
         
     def test_population_fields(self):
         population = Population(organisms=self.organisms, species=np.array([]))
-        assert set(['organisms', 'species', 'size']).issubset(vars(population))
+        assert set(['organisms', 'species', 'size']).issubset(vars(population)) """
         
     

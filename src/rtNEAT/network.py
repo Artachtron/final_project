@@ -1,4 +1,3 @@
-from unittest.mock import sentinel
 import numpy as np
 from node import Node
 
