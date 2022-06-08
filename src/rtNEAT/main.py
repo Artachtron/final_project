@@ -19,6 +19,5 @@ def function() -> Population:
     
     return population
 
-def function2(population: Population) -> int:
-    
+def create_a_genome():
     pass

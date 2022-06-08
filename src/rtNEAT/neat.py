@@ -1,3 +1,31 @@
+class config:
+    # Network structures
+    num_inputs: int = 5
+    num_ouputs: int = 12
+    
+    # Mutations
+    ## link weight mutation
+    weight_mutate_power: float = 0.5
+    weight_mutate_prob: float = 0.1
+    new_link_prob: float = 0.1
+    ## add link mutation
+    add_link_prob: float = 0.05
+    add_link_tries: int = 20
+    recurrence_only_prob: float = 0
+    # add node mutation
+    add_node_prob: float = 0.02
+    
+    
+    # Mating
+    mate_multipoint_prob: float = 0
+    
+    # Compatibility
+    disjoint_coeff: float = 1.0
+    excess_coeff: float = 1.0
+    mutation_difference_coeff: float = 0.5
+    compatibility_threshod: float = 3.0
+    
+
 class NEAT:
     time_alive_minimum: int = 0
     trait_param_mut_prob: float = 0

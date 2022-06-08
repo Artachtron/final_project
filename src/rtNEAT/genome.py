@@ -1,6 +1,6 @@
 from __future__ import annotations
 import numpy as np
-from neat import NEAT
+from neat import config
 from node import Node, NodePlace, NodeType
 from link import Link
 from gene import Gene
@@ -21,8 +21,19 @@ class Genome:
         self.size = len(genes)
         self.phenotype = None # Network associated with genome
    
+    def mutate(self) -> None:
+        """ Mutate the genome
+        """        
+        if random() < config.add_node_prob:
+            self._mutate_add_node()
+            
+        if random() < config.add_link_prob:
+            self._mutate_add_link(tries=config.add_link_tries)
+            
+        self._mutate_link_weights()
+    
     @staticmethod
-    def compatibility(genome1, genome2: Genome) -> float:
+    def compatibility(genome1: Genome, genome2: Genome) -> float:
         """ Find the compatibility score between two genomes
 
         Args:
@@ -32,8 +43,8 @@ class Genome:
         Returns:
             float: compatibility score
         """        
-        p1_innovation: int
-        p2_innovation: int
+        g1_innovation: int
+        g2_innovation: int
         
         mutation_difference: float
         
@@ -42,48 +53,48 @@ class Genome:
         mutation_difference_total: float= 0.0
         number_matching: int = 0
         
-        p1_genome = iter(genome1.genes)
-        p2_genome = iter(genome2.genes)
+        g1_genome = iter(genome1.genes)
+        g2_genome = iter(genome2.genes)
         
-        p1_gene = next(p1_genome)
-        p2_gene = next(p2_genome)
+        g1_gene = next(g1_genome)
+        g2_gene = next(g2_genome)
         
-        while p1_gene or p2_gene:
+        while g1_gene or g2_gene:
             # Excess genes
-            if not p1_gene:
-                p2_gene = next(p2_genome, None)
+            if not g1_gene:
+                g2_gene = next(g2_genome, None)
                 number_excess += 1
-            elif not p2_gene:
-                p1_gene = next(p1_genome, None)
+            elif not g2_gene:
+                g1_gene = next(g1_genome, None)
                 number_excess += 1
             
             # Non excess genes, we must compare innovation numbers
             else:
-                p1_innovation = p1_gene.innovation_number
-                p2_innovation = p2_gene.innovation_number
+                g1_innovation = g1_gene.innovation_number
+                g2_innovation = g2_gene.innovation_number
                 
                 # Matching genes
-                if(p1_innovation == p2_innovation):
+                if(g1_innovation == g2_innovation):
                     number_matching += 1
-                    mutation_difference = abs(p1_gene.mutation_number - p2_gene.mutation_number)
+                    mutation_difference = abs(g1_gene.mutation_number - g2_gene.mutation_number)
                     mutation_difference_total += mutation_difference
-                    p1_gene = next(p1_genome, None)
-                    p2_gene = next(p2_genome, None)
+                    g1_gene = next(g1_genome, None)
+                    g2_gene = next(g2_genome, None)
                  
                 # disjoint genes   
-                elif p1_innovation < p2_innovation:
-                    p1_gene = next(p1_genome, None)
+                elif g1_innovation < g2_innovation:
+                    g1_gene = next(g1_genome, None)
                     number_disjoint += 1
                     
-                elif p2_innovation < p1_innovation:
-                    p2_gene = next(p2_genome, None)
+                elif g2_innovation < g1_innovation:
+                    g2_gene = next(g2_genome, None)
                     number_disjoint += 1
 
         # Compatibility score calculations
-        disjoint = NEAT.disjoint_coeff * (number_disjoint)
-        excess =  NEAT.excess_coeff * (number_excess)
+        disjoint = config.disjoint_coeff * (number_disjoint)
+        excess =  config.excess_coeff * (number_excess)
         if number_matching > 0:
-             mutation_difference = NEAT.mutation_difference_coeff * (mutation_difference_total/number_matching)
+             mutation_difference = config.mutation_difference_coeff * (mutation_difference_total/number_matching)
         else:
             mutation_difference = 0
        
@@ -180,8 +191,8 @@ class Genome:
                                             ... : args for the next iteration
                                         
         """        
-        disable: bool = False # if the gene must be disabled
-        skip: bool = False # if the gene must be skipped and not transmitted
+        disable: bool = False   # if the gene must be disabled
+        skip: bool = False      # if the gene must be skipped and not transmitted
         
         if not parent1_gene: 
             chosen_gene = parent2_gene
@@ -312,7 +323,7 @@ class Genome:
         args = (parent1_gene, parent2_gene, parent1_genes, parent2_genes)
         while parent1_gene or parent2_gene:
          
-            (chosen_gene, skip, disable, *args) = Genome._choose_gene_to_transmit(*args,
+            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(*args,
                                                                       p1_dominant=parent1_dominant)
             parent1_gene, parent2_gene = args[0:2]           
             
@@ -443,18 +454,18 @@ class Genome:
         
         return new_network
     
-    def mutate_link_weights(self) -> None:
+    def _mutate_link_weights(self) -> None:
         """Simplified mutate link weight method
         """        
         for current_gene in self.genes:
             if current_gene.frozen:
                 continue
             
-            if random() < NEAT.mutate_link_weights_prob:
-                if random() < NEAT.mutate_new_link_prob:
+            if random() < config.weight_mutate_prob:
+                if random() < config.new_link_prob:
                     current_gene.link.weight = uniform(-1,1)
                 else:
-                    current_gene.link.weight += uniform(-1,1) * NEAT.weight_mutation_power 
+                    current_gene.link.weight += uniform(-1,1) * config.weight_mutate_power 
                     
         # Record the innovation 
         current_gene.mutation_number = current_gene.link.weight
@@ -467,9 +478,9 @@ class Genome:
                                 bool: gene was found
         """     
                   
-        try_count: int = 0  
-        found: bool = False
-        the_gene: Gene = None
+        try_count: int = 0      # number of attempt already made
+        found: bool = False     # a valid gene was found
+        the_gene: Gene = None   # the found gene
         
         while try_count < tries and not found:
             for gene in self.genes:
@@ -487,13 +498,13 @@ class Genome:
         """Create the new node and two genes connecting this node in and out
 
         Args:
-            node_id (int): _description_
-            in_node (Node): _description_
-            out_node (Node): _description_
-            recurrence (bool): _description_
-            innovation_number1 (int): _description_
-            innovation_number2 (int): _description_
-            old_weight (int): _description_
+            node_id (int):              node's id
+            in_node (Node):             incoming node
+            out_node (Node):            outgoing node
+            recurrence (bool):          recurrence flag
+            innovation_number1 (int):   incoming link's innovation number
+            innovation_number2 (int):   outgoing link's innovation number'
+            old_weight (int):           weight of the disabled old link
 
         Returns:
             Tuple[Node, Gene, Gene]:    Node: the new node created
@@ -525,10 +536,10 @@ class Genome:
         """Check if the innovation already exists
 
         Args:
-            innovation (Innovation): innovation to check for
-            in_node (Node): in_node of the innovation
-            out_node (Node): out_node of the innovation
-            the_gene (Gene): the gene with the innovation number
+            innovation (Innovation):    innovation to check for
+            in_node (Node):             incoming node of the innovation
+            out_node (Node):            outgoing node of the innovation
+            the_gene (Gene):            the gene with the innovation number
 
         Returns:
             bool: the innovation already exist
@@ -542,8 +553,6 @@ class Genome:
         """ Check to see if this innovation has already been done in another genome
 
         Args:
-            innovations (List[Innovation]): List of already existing innovations
-            current_node_id (int): the id of the current node
             the_gene (Gene): the gene which innovation to check
 
         Returns:
@@ -575,59 +584,15 @@ class Genome:
                                                                 innovation_number2=the_innovation.innovation_number2,
                                                                 old_weight=old_weight)
         
-    
-        """ for innovation in InnovTable.history:
-            # Innovation already exists    
-            if self._check_innovation_identical(innovation=innovation,
-                                                in_node=in_node,
-                                                out_node=out_node,
-                                                the_gene=the_gene):
-                
-                new_node, new_gene1, new_gene2 = self._create_new_node( node_id=innovation.new_node_id,
-                                                                        in_node=in_node,
-                                                                        out_node=out_node,
-                                                                        recurrence=recurrence,
-                                                                        innovation_number1=innovation.innovation_number1,
-                                                                        innovation_number2=innovation.innovation_number2,
-                                                                        old_weight=old_weight)
-                break
-            
-        # If innovation is novel
-        else:
-            new_node, new_gene1, new_gene2 = self._create_new_node( node_id=InnovTable.get_node_number(),
-                                                                    in_node=in_node,
-                                                                    out_node=out_node,
-                                                                    recurrence=recurrence,
-                                                                    innovation_number1=current_innovation,
-                                                                    innovation_number2=current_innovation+1,
-                                                                    old_weight=old_weight)
-
-            new_innovation = Innovation(node_in_id=in_node.id,
-                                        node_out_id=out_node.id,
-                                        innovation_type=InnovationType.NEWNODE,
-                                        innovation_number1=current_innovation-2.0,
-                                        innovation_number2=current_innovation-1.0,
-                                        new_node_id=new_node.id,
-                                        old_innovation_number=the_gene.innovation_number)
-            
-            InnovTable._create_innovation()
-
-            current_innovation += 2 """
                 
         return  new_node, new_gene1, new_gene2
                     
-    def mutate_add_node(self) -> bool:
+    def _mutate_add_node(self) -> bool:
         """Mutate genome by adding a node representation 
-
-        Args:
-            innovations (List):         list of innovations already existing
-            current_node_id (int):      the id of the current node
-            current_innovation (int):   current innovation number
 
         Returns:
             bool: mutation worked
         """        
-        
         the_gene, found = self._find_random_gene()
                
         if not found:
@@ -705,8 +670,17 @@ class Genome:
                 
         return found
 
-    def _new_link_gene(self, recurrence: bool,
-                       node_in: Node, node_out: Node,) -> Gene:
+    def _new_link_gene(self, recurrence: bool, node_in: Node, node_out: Node) -> Gene:
+        """ Create a new gene representing a link between two nodes, and return this gene
+
+        Args:
+            recurrence (bool):  recurrence flag
+            node_in (Node):     incoming node
+            node_out (Node):    outgoing node
+
+        Returns:
+            Gene: the newly created gene
+        """        
         
         the_innovation = InnovTable.get_innovation(node_in=node_in,
                                                     node_out=node_out,
@@ -719,57 +693,11 @@ class Genome:
                         recurrence=recurrence,
                         innovation_number=the_innovation.innovation_number1,
                         mutation_number=0)
-        
-        
-        """ for the_innovation in innovations:          
-            # OTHERWISE, match the innovation in the innovs list
-            if Genome._check_innovation_already_exists( the_innovation=the_innovation,
-                                                        innovation_type=InnovationType.NEWLINK,
-                                                        node_in=node_in,
-                                                        node_out=node_out,
-                                                        recurrence=recurrence):
-                
-                new_gene = Gene(weight=the_innovation.weight,
-                                in_node=node_in,
-                                out_node=node_out,
-                                recurrence=recurrence,
-                                innovation_number=the_innovation.innovation_number1,
-                                mutation_number=0)
-                break
-        else:
-            # The innovation is totally novel
-
-                # If the phenotype does not exist, exit on false,print error
-                # Note: This should never happen- if it does there is a bug
-                if self.phenotype == 0:
-                    return False
-                                        
-                # Choose the new weight
-                new_weight = choice([-1,1]) * random() 
-                # Create the new gene
-                new_gene = Gene(weight=new_weight,
-                                in_node=node_in,
-                                out_node=node_out,
-                                recurrence=recurrence,
-                                innovation_number=current_innovation,
-                                mutation_number=new_weight)
-                
-                # Add the innovation
-                new_innovation = Innovation(node_in_id=node_in.id,
-                                            node_out_id=node_out.id,
-                                            innovation_type=InnovationType.NEWLINK,
-                                            innovation_number1=current_innovation,
-                                            new_weight=new_weight,
-                                            ) """
-                
-                #innovations.append(new_innovation)
-        
-                #current_innovation += 1
-                
+                    
         return new_gene
       
     def _find_valid_link(self, tries:int, recurrence: bool) -> Tuple[bool, Node, Node]: 
-        """_summary_
+        """ Find a valid open link to add a new link after mutation
 
         Args:
             tries (int): Number of tries before giving up
@@ -796,19 +724,17 @@ class Genome:
             
             
             
-    def mutate_add_link(self, tries: int) -> bool:
+    def _mutate_add_link(self, tries: int) -> bool:
         """Mutate the genome by adding a new link between 2 random Nodes 
 
         Args:
-            innovations (List):         List of already existing innovations
-            current_innovation (int):   Current innovation number
             tries (int):                Amount of tries before giving up
 
         Returns:
             bool: Successful mutation
         """
          # Decide whether to make this recurrent
-        recurrence: bool = random() < NEAT.recurrence_only_prob
+        recurrence: bool = random() < config.recurrence_only_prob
         
         # Find an open link
         found, node1, node2 = self._find_valid_link(tries=tries,

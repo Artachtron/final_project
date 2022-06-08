@@ -56,7 +56,11 @@ class Node:
         return self._node_type
     
     @node_type.setter
-    def node_type(self, new_type):
+    def node_type(self, new_type: NodeType):
+        # check validity of new_type's value
+        if type(new_type) is NodeType:
+            return
+        
         self._node_type = new_type
         
     def get_analogue(self) -> Node:
@@ -108,14 +112,18 @@ class Node:
             return False
     
     def add_incoming(self, feednode: Node, weight: float, recurrence: bool=False) -> None:    
-        """Adds a Link to a new Node in the incoming List 
+        """ Adds a Link to a new Node in the incoming List 
 
         Args:
             feednode (Node): _description_
             weight (float): _description_
             recurrence (bool): _description_
         """              
-        new_link: Link = Link(weight, feednode, self, recurrence)
+        new_link: Link = Link(weight=weight,
+                              in_node=feednode,
+                              out_node=self,
+                              recurrence=recurrence)
+        
         self.incoming.append(new_link)
         feednode.outgoing.append(new_link)
         

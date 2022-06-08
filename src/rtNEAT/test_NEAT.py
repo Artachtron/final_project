@@ -6,7 +6,7 @@ from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
 from population import Population
 import numpy as np
-from neat import NEAT
+from neat import config
 
 class TestNode:
     def test_create_node(self):
@@ -358,7 +358,6 @@ class TestGenome:
         
         def test_genome_compatibility(self):
             # Excess
-            
             genome1 = Genome(genome_id=0,
                         nodes=self.nodes,
                         genes=self.genes)
@@ -369,10 +368,9 @@ class TestGenome:
             
             compatibility = Genome.compatibility(genome1=genome1,
                                                  genome2=genome2)
-            assert compatibility == 2.0
+            assert compatibility == 2.0 * config.excess_coeff
             
             # Disjoint
-            
             genome3 = Genome(genome_id=2,
                         nodes=self.nodes[[0,1,4,5]],
                         genes=self.genes[0:3])
@@ -383,10 +381,9 @@ class TestGenome:
                     
             compatibility = Genome.compatibility(genome1=genome4,
                                                   genome2=genome3)
-            assert compatibility == 1.0
+            assert compatibility == 1.0 * config.disjoint_coeff
             
             # Mutation
-            
             genome5 = Genome(genome_id=4,
                             nodes=self.nodes[2:4],
                             genes=self.genes[2:3])
@@ -397,7 +394,7 @@ class TestGenome:
             
             compatibility = Genome.compatibility(genome1=genome5,
                                                   genome2=genome6)
-            assert compatibility == 1.0
+            assert compatibility == 1.0 * config.mutation_difference_coeff
             
         def test_get_last_node_info(self):        
             assert self.genome1.get_last_node_id() == 5+1
@@ -435,12 +432,12 @@ class TestGenome:
             assert network.genotype == self.genome1
         
         def test_mutate_links_weight_simplified(self):
-            NEAT.mutate_link_weights_prob = 1.0
-            NEAT.mutate_new_link_prob = 0.5
-            NEAT.weight_mutation_power = 0.5
+            config.weight_mutate_prob = 1.0
+            config.new_link_prob = 0.5
+            config.weight_mutate_power = 0.5
             
             weights = [gene.link.weight for gene in self.genome1.genes]
-            self.genome1.mutate_link_weights()
+            self.genome1._mutate_link_weights()
             new_weights = [gene.link.weight for gene in self.genome1.genes]
             
             for new_weight, weight in zip(new_weights, weights):
@@ -486,7 +483,7 @@ class TestGenome:
             assert InnovTable.get_innovation_number() == 0
             assert genome1.nodes.size == 2
             assert genome1.genes.size == 1
-            success = genome1.mutate_add_node()
+            success = genome1._mutate_add_node()
             assert genome1.genes[0].enabled == False
             assert success
             assert InnovTable.get_innovation_number() == 2
@@ -498,7 +495,7 @@ class TestGenome:
             assert InnovTable.get_innovation_number() == 2
             assert genome2.nodes.size == 2
             assert genome2.genes.size == 1
-            success = genome2.mutate_add_node()
+            success = genome2._mutate_add_node()
             assert success
             assert InnovTable.get_innovation_number() == 2
             assert genome2.nodes.size == 3
@@ -607,7 +604,7 @@ class TestGenome:
         def test_mutate_add_link(self):
             genes_size = self.genes.size
             assert self.genome1.genes.size == genes_size
-            success = self.genome1.mutate_add_link(tries=1)
+            success = self.genome1._mutate_add_link(tries=1)
             
             assert success
             assert self.genome1.genes.size == genes_size + 1   

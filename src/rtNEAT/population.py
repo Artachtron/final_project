@@ -2,6 +2,7 @@ import numpy as np
 from species import Species
 from neat import NEAT
 
+# Might not be necessary
 class Population:
     def __init__(self,
                  organisms: np.array,
@@ -10,7 +11,7 @@ class Population:
         self.species = species
         self.size = len(organisms)
     
-    def speciate(self):
+    """ def speciate(self):
         comparison_organism = 0
                 
         counter: int = 0
@@ -47,4 +48,4 @@ class Population:
                     self.species.append(new_species)
                     new_species.add_organism(current_organism) # Add the current organism
                     current_organism.species = new_species # Point organism to its species
-                
+                     """
