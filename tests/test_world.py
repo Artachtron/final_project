@@ -5,6 +5,7 @@ import pygame as pg
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')))
 from project.src import world
+from project.src.energies import EnergyType
 
 class TestGrid:
     @pytest.fixture(autouse=True)
@@ -61,6 +62,23 @@ class TestGrid:
         assert not self.entity_grid.get_cell_value(cell_coordinates=pos_3)
         assert not self.entity_grid.get_cell_value(cell_coordinates=pos_4)
         
+    def test_sub_region(self):
+        positions = [(1,2), (4,2), (3,7), (0,3)]
+        world.init_pygame()
+        for pos in positions:
+            self.grid.create_energy(energy_type=EnergyType.BLUE,
+                                    quantity=10,
+                                    cell_coordinates=pos)
+            
+        def not_none(arr):
+            return sum(x is not None for x in arr)
+        
+        for i in range(1,4):
+            subregion = self.grid.resource_grid.get_sub_region(initial_pos=(3,3),
+                                                            radius=i).flatten()
+            
+            assert not_none(subregion) == i
+
         
 class TestWorld:
     
@@ -87,7 +105,7 @@ class TestWorld:
      
     #def test_world_update(self):
         
-    def test_entities_update(self):
+    """ def test_entities_update(self):
         world.init_grid()
         world.init_population(counts=(1,0))
         
@@ -97,7 +115,7 @@ class TestWorld:
         world.update_entities()
         after_update_position = world.grid.entity_group.sprites()[0].position
                 
-        assert before_update_position != after_update_position
+        assert before_update_position != after_update_position """
     
     def test_world_drawing(self):
         world.init_grid()

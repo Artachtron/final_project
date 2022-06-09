@@ -18,7 +18,7 @@ class SubGrid:
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
-            value (int): The new value to assign
+            value (int):                The new value to assign
         """
         try:
             self._subgrid[cell_coordinates] = value
@@ -41,7 +41,12 @@ class SubGrid:
         except IndexError:
             print(f"{cell_coordinates} is out of bounds")
             return False
-
+        
+    def get_sub_region(self, initial_pos: Tuple[int,int], radius:int=1):
+        x1, x2, y1, y2 = (initial_pos[0] - radius, initial_pos[0] + radius+1,
+                          initial_pos[1] - radius, initial_pos[1] + radius+1)
+        
+        return self._subgrid[x1:x2, y1:y2]
         
 class Grid:
     def __init__(self, height: int, width: int, block_size: int=20):
@@ -81,9 +86,9 @@ class Grid:
         """Create energy on the grid
 
         Args:
-            energy_type (EnergyType): type of energy to be created
-            quantity (int): amount of energy to be created
-            cell (Tuple[int, int]): cell of the grid on which the energy should be created
+            energy_type (EnergyType):   type of energy to be created
+            quantity (int):             amount of energy to be created
+            cell (Tuple[int, int]):     cell of the grid on which the energy should be created
         """        
         print(f"{energy_type} was created at {cell_coordinates}")
         match energy_type.value:
@@ -106,17 +111,19 @@ class Grid:
         resource_grid.set_cell_value(cell_coordinates=position, value=None)
         print(f"{energy} was deleted at {position}")
     
-    def create_entity(self, entity_type: str, position, size=20, blue_energy=Animal.INITIAL_BLUE_ENERGY, red_energy=Animal.INITIAL_RED_ENERGY, max_age: int=0, production_type: EnergyType=None, adult_size: int=0) -> Tree|Animal|Seed:
+    def create_entity(self, entity_type: str, position: Tuple[int, int], size: int=20,
+                      blue_energy:int=Animal.INITIAL_BLUE_ENERGY, red_energy:int=Animal.INITIAL_RED_ENERGY,
+                      max_age: int=0, production_type: EnergyType=None, adult_size: int=0) -> Tree|Animal|Seed:
         """Create an entity and add it to the grid
 
         Args:
-            entity_type (str): the type of entity to create (tree/animal)
-            position (_type_): the position of the new entity on the grid
-            size (int, optional): initial size. Defaults to 1.
-            blue_energy (int, optional): amount of blue energy. Defaults to 5.
-            red_energy (int, optional): amout of red energy. Defaults to 10.
+            entity_type (str):                      type of entity to create (tree/animal)
+            position (Tuple[int, int]):             position of the new entity on the grid
+            size (int, optional): initial           size. Defaults to 1.
+            blue_energy (int, optional):            amount of blue energy. Defaults to 5.
+            red_energy (int, optional):             amout of red energy. Defaults to 10.
             production_type (EnergyType, optional): type of energy to be created by tree
-            adult_size (int): size to reach before reaching adulthood. Defaults to 0
+            adult_size (int):                       size to reach before reaching adulthood. Defaults to 0
             
         Returns:
             Tree|Animal|Seed: entity newly created
@@ -134,14 +141,25 @@ class Grid:
         self.entity_group.add(entity)
         return entity
         
-    def remove_entity(self, entity):
+    def remove_entity(self, entity: Entity):
         """Remove entity from the grid
 
         Args:
-            entity (_type_): entity to remove
+            entity (Entity): entity to remove
         """
         entity_grid = self.entity_grid
         self.entity_group.remove(entity)
         position = entity.position
         entity_grid.set_cell_value(cell_coordinates=position, value=None)
         print(f"{entity} was deleted at {position}")
+        
+    def get_nearby_colors(self, radius: int = 1) -> np.array:
+        position: Tuple[int, int] = self.position
+        color_cells = []
+                
+        for x in range(-radius, radius + 1):
+            for y in range(-radius, radius + 1):
+                coordinate = tuple(np.add(position,(x, y)))
+                color_cells.append(self.color_grid.get_cell_value(coordinate=coordinate))
+                
+        return np.array(color_cells)

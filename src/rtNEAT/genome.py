@@ -22,60 +22,7 @@ class Genome:
         if genes is not None:
             self.size = len(genes)
         self.phenotype = None          # Node network associated with the genome
-    
-        if self.nodes is None:
-            self._genesis()
-        
-    
-    def _genesis(self):
-        # Initialize input
-        bias =[]
-        bias.append(Node(node_id=InnovTable.get_node_number(),
-                        node_place=NodePlace.BIAS))
-        
-        InnovTable.increment_node()
-        
-        # Initialize inputs
-        inputs = []
-        for _ in range(config.num_inputs):
-            inputs.append(Node(node_id=InnovTable.get_node_number(),
-                                node_place=NodePlace.INPUT))
-                
-            InnovTable.increment_node()                    
-        
-        # Initialize outputs    
-        outputs = []  
-        for _ in range(config.num_outputs):
-            outputs.append(Node(node_id=InnovTable.get_node_number(),
-                                node_place=NodePlace.OUTPUT))
             
-            InnovTable.increment_node() 
-        else:
-            self.nodes = np.array(bias + inputs + outputs)
-        
-        genes = []
-        for node1 in inputs + bias:
-            for node2 in outputs:
-                genes.append(Gene(  in_node=node1,
-                                    out_node=node2,
-                                    innovation_number=InnovTable.get_innovation_number()))
-
-                InnovTable.increment_innov()
-        else:
-            self.genes = np.array(genes)
-                
-        # Create the new network        
-        new_network = Network(inputs=bias+inputs,
-                              outputs=outputs,
-                              all_nodes=bias+inputs+outputs,
-                              network_id=self.id)
-            
-        # Attach genotype and phenotype together
-        new_network.genotype = self
-        self.phenotype = new_network
-        
-        return new_network       
-   
     def mutate(self) -> None:
         """ Mutate the genome
         """        
@@ -452,61 +399,43 @@ class Genome:
         
         return new_link
            
-    """ def genesis(self, network_id: int) -> Network:
-        Generate a network phenotype from this Genome with specified id
+    def genesis(self, network_id: int) -> Network:
+        """ Generate a network phenotype from this Genome with specified id
 
         Args:
             id (int): id of the network
             
         Returns:
-            Network: the network created as phenotype
-          
-        
-        max_weight:float = 0.0
-       
-        inlist: List[Node] = []
-        outlist: List[Node] = []
-        all_list: List[Node] = []
+            Network: the network created as phenotype """
+                 
+        inputs: List[Node] = []
+        outputs: List[Node] = []
+        all_nodes: List[Node] = []
                 
-        for current_node in self.nodes:
-            new_node = Node.constructor_from_node(node=current_node)
-            
+        for current_node in self.nodes:         
             # Check for input or output designation of node
             match current_node.node_place:
                 case NodePlace.INPUT:
-                    inlist.append(new_node)
+                    inputs.append(current_node)
                 case NodePlace.OUTPUT:
-                    outlist.append(new_node)
+                    outputs.append(current_node)
                 case NodePlace.BIAS:
-                    inlist.append(new_node)
+                    inputs.append(current_node)
             
             # Keep track of all nodes, not just input and output    
-            all_list.append(new_node)
-            
-            # Have the node specifier point to the node it generated
-            current_node.analogue = new_node
-            
-        # Create the links by iterating through the genes
-        for current_gene in self.genes:
-            # Only create the link if the gene is enabled
-            if current_gene.enabled:
-                # Create the new link               
-                new_link = self._create_new_link(gene=current_gene)
-
-                # Keep track of maximum weight
-                weight_magnitude = abs(new_link.weight) # Measures absolute value of weights
-                max_weight = max(weight_magnitude, max_weight) # Compute the maximum weight for adaptation purposes
-        
+            all_nodes.append(current_node)
+                                                
         # Create the new network        
-        new_network = Network(inputs=inlist, outputs=outlist,all_nodes=all_list, network_id=network_id)
+        new_network = Network(inputs=inputs,
+                              outputs=outputs,
+                              all_nodes=all_nodes,
+                              network_id=network_id)
             
         # Attach genotype and phenotype together
         new_network.genotype = self
         self.phenotype = new_network
-        
-        new_network.max_weight = max_weight
-        
-        return new_network """
+                
+        return new_network
     
     def _mutate_link_weights(self) -> None:
         """Simplified mutate link weight method
@@ -546,7 +475,7 @@ class Genome:
         
         return the_gene, found
     
-    def _create_new_node(self, node_id: int, in_node: Node, out_node: Node, recurrence: bool,
+    def _create_node(self, node_id: int, in_node: Node, out_node: Node, recurrence: bool,
                          innovation_number1: int, innovation_number2: int, old_weight: int
                          ) -> Tuple[Node, Gene, Gene]:
         """Create the new node and two genes connecting this node in and out
@@ -629,7 +558,7 @@ class Genome:
                                                     recurrence=recurrence,
                                                     old_innovation_number=the_gene.innovation_number)
      
-        new_node, new_gene1, new_gene2 = self._create_new_node( node_id=the_innovation.new_node_id,
+        new_node, new_gene1, new_gene2 = self._create_node( node_id=the_innovation.new_node_id,
                                                                 in_node=in_node,
                                                                 out_node=out_node,
                                                                 recurrence=recurrence,
@@ -661,7 +590,6 @@ class Genome:
         self.nodes = Genome.insert_node(self.nodes, new_node)
         return True  
           
-    
     def _find_first_non_sensor(self) -> Tuple[Node, int]:
         """Find the first non-sensor so that the to-node won't look at sensors as possible destinations
 
@@ -775,9 +703,7 @@ class Genome:
                                                         recurrence=True)
             if found: 
                 return found, node1, node2
-            
-            
-            
+                      
     def _mutate_add_link(self, tries: int) -> bool:
         """Mutate the genome by adding a new link between 2 random Nodes 
 

@@ -3,7 +3,7 @@ from types import NoneType
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
-from typing import Tuple, Set, Final
+from typing import Tuple, Set, final
 import enum
 import random
 from energies import EnergyType, Energy
@@ -347,30 +347,24 @@ class Entity(EntitySprite):
         """ Find the cells occupied by the given value, return a list of boolean
 
         Args:
-            subgrid (_type_):               subgrid on which to look for
-            value (_type_):                 value to search for
+            subgrid (SubGrid):              subgrid on which to look for
+            value (Class):                  value to search for
             radius (int, optional):         radius of search. Defaults to 1.
             include_self (bool, optional):  include self in the list. Defaults to False.
 
         Returns:
             np.array[bool]: List of occupied (True) and empty cells (False)
         """        
-        position = self.position
+        position: Tuple[int, int] = self.position
         occupied_cells = []
-        count = 0
         
         for x in range(-radius, radius + 1):
             for y in range(-radius, radius + 1):
                 if not include_self and x == 0 and y == 0:
                     continue
                 coordinate = tuple(np.add(position,(x, y)))
-                occupied_cells.append((issubclass(
-                                                    type(
-                                                        subgrid.get_cell_value(
-                                                            cell_coordinates=coordinate)),
-                                                        value)))
-    
-                count += 1
+                occupied_cells.append((issubclass(type(subgrid.get_cell_value(cell_coordinates=coordinate)),value)))
+
         return np.array(occupied_cells)         
            
     def _find_occupied_cells_by_entities(self, radius: int = 1) -> bool:
@@ -397,7 +391,8 @@ class Entity(EntitySprite):
         """               
         return self._find_occupied_cells_by_value(subgrid=self.grid.resource_grid,
                                                     value=Energy,
-                                                    radius=radius)     
+                                                    radius=radius,
+                                                    include_self=True)     
             
     
     def _find_tree_cells(self, include_self: bool = False,
@@ -668,13 +663,19 @@ class Animal(Entity):
         self._perform_action()
 
     def rtNEAT_update(self) -> None:
-        # Internal properties
+        #Inputs
+        ## Internal properties
         age = self._age
         size = self.size
         blue_energy, red_energy = self.energies_stock.values()
+        ## Perceptions
+        see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
+        see_energies = [int(x) for x in self._find_occupied_cells_by_energies()]
+        see_colors = self.grid.color_grid.get_sub_region(initial_pos=self.position,
+                                                         radius=2).flatten()
+                                                                   
+        #Outputs
         
-        
-     
     
     def random_update(self) -> None:
         """Test behaviour by doing random actions"""

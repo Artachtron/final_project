@@ -6,6 +6,7 @@ from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
 import numpy as np
 from neat import config
+from src.rtNEAT.organism import Organism
 
 class TestNode:
     def test_create_node(self):
@@ -146,6 +147,10 @@ class TestGenome:
         n_total = n_inputs + n_outputs + 1
         assert InnovTable.get_node_number() == 0
         genome = Genome(genome_id=0)
+        Organism(genome=genome,
+                 generation=0)
+        
+        
         for i in range(n_total):
             assert genome.nodes[i].id == i
         
@@ -442,7 +447,7 @@ class TestGenome:
             assert len(in_node.outgoing) == 2 """
             
         def test_genesis(self):        
-            network = self.genome1._genesis() 
+            network = self.genome1.genesis(network_id=self.genome1.id) 
             assert self.genome1.phenotype == network
             assert network.genotype == self.genome1
         
@@ -465,7 +470,7 @@ class TestGenome:
             
         def test_create_new_node(self):
             in_node, out_node = self.nodes[:2]
-            node, gene1, gene2 = self.genome1._create_new_node(node_id=0,
+            node, gene1, gene2 = self.genome1._create_node(node_id=0,
                                           in_node=in_node,
                                           out_node=out_node,
                                           recurrence=False,

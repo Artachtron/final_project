@@ -26,8 +26,8 @@ def create_a_genome():
 def main():
     internal_properties = 3
     see_entities = 8
-    see_energies = 8
-    see_cells = 24 * 3
+    see_energies = 9
+    see_cells = 25 * 3
     n_inputs = internal_properties + see_entities + see_energies + see_cells
     
     move = 2

@@ -1,4 +1,3 @@
-from hashlib import new
 import numpy as np
 import pytest
 import sys, os
