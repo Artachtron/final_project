@@ -1,12 +1,13 @@
 import pytest
 from gene import Gene
-from node import Node, NodePlace, FuncType
+from node import Node, NodePlace, ActivationFuncType
 from link import Link
 from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
 import numpy as np
-from neat import config
-from src.rtNEAT.organism import Organism
+import neat
+from neat import Config
+from organism import Organism
 
 class TestNode:
     def test_create_node(self):
@@ -26,18 +27,18 @@ class TestNode:
                            
                            node_place=NodePlace.OUTPUT)
       
-        assert set(['id', 'node_place', 'activation', 'ftype', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
+        assert set(['id', 'node_place', 'val', 'ftype', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
         
         assert sensor_node.id == 0
         assert sensor_node.node_place == NodePlace.INPUT
-        assert sensor_node.activation == 0.0
-        assert sensor_node.ftype == FuncType.SIGMOID
+        assert sensor_node.output_value == 0.0
+        assert sensor_node.ftype == ActivationFuncType.SIGMOID
         assert sensor_node.frozen == False
         
         assert action_node.id == 1
         assert action_node.node_place == NodePlace.OUTPUT
-        assert action_node.activation == 0.0
-        assert action_node.ftype == FuncType.SIGMOID
+        assert action_node.output_value == 0.0
+        assert action_node.ftype == ActivationFuncType.SIGMOID
         assert action_node.frozen == False
 
     """ def test_add_incoming_link(self):
@@ -142,8 +143,8 @@ class TestGenome:
         assert type(genome) == Genome
 
     def test_init_genome(self):
-        n_inputs = config.num_inputs
-        n_outputs = config.num_outputs
+        n_inputs = Config.num_inputs
+        n_outputs = Config.num_outputs
         n_total = n_inputs + n_outputs + 1
         assert InnovTable.get_node_number() == 0
         genome = Genome(genome_id=0)
@@ -160,7 +161,7 @@ class TestGenome:
         for i in range(n_outputs, n_total):
             assert genome.nodes[i].node_place == NodePlace.OUTPUT
             
-        assert genome.nodes.size == n_total
+        assert len(genome.nodes) == n_total
         assert InnovTable.get_node_number() == n_total
         
         assert genome.genes.size == (n_inputs + 1) * n_outputs
@@ -255,6 +256,15 @@ class TestGenome:
             nodes_list = list(self.genome1.nodes)
             nodes_list.insert(3, self.genome1.nodes[3])
             assert self.genome1.nodes.all() == np.array(nodes_list).all()
+
+        def test_get_input_links(self):
+            links = self.genome1._get_input_links(node_id=4)
+            assert len(links) == 2
+            assert links == [gene.link for gene in self.genes[2:]]
+            
+            links = self.genome1._get_input_links(node_id=2)
+            assert len(links) == 1
+            assert links == [self.genes[1].link]
 
         def test_choose_gene(self):
             genome1 = Genome(genome_id=0,
@@ -388,7 +398,7 @@ class TestGenome:
             
             compatibility = Genome.compatibility(genome1=genome1,
                                                  genome2=genome2)
-            assert compatibility == 2.0 * config.excess_coeff
+            assert compatibility == 2.0 * Config.excess_coeff
             
             # Disjoint
             genome3 = Genome(genome_id=2,
@@ -401,7 +411,7 @@ class TestGenome:
                     
             compatibility = Genome.compatibility(genome1=genome4,
                                                   genome2=genome3)
-            assert compatibility == 1.0 * config.disjoint_coeff
+            assert compatibility == 1.0 * Config.disjoint_coeff
             
             # Mutation
             genome5 = Genome(genome_id=4,
@@ -414,18 +424,18 @@ class TestGenome:
             
             compatibility = Genome.compatibility(genome1=genome5,
                                                   genome2=genome6)
-            assert compatibility == 1.0 * config.mutation_difference_coeff
+            assert compatibility == 1.0 * Config.mutation_difference_coeff
             
         def test_get_last_node_info(self):        
             assert self.genome1.get_last_node_id() == 5+1
             assert self.genome1.get_last_gene_innovation_number() == 2+1
          
-        """ def test_create_new_link(self):
-            self.genome1._genesis()
+        def test_create_new_link(self):
+            self.genome1.genesis(network_id=0)
             gene = self.genome1.genes[0]
             
-            in_node = gene.link.in_node.analogue
-            out_node = gene.link.out_node.analogue
+            in_node = gene.link.in_node
+            out_node = gene.link.out_node
             
             assert len(out_node.incoming) == 1
             assert len(in_node.outgoing) == 1
@@ -433,28 +443,36 @@ class TestGenome:
             link = self.genome1._create_new_link(gene = gene) 
             
             assert link.weight == gene.link.weight
-            assert link.in_node == gene.link.in_node.analogue
-            assert link.out_node == gene.link.out_node.analogue
+            assert link.in_node == gene.link.in_node
+            assert link.out_node == gene.link.out_node
             assert link.is_recurrent == gene.link.is_recurrent
             
-            in_node = gene.link.in_node.analogue
-            out_node = gene.link.out_node.analogue
+            in_node = gene.link.in_node
+            out_node = gene.link.out_node
             
             assert link in out_node.incoming
             assert link in in_node.outgoing
             
             assert len(out_node.incoming) == 2
-            assert len(in_node.outgoing) == 2 """
+            assert len(in_node.outgoing) == 2
             
         def test_genesis(self):        
             network = self.genome1.genesis(network_id=self.genome1.id) 
             assert self.genome1.phenotype == network
             assert network.genotype == self.genome1
+            
+            node1, node2, node3, node4, node5, node6 = self.nodes
+            assert len(node1.incoming) == 0
+            assert len(node2.incoming) == 1
+            assert len(node3.incoming) == 0
+            assert len(node4.incoming) == 1
+            assert len(node5.incoming) == 0
+            assert len(node6.incoming) == 2
         
         def test_mutate_links_weight_simplified(self):
-            config.weight_mutate_prob = 1.0
-            config.new_link_prob = 0.5
-            config.weight_mutate_power = 0.5
+            Config.weight_mutate_prob = 1.0
+            Config.new_link_prob = 0.5
+            Config.weight_mutate_power = 0.5
             
             weights = [gene.link.weight for gene in self.genome1.genes]
             self.genome1._mutate_link_weights()
@@ -471,12 +489,12 @@ class TestGenome:
         def test_create_new_node(self):
             in_node, out_node = self.nodes[:2]
             node, gene1, gene2 = self.genome1._create_node(node_id=0,
-                                          in_node=in_node,
-                                          out_node=out_node,
-                                          recurrence=False,
-                                          innovation_number1=0,
-                                          innovation_number2=1,
-                                          old_weight=0.34)
+                                                            in_node=in_node,
+                                                            out_node=out_node,
+                                                            recurrence=False,
+                                                            innovation_number1=0,
+                                                            innovation_number2=1,
+                                                            old_weight=0.34)
            
             assert node.id == 0
             assert node.node_place == NodePlace.HIDDEN
@@ -498,6 +516,8 @@ class TestGenome:
                              nodes=self.nodes[:2],
                              genes=self.genes[:1])
             
+            InnovTable.increment_node(2)
+            
             # Innovation is novel
             assert InnovTable.get_innovation_number() == 0
             assert genome1.nodes.size == 2
@@ -508,7 +528,8 @@ class TestGenome:
             assert InnovTable.get_innovation_number() == 2
             assert genome1.nodes.size == 3
             assert genome1.genes.size == 3
-            
+            assert list(set(genome1.nodes) - set(self.nodes[:2]))[0].id == 2
+
             # Innovation exists                     
             genome2.genes[0].enabled = True
             assert InnovTable.get_innovation_number() == 2
@@ -628,7 +649,12 @@ class TestGenome:
             success = self.genome1._mutate_add_link(tries=1)
             
             assert success
-            assert self.genome1.genes.size == genes_size + 1   
+            assert self.genome1.genes.size == genes_size + 1
+            
+        def test_predict_callable_functions(self):
+            values = [1,2,3,4,5]
+            Config.aggregation_func(values) == sum(values)
+            Config.activation_function(Config.aggregation_func(values)) == neat.sigmoid(sum(values))
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)

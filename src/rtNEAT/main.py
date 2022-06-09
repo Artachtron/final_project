@@ -2,7 +2,7 @@ from population import Population
 from genome import Genome
 from node import Node, NodePlace
 from gene import Gene
-from neat import config
+from neat import Config
 import numpy as np
 
 def function() -> Population:
@@ -35,8 +35,8 @@ def main():
     other_actions = 6
     n_outputs = move + modify_cell_color + other_actions
     
-    config.num_inputs = n_inputs
-    config.num_outputs = n_outputs
+    Config.num_inputs = n_inputs
+    Config.num_outputs = n_outputs
     
     genome = Genome(genome_id=0)
     

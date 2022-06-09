@@ -12,6 +12,7 @@ class Network:
         self.outputs: np.array = outputs # Values output by the network
         self.all_nodes: np.array = all_nodes # A list of all the nodes
         
+        self.activation_phase: int = 0
         self.number_nodes: int = -1 # The number of nodes in the net (-1 means not yet counted)
         self.number_links: int = -1 # The number of links in the net (-1 means not yet counted)
         self.id = network_id # Allow for a network id

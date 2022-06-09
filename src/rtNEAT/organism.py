@@ -4,7 +4,7 @@ from network import Network
 from innovation import InnovTable
 from node import Node, NodePlace
 from gene import Gene
-from neat import config
+from neat import Config
 import numpy as np
 
 class Organism:
@@ -33,7 +33,7 @@ class Organism:
         
         # Initialize inputs
         inputs = []
-        for _ in range(config.num_inputs):
+        for _ in range(Config.num_inputs):
             inputs.append(Node(node_id=InnovTable.get_node_number(),
                                 node_place=NodePlace.INPUT))
                 
@@ -41,13 +41,13 @@ class Organism:
         
         # Initialize outputs    
         outputs = []  
-        for _ in range(config.num_outputs):
+        for _ in range(Config.num_outputs):
             outputs.append(Node(node_id=InnovTable.get_node_number(),
                                 node_place=NodePlace.OUTPUT))
             
             InnovTable.increment_node() 
         else:
-            self.genome.nodes = np.array(bias + inputs + outputs)
+            self.genome.nodes = {node.id: node for node in bias + inputs + outputs}
         
         genes = []
         for node1 in inputs + bias:

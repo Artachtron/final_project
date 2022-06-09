@@ -1,22 +1,22 @@
 from __future__ import annotations
 import numpy as np
-from neat import config
+from neat import Config
 from node import Node, NodePlace
 from link import Link
 from gene import Gene
 from innovation import Innovation, InnovationType, InnovTable
 from network import Network
-from typing import List, Iterator, Tuple
+from typing import List, Iterator, Tuple, Dict
 from numpy.random import choice, randint, random, uniform
 
 class Genome:
     def __init__(self,
                  genome_id: int,
-                 nodes: np.array = None,
+                 nodes: Dict[int, Node] = None,
                  genes: np.array = None):
         
         self.id: int = genome_id
-        self.nodes: np.array = nodes   # List of network's nodes 
+        self.nodes: Dict[int, Node] = nodes   # List of network's nodes 
         self.genes: np.array = genes   # List of link's genes
         
         if genes is not None:
@@ -26,11 +26,11 @@ class Genome:
     def mutate(self) -> None:
         """ Mutate the genome
         """        
-        if random() < config.add_node_prob:
+        if random() < Config.add_node_prob:
             self._mutate_add_node()
             
-        if random() < config.add_link_prob:
-            self._mutate_add_link(tries=config.add_link_tries)
+        if random() < Config.add_link_prob:
+            self._mutate_add_link(tries=Config.add_link_tries)
             
         self._mutate_link_weights()
     
@@ -93,10 +93,10 @@ class Genome:
                     number_disjoint += 1
 
         # Compatibility score calculations
-        disjoint = config.disjoint_coeff * (number_disjoint)
-        excess =  config.excess_coeff * (number_excess)
+        disjoint = Config.disjoint_coeff * (number_disjoint)
+        excess =  Config.excess_coeff * (number_excess)
         if number_matching > 0:
-             mutation_difference = config.mutation_difference_coeff * (mutation_difference_total/number_matching)
+             mutation_difference = Config.mutation_difference_coeff * (mutation_difference_total/number_matching)
         else:
             mutation_difference = 0
        
@@ -302,8 +302,8 @@ class Genome:
             Genome: the child genome created
         """        
                 
-        new_nodes = np.array([], dtype=Node) # already added nodes
-        parent1_dominant: bool = choice([0,1]) # Determine which genome will give its excess genes
+        new_nodes = np.array([], dtype=Node)    # already added nodes
+        parent1_dominant: bool = choice([0,1])  # Determine which genome will give its excess genes
         
         new_genes: List[Gene] = [] # already chosen genes
         
@@ -354,8 +354,8 @@ class Genome:
                     
                 # If the onode has a higher id than the inode we want to add it first     
                 else:
-                    new_out_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
-                                                                              target_node=out_node)
+                    new_out_node, new_nodes = Genome._check_new_node_existence( new_nodes=new_nodes,
+                                                                                target_node=out_node)
                         
                     new_in_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
                                                                               target_node=in_node)
@@ -370,9 +370,9 @@ class Genome:
                     
                 new_genes.append(new_gene)
         
-        baby_genome = Genome(genome_id=genome_id,
-                            nodes=new_nodes,
-                            genes=np.array(new_genes))
+        baby_genome = Genome(   genome_id=genome_id,
+                                nodes=new_nodes,
+                                genes=np.array(new_genes))
         
         return baby_genome
     
@@ -386,8 +386,8 @@ class Genome:
             Link: the created link
         """        
         current_link = gene.link
-        in_node = current_link.in_node.analogue
-        out_node = current_link.out_node.analogue
+        in_node = current_link.in_node
+        out_node = current_link.out_node
         
         new_link = Link(weight=current_link.weight,
                         in_node=in_node,
@@ -424,6 +424,14 @@ class Genome:
             
             # Keep track of all nodes, not just input and output    
             all_nodes.append(current_node)
+        
+        # Create the links by iterating through the genes
+        for current_gene in self.genes:
+            # Only create the link if the gene is enabled
+            if current_gene.enabled:
+                # Create the new link               
+                self._create_new_link(gene=current_gene)
+         
                                                 
         # Create the new network        
         new_network = Network(inputs=inputs,
@@ -444,11 +452,11 @@ class Genome:
             if current_gene.frozen:
                 continue
             
-            if random() < config.weight_mutate_prob:
-                if random() < config.new_link_prob:
+            if random() < Config.weight_mutate_prob:
+                if random() < Config.new_link_prob:
                     current_gene.link.weight = uniform(-1,1)
                 else:
-                    current_gene.link.weight += uniform(-1,1) * config.weight_mutate_power 
+                    current_gene.link.weight += uniform(-1,1) * Config.weight_mutate_power 
                     
         # Record the innovation 
         current_gene.mutation_number = current_gene.link.weight
@@ -714,7 +722,7 @@ class Genome:
             bool: Successful mutation
         """
          # Decide whether to make this recurrent
-        recurrence: bool = random() < config.recurrence_only_prob
+        recurrence: bool = random() < Config.recurrence_only_prob
         
         # Find an open link
         found, node1, node2 = self._find_valid_link(tries=tries,
@@ -728,6 +736,44 @@ class Genome:
             self.add_gene(new_gene)
             return True
                                        
+    def _get_input_links(self, node_id: int) -> List[Link]:
+        """ get all the links that connects to the node and return the list
+
+        Args:
+            node_id (int): id of the node
+
+        Returns:
+            List[Link]: the list of links connecting to the node
+        """        
+        return [gene.link for gene in self.genes if gene.link.in_node.id == node_id]
+    
+       
+    def predict(self, inputs):
+        if len(inputs) != Config.num_inputs:
+            raise ValueError
+
+        input_index: int  = 0 # Keep track of the number of inputs crossed
+        outputs = []
+        
+        for node in self.nodes:
+            match node.node_place:
+                case NodePlace.INPUT:
+                    node.output_value = inputs[input_index]
+                    node.activation_phase = self.phenotype.activation_phase
+                    input_index += 1
+                    
+                case NodePlace.BIAS:
+                    node.output_value = 1
+                    node.activation_phase = self.phenotype.activation_phase
+                    
+                case NodePlace.OUTPUT:
+                    output_value = node._get_activation()
+                    outputs.append(output_value)
+                    
+        self.phenotype.activation_phase += 1                   
+        return outputs
+                           
+    
     """ def mutate_add_sensor(self, innovations: List, current_innovation: int):
         
         # Find all the sensors and outputs

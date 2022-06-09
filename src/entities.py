@@ -652,8 +652,8 @@ class Animal(Entity):
         """Modfify the color of a given cell, usually the cell currently sat on
 
         Args:
-            color (Tuple[int,int,int]): color to apply
-            cell_coordinates (Tuple[int, int], optional): the coordinates of the cell to modify. Defaults to None.
+            color (Tuple[int,int,int]):                     color to apply
+            cell_coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
         """
         cell_coordinates = cell_coordinates if cell_coordinates else self.position
         self.grid.color_grid.set_cell_value(
@@ -673,6 +673,7 @@ class Animal(Entity):
         see_energies = [int(x) for x in self._find_occupied_cells_by_energies()]
         see_colors = self.grid.color_grid.get_sub_region(initial_pos=self.position,
                                                          radius=2).flatten()
+        
                                                                    
         #Outputs
         

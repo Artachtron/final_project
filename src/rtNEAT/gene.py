@@ -15,10 +15,10 @@ class Gene:
         if weight is None:
             weight = uniform(-1,1)
         
-        self.link = Link(weight=weight,
-                    in_node=in_node,
-                    out_node=out_node,
-                    recurrence=recurrence)
+        self.link = Link(   weight=weight,
+                            in_node=in_node,
+                            out_node=out_node,
+                            recurrence=recurrence)
         
         self.innovation_number: int = innovation_number
         self.mutation_number: int = mutation_number # Used to see how much mutation has changed the link
