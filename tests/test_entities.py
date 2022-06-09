@@ -718,7 +718,7 @@ class TestEntity:
             self.grid.create_energy(energy_type=EnergyType.BLUE, quantity=10, cell_coordinates=(3,2))
 
             assert len(animal._find_energies_cells()) == 4
-            result = [True, False, False, True, True, False, True, False]
+            result = [True, False, False,True, False, True, False, True, False]
             assert (animal._find_occupied_cells_by_energies() == np.array(result)).all()
             
         def test_distance_between_objects(self):

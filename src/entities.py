@@ -3,7 +3,7 @@ from types import NoneType
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
-from typing import Tuple, Set, final
+from typing import Tuple, Set, Final
 import enum
 import random
 from energies import EnergyType, Energy
@@ -367,7 +367,7 @@ class Entity(EntitySprite):
 
         return np.array(occupied_cells)         
            
-    def _find_occupied_cells_by_entities(self, radius: int = 1) -> bool:
+    def _find_occupied_cells_by_entities(self, radius: int = 1) -> np.array[bool]:
         """ Find the cells occupied by entities, return a list of boolean
 
         Args:
@@ -380,7 +380,7 @@ class Entity(EntitySprite):
                                                     value=Entity,
                                                     radius=radius) 
         
-    def _find_occupied_cells_by_energies(self, radius: int = 1) -> bool:
+    def _find_occupied_cells_by_energies(self, radius: int = 1) -> np.array[bool]:
         """ Find the cells occupied by energies, return a list of boolean
 
         Args:

@@ -13,7 +13,7 @@ class Organism:
                  generation: int=0):
         
         self.genotype: Genome = genome # The Organism's genotype 
-        self.network: Network = genome.phenotype
+        self.mind: Network = genome.phenotype
                 
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from
@@ -22,10 +22,10 @@ class Organism:
             self._initial_generation_organism()
  
     def update_phenotype(self) -> Organism:
-        self.network = self.genotype.genesis(network_id=self.genotype.id)
+        self.mind = self.genotype.genesis(mind_id=self.genotype.id)
         
     def _initial_generation_organism(self):
-        """ Initialize a network based on configuration.
+        """ Initialize a mind based on configuration.
             Create the input nodes, output nodes and
             genes connecting each input to each output 
         """        

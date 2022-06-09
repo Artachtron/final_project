@@ -657,21 +657,20 @@ class TestGenome:
 class TestNetwork:   
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.n_inputs = 2
-        self.n_outputs = 3
+        self.n_inputs, self.n_outputs = np.random.randint(3,10,2)
         Config.num_inputs = self.n_inputs
         Config.num_outputs = self.n_outputs
         self.genome = Genome(genome_id=0)
         self.organism = Organism(genome = self.genome)
-        self.network = self.genome.phenotype
+        self.mind = self.genome.phenotype
         
         
-    def test_predict_callable_functions(self):
+    def test_activate_callable_functions(self):
         values = [1,2,3,4,5]
         Config.aggregation_func(values) == sum(values)
         Config.activation_function(Config.aggregation_func(values)) == neat.sigmoid(sum(values))
         
-    def test_predict(self):
+    def test_activate_complete_no_hidden_nodes(self):
         n_inputs = self.n_inputs
         n_outputs = self.n_outputs
         dim = (n_inputs+1) * n_outputs
@@ -682,27 +681,27 @@ class TestNetwork:
         for weight, gene in zip(weights, genes):
             gene.link.weight = weight
                 
-        outputs = self.network.activate(input_values=inputs)
+        outputs = self.mind.activate(input_values=inputs)
         
         link_count = 0
-        for value, node in zip(inputs, self.network.inputs[:-1]):
+        for value, node in zip(inputs, self.mind.inputs[:-1]):
             assert node.output_value == value
             for link in node.outgoing:
                 assert link.weight == weights[link_count]
                 link_count += 1
         
         link_count = 3
-        for i, node in enumerate(self.network.outputs):
+        for i, node in enumerate(self.mind.outputs):
             for j, link in enumerate(node.incoming):
-                assert link.weight == weights[i::3][j]
+                assert link.weight == weights[i::n_outputs][j]
         
-        assert self.network.inputs[-1].output_value == 1
+        assert self.mind.inputs[-1].output_value == 1
         
         inputs = list(inputs)
         for i, output_value in enumerate(outputs):
-            values = [value * weight for value, weight in zip(inputs+[1], weights[i::3])]
+            values = [value * weight for value, weight in zip(inputs+[1], weights[i::n_outputs])]
             assert output_value == neat.sigmoid(sum(values))
-            #0 3 6
+            
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)

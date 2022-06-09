@@ -21,7 +21,7 @@ class Genome:
         
         if genes is not None:
             self.size = len(genes)
-        self.phenotype = None          # Node network associated with the genome
+        self.phenotype = None          # Node mind associated with the genome
          
             
     def mutate(self) -> None:
@@ -401,7 +401,7 @@ class Genome:
         return current_link
            
     def genesis(self):
-        """ Generate a network phenotype from this Genome with specified id
+        """ Generate a mind phenotype from this Genome with specified id
         """
                  
         inputs: List[Node] = []
