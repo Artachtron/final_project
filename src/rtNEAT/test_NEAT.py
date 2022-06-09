@@ -629,8 +629,8 @@ class TestGenome:
             InnovTable.add_innovation(innovation)
             
             gene = self.genome1._new_link_gene( recurrence=recurrence,
-                                                node_in=node1,
-                                                node_out=node2)
+                                                in_node=node1,
+                                                out_node=node2)
             
             assert gene.link.weight == 0.23
             assert gene.innovation_number == 3
@@ -641,8 +641,8 @@ class TestGenome:
             innovation.innovation_type = InnovationType.NEW_NODE
             np.random.seed(1)
             gene = self.genome1._new_link_gene( recurrence=recurrence,
-                                                node_in=node1,
-                                                node_out=node2)
+                                                in_node=node1,
+                                                out_node=node2)
             
             assert gene.link.weight == new_weight
             
@@ -654,31 +654,63 @@ class TestGenome:
             assert success
             assert self.genome1.genes.size == genes_size + 1
             
-    class PredictOutput:   
-        @pytest.fixture(autouse=True)
-        def setup(self):
-            Config.num_inputs = 2
-            Config.num_outputs = 3
-            self.genome = Genome(genome_id=0)
-            
-            
-        def test_predict_callable_functions(self):
-            values = [1,2,3,4,5]
-            Config.aggregation_func(values) == sum(values)
-            Config.activation_function(Config.aggregation_func(values)) == neat.sigmoid(sum(values))
-            
-        def test_predict(self):
-            self.genom
+class TestNetwork:   
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.n_inputs = 2
+        self.n_outputs = 3
+        Config.num_inputs = self.n_inputs
+        Config.num_outputs = self.n_outputs
+        self.genome = Genome(genome_id=0)
+        self.organism = Organism(genome = self.genome)
+        self.network = self.genome.phenotype
+        
+        
+    def test_predict_callable_functions(self):
+        values = [1,2,3,4,5]
+        Config.aggregation_func(values) == sum(values)
+        Config.activation_function(Config.aggregation_func(values)) == neat.sigmoid(sum(values))
+        
+    def test_predict(self):
+        n_inputs = self.n_inputs
+        n_outputs = self.n_outputs
+        dim = (n_inputs+1) * n_outputs
+        weights = np.random.uniform(-1,1,dim)
+        inputs = np.random.uniform(-1,1,n_inputs)
+        
+        genes = self.genome.genes
+        for weight, gene in zip(weights, genes):
+            gene.link.weight = weight
+                
+        outputs = self.network.activate(input_values=inputs)
+        
+        link_count = 0
+        for value, node in zip(inputs, self.network.inputs[:-1]):
+            assert node.output_value == value
+            for link in node.outgoing:
+                assert link.weight == weights[link_count]
+                link_count += 1
+        
+        link_count = 3
+        for i, node in enumerate(self.network.outputs):
+            for j, link in enumerate(node.incoming):
+                assert link.weight == weights[i::3][j]
+        
+        assert self.network.inputs[-1].output_value == 1
+        
+        inputs = list(inputs)
+        for i, output_value in enumerate(outputs):
+            values = [value * weight for value, weight in zip(inputs+[1], weights[i::3])]
+            assert output_value == neat.sigmoid(sum(values))
+            #0 3 6
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)
     def setup(self):
         sensor_node = Node(node_id=0,
-                                
                                 node_place=NodePlace.INPUT)
             
         action_node = Node(node_id=1,
-                                
                                 node_place=NodePlace.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
@@ -709,29 +741,29 @@ class TestInnovTable:
             
             exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
                                                                     innovation_type=innovation_type,
-                                                                    node_in=node1,
-                                                                    node_out=node2,
+                                                                    in_node=node1,
+                                                                    out_node=node2,
                                                                     recurrence=recurrence)
             assert exists 
             
             exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
                                                                     innovation_type=innovation_type,
-                                                                    node_in=node1,
-                                                                    node_out=node2,
+                                                                    in_node=node1,
+                                                                    out_node=node2,
                                                                     recurrence=not recurrence)  
             assert not exists
             
             exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
                                                                     innovation_type=innovation_type,
-                                                                    node_in=node2,
-                                                                    node_out=node1,
+                                                                    in_node=node2,
+                                                                    out_node=node1,
                                                                     recurrence=recurrence) 
             assert not exists
             
             exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
                                                                     innovation_type=InnovationType.NEW_NODE,
-                                                                    node_in=node1,
-                                                                    node_out=node2,
+                                                                    in_node=node1,
+                                                                    out_node=node2,
                                                                     recurrence=recurrence) 
             assert not exists
             
@@ -740,8 +772,8 @@ class TestInnovTable:
         assert InnovTable.get_innovation_number() == 0
         
         # new innovation
-        innovation = InnovTable.get_innovation( node_in=node1,
-                                                node_out=node2,
+        innovation = InnovTable.get_innovation( in_node=node1,
+                                                out_node=node2,
                                                 innovation_type=InnovationType.NEW_NODE,
                                                 recurrence=False)
         
@@ -755,8 +787,8 @@ class TestInnovTable:
         assert InnovTable.get_innovation_number() == 2
         
         # same innovaiton
-        innovation = InnovTable.get_innovation( node_in=node1,
-                                                node_out=node2,
+        innovation = InnovTable.get_innovation( in_node=node1,
+                                                out_node=node2,
                                                 innovation_type=InnovationType.NEW_NODE,
                                                 recurrence=False)
         
@@ -780,8 +812,8 @@ class TestInnovTable:
         assert InnovTable.get_innovation_number() == initial_innov_num
         
         # New link
-        innovation = InnovTable._create_innovation(node_in=node1,
-                                                    node_out=node2,
+        innovation = InnovTable._create_innovation(in_node=node1,
+                                                    out_node=node2,
                                                     innovation_type=InnovationType.NEW_LINK)
         
         assert InnovTable.get_innovation_number() == current_innovation + 1
@@ -797,8 +829,8 @@ class TestInnovTable:
         
         # New node
         current_innovation = InnovTable.get_innovation_number()
-        innovation = InnovTable._create_innovation(node_in=node1,
-                                                    node_out=node2,
+        innovation = InnovTable._create_innovation(in_node=node1,
+                                                    out_node=node2,
                                                     innovation_type=InnovationType.NEW_NODE,
                                                     old_innovation_number=7)
         

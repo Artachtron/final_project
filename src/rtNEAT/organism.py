@@ -11,26 +11,24 @@ class Organism:
     def __init__(self,
                  genome: Genome,
                  generation: int=0):
-        self.genome: Genome = genome # The Organism's genotype 
+        
+        self.genotype: Genome = genome # The Organism's genotype 
         self.network: Network = genome.phenotype
                 
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from
         
-        if generation == 0 and self.genome.nodes is None:
+        if generation == 0 and self.genotype.nodes is None:
             self._initial_generation_organism()
  
     def update_phenotype(self) -> Organism:
-        self.network = self.genome.genesis(network_id=self.genome.id)
+        self.network = self.genotype.genesis(network_id=self.genotype.id)
         
     def _initial_generation_organism(self):
-        # Initialize bias
-        bias =[]
-        bias.append(Node(node_id=InnovTable.get_node_number(),
-                        node_place=NodePlace.BIAS))
-        
-        InnovTable.increment_node()
-        
+        """ Initialize a network based on configuration.
+            Create the input nodes, output nodes and
+            genes connecting each input to each output 
+        """        
         # Initialize inputs
         inputs = []
         for _ in range(Config.num_inputs):
@@ -38,6 +36,13 @@ class Organism:
                                 node_place=NodePlace.INPUT))
                 
             InnovTable.increment_node()                    
+        
+         # Initialize bias
+        bias =[]
+        bias.append(Node(node_id=InnovTable.get_node_number(),
+                        node_place=NodePlace.BIAS))
+        
+        InnovTable.increment_node()
         
         # Initialize outputs    
         outputs = []  
@@ -47,7 +52,7 @@ class Organism:
             
             InnovTable.increment_node() 
         else:
-            self.genome.nodes = {node.id: node for node in bias + inputs + outputs}
+            self.genotype.nodes = {node.id: node for node in bias + inputs + outputs}
         
         genes = []
         for node1 in inputs + bias:
@@ -58,11 +63,11 @@ class Organism:
 
                 InnovTable.increment_innov()
         else:
-            self.genome.genes = np.array(genes)
+            self.genotype.genes = np.array(genes)
         
-        Network.create_network( genome=self.genome,
-                                inputs=bias+inputs,
-                                outputs=outputs,
-                                all_nodes=bias+inputs+outputs)
+        Network.create_network( genome=self.genotype,
+                                inputs=np.array(inputs+bias),
+                                outputs=np.array(outputs),
+                                all_nodes=np.array(inputs+bias+outputs))
                    
      

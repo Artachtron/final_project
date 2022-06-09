@@ -12,9 +12,8 @@ class Gene:
                  mutation_number: int=0,
                  recurrence: bool=False):
         
-        if weight is None:
-            weight = uniform(-1,1)
-        
+        weight = weight or uniform(-1,1)
+              
         self.link = Link(   weight=weight,
                             in_node=in_node,
                             out_node=out_node,

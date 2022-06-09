@@ -22,6 +22,7 @@ class Genome:
         if genes is not None:
             self.size = len(genes)
         self.phenotype = None          # Node network associated with the genome
+         
             
     def mutate(self) -> None:
         """ Mutate the genome
@@ -389,15 +390,15 @@ class Genome:
         in_node = current_link.in_node
         out_node = current_link.out_node
         
-        new_link = Link(weight=current_link.weight,
+        """ new_link = Link(weight=current_link.weight,
                         in_node=in_node,
                         out_node=out_node,
-                        recurrence=current_link.is_recurrent)
+                        recurrence=current_link.is_recurrent) """
+                        
+        out_node.incoming.append(current_link)
+        in_node.outgoing.append(current_link)
         
-        out_node.incoming.append(new_link)
-        in_node.outgoing.append(new_link)
-        
-        return new_link
+        return current_link
            
     def genesis(self):
         """ Generate a network phenotype from this Genome with specified id
@@ -541,8 +542,8 @@ class Genome:
 
         recurrence = the_link.is_recurrent
         
-        the_innovation = InnovTable.get_innovation( node_in=in_node,
-                                                    node_out=out_node,
+        the_innovation = InnovTable.get_innovation( in_node=in_node,
+                                                    out_node=out_node,
                                                     innovation_type=InnovationType.NEW_NODE,
                                                     recurrence=recurrence,
                                                     old_innovation_number=the_gene.innovation_number)
@@ -641,26 +642,26 @@ class Genome:
                 
         return found
 
-    def _new_link_gene(self, recurrence: bool, node_in: Node, node_out: Node) -> Gene:
+    def _new_link_gene(self, recurrence: bool, in_node: Node, out_node: Node) -> Gene:
         """ Create a new gene representing a link between two nodes, and return this gene
 
         Args:
             recurrence (bool):  recurrence flag
-            node_in (Node):     incoming node
-            node_out (Node):    outgoing node
+            in_node (Node):     incoming node
+            out_node (Node):    outgoing node
 
         Returns:
             Gene: the newly created gene
         """        
         
-        the_innovation = InnovTable.get_innovation(node_in=node_in,
-                                                    node_out=node_out,
+        the_innovation = InnovTable.get_innovation( in_node=in_node,
+                                                    out_node=out_node,
                                                     innovation_type=InnovationType.NEW_LINK,
                                                     recurrence=recurrence)
             
         new_gene = Gene(weight=the_innovation.weight,
-                        in_node=node_in,
-                        out_node=node_out,
+                        in_node=in_node,
+                        out_node=out_node,
                         recurrence=recurrence,
                         innovation_number=the_innovation.innovation_number1,
                         mutation_number=0)
@@ -712,8 +713,8 @@ class Genome:
         # Continue only if an open link was found
         if found:
             new_gene = self._new_link_gene(recurrence=recurrence,
-                                           node_in=node1,
-                                           node_out=node2)
+                                           in_node=node1,
+                                           out_node=node2)
             self.add_gene(new_gene)
             return True
                                        
@@ -727,33 +728,7 @@ class Genome:
             List[Link]: the list of links connecting to the node
         """        
         return [gene.link for gene in self.genes if gene.link.in_node.id == node_id]
-    
-       
-    def predict(self, inputs):
-        if len(inputs) != Config.num_inputs:
-            raise ValueError
-
-        input_index: int  = 0 # Keep track of the number of inputs crossed
-        outputs = []
-        
-        for node in self.nodes:
-            match node.node_place:
-                case NodePlace.INPUT:
-                    node.output_value = inputs[input_index]
-                    node.activation_phase = self.phenotype.activation_phase
-                    input_index += 1
-                    
-                case NodePlace.BIAS:
-                    node.output_value = 1
-                    node.activation_phase = self.phenotype.activation_phase
-                    
-                case NodePlace.OUTPUT:
-                    output_value = node._get_activation()
-                    outputs.append(output_value)
-                    
-        self.phenotype.activation_phase += 1                   
-        return outputs
-                           
+                               
     
     """ def mutate_add_sensor(self, innovations: List, current_innovation: int):
         

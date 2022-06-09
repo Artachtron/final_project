@@ -71,7 +71,7 @@ class Node:
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
-                    values += link.node_in.get_activation() 
+                    values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
             
             self.output_value = Config.activation_function(
                                     Config.aggregation_func(values))
