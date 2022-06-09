@@ -27,7 +27,7 @@ class TestNode:
                            
                            node_place=NodePlace.OUTPUT)
       
-        assert set(['id', 'node_place', 'val', 'ftype', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
+        assert set(['id', 'node_place', 'output_value', 'activation_phase', 'ftype', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
         
         assert sensor_node.id == 0
         assert sensor_node.node_place == NodePlace.INPUT
