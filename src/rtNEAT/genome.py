@@ -399,14 +399,9 @@ class Genome:
         
         return new_link
            
-    def genesis(self, network_id: int) -> Network:
+    def genesis(self):
         """ Generate a network phenotype from this Genome with specified id
-
-        Args:
-            id (int): id of the network
-            
-        Returns:
-            Network: the network created as phenotype """
+        """
                  
         inputs: List[Node] = []
         outputs: List[Node] = []
@@ -424,26 +419,12 @@ class Genome:
             
             # Keep track of all nodes, not just input and output    
             all_nodes.append(current_node)
-        
-        # Create the links by iterating through the genes
-        for current_gene in self.genes:
-            # Only create the link if the gene is enabled
-            if current_gene.enabled:
-                # Create the new link               
-                self._create_new_link(gene=current_gene)
-         
-                                                
-        # Create the new network        
-        new_network = Network(inputs=inputs,
-                              outputs=outputs,
-                              all_nodes=all_nodes,
-                              network_id=network_id)
-            
-        # Attach genotype and phenotype together
-        new_network.genotype = self
-        self.phenotype = new_network
-                
-        return new_network
+                            
+        Network.create_network( genome=self,
+                                inputs=inputs,
+                                outputs=outputs,
+                                all_nodes=all_nodes)
+                   
     
     def _mutate_link_weights(self) -> None:
         """Simplified mutate link weight method

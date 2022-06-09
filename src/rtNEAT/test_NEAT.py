@@ -157,9 +157,13 @@ class TestGenome:
         
         for i in range(1,n_inputs):
             assert genome.nodes[i].node_place == NodePlace.INPUT
+            assert len(genome.nodes[i].incoming) == 0
+            assert len(genome.nodes[i].outgoing) == n_outputs
         
         for i in range(n_outputs, n_total):
             assert genome.nodes[i].node_place == NodePlace.OUTPUT
+            assert len(genome.nodes[i].incoming) == n_inputs + 1
+            assert len(genome.nodes[i].outgoing) == 0
             
         assert len(genome.nodes) == n_total
         assert InnovTable.get_node_number() == n_total
@@ -431,7 +435,7 @@ class TestGenome:
             assert self.genome1.get_last_gene_innovation_number() == 2+1
          
         def test_create_new_link(self):
-            self.genome1.genesis(network_id=0)
+            self.genome1.genesis()
             gene = self.genome1.genes[0]
             
             in_node = gene.link.in_node
@@ -457,10 +461,9 @@ class TestGenome:
             assert len(in_node.outgoing) == 2
             
         def test_genesis(self):        
-            network = self.genome1.genesis(network_id=self.genome1.id) 
-            assert self.genome1.phenotype == network
-            assert network.genotype == self.genome1
-            
+            self.genome1.genesis() 
+            assert self.genome1.phenotype.genotype == self.genome1
+                 
             node1, node2, node3, node4, node5, node6 = self.nodes
             assert len(node1.incoming) == 0
             assert len(node2.incoming) == 1
@@ -651,10 +654,21 @@ class TestGenome:
             assert success
             assert self.genome1.genes.size == genes_size + 1
             
+    class PredictOutput:   
+        @pytest.fixture(autouse=True)
+        def setup(self):
+            Config.num_inputs = 2
+            Config.num_outputs = 3
+            self.genome = Genome(genome_id=0)
+            
+            
         def test_predict_callable_functions(self):
             values = [1,2,3,4,5]
             Config.aggregation_func(values) == sum(values)
             Config.activation_function(Config.aggregation_func(values)) == neat.sigmoid(sum(values))
+            
+        def test_predict(self):
+            self.genom
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)

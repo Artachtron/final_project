@@ -59,15 +59,10 @@ class Organism:
                 InnovTable.increment_innov()
         else:
             self.genome.genes = np.array(genes)
-            
-        # Create the new network        
-        new_network = Network(inputs=bias+inputs,
-                              outputs=outputs,
-                              all_nodes=bias+inputs+outputs,
-                              network_id=self.genome.id)
         
-         # Attach genotype and phenotype together
-        new_network.genotype = self
-        self.phenotype = new_network
-        
-        return new_network       
+        Network.create_network( genome=self.genome,
+                                inputs=bias+inputs,
+                                outputs=outputs,
+                                all_nodes=bias+inputs+outputs)
+                   
+     

@@ -1,5 +1,11 @@
+from __future__ import annotations
 import numpy as np
 from node import Node
+from typing import List
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from genome import Genome
+
 
 class Network:
     def __init__(self,
@@ -18,6 +24,30 @@ class Network:
         self.id = network_id # Allow for a network id
         self.adaptable = adaptable # Tells whether network can adapt or not
         
+    
+    def create_network(genome: Genome,
+                       inputs: List[Node],
+                       outputs: List[Node],
+                       all_nodes: List[Node]) -> Network:
+        
+        for current_gene in genome.genes:
+            # Only create the link if the gene is enabled
+            if current_gene.enabled:
+                # Create the new link               
+                genome._create_new_link(gene=current_gene)
+           
+        # Create the new network        
+        new_network = Network(inputs=inputs,
+                              outputs=outputs,
+                              all_nodes=all_nodes,
+                              network_id=genome.id)
+        
+         # Attach genotype and phenotype together
+        new_network.genotype = genome
+        genome.phenotype = new_network
+        
+        return new_network  
+    
     def flush(self):
         """Puts the network back into an initial state
         """        
