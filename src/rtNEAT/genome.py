@@ -401,6 +401,7 @@ class Genome:
                  
         inputs: List[Node] = []
         outputs: List[Node] = []
+        hidden: List[Node] = []
         all_nodes: List[Node] = []
                 
         for current_node in self.nodes.values():         
@@ -412,6 +413,8 @@ class Genome:
                     outputs.append(current_node)
                 case NodePlace.BIAS:
                     inputs.append(current_node)
+                case NodePlace.HIDDEN:
+                    hidden.append(current_node)
             
             # Keep track of all nodes, not just input and output    
             all_nodes.append(current_node)
@@ -419,6 +422,7 @@ class Genome:
         Network.create_network( genome=self,
                                 inputs=inputs,
                                 outputs=outputs,
+                                hidden=hidden,
                                 all_nodes=all_nodes)
                    
     
@@ -574,46 +578,31 @@ class Genome:
         self.add_gene(gene=new_gene2)
         self.nodes = Genome.insert_node(self.nodes, new_node)
         return True  
-          
-    def _find_first_non_sensor(self) -> Tuple[Node, int]:
-        """Find the first non-sensor so that the to-node won't look at sensors as possible destinations
-
-        Returns:
-            Tuple[Node, int]:   Node:   the first non-sensor found
-                                int:    the index
-        """                 
-        """ for index, node in enumerate(self.nodes.values()):
-            if not node.is_sensor():
-                return index """
-                
-        return max([node.id for node in self.phenotype.inputs])+1
                     
-    def _select_nodes_for_link(self,recurrence: bool, first_non_sensor: int) -> Tuple[Node,Node]:
+    def _select_nodes_for_link(self,recurrence: bool) -> Tuple[Node,Node]:
         """ Select 2 random nodes to link together
 
         Args:
             loop_recurrence (bool): is a recurrent loop
-            first_non_sensor (int): first index of non-sensor node
 
         Returns:
             Tuple[Node,Node]:   Node: the in_node of the link
                                 Node: the out_node of the link
         """ 
-        nodes_size = len(self.nodes)
+        inputs = self.phenotype.inputs
+        neurons = self.phenotype.hidden + self.phenotype.outputs
         if recurrence:
             loop_recurrence: bool  = choice([0,1])     
             if loop_recurrence:
-                node_number1 = randint(first_non_sensor, nodes_size)
-                node_number2 = node_number1
+                node1 = choice(neurons)
+                node2 = node1
             else:
-                node_number1 = randint(0, nodes_size)
-                node_number2 = randint(first_non_sensor, nodes_size)
-                
-            node1 = self.nodes[node_number1]
-            node2 = self.nodes[node_number2]
+                node1 = choice(inputs+neurons)
+                node2 = choice(neurons)
+
         else:
-            node1 = self.nodes[randint(0,nodes_size)]
-            node2 = self.nodes[randint(first_non_sensor,nodes_size)]
+            node1 = choice(inputs+neurons)
+            node2 = choice(neurons)
         
         return node1, node2
     
@@ -676,14 +665,10 @@ class Genome:
                                         Node: the first node of the link
                                         Node: the second node of the link
         """        
-
-        # Find the first non-sensor so that the to-node won't look at sensors as possible destinations
-        first_non_sensor = self._find_first_non_sensor()
         
         for _ in range(tries + 1):
             # Select two nodes at random
-            node1, node2 = self._select_nodes_for_link( recurrence=recurrence,
-                                                        first_non_sensor=first_non_sensor)
+            node1, node2 = self._select_nodes_for_link( recurrence=recurrence)
             # Search for open link between the two nodes
             found: bool = not self._link_already_exists(node1=node1,
                                                         node2=node2,

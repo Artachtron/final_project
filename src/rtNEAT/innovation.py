@@ -75,8 +75,8 @@ class InnovTable:
         """ Reset the values of the innovation table
         """        
         InnovTable.history = []
-        InnovTable.next_innovation_number = 0
-        InnovTable.next_node_number = 0
+        InnovTable.next_innovation_number = 1
+        InnovTable.next_node_number = 1
     
     @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,

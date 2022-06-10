@@ -14,10 +14,12 @@ class Network:
                  outputs: np.array,
                  all_nodes: np.array,
                  network_id: int,
+                 hidden: np.array= np.array([]),
                  adaptable: bool=False):
         
         self.inputs: np.array = inputs # Nodes that input into the network
         self.outputs: np.array = outputs # Values output by the network
+        self.hidden: np.array = hidden #
         self.all_nodes: np.array = all_nodes # A list of all the nodes
         
         self.activation_phase: int = 0
@@ -30,7 +32,8 @@ class Network:
     def create_network(genome: Genome,
                        inputs: List[Node],
                        outputs: List[Node],
-                       all_nodes: List[Node]) -> Network:
+                       all_nodes: List[Node],
+                       hidden: List[Node]=[]) -> Network:
         
         for current_gene in genome.genes:
             # Only create the link if the gene is enabled
@@ -42,6 +45,7 @@ class Network:
         new_network = Network(inputs=inputs,
                               outputs=outputs,
                               all_nodes=all_nodes,
+                              hidden=hidden,
                               network_id=genome.id)
         
          # Attach genotype and phenotype together
