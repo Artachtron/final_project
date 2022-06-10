@@ -46,8 +46,8 @@ class SubGrid:
         x1, x2, y1, y2 = (initial_pos[0] - radius, initial_pos[0] + radius+1,
                           initial_pos[1] - radius, initial_pos[1] + radius+1)
         
-        width, height = self.dimensions
-        array = np.full(fill_value=-1, shape=(x2-x1, y2-y1, 3))
+        width, height, depth = self.dimensions
+        padded_subregion = np.full(fill_value=-1, shape=(x2-x1, y2-y1, depth))
         left_pad = right_pad = up_pad = down_pad = 0
         
         if x1 < 0:
@@ -69,7 +69,9 @@ class SubGrid:
         
         for x in range(x_shape):
             for y in range(y_shape):
-                array[x+left_pad, y+up_pad] = subregion[x-right_pad,y-down_pad,:]
+                padded_subregion[x+left_pad, y+up_pad] = subregion[x-right_pad,y-down_pad,:]
+                
+        return padded_subregion
             
 class Grid:
     def __init__(self, height: int, width: int, block_size: int=20):

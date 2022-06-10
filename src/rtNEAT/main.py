@@ -24,7 +24,7 @@ def create_a_genome():
     pass
 
 def main():
-    internal_properties = 3
+    internal_properties = 4
     see_entities = 8
     see_energies = 9
     see_cells = 25 * 3

@@ -676,8 +676,8 @@ class Animal(Entity):
         see_colors = self.grid.color_grid.get_sub_region(initial_pos=self.position,
                                                          radius=2).flatten()
         
-        inputs = [age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors
-        pass
+        inputs = [age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors.tolist()
+       
                                                                    
         #Outputs
         
