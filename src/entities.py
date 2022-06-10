@@ -1,20 +1,24 @@
 from __future__ import annotations
-from types import NoneType
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from grid import Grid, SubGrid
+    
+from config import WorldTable    
 import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
 from typing import Tuple, Set, Final
+from types import NoneType
 import enum
 import random
 from energies import EnergyType, Energy
 import numpy as np
 import sys, os
 from itertools import combinations
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'rtNEAT')))
-from rtNEAT.organism import Organism
-from rtNEAT.genome import Genome
 
-
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rtNEAT')))
+from project.src.rtNEAT.organism import Organism
+from project.src.rtNEAT.genome import Genome
 
 assets_path = join(
     Path(
@@ -105,8 +109,9 @@ class Entity(EntitySprite):
     
     def __init__(self,
                  image_filename: str,
-                 grid,
+                 grid: Grid,
                  position: Tuple[int, int],
+                 entitiy_id: int = None,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -121,6 +126,9 @@ class Entity(EntitySprite):
                                      blue_energy=blue_energy,
                                      red_energy=red_energy)
 
+        self.id = entitiy_id or WorldTable.get_next_entity_id(increment=True)
+        self.organism = self._create_organism() 
+               
         self._age: int = 0
         self._max_age: int = max_age if max_age else size * Entity.MAX_AGE_SIZE_COEFFICIENT
         self._adult_size: int = adult_size
@@ -131,7 +139,17 @@ class Entity(EntitySprite):
         
         
         self._action_cost: int = action_cost if self.is_adult else action_cost
-
+        
+        
+    def _create_organism(self):
+        organism = Organism(organism_id=self.id,
+                        genome=Genome(genome_id=self.id),
+                        generation = 0,
+                        entity=self)
+        
+        return organism
+        
+    
     def _reached_adulthood(self) -> None:
         """Check if the entity reached maturity size and assign the result in the is_adult instance variable
         """
@@ -142,9 +160,9 @@ class Entity(EntitySprite):
         """Drop some energy on a cell
 
         Args:
-            energy_type (EnergyType): the type of energy (blue/red) to drop
-            quantity (int): the amount of energy to drop
-            cell_coordinates (Tuple[int,int]): the coordinates of the cell on which to drop energy
+            energy_type (EnergyType):           type of energy (blue/red) to drop
+            quantity (int):                      amount of energy to drop
+            cell_coordinates (Tuple[int,int]):  coordinates of the cell on which to drop energy
         """
         if self._check_coordinates(
                 cell_coordinates=cell_coordinates,
@@ -183,8 +201,8 @@ class Entity(EntitySprite):
         """Gain energy from specified type to energies stock
 
         Args:
-            energy_type (EnergyType): the type of energy to gain
-            quantity (int): amount of energy to gain
+            energy_type (EnergyType):   type of energy to gain
+            quantity (int):             amount of energy to gain
         """
         self._energies_stock[energy_type.value] += quantity
 
@@ -197,8 +215,8 @@ class Entity(EntitySprite):
         """Loose energy of specified type from energies stock
 
         Args:
-            energy_type (EnergyType): the type of energy to loose
-            quantity (int): amount of energy to loose
+            energy_type (EnergyType):   type of energy to loose
+            quantity (int):             amount of energy to loose
         """
         energy_amount = self._energies_stock[energy_type.value]
         if energy_amount - quantity > 0:
@@ -216,8 +234,8 @@ class Entity(EntitySprite):
         """Check if the entity has enough energy to perform an action, use the energy if it's the case
 
         Args:
-            energy_type (EnergyType): the type of energy to loose
-            quantity (int): amount of energy to loose
+            energy_type (EnergyType):   type of energy to loose
+            quantity (int):             amount of energy to loose
 
         Returns:
             bool: if the entity had enough energy
@@ -321,19 +339,7 @@ class Entity(EntitySprite):
         Returns:
             Set[Tuple[int,int]]: set of found cells' coordinates
         """
-        """ position = self.position
-        cells = set()
-        for x in range(-radius, radius + 1):
-            for y in range(-radius, radius + 1):
-                coordinate = tuple(np.add(position, (x, y)))
-                if issubclass(
-                    type(
-                        subgrid.get_cell_value(
-                            cell_coordinates=coordinate)),
-                        value):
-                    cells.add(coordinate)
-
-        return cells """
+      
         pos = self.position
         a = list(range(-radius, radius+1))
         b = combinations(a*2, 2)
@@ -400,8 +406,8 @@ class Entity(EntitySprite):
         """Find the cells at proximity on which trees are located
 
         Args:
-            include_self (bool, optional): include self in the list. Defaults to False.
-            radius (int, optional): radius of search. Defaults to 1.
+            include_self (bool, optional):  include self in the list. Defaults to False.
+            radius (int, optional):         radius of search. Defaults to 1.
 
         Returns:
             Set[Tuple[int,int]]: set of found trees' cells' coordinates
@@ -461,11 +467,11 @@ class Entity(EntitySprite):
         return energies
 
     def _find_free_cells(
-            self, subgrid, radius: int = 1) -> Set[Tuple[int, int]]:
+            self, subgrid: SubGrid, radius: int = 1) -> Set[Tuple[int, int]]:
         """Find a free cell in range
 
         Args:
-            subgrid (_type_): subgrid to look for free cells
+            subgrid (SubGrid):      subgrid to look for free cells
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
@@ -474,11 +480,11 @@ class Entity(EntitySprite):
         return self._find_cells_coordinate_by_value(
             subgrid=subgrid, value=NoneType, radius=radius)
 
-    def _select_free_cell(self, subgrid, radius: int = 1) -> Tuple[int, int]:
+    def _select_free_cell(self, subgrid: SubGrid, radius: int = 1) -> Tuple[int, int]:
         """Select randomly from the free cells available
 
         Args:
-            subgrid (_type_): subgrid to look for free cell
+            subgrid (_type_):       subgrid to look for free cell
             radius (int, optional): radius of search. Defaults to 1.
 
         Returns:
@@ -530,7 +536,7 @@ class Animal(Entity):
             *args,
             **kwargs)
         self.seed_pocket: Seed = None
-        self.organism = Organism(Genome(genome_id=0))
+     
 
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
@@ -663,24 +669,33 @@ class Animal(Entity):
         self._perform_action()
 
     def test_update(self):
-        self.rtNEAT_update()
-    def rtNEAT_update(self) -> None:
-        #Inputs
+        self.activate_mind()
+        
+    def activate_mind(self) -> None:
+        inputs = self.normalized_inputs()
+        mind = self.organism.mind
+        outputs = mind.activate(input_values=inputs)
+ 
+        self.interpret_outputs(outputs=outputs)                                                       
+        #Outputs
+        
+    def normalize_inputs(self ,inputs):
+         #Inputs
         ## Internal properties
-        age = self._age
-        size = self.size
-        blue_energy, red_energy = self.energies_stock.values()
+        age = self._age/100
+        size = self.size/100
+        blue_energy, red_energy = (energy/100 for energy in self.energies_stock.values())
         ## Perceptions
         see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
         see_energies = [int(x) for x in self._find_occupied_cells_by_energies()]
         see_colors = self.grid.color_grid.get_sub_region(initial_pos=self.position,
-                                                         radius=2).flatten()
+                                                         radius=2).flatten()/255
+        see_colors = see_colors.tolist()
         
-        inputs = [age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors.tolist()
-       
-                                                                   
-        #Outputs
-        
+        return np.array([age, size, blue_energy/100, red_energy/100] + see_entities + see_energies + see_colors)
+    
+    def interpret_outputs(self, outputs: np.array):
+        pass
     
     def random_update(self) -> None:
         """Test behaviour by doing random actions"""

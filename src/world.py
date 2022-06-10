@@ -1,9 +1,12 @@
 import pygame as pg
-import sys
+import sys, os
 from grid import Grid
 
 import numpy as np
 from typing import Tuple, Final
+
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rtNEAT')))
+from project.src.rtNEAT.neat import Config
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -22,6 +25,8 @@ INITIAL_TREE_POPULATION: Final[int] = 2
 
              
 def main():
+    configure()
+    
     global tick_counter
     tick_counter = 0
     
@@ -42,6 +47,25 @@ def main():
         tick_counter += 1
         if tick_counter == SIMULATION_SPEED:
             tick_counter = 0
+
+def configure():
+    internal_properties = 4
+    see_entities = 8
+    see_energies = 9
+    see_cells = 25 * 3
+    n_inputs = internal_properties + see_entities + see_energies + see_cells
+    
+    move = 2
+    modify_cell_color = 3
+    drop_energy = 2
+    other_actions = 5
+    n_outputs = move + modify_cell_color + drop_energy + other_actions
+    
+    Config.configure(num_inputs=n_inputs,
+                              num_outputs=n_outputs)
+    """ Config.num_inputs = n_inputs
+    Config.num_outputs = n_outputs """
+    print(Config.num_inputs, Config.num_outputs)
             
 def init_grid():
     global grid
@@ -87,7 +111,8 @@ def create_new_animal() -> None:
     while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
         x, y = get_random_coordinates()
     
-    grid.create_entity(entity_type="animal", position=(x,y), blue_energy=100)
+    animal = grid.create_entity(entity_type="animal", position=(x,y), blue_energy=100)
+    
        
 def get_random_coordinates() -> Tuple[int,int]:
     """Get random coordinates of a point on a grid

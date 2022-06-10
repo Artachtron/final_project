@@ -1,10 +1,14 @@
 from __future__ import annotations
-import numpy as np
-from node import Node, NodePlace
-from typing import List
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from genome import Genome
+    
+from typing import List
+
+import numpy as np
+from node import Node, NodePlace
+
+
 
 
 class Network:

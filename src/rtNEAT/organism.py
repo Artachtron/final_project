@@ -2,21 +2,24 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from entities import Entity
+    
 from genome import Genome
 from network import Network
 from innovation import InnovTable
 from node import Node, NodePlace
 from gene import Gene
-from neat import Config
+from .neat import Config
 import numpy as np
 
 
 class Organism:
     def __init__(self,
                  genome: Genome,
+                 organism_id: int = 0,
                  entity: Entity=None,
                  generation: int=0):
         
+        self.id = organism_id
         self.genotype: Genome = genome # The Organism's genotype 
         self.mind: Network = genome.phenotype
         self.body: Entity = entity
@@ -65,9 +68,9 @@ class Organism:
         else:
             self.genotype.genes = np.array(genes)
         
-        Network.create_network( genome=self.genotype,
-                                inputs=np.array(inputs+bias),
-                                outputs=np.array(outputs),
-                                all_nodes=np.array(inputs+bias+outputs))
+        self.mind = Network.create_network( genome=self.genotype,
+                                            inputs=np.array(inputs+bias),
+                                            outputs=np.array(outputs),
+                                            all_nodes=np.array(inputs+bias+outputs))
                    
      

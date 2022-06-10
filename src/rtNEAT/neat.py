@@ -34,34 +34,70 @@ def relu(x):
     return max(0, x)
     
 class Config:
-    # Network structures
-    num_inputs: int = 5
-    num_outputs: int = 12
+    @staticmethod
+    def set_inputs_outputs(num_inputs, num_outputs):
+        Config.num_inputs = num_inputs
+        Config.num_outputs = num_outputs
     
-    # Mutations
-    ## link weight mutation
-    weight_mutate_power: float = 0.5
-    weight_mutate_prob: float = 0.1
-    new_link_prob: float = 0.1
-    ## add link mutation
-    add_link_prob: float = 0.05
-    add_link_tries: int = 20
-    recurrence_only_prob: float = 0
-    # add node mutation
-    add_node_prob: float = 0.02
+    def configure(
+        # Network structures
+        num_inputs: int = 0,
+        num_outputs: int = 0,
     
-    # Mating
-    mate_multipoint_prob: float = 0
+        # Mutations
+        weight_mutate_power: float = 0.5,
+        weight_mutate_prob: float = 0.1,
+        new_link_prob: float = 0.1,
+        ## add link mutation
+        add_link_prob: float = 0.05,
+        add_link_tries: int = 20,
+        recurrence_only_prob: float = 0,
+        # add node mutation
+        add_node_prob: float = 0.02,
+        
+        # Mating
+        mate_multipoint_prob: float = 0,
+        
+        # Compatibility
+        disjoint_coeff: float = 1.0,
+        excess_coeff: float = 1.0,
+        mutation_difference_coeff: float = 0.5,
+        compatibility_threshod: float = 3.0,
+        
+        # Predictions
+        activation_function: Callable[[float], float] = sigmoid,
+        aggregation_func: Callable[[List[float]], float] = sum   
+    ):
+        # Network structures
+        Config.num_inputs: int = num_inputs
+        Config.num_outputs: int = num_outputs
+        
+        # Mutations
+        ## link weight mutation
+        Config.weight_mutate_power: float  = weight_mutate_power
+        Config.weight_mutate_prob: float  = weight_mutate_prob
+        Config.new_link_prob: float = new_link_prob
+        ## add link mutation
+        Config.add_link_prob: float = add_link_prob
+        Config.add_link_tries: int = add_link_tries
+        Config.recurrence_only_prob: float = recurrence_only_prob
+        # add node mutation
+        Config.add_node_prob: float = add_node_prob
+        
+        # Mating
+        Config.mate_multipoint_prob: float = mate_multipoint_prob
+        
+        # Compatibility
+        Config.disjoint_coeff: float = disjoint_coeff
+        Config.excess_coeff: float = excess_coeff
+        Config.mutation_difference_coeff: float = mutation_difference_coeff
+        Config.compatibility_threshod: float = compatibility_threshod
+        
+        # Predictions
+        Config.activation_function: Callable[[float], float] = activation_function
+        Config.aggregation_func: Callable[[List[float]], float] = aggregation_func
     
-    # Compatibility
-    disjoint_coeff: float = 1.0
-    excess_coeff: float = 1.0
-    mutation_difference_coeff: float = 0.5
-    compatibility_threshod: float = 3.0
     
-    # Predictions
-    activation_function: Callable[[float], float] = sigmoid
-    aggregation_func: Callable[[List[float]], float] = sum
     
 
 class NEAT:
