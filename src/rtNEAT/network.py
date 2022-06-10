@@ -67,7 +67,7 @@ class Network:
             np.array: activated values coming out of outputs nodes
         """        
         # Compare the size of input values given to the network's inputs (minus bias)
-        if len(input_values) != self.inputs.size - 1:
+        if input_values.size != len(self.inputs) - 1:
             raise ValueError
         
         # increment the activation_phase            

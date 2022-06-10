@@ -169,7 +169,6 @@ class TestGenome:
         
         assert InnovTable.get_innovation_number() == (n_inputs + 1) * n_outputs + 1
         
-       
     def test_genome_fields(self):
         genome = Genome(genome_id=0, nodes=self.nodes, genes=self.genes)
         assert set(['id', 'genes', 'nodes']).issubset(vars(genome))
@@ -727,14 +726,75 @@ class TestNetwork:
         #    /
         #   O
         #
- 
         
-        input1 = Node(node_place=NodePlace.INPUT)
-        
-        input2 = Node(node_place=NodePlace.INPUT)
-        
-        hidden = Node(node_place=NodePlace.HIDDEN)
+        for _ in range(100):
+            weights = np.random.uniform(-1,1,3)
+            input1 = Node(node_place=NodePlace.INPUT)
+            input2 = Node(node_place=NodePlace.INPUT)
+            bias = Node(node_place=NodePlace.BIAS)
+            hidden = Node(node_place=NodePlace.HIDDEN)
+            output = Node(node_place=NodePlace.OUTPUT)
+            gene1 = Gene(in_node=input1, out_node=hidden, weight=weights[0])
+            gene2 = Gene(in_node=input2, out_node=hidden, weight=weights[1])
+            gene3 = Gene(in_node=hidden, out_node=output, weight=weights[2])
             
+            nodes =  [input1, input2, bias, hidden, output]
+            nodes_dict = {node.id: node for node in nodes}
+            genes = [gene1, gene2, gene3]
+            
+            genome = Genome(genome_id=1,
+                            nodes=nodes_dict,
+                            genes=genes)
+            
+            genome.genesis()
+            
+            network = genome.phenotype
+            inputs = np.random.uniform(-1,1,2)
+            outputs = network.activate(np.array(inputs))
+            
+            assert outputs[0] == neat.sigmoid(neat.sigmoid(inputs[0]*weights[0] + inputs[1]*weights[1])*weights[2])
+       
+    def test_activate_random_networks(self):
+        n_links = np.random.randint(25,50)
+        n_nodes = np.random.randint(10,20)
+        weights = np.random.uniform(-1,1,n_links)
+        
+        nodes = []
+        nodes.append(Node(node_place=NodePlace.BIAS))
+        n_inputs = 0
+        n_outputs = 0
+        for _ in range(n_nodes):
+            node_place = np.random.choice([NodePlace.INPUT, NodePlace.OUTPUT, NodePlace.HIDDEN])
+            if node_place == NodePlace.INPUT:
+                n_inputs += 1
+            elif node_place == NodePlace.OUTPUT:
+                n_outputs += 1
+            nodes.append(Node(node_place=node_place))
+        
+        genes = []
+        
+        for i, _ in enumerate(range((n_links))):
+            valid = False
+            while not valid:
+                in_node, out_node = np.random.choice(nodes, 2)
+                valid = (in_node.node_place != NodePlace.OUTPUT and
+                         out_node.node_place != NodePlace.INPUT)
+                
+            genes.append(Gene(in_node=in_node,
+                              out_node=out_node,
+                              weight=weights[i])) 
+            
+        nodes_dict = {node.id: node for node in nodes}
+        genome = Genome(genome_id=0,
+                        nodes=nodes_dict,
+                        genes=genes)
+        
+        genome.genesis()   
+        network = genome.phenotype
+        inputs = np.random.uniform(-1,1,n_inputs)
+        outputs = network.activate(np.array(inputs))
+        assert len(outputs) == n_outputs
+        
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)

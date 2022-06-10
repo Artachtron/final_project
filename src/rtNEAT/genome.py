@@ -402,6 +402,7 @@ class Genome:
         inputs: List[Node] = []
         outputs: List[Node] = []
         hidden: List[Node] = []
+        bias = None
         all_nodes: List[Node] = []
                 
         for current_node in self.nodes.values():         
@@ -412,13 +413,18 @@ class Genome:
                 case NodePlace.OUTPUT:
                     outputs.append(current_node)
                 case NodePlace.BIAS:
-                    inputs.append(current_node)
+                    bias = current_node
                 case NodePlace.HIDDEN:
                     hidden.append(current_node)
             
             # Keep track of all nodes, not just input and output    
             all_nodes.append(current_node)
-                            
+            
+        if bias is None:
+            raise RuntimeError("bias is missing")
+        
+        inputs.append(bias) 
+                          
         Network.create_network( genome=self,
                                 inputs=inputs,
                                 outputs=outputs,

@@ -20,6 +20,8 @@ class Organism:
         
         if generation == 0 and self.genotype.nodes is None:
             self._initial_generation_organism()
+        elif self.genotype.nodes is not None:
+            self.genotype.genesis()
  
     def update_phenotype(self) -> Organism:
         self.mind = self.genotype.genesis(mind_id=self.genotype.id)
