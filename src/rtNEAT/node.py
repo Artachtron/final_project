@@ -1,9 +1,11 @@
 from __future__ import annotations
-from neat import ActivationFuncType
+from innovation import InnovTable  
 import enum  
 from typing import List
 from link import Link
 from neat import Config
+
+
    
 class NodePlace(enum.Enum):
     HIDDEN = 0
@@ -13,21 +15,18 @@ class NodePlace(enum.Enum):
 
 class Node:
     def __init__(self,
-                  node_id: int,
+                  node_id: int = None,
                   node_place: NodePlace = NodePlace.HIDDEN,
                   ):
         
-        self.id: int = node_id
-        self.active_flag: bool = False              # To make sure outputs are active
-        self.activesum: float = 0.0                 # The incoming activity before being processed
+        self.id: int = node_id or InnovTable.get_node_number(increment=True)
         
         self.activation_phase: int = 0
         self.output_value: float = 0.0              # The total activation entering the Node
-        self.output: float = 0.0                    # Output of the Node- the value in the Node
-
+        
         self.node_place: NodePlace = node_place     # HIDDEN, INPUT, OUTPUT, BIAS
        
-        self.ftype: ActivationFuncType = ActivationFuncType.SIGMOID
+        #self.ftype: ActivationFuncType = ActivationFuncType.SIGMOID
     
         self.frozen: bool = False                   # When frozen, cannot be mutated (meaning its trait pointer is fixed)
         

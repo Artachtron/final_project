@@ -1,6 +1,7 @@
+from cgitb import reset
 import pytest
 from gene import Gene
-from node import Node, NodePlace, ActivationFuncType
+from node import Node, NodePlace
 from link import Link
 from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
@@ -11,34 +12,31 @@ from organism import Organism
 
 class TestNode:
     def test_create_node(self):
-        sensor_node = Node(node_id=0,
+        sensor_node = Node(
                            node_place=NodePlace.INPUT)
         assert sensor_node
         assert type(sensor_node) == Node
         
+        yield 
+        InnovTable.reset_innovation_table()
+        
         
         
     def test_node_fields(self):
-        sensor_node = Node(node_id=0,
-                           
-                           node_place=NodePlace.INPUT)
+        sensor_node = Node(node_place=NodePlace.INPUT)
         
-        action_node = Node(node_id=1,
-                           
-                           node_place=NodePlace.OUTPUT)
+        action_node = Node(node_place=NodePlace.OUTPUT)
       
-        assert set(['id', 'node_place', 'output_value', 'activation_phase', 'ftype', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
+        assert set(['id', 'node_place', 'output_value', 'activation_phase', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
         
         assert sensor_node.id == 0
         assert sensor_node.node_place == NodePlace.INPUT
         assert sensor_node.output_value == 0.0
-        assert sensor_node.ftype == ActivationFuncType.SIGMOID
         assert sensor_node.frozen == False
         
         assert action_node.id == 1
         assert action_node.node_place == NodePlace.OUTPUT
         assert action_node.output_value == 0.0
-        assert action_node.ftype == ActivationFuncType.SIGMOID
         assert action_node.frozen == False
 
     """ def test_add_incoming_link(self):
@@ -56,13 +54,9 @@ class TestNode:
 class TestLink:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.sensor_node = Node(node_id=0,
-                                
-                                node_place=NodePlace.INPUT)
+        self.sensor_node = Node(node_place=NodePlace.INPUT)
         
-        self.action_node = Node(node_id=1,
-                                
-                                node_place=NodePlace.OUTPUT) 
+        self.action_node = Node(node_place=NodePlace.OUTPUT) 
         
     def test_create_link(self):
         link = Link(in_node=self.sensor_node, out_node=self.action_node, weight=1.0)
@@ -85,11 +79,9 @@ class TestLink:
 class TestGene:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.sensor_node = Node(node_id=0,
-                                node_place=NodePlace.INPUT)
+        self.sensor_node = Node(node_place=NodePlace.INPUT)
         
-        self.action_node = Node(node_id=1,
-                                node_place=NodePlace.OUTPUT) 
+        self.action_node = Node(node_place=NodePlace.OUTPUT) 
         
     def test_create_gene(self):
         gene = Gene(in_node=self.sensor_node,
@@ -117,13 +109,9 @@ class TestGene:
 class TestGenome:
     @pytest.fixture(autouse=True)
     def setup(self):
-        sensor_node = Node(node_id=0,
-                                
-                                node_place=NodePlace.INPUT)
+        sensor_node = Node(node_place=NodePlace.INPUT)
             
-        action_node = Node(node_id=1,
-                                
-                                node_place=NodePlace.OUTPUT)
+        action_node = Node(node_place=NodePlace.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
                     out_node=action_node,
@@ -134,6 +122,9 @@ class TestGenome:
         self.nodes = np.array([sensor_node, action_node])
         self.genes = np.array([gene0])
         
+        yield 
+        InnovTable.reset_innovation_table()
+        
     def test_create_genome(self):
         genome = Genome(genome_id=0,
                         nodes=self.nodes,
@@ -143,6 +134,7 @@ class TestGenome:
         assert type(genome) == Genome
 
     def test_init_genome(self):
+        InnovTable.reset_innovation_table()
         n_inputs = Config.num_inputs
         n_outputs = Config.num_outputs
         n_total = n_inputs + n_outputs + 1
@@ -152,10 +144,10 @@ class TestGenome:
                  generation=0)
         
         
-        for i in range(n_total):
-            assert genome.nodes[i].id == i
+        for i, node in enumerate(genome.nodes.values()):
+            assert node.id == i
         
-        for i in range(1,n_inputs):
+        for i in range(n_inputs-1):
             assert genome.nodes[i].node_place == NodePlace.INPUT
             assert len(genome.nodes[i].incoming) == 0
             assert len(genome.nodes[i].outgoing) == n_outputs
@@ -188,11 +180,13 @@ class TestGenome:
     class TestGenomeMethods:  
         @pytest.fixture(autouse=True)
         def setup(self):
-            sensor_node = Node(node_id=0,
-                               node_place=NodePlace.INPUT)
+            sensor_node = Node(node_place=NodePlace.INPUT)
             
-            action_node = Node(node_id=1,
-                               node_place=NodePlace.OUTPUT)
+            sensor_node2 = Node(node_place=NodePlace.INPUT)
+   
+            sensor_node3 = Node(node_place=NodePlace.INPUT)
+            
+            action_node = Node(node_place=NodePlace.OUTPUT)
             
             gene0 = Gene(in_node=sensor_node,
                         out_node=action_node,
@@ -200,11 +194,7 @@ class TestGenome:
                         innovation_number=0,
                         mutation_number=0)
             
-            sensor_node2 = Node(node_id=2,
-                                node_place=NodePlace.INPUT)
-            
-            action_node2 = Node(node_id=3,
-                                    node_place=NodePlace.OUTPUT)
+            action_node2 = Node(node_place=NodePlace.OUTPUT)
             
             gene1 = Gene(in_node=sensor_node2,
                         out_node=action_node2,
@@ -212,11 +202,7 @@ class TestGenome:
                         innovation_number=1,
                         mutation_number=0)
             
-            sensor_node3 = Node(node_id=4,
-                                node_place=NodePlace.INPUT)
-            
-            action_node3 = Node(node_id=5,
-                                node_place=NodePlace.OUTPUT)
+            action_node3 = Node(node_place=NodePlace.OUTPUT)
             
             gene2 = Gene(in_node=sensor_node3,
                     out_node=action_node3,
@@ -229,8 +215,10 @@ class TestGenome:
                     weight=1.0,
                     innovation_number=2,
                     mutation_number=1)
-           
-            self.nodes = np.array([sensor_node, action_node, sensor_node2, action_node2, sensor_node3, action_node3], dtype=Node)
+
+            
+            nodes = [sensor_node, action_node, sensor_node2, action_node2, sensor_node3, action_node3]
+            self.nodes = {node.id : node for node in nodes}
             self.genes = np.array([gene0, gene1, gene2, gene3], dtype=Gene)
             
             self.genome1 = Genome(genome_id=0,
@@ -243,30 +231,44 @@ class TestGenome:
           
         def test_add_gene(self):
             assert self.genome1.genes.size == 4
+            genes_list = list(self.genome1.genes)
             self.genome1.add_gene(gene=self.genes[1])
             assert self.genome1.genes.size == 5
             
-            genes_list = list(self.genome1.genes)
+            
             genes_list.insert(2, self.genes[1])
-            assert self.genome1.genes.all() == np.array(genes_list).all()
+            assert (self.genome1.genes == np.array(genes_list)).all()
             
         def test_insert_node(self):
-            assert self.genome1.nodes.size == 6
-            node = self.genome1.nodes[3]
-            self.genome1.nodes = Genome.insert_node(nodes_list=self.genome1.nodes,
-                                                node=node)
-            assert self.genome1.nodes.size == 7
+            assert len(self.genome1.nodes) == 6
+            node = Node()
+            nodes_list = list(self.genome1.nodes.values())
+            self.genome1.nodes = Genome.insert_node(nodes_dict=self.genome1.nodes,
+                                                    node=node)
+            assert len(self.genome1.nodes) == 7
             
-            nodes_list = list(self.genome1.nodes)
-            nodes_list.insert(3, self.genome1.nodes[3])
-            assert self.genome1.nodes.all() == np.array(nodes_list).all()
+            
+            nodes_list.insert(len(self.genome1.nodes), node)
+           
+            assert list(self.genome1.nodes.values()) == nodes_list
+            
+            nodes = {}
+            ids = [12,13,14,16,17,18,19]
+            for i in ids:
+                nodes[i]= Node(node_id=i)
+                
+            new_dict = Genome.insert_node(nodes_dict=nodes,
+                                          node = Node(node_id=15))
+            
+            assert list(new_dict.keys()) == list(ids) + [15]   
 
         def test_get_input_links(self):
-            links = self.genome1._get_input_links(node_id=4)
+            self.genome1.genesis()
+            links = self.genome1._get_input_links(node_id=5)
             assert len(links) == 2
             assert links == [gene.link for gene in self.genes[2:]]
             
-            links = self.genome1._get_input_links(node_id=2)
+            links = self.genome1._get_input_links(node_id=4)
             assert len(links) == 1
             assert links == [self.genes[1].link]
 
@@ -334,30 +336,29 @@ class TestGenome:
             assert not conflict
         
         def test_check_node_existence(self):
-            new_nodes = self.nodes[:4]
+            new_nodes = self.nodes
             target_node = self.nodes[3]
+            initial_size = len(self.nodes)
             
-            assert len(new_nodes) == 4
+            assert len(new_nodes) == initial_size
             # node exists
-            new_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
-                                                                target_node=target_node)
+            new_node, new_nodes = Genome._check_new_node_existence( new_nodes=new_nodes,
+                                                                    target_node=target_node)
             assert new_node == target_node
-            assert len(new_nodes) == 4
+            assert len(new_nodes) == initial_size
             
             # node does not exist
-            target_node = self.nodes[4]
-            new_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
-                                                                target_node=target_node)
+            target_node = Node()
+            new_node, new_nodes = Genome._check_new_node_existence( new_nodes=new_nodes,
+                                                                    target_node=target_node)
             
             assert new_node.id == target_node.id
-            assert len(new_nodes) == 5
+            assert len(new_nodes) == initial_size+1
             
         def test_mate_multipoint(self):
-            sensor_node = Node(node_id=6,
-                                node_place=NodePlace.INPUT)
+            sensor_node = Node(node_place=NodePlace.INPUT)
             
-            action_node = Node(node_id=7,
-                                node_place=NodePlace.OUTPUT)
+            action_node = Node(node_place=NodePlace.OUTPUT)
             
             gene3 = Gene(in_node=sensor_node,
                     out_node=action_node,
@@ -365,6 +366,7 @@ class TestGenome:
                     innovation_number=3,
                     mutation_number=0)
             self.genes[3] = gene3
+            
             genome1 = Genome(genome_id=0,
                         nodes=self.nodes,
                         genes=self.genes[[0,1,3]])
@@ -379,8 +381,9 @@ class TestGenome:
                                                 genome_id=2)
             
             assert new_genome.id == 2
-            assert new_genome.nodes.size == 8
+            assert len(new_genome.nodes) == 8
             assert new_genome.genes.size == 3
+            
             genes = [gene.innovation_number for gene in new_genome.genes]
             
             p1_dominant = np.random.choice([0,1])
@@ -397,7 +400,7 @@ class TestGenome:
                         genes=self.genes)
             
             genome2 = Genome(genome_id=1,
-                        nodes=self.nodes[:4],
+                        nodes={node.id: node for node in self.nodes.values() if node.id < 4},
                         genes=self.genes[:2])
             
             compatibility = Genome.compatibility(genome1=genome1,
@@ -406,24 +409,24 @@ class TestGenome:
             
             # Disjoint
             genome3 = Genome(genome_id=2,
-                        nodes=self.nodes[[0,1,4,5]],
+                        nodes={node.id: node for node in self.nodes.values() if node.id in [0,1,4,5]},
                         genes=self.genes[0:3])
-            
+           
             genome4 = Genome(genome_id=3,
-                        nodes=self.nodes[2:5],
+                        nodes={node.id: node for node in self.nodes.values() if node.id in list(range(2,5))},
                         genes=self.genes[1:3])
-                    
+                  
             compatibility = Genome.compatibility(genome1=genome4,
                                                   genome2=genome3)
             assert compatibility == 1.0 * Config.disjoint_coeff
             
             # Mutation
             genome5 = Genome(genome_id=4,
-                            nodes=self.nodes[2:4],
+                            nodes={node.id: node for node in self.nodes.values() if node.id in list(range(2,4))},
                             genes=self.genes[2:3])
             
             genome6 = Genome(genome_id=5,
-                            nodes=self.nodes[4:],
+                            nodes={node.id: node for node in self.nodes.values() if node.id in list(range(4,len(self.nodes)))},
                             genes=self.genes[3:])
             
             compatibility = Genome.compatibility(genome1=genome5,
@@ -464,7 +467,7 @@ class TestGenome:
             self.genome1.genesis() 
             assert self.genome1.phenotype.genotype == self.genome1
                  
-            node1, node2, node3, node4, node5, node6 = self.nodes
+            node1, node2, node3, node4, node5, node6 = self.nodes.values()
             assert len(node1.incoming) == 0
             assert len(node2.incoming) == 1
             assert len(node3.incoming) == 0
@@ -490,8 +493,8 @@ class TestGenome:
             assert found
             
         def test_create_new_node(self):
-            in_node, out_node = self.nodes[:2]
-            node, gene1, gene2 = self.genome1._create_node(node_id=0,
+            in_node, out_node = list(self.nodes.values())[:2]
+            node, gene1, gene2 = self.genome1._create_node(node_id=3,
                                                             in_node=in_node,
                                                             out_node=out_node,
                                                             recurrence=False,
@@ -499,7 +502,7 @@ class TestGenome:
                                                             innovation_number2=1,
                                                             old_weight=0.34)
            
-            assert node.id == 0
+            assert node.id == 3
             assert node.node_place == NodePlace.HIDDEN
             assert gene1.link.in_node == in_node
             assert gene1.link.out_node == node
@@ -511,46 +514,52 @@ class TestGenome:
             assert gene2.innovation_number == 1
             
         def test_mutate_add_node(self):
+            
+            nodes = {node.id: node for node in self.nodes.values() if node.id < 2}
+
             genome1 = Genome(genome_id=1,
-                             nodes=self.nodes[:2],
+                             nodes=nodes,
                              genes=self.genes[:1])
             
-            genome2 = Genome(genome_id=1,
-                             nodes=self.nodes[:2],
-                             genes=self.genes[:1])
             
-            InnovTable.increment_node(2)
+            InnovTable.next_node_number = 3
             
             # Innovation is novel
             assert InnovTable.get_innovation_number() == 0
-            assert genome1.nodes.size == 2
+            assert len(genome1.nodes) == 2
             assert genome1.genes.size == 1
             success = genome1._mutate_add_node()
             assert genome1.genes[0].enabled == False
             assert success
             assert InnovTable.get_innovation_number() == 2
-            assert genome1.nodes.size == 3
+            assert len(genome1.nodes) == 3
             assert genome1.genes.size == 3
-            assert list(set(genome1.nodes) - set(self.nodes[:2]))[0].id == 2
-
-            # Innovation exists                     
+            nodes = {node.id: node for node in self.nodes.values() if node.id < 2}
+            assert list(set(genome1.nodes.keys()) - set(nodes.keys()))[0] == 3
+            
+            # Innovation exists
+            genome2 = Genome(genome_id=1,
+                             nodes=nodes,
+                             genes=self.genes[:1])
+                                 
             genome2.genes[0].enabled = True
             assert InnovTable.get_innovation_number() == 2
-            assert genome2.nodes.size == 2
+            assert len(genome2.nodes) == 2
             assert genome2.genes.size == 1
             success = genome2._mutate_add_node()
             assert success
             assert InnovTable.get_innovation_number() == 2
-            assert genome2.nodes.size == 3
+            assert len(genome2.nodes) == 3
             assert genome2.genes.size == 3
             
         def test_find_first_non_sensor(self):
-            self.genome1.nodes = self.nodes[[0,2,4,1,3,5]]
+            self.genome1.nodes = {node.id: node for node in self.nodes.values() if node.id in [0,2,4,1,3,5]}
+            self.genome1.genesis()
             index = self.genome1._find_first_non_sensor()
             assert index == 3
         
         def test_select_nodes_for_link(self):
-            self.genome1.nodes = self.nodes[[0,2,4,1,3,5]]
+            self.genome1.nodes = {node.id: node for node in self.nodes.values() if node.id in [0,2,4,1,3,5]}
             
             for _ in range(10):
                 # Not recurrent link
@@ -579,6 +588,7 @@ class TestGenome:
         def test_link_already_exists(self):
             node1 = self.nodes[0]
             node2 = self.nodes[1]
+            node4 = self.nodes[3]
 
             # Recurrence already exists
             found = self.genome1._link_already_exists(  node1=node1,
@@ -591,7 +601,7 @@ class TestGenome:
             
             # Non-recurrence does not exist
             found = self.genome1._link_already_exists(  node1=node1,
-                                                        node2=node2,
+                                                        node2=node4,
                                                         recurrence=False)
             assert found
             
@@ -615,7 +625,7 @@ class TestGenome:
             
         def test_new_link_gene(self):
             innovation_type = InnovationType.NEW_LINK
-            node1, node2 = self.nodes[:2]
+            node1, node2 = self.nodes[0], self.nodes[1]
             weight = 0.23
             innovation_number1 = 3
             recurrence = False
@@ -648,6 +658,7 @@ class TestGenome:
             
         def test_mutate_add_link(self):
             genes_size = self.genes.size
+            self.genome1.genesis()
             assert self.genome1.genes.size == genes_size
             success = self.genome1._mutate_add_link(tries=1)
             
@@ -664,6 +675,9 @@ class TestNetwork:
         self.organism = Organism(genome = self.genome)
         self.mind = self.genome.phenotype
         
+        yield 
+        InnovTable.reset_innovation_table()
+        
         
     def test_activate_callable_functions(self):
         values = [1,2,3,4,5]
@@ -677,6 +691,9 @@ class TestNetwork:
         weights = np.random.uniform(-1,1,dim)
         inputs = np.random.uniform(-1,1,n_inputs)
         
+        for node in self.genome.nodes.values():
+            assert node.activation_phase == 0
+        
         genes = self.genome.genes
         for weight, gene in zip(weights, genes):
             gene.link.weight = weight
@@ -686,31 +703,49 @@ class TestNetwork:
         link_count = 0
         for value, node in zip(inputs, self.mind.inputs[:-1]):
             assert node.output_value == value
+            assert node.activation_phase == 1
             for link in node.outgoing:
                 assert link.weight == weights[link_count]
                 link_count += 1
         
         link_count = 3
         for i, node in enumerate(self.mind.outputs):
+            assert node.activation_phase == 1
             for j, link in enumerate(node.incoming):
                 assert link.weight == weights[i::n_outputs][j]
         
-        assert self.mind.inputs[-1].output_value == 1
+        bias = self.mind.inputs[-1]
+        assert bias.output_value == 1
+        assert bias.activation_phase == 1
         
         inputs = list(inputs)
         for i, output_value in enumerate(outputs):
             values = [value * weight for value, weight in zip(inputs+[1], weights[i::n_outputs])]
             assert output_value == neat.sigmoid(sum(values))
             
+    def test_activate_simple_networks(self):
+        #   
+        #   O
+        #    \
+        #     O ----O
+        #    /
+        #   O
+        #
+ 
+        
+        input1 = Node(node_place=NodePlace.INPUT)
+        
+        input2 = Node(node_place=NodePlace.INPUT)
+        
+        hidden = Node(node_place=NodePlace.HIDDEN)
+            
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)
     def setup(self):
-        sensor_node = Node(node_id=0,
-                                node_place=NodePlace.INPUT)
+        sensor_node = Node(node_place=NodePlace.INPUT)
             
-        action_node = Node(node_id=1,
-                                node_place=NodePlace.OUTPUT)
+        action_node = Node(node_place=NodePlace.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
                     out_node=action_node,
@@ -831,7 +866,7 @@ class TestInnovTable:
         innovation = InnovTable._create_innovation(in_node=node1,
                                                     out_node=node2,
                                                     innovation_type=InnovationType.NEW_NODE,
-                                                    old_innovation_number=7)
+                                                    old_innovation_number=8)
         
         assert innovation.innovation_number1 == current_innovation
         assert innovation.innovation_number2 == current_innovation + 1
@@ -841,8 +876,8 @@ class TestInnovTable:
         assert innovation.node_out_id == node2.id
         assert innovation.recurrence_flag == False
         assert innovation.weight == -1
-        assert innovation.new_node_id == 5
-        assert innovation.old_innovation_number == 7
+        assert innovation.new_node_id == 7
+        assert innovation.old_innovation_number == 8
     
 """ class TestPopulation:
     @pytest.fixture(autouse=True)

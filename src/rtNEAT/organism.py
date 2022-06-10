@@ -32,27 +32,19 @@ class Organism:
         # Initialize inputs
         inputs = []
         for _ in range(Config.num_inputs):
-            inputs.append(Node(node_id=InnovTable.get_node_number(),
-                                node_place=NodePlace.INPUT))
-                
-            InnovTable.increment_node()                    
+            inputs.append(Node(node_place=NodePlace.INPUT))               
         
          # Initialize bias
         bias =[]
-        bias.append(Node(node_id=InnovTable.get_node_number(),
-                        node_place=NodePlace.BIAS))
-        
-        InnovTable.increment_node()
-        
+        bias.append(Node(node_place=NodePlace.BIAS))
+                
         # Initialize outputs    
         outputs = []  
         for _ in range(Config.num_outputs):
-            outputs.append(Node(node_id=InnovTable.get_node_number(),
-                                node_place=NodePlace.OUTPUT))
-            
-            InnovTable.increment_node() 
+            outputs.append(Node(node_place=NodePlace.OUTPUT))
+
         else:
-            self.genotype.nodes = {node.id: node for node in bias + inputs + outputs}
+            self.genotype.nodes = {node.id: node for node in inputs + bias + outputs}
         
         genes = []
         for node1 in inputs + bias:

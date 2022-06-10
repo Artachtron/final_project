@@ -21,6 +21,7 @@ class Genome:
         
         if genes is not None:
             self.size = len(genes)
+        
         self.phenotype = None          # Node mind associated with the genome
          
             
@@ -110,7 +111,7 @@ class Genome:
         Returns:
             int: last node's id
         """    
-        return self.nodes[-1].id + 1
+        return max(list(self.nodes.keys())) + 1
 
     def get_last_gene_innovation_number(self) -> int:
         """ Return last innovation number in Genome
@@ -137,27 +138,21 @@ class Genome:
         self.genes = np.insert(self.genes, gene_index, gene)
      
     @staticmethod   
-    def insert_node(nodes_list: np.array,
-                    node: Node) -> np.array:
+    def insert_node(nodes_dict: Dict[int, Node],
+                    node: Node) -> Dict[int, Node]:
         """ Insert a node into a list of nodes
 
         Args:
-            nodes_list (np.array):  the list of nodes to insert in
+            nodes_dict (np.Dict[int, Node]):  the list of nodes to insert in
             node (Node):            the node to insert
 
         Returns:
-            np.array: the final list of nodes after insertion
+            Dict[int, Node]: the final list of nodes after insertion
         """        
-        
-        node_id = node.id
-        node_index: int = 0
-        for current_node in nodes_list:
-            if current_node.id > node_id:
-                break
-            node_index += 1
             
-        return np.insert(nodes_list, node_index, node)   
-     
+        nodes_dict[node.id] = node        
+        return nodes_dict
+       
     @staticmethod 
     def _is_IO_node(node: Node) -> bool:
         """ Check if the node is an input or output node
@@ -169,8 +164,8 @@ class Genome:
             bool: is an input or output node
         """        
         return (node.node_place == NodePlace.INPUT or
-               node.node_place == NodePlace.BIAS or
-               node.node_place == NodePlace.OUTPUT)
+                node.node_place == NodePlace.BIAS or
+                node.node_place == NodePlace.OUTPUT)
     
     @staticmethod
     def _choose_gene_to_transmit(   parent1_gene: Gene, parent2_gene: Gene, parent1_genes: Iterator,
@@ -253,7 +248,7 @@ class Genome:
                         current_gene.link.out_node.id == chosen_gene.link.out_node.id and
                         current_gene.link.is_recurrent == chosen_gene.link.is_recurrent) and
                     not(current_gene.link.in_node.id == chosen_gene.link.out_node.id and
-                        current_gene.link.out_node.id == chosen_gene.link.in_node.od and
+                        current_gene.link.out_node.id == chosen_gene.link.in_node.id and
                         current_gene.link.is_recurrent == chosen_gene.link.is_reccurent) and
                     not (chosen_gene.link.is_recurrent)):
                 
@@ -262,31 +257,30 @@ class Genome:
         return False
     
     @staticmethod
-    def _check_new_node_existence(new_nodes: np.array, target_node: Node) -> Tuple[Node, List[Node]]:
+    def _check_new_node_existence(new_nodes: Dict[int, Node], target_node: Node) -> Tuple[Node, List[Node]]:
         """ Find if the target node already exists in the new nodes list return the final list and new node
 
         Args:
-            new_nodes (List[Node]): the list of nodes already added
+            new_nodes Dict[int, Node]: the list of nodes already added
             target_node (Node): the node to check existence in the list
 
         Returns:
             Tuple[Node, List[Node]]:    Node: the new node, either an existing node or a created one
                                         List[Node]: the final list of nodes (updated if new node wasn't already in it)
         """                
-        for current_node in new_nodes:
-            if current_node.id == target_node.id:
-                new_node = current_node
-                break
+                       
+        if target_node.id in new_nodes:
+            new_node = new_nodes[target_node.id]
             
         else:
             new_node = Node.constructor_from_node(target_node)
-            new_nodes = Genome.insert_node(nodes_list=new_nodes,
+            new_nodes = Genome.insert_node(nodes_dict=new_nodes,
                                            node=new_node)
             
         return new_node, new_nodes
     
     @staticmethod
-    def mate_multipoint(parent1, parent2: Genome, genome_id: int,) -> Genome:
+    def mate_multipoint(parent1: Genome, parent2: Genome, genome_id: int,) -> Genome:
         """mates this Genome with another Genome  
 		   For every point in each Genome, where each Genome shares
 		   the innovation number, the Gene is chosen randomly from 
@@ -303,20 +297,21 @@ class Genome:
             Genome: the child genome created
         """        
                 
-        new_nodes = np.array([], dtype=Node)    # already added nodes
+        new_nodes = {}    # already added nodes
         parent1_dominant: bool = choice([0,1])  # Determine which genome will give its excess genes
         
         new_genes: List[Gene] = [] # already chosen genes
         
         # Make sure all sensors and outputs are included
-        for current_node in parent2.nodes:
+        for current_node in parent2.nodes.values():
             if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
                 new_output_node = Node.constructor_from_node(current_node)
                 
                 # Add the new node
-                new_nodes = Genome.insert_node(nodes_list=new_nodes, node=new_output_node)
+                new_nodes = Genome.insert_node(nodes_dict=new_nodes,
+                                               node=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
         parent1_genes = iter(parent1.genes)
@@ -408,7 +403,7 @@ class Genome:
         outputs: List[Node] = []
         all_nodes: List[Node] = []
                 
-        for current_node in self.nodes:         
+        for current_node in self.nodes.values():         
             # Check for input or output designation of node
             match current_node.node_place:
                 case NodePlace.INPUT:
@@ -587,9 +582,11 @@ class Genome:
             Tuple[Node, int]:   Node:   the first non-sensor found
                                 int:    the index
         """                 
-        for index, node in enumerate(self.nodes):
+        """ for index, node in enumerate(self.nodes.values()):
             if not node.is_sensor():
-                return index
+                return index """
+                
+        return max([node.id for node in self.phenotype.inputs])+1
                     
     def _select_nodes_for_link(self,recurrence: bool, first_non_sensor: int) -> Tuple[Node,Node]:
         """ Select 2 random nodes to link together
@@ -602,21 +599,21 @@ class Genome:
             Tuple[Node,Node]:   Node: the in_node of the link
                                 Node: the out_node of the link
         """ 
+        nodes_size = len(self.nodes)
         if recurrence:
             loop_recurrence: bool  = choice([0,1])     
             if loop_recurrence:
-                node_number1 = randint(first_non_sensor, self.nodes.size)
+                node_number1 = randint(first_non_sensor, nodes_size)
                 node_number2 = node_number1
             else:
-                node_number1 = randint(0, self.nodes.size)
-                node_number2 = randint(first_non_sensor, self.nodes.size)
+                node_number1 = randint(0, nodes_size)
+                node_number2 = randint(first_non_sensor, nodes_size)
                 
             node1 = self.nodes[node_number1]
             node2 = self.nodes[node_number2]
         else:
-            nodes_size = self.nodes.size
-            node1 = choice(self.nodes[0:nodes_size])
-            node2 = choice(self.nodes[first_non_sensor:nodes_size])
+            node1 = self.nodes[randint(0,nodes_size)]
+            node2 = self.nodes[randint(first_non_sensor,nodes_size)]
         
         return node1, node2
     
@@ -727,7 +724,7 @@ class Genome:
         Returns:
             List[Link]: the list of links connecting to the node
         """        
-        return [gene.link for gene in self.genes if gene.link.in_node.id == node_id]
+        return [gene.link for gene in self.genes if gene.link.out_node.id == node_id]
                                
     
     """ def mutate_add_sensor(self, innovations: List, current_innovation: int):

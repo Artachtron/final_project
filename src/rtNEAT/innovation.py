@@ -1,5 +1,7 @@
 from __future__ import annotations
-from node import Node
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from node import Node
 import enum
 from typing import List
 from numpy.random import choice, random
@@ -10,17 +12,22 @@ class InnovationType(enum.Enum):
 
 class InnovTable:
     history: List[Innovation] = []
-    next_innovation_number: int = 0
-    next_node_number: int = 0
+    next_innovation_number: int = 1
+    next_node_number: int = 1
      
     @staticmethod    
-    def get_innovation_number() -> int:
+    def get_innovation_number(increment: bool=False) -> int:
         """ Get the current innovation number
 
         Returns:
             int: current innovation number
-        """        
-        return InnovTable.next_innovation_number
+        """
+        number = InnovTable.next_innovation_number 
+        
+        if increment:
+            InnovTable.increment_innov()
+         
+        return number
     
     @staticmethod
     def increment_innov(amount: int=1) -> None:
@@ -32,13 +39,18 @@ class InnovTable:
         InnovTable.next_innovation_number += amount
     
     @staticmethod    
-    def get_node_number() -> int:
+    def get_node_number(increment: bool=False) -> int:
         """ Get the current node number
 
         Returns:
             int: current node number
-        """        
-        return InnovTable.next_node_number
+        """
+        number = InnovTable.next_node_number
+        
+        if increment:
+            InnovTable.increment_node() 
+                   
+        return number
     
     @staticmethod
     def increment_node(amount: int=1) -> None:
