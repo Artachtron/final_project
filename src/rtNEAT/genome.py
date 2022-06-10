@@ -421,7 +421,8 @@ class Genome:
             all_nodes.append(current_node)
             
         if bias is None:
-            raise RuntimeError("bias is missing")
+            bias = self._create_bias()
+            all_nodes.append(bias)
         
         inputs.append(bias) 
                           
@@ -431,6 +432,11 @@ class Genome:
                                 hidden=hidden,
                                 all_nodes=all_nodes)
                    
+    def _create_bias(self):
+        bias = Node(node_place=NodePlace.BIAS)
+        
+        return bias
+    
     
     def _mutate_link_weights(self) -> None:
         """Simplified mutate link weight method

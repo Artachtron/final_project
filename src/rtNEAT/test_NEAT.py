@@ -1,4 +1,3 @@
-from cgitb import reset
 import pytest
 from gene import Gene
 from node import Node, NodePlace
@@ -153,7 +152,7 @@ class TestGenome:
             assert len(genome.nodes[i].incoming) == 0
             assert len(genome.nodes[i].outgoing) == n_outputs
         
-        for i in range(n_outputs, n_total):
+        for i in range(n_inputs+2, n_total):
             assert genome.nodes[i].node_place == NodePlace.OUTPUT
             assert len(genome.nodes[i].incoming) == n_inputs + 1
             assert len(genome.nodes[i].outgoing) == 0
@@ -378,7 +377,7 @@ class TestGenome:
                         nodes=self.nodes,
                         genes=self.genes[[0,2,3]]) 
             
-            #np.random.seed(1)
+            #np.random.seed(2)
             new_genome = Genome.mate_multipoint(parent1=genome1,
                                                 parent2=genome2,
                                                 genome_id=2)
@@ -510,7 +509,7 @@ class TestGenome:
             assert gene1.link.in_node == in_node
             assert gene1.link.out_node == node
             assert gene1.link.weight == 1.0
-            assert gene1.innovation_number == 0
+            assert gene1.innovation_number == 1
             assert gene2.link.in_node == node
             assert gene2.link.out_node == out_node
             assert gene2.link.weight == 0.34
@@ -566,18 +565,18 @@ class TestGenome:
                 assert node1
                 assert not node2.is_sensor()
                 
-            np.random.seed(100)      
+            #np.random.seed(100)      
             # Recurrent link   
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True)
-            assert node1 != node2
-            assert not node2.is_sensor()
-            
-            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True)
-            assert node1 != node2
-            assert not node2.is_sensor()
-            
-            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True)
             assert node1 == node2
+            assert not node2.is_sensor()
+            
+            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True)
+            assert node1 != node2
+            assert not node2.is_sensor()
+            
+            node1, node2 = self.genome1._select_nodes_for_link( recurrence = True)
+            assert node1 != node2
             assert not node2.is_sensor()
                    
         def test_link_already_exists(self):

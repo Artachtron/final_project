@@ -8,7 +8,7 @@ from network import Network
 from innovation import InnovTable
 from node import Node, NodePlace
 from gene import Gene
-from .neat import Config
+from neat import Config
 import numpy as np
 
 

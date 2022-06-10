@@ -41,8 +41,8 @@ class Config:
     
     def configure(
         # Network structures
-        num_inputs: int = 0,
-        num_outputs: int = 0,
+        num_inputs: int = 96,
+        num_outputs: int = 12,
     
         # Mutations
         weight_mutate_power: float = 0.5,

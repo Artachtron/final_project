@@ -46,8 +46,14 @@ class SubGrid:
         x1, x2, y1, y2 = (initial_pos[0] - radius, initial_pos[0] + radius+1,
                           initial_pos[1] - radius, initial_pos[1] + radius+1)
         
-        width, height, depth = self.dimensions
-        padded_subregion = np.full(fill_value=-1, shape=(x2-x1, y2-y1, depth))
+        ndim = self._subgrid.ndim
+        if ndim == 3:
+            width, height, depth = self.dimensions
+            padded_subregion = np.full(fill_value=-1, shape=(x2-x1, y2-y1, depth))
+        elif ndim == 2:
+            width, height = self.dimensions
+            padded_subregion = np.full(fill_value=None, shape=(x2-x1, y2-y1))
+            
         left_pad = right_pad = up_pad = down_pad = 0
         
         if x1 < 0:
@@ -63,13 +69,13 @@ class SubGrid:
             down_pad = y2 - height
             y2 = height
     
-        subregion = self._subgrid[x1:x2, y1:y2,:]
+        subregion = self._subgrid[x1:x2, y1:y2]
         
-        x_shape,y_shape,z_shape = subregion.shape
+        x_shape, y_shape = subregion.shape[:2]
         
         for x in range(x_shape):
             for y in range(y_shape):
-                padded_subregion[x+left_pad, y+up_pad] = subregion[x-right_pad,y-down_pad,:]
+                padded_subregion[x+left_pad, y+up_pad] = subregion[x-right_pad,y-down_pad]
                 
         return padded_subregion
             
