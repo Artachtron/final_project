@@ -662,6 +662,8 @@ class Animal(Entity):
 
         self._perform_action()
 
+    def test_update(self):
+        self.rtNEAT_update()
     def rtNEAT_update(self) -> None:
         #Inputs
         ## Internal properties
@@ -674,6 +676,8 @@ class Animal(Entity):
         see_colors = self.grid.color_grid.get_sub_region(initial_pos=self.position,
                                                          radius=2).flatten()
         
+        inputs = [age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors
+        pass
                                                                    
         #Outputs
         

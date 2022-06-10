@@ -32,8 +32,9 @@ def main():
     
     move = 2
     modify_cell_color = 3
-    other_actions = 6
-    n_outputs = move + modify_cell_color + other_actions
+    drop_energy = 2
+    other_actions = 5
+    n_outputs = move + modify_cell_color + drop_energy + other_actions
     
     Config.num_inputs = n_inputs
     Config.num_outputs = n_outputs

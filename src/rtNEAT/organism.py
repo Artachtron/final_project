@@ -1,4 +1,7 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from entities import Entity
 from genome import Genome
 from network import Network
 from innovation import InnovTable
@@ -7,13 +10,16 @@ from gene import Gene
 from neat import Config
 import numpy as np
 
+
 class Organism:
     def __init__(self,
                  genome: Genome,
+                 entity: Entity=None,
                  generation: int=0):
         
         self.genotype: Genome = genome # The Organism's genotype 
         self.mind: Network = genome.phenotype
+        self.body: Entity = entity
                 
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from
