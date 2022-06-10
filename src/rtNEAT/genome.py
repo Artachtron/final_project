@@ -143,8 +143,8 @@ class Genome:
         """ Insert a node into a list of nodes
 
         Args:
-            nodes_dict (np.Dict[int, Node]):  the list of nodes to insert in
-            node (Node):            the node to insert
+            nodes_dict (np.Dict[int, Node]):    list of nodes to insert in
+            node (Node):                        node to insert
 
         Returns:
             Dict[int, Node]: the final list of nodes after insertion

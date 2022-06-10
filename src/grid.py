@@ -42,7 +42,7 @@ class SubGrid:
             print(f"{cell_coordinates} is out of bounds")
             return False
         
-    def get_sub_region(self, initial_pos: Tuple[int,int], radius:int=1):
+    def get_sub_region(self, initial_pos: Tuple[int,int], radius:int=1) -> np.array:
         x1, x2, y1, y2 = (initial_pos[0] - radius, initial_pos[0] + radius+1,
                           initial_pos[1] - radius, initial_pos[1] + radius+1)
         

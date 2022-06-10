@@ -1,7 +1,6 @@
 from __future__ import annotations
 import numpy as np
 from node import Node, NodePlace
-from neat import Config
 from typing import List
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -51,7 +50,7 @@ class Network:
          # Attach genotype and phenotype together
         new_network.genotype = genome
         genome.phenotype = new_network
-        
+               
         return new_network  
     
     def activate(self, input_values: np.array) -> np.array:
@@ -68,7 +67,8 @@ class Network:
         """        
         # Compare the size of input values given to the network's inputs (minus bias)
         if input_values.size != len(self.inputs) - 1:
-            raise ValueError
+            raise ValueError(f"""Input values {(input_values.size)} does not correspond
+                             to number of input nodes {len(self.inputs)}""")
         
         # increment the activation_phase            
         self.activation_phase += 1 
