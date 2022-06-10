@@ -31,7 +31,7 @@ class Node:
         self.incoming: List[Link] = []                          # A list of pointers to incoming weighted signals from other nodes
         self.outgoing: List[Link] = []                          #  A list of pointers to links carrying this node's signal
         
-        Config.configure()
+        #Config.configure()
         
   
     @classmethod

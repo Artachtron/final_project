@@ -20,7 +20,7 @@ class Gene:
                             out_node=out_node,
                             recurrence=recurrence)
         
-        self.innovation_number: int = innovation_number or InnovTable.get_innovation_number()
+        self.innovation_number: int = innovation_number or InnovTable.get_innovation_number(increment=True)
         self.mutation_number: int = mutation_number # Used to see how much mutation has changed the link
         self.enabled: bool = True # When this is off the Gene is disabled
         self.frozen: bool = False # When frozen, the linkweight cannot be mutated

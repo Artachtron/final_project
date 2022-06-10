@@ -672,14 +672,14 @@ class Animal(Entity):
         self.activate_mind()
         
     def activate_mind(self) -> None:
-        inputs = self.normalized_inputs()
+        inputs = self.normalize_inputs()
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
  
         self.interpret_outputs(outputs=outputs)                                                       
         #Outputs
         
-    def normalize_inputs(self ,inputs):
+    def normalize_inputs(self):
          #Inputs
         ## Internal properties
         age = self._age/100

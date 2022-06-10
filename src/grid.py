@@ -49,7 +49,7 @@ class SubGrid:
         ndim = self._subgrid.ndim
         if ndim == 3:
             width, height, depth = self.dimensions
-            padded_subregion = np.full(fill_value=-1, shape=(x2-x1, y2-y1, depth))
+            padded_subregion = np.full(fill_value=-255, shape=(x2-x1, y2-y1, depth))
         elif ndim == 2:
             width, height = self.dimensions
             padded_subregion = np.full(fill_value=None, shape=(x2-x1, y2-y1))
