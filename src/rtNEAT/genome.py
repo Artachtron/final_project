@@ -15,34 +15,21 @@ class Genome:
     def __init__(self,
                  genome_id: int,
                  nodes: Dict[int, NodeGene] = {},
-                 genes: Dict[int, LinkGene] = {}):
+                 links: Dict[int, LinkGene] = {}):
         
         self.id: int = genome_id
-        self.nodes: Dict[int, NodeGene] = nodes   # List of network's nodes 
-        self.genes: Dict[int, LinkGene] = genes   # List of link's genes
+        self.node_genes: Dict[int, NodeGene] = nodes   # List of network's nodes 
+        self.link_genes: Dict[int, LinkGene] = links   # List of link's genes
         
         """ if genes is not None:
             self.size = len(genes) """
    
       
-    def add_gene(self,
-                 gene: LinkGene) -> None:
-        """Adds a new gene that has been created through a mutation in the correct order into the list of genes in the genome
-
-        Args:
-            gene (LinkGene): The gene to add to the genome's list of genes
-        """
-        innovation_number = gene.innovation_number
-        gene_index = 0
-        for current_gene in self.genes:
-            if current_gene.innovation_number > innovation_number:
-                break
-            gene_index += 1
-            
-        self.genes = np.insert(self.genes, gene_index, gene)
+    def add_gene(self, link: LinkGene) -> None:
+        self.link_genes[link.id] = link
      
-    def insert_node(self, node: NodeGene):
-        self.nodes[node.id] = node
+    def insert_node(self, node: NodeGene) -> None:
+        self.node_genes[node.id] = node
     
     @staticmethod   
     def insert_node_in_dict(nodes_dict: Dict[int, NodeGene],
@@ -59,6 +46,15 @@ class Genome:
         nodes_dict[node.id] = node        
         return nodes_dict  
       
+    def create_bias_gene(self) -> Node:
+        return NodeGene(node_type=NodeType.BIAS)
+    
+    def get_link_genes(self) -> np.array[LinkGene]:
+        return np.array(list(self.link_genes.values()))
+    
+    def get_node_genes(self) -> np.array[LinkGene]:
+        return np.array(list(self.node_genes.values()))
+    
     def genesis(self):
         """ Generate a mind network from this genome with specified id
         """
@@ -69,7 +65,7 @@ class Genome:
         hidden: Dict[int, NodeGene] = {}
         all_nodes: Dict[int, NodeGene] = {}
               
-        for key, node in self.nodes.items:         
+        for key, node in self.node_genes.items:         
             # Check for input or output designation of node
             match node.type.name:
                 case 'INPUT':
@@ -98,7 +94,7 @@ class Genome:
                    
     def _create_bias(self, outputs: Dict[int, NodeGene]) -> Node:
         bias = Node(node_type=NodeType.BIAS)
-        self.insert_node_in_dict(   nodes_dict=self.nodes,
+        self.insert_node_in_dict(   nodes_dict=self.node_genes,
                             node=bias)
         
         for output in outputs:
@@ -141,8 +137,8 @@ class Genome:
         mutation_difference_total: float= 0.0
         number_matching: int = 0
         
-        g1_genome = iter(genome1.genes)
-        g2_genome = iter(genome2.genes)
+        g1_genome = iter(genome1.link_genes)
+        g2_genome = iter(genome2.link_genes)
         
         g1_gene = next(g1_genome)
         g2_gene = next(g2_genome)
@@ -195,7 +191,7 @@ class Genome:
         Returns:
             int: last node's id
         """    
-        return max(list(self.nodes.keys())) + 1
+        return max(list(self.node_genes.keys())) + 1
 
     def get_last_gene_innovation_number(self) -> int:
         """ Return last innovation number in Genome
@@ -203,7 +199,7 @@ class Genome:
         Returns:
             int: last gene's innovation number
         """    
-        return self.genes[-1].innovation_number + 1
+        return self.link_genes[-1].innovation_number + 1
            
     @staticmethod 
     def _is_IO_node(node: Node) -> bool:
@@ -355,7 +351,7 @@ class Genome:
         new_genes: List[LinkGene] = [] # already chosen genes
         
         # Make sure all sensors and outputs are included
-        for current_node in parent2.nodes.values():
+        for current_node in parent2.node_genes.values():
             if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
@@ -366,8 +362,8 @@ class Genome:
                                                node=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
-        parent1_genes = iter(parent1.genes)
-        parent2_genes =iter(parent2.genes)
+        parent1_genes = iter(parent1.link_genes)
+        parent2_genes =iter(parent2.link_genes)
         parent1_gene = next(parent1_genes, None)
         parent2_gene = next(parent2_genes, None)
         args = (parent1_gene, parent2_gene, parent1_genes, parent2_genes)
@@ -420,7 +416,7 @@ class Genome:
         
         baby_genome = Genome(   genome_id=genome_id,
                                 nodes=new_nodes,
-                                genes=np.array(new_genes))
+                                links=np.array(new_genes))
         
         return baby_genome
     
@@ -453,7 +449,7 @@ class Genome:
     def _mutate_link_weights(self) -> None:
         """Simplified mutate link weight method
         """        
-        for current_gene in self.genes:
+        for current_gene in self.link_genes:
             if current_gene.frozen:
                 continue
             
@@ -479,7 +475,7 @@ class Genome:
         the_gene: LinkGene = None   # the found gene
         
         while try_count < tries and not found:
-            for gene in self.genes:
+            for gene in self.link_genes:
                 if gene.enabled and gene.link.in_node.type != NodeType.BIAS:
                     found = True
                     the_gene = gene
@@ -600,7 +596,7 @@ class Genome:
                 
         self.add_gene(gene=new_gene1)
         self.add_gene(gene=new_gene2)
-        self.nodes = Genome.insert_node_in_dict(self.nodes, new_node)
+        self.node_genes = Genome.insert_node_in_dict(self.node_genes, new_node)
         return True  
                     
     def _select_nodes_for_link(self,recurrence: bool) -> Tuple[Node,Node]:
@@ -642,7 +638,7 @@ class Genome:
             Tuple[bool, int]:   bool: found an already existing link  
         """  
         found: bool = False 
-        for the_gene in self.genes:
+        for the_gene in self.link_genes:
             if (the_gene.link.in_node == node1 and
                 the_gene.link.out_node == node2 and
                 the_gene.link.is_recurrent == recurrence):
@@ -733,7 +729,7 @@ class Genome:
         Returns:
             List[Link]: the list of links connecting to the node
         """        
-        return [gene.link for gene in self.genes if gene.link.out_node.id == node_id]
+        return [gene.link for gene in self.link_genes if gene.link.out_node.id == node_id]
                                
     
     """ def mutate_add_sensor(self, innovations: List, current_innovation: int):

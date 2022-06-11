@@ -13,18 +13,18 @@ class TestGenome:
     def test_genome_fields(self):
         nodes = {0: NodeGene(0), 1: NodeGene(1)}
         genes = {0: LinkGene(link_id=0,
-                            in_node_id=nodes[0].id,
-                            out_node_id=nodes[1].id)}
+                            in_node=nodes[0].id,
+                            out_node=nodes[1].id)}
         
         genome = Genome(genome_id=0,
                         nodes=nodes,
-                        genes=genes)
+                        links=genes)
         
-        assert {'id','nodes','genes'}.issubset(vars(genome))
+        assert {'id','node_genes','link_genes'}.issubset(vars(genome))
         
         assert genome.id == 0
-        assert genome.nodes == nodes
-        assert genome.genes == genes
+        assert genome.node_genes == nodes
+        assert genome.link_genes == genes
         
     class TestGenomeMethods:
         @pytest.fixture(autouse=True)
@@ -40,13 +40,13 @@ class TestGenome:
                                                     node=node)
             
             assert nodes_dict == {1: node}
-            assert self.genome.nodes == {}
+            assert self.genome.node_genes == {}
             
             self.genome.insert_node(node=node)
-            assert self.genome.nodes == nodes_dict
+            assert self.genome.node_genes == nodes_dict
             
         def test_genesis(self):
             for _ in range(1, 10):
                 self.genome.insert_node(NodeGene())
             
-            assert len(self.genome.nodes) == 9
+            assert len(self.genome.node_genes) == 9

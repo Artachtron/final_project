@@ -26,9 +26,9 @@ class Organism:
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from
         
-        if generation == 0 and not self.genotype.nodes:
+        if generation == 0 and not self.genotype.node_genes:
             self._initial_generation_organism()
-        elif self.genotype.nodes:
+        elif self.genotype.node_genes:
             self.genotype.genesis()
  
     def update_phenotype(self) -> Organism:
@@ -54,7 +54,7 @@ class Organism:
             outputs.append(Node(node_type=NodeType.OUTPUT))
 
         else:
-            self.genotype.nodes = {node.id: node for node in inputs + bias + outputs}
+            self.genotype.node_genes = {node.id: node for node in inputs + bias + outputs}
         
         genes = []
         for node1 in inputs + bias:
@@ -63,7 +63,7 @@ class Organism:
                                     out_node=node2))
 
         else:
-            self.genotype.genes = np.array(genes)
+            self.genotype.link_genes = np.array(genes)
         
         self.mind = Network.create_network( genome=self.genotype,
                                             inputs=np.array(inputs+bias),

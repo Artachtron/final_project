@@ -7,7 +7,7 @@ from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFu
 from project.src.rtNEAT.genes import LinkGene, NodeGene
 
 
-class TestPhenotype:
+class TestPhenes:
     def test_create_node(self):
         node = Node(node_id=0)
         assert type(node) == Node
@@ -47,30 +47,32 @@ class TestPhenotype:
                     out_node=Node(1),
                     enabled=False)
         
-        assert {'id', 'weight', 'in_node', 'out_node', 'enabled'}.issubset(vars(link))
+        assert {'id', 'weight', 'in_node', 'out_node',
+                'enabled'}.issubset(vars(link))
         
         assert link.id == 1
         assert link.weight == 0.5
         assert link.in_node.id == 0
         assert link.out_node.id == 1
         assert link.enabled == False
-        
-    def test_synthesis(self):
-        node_gene = NodeGene()
-        
-        node = Node.synthesis(**node_gene.transcription())
-        assert type(node) == Node
-        assert node.id == node_gene.id
-        
-        node2 = Node.synthesis(**NodeGene().transcription())
+    
+    class PhenesMethhods:  
+        def test_synthesis(self):
+            node_gene = NodeGene()
+            
+            node = Node.synthesis(**node_gene.transcript())
+            assert type(node) == Node
+            assert node.id == node_gene.id
+            
+            node2 = Node.synthesis(**NodeGene().transcript())
 
-        link_gene = LinkGene(in_node_id=node.id,
-                             out_node_id=node2.id)
-        
-        dict_link = link_gene.transcription()
-        dict_link['in_node'] = node
-        dict_link['out_node'] = node2
-        
-        link = Link.synthesis(**dict_link)
-        assert type(link) == Link
-        assert link.id == link_gene.id
+            link_gene = LinkGene(in_node=node.id,
+                                out_node=node2.id)
+            
+            """ dict_link = 
+            dict_link['in_node'] = node
+            dict_link['out_node'] = node2 """
+            
+            link = Link.synthesis(**link_gene.transcript())
+            assert type(link) == Link
+            assert link.id == link_gene.id

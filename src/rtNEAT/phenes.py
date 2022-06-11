@@ -19,8 +19,8 @@ class Link(BasePhene):
     def __init__(self,
                 link_id: int,
                 weight: float,
-                in_node: Node,
-                out_node: Node,
+                in_node: int,
+                out_node: int,
                 enabled: bool = True,
                 ):
         
@@ -32,7 +32,13 @@ class Link(BasePhene):
         self.out_node: Node = out_node # Node that the link affects
 
     @classmethod
-    def synthesis(cls, **kwargs):
+    def synthesis(cls, **kwargs) -> Link:
+        """ Synthesize a Link from a GeneLink
+            and return it
+
+        Returns:
+            Link: the created Link
+        """        
         return Link(**kwargs)
 
 class Node(BasePhene):
@@ -60,14 +66,20 @@ class Node(BasePhene):
         #Config.configure()
         
     @classmethod
-    def synthesis(cls, **kwargs):
+    def synthesis(cls, **kwargs) -> Node:
+        """ Synthesize a Node from a GeneLink
+            and return it
+
+        Returns:
+            Node: the created Node
+        """ 
         return Node(**kwargs)    
   
     @classmethod
-    def constructor_from_node(cls, node:Node):
+    def constructor_from_node(cls, node:Node) -> Node:
         return Node(node_id=node.id,
                     node_type=node.type)
-        
+                
     def is_sensor(self) -> bool:
         """ determine if the node is a sensor (INPUT or BIAS)
 

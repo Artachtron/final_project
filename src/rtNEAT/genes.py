@@ -3,12 +3,13 @@ from numpy.random import uniform
 from innovation import InnovTable
 from functools import partial
 import enum
+from typing import Dict
 
 class NodeType(enum.Enum):
-    HIDDEN = 0
+    BIAS = 0
     INPUT = 1
     OUTPUT = 2
-    BIAS = 3
+    HIDDEN = 3  
     
 def sigmoid(x):
     """ Sigmoid activation function, Logistic activation with a range of 0 to 1
@@ -52,14 +53,14 @@ class BaseGene:
         self.frozen: bool = freeze
         self.enabled: bool = enable
        
-    def transcription(self):
+    def transcript(self):
         raise NotImplementedError("Please Implement the transcription method")
         
      
 class LinkGene(BaseGene):
     def __init__(self,
-                 in_node_id: int,
-                 out_node_id: int,
+                 in_node: int,
+                 out_node: int,
                  weight: float = 0.0,
                  link_id: int = 0,
                  innovation_number: int = 0,
@@ -74,8 +75,8 @@ class LinkGene(BaseGene):
                                        enable=enable,
                                        freeze=freeze)
         
-        self.in_node: int = in_node_id
-        self.out_node: int = out_node_id
+        self.in_node: int = in_node
+        self.out_node: int = out_node
         self.weight: float = weight or uniform(-1,1)
         
         self.innovation_number: int = (innovation_number or
@@ -83,7 +84,13 @@ class LinkGene(BaseGene):
         
         self.mutation_number: int = mutation_number
         
-    def transcription(self):
+    def transcript(self) -> Dict:
+        """ Return a dictionary containing the LinkGene's 
+            information to synthesize a Link
+
+        Returns:
+            Dict: dictionary of LinkGene's information
+        """        
         return {'link_id':self.id, 'weight':self.weight,
                 'in_node':self.in_node, 'out_node':self.out_node,
                  'enabled':self.enabled}
@@ -112,7 +119,13 @@ class NodeGene(BaseGene):
         #self.incoming: Dict[int, Link] = {}                          # A list of pointers to incoming weighted signals from other nodes
         #self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
 
-    def transcription(self):
+    def transcript(self) -> Dict:
+        """ Return a dictionary containing the NodeGene's 
+            information to synthesize a Node
+
+        Returns:
+            Dict: dictionary of NodeGene's information
+        """        
         return {'node_id':self.id, 'node_type':self.type,
                 'activation_function':self.activation_function,
                 'aggregation_function':self.aggregation_function,

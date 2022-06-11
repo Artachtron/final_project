@@ -29,15 +29,15 @@ class TestGene:
         assert base_gene.frozen == False
         
     def test_create_link_gene(self):
-        link_gene = LinkGene(in_node_id=1,
-                             out_node_id=2)
+        link_gene = LinkGene(in_node=1,
+                             out_node=2)
         
         assert type(link_gene) == LinkGene
         assert issubclass(type(link_gene), BaseGene)
         
     def test_link_gene_fields(self):
-        link_gene = LinkGene(in_node_id=1,
-                             out_node_id=2,
+        link_gene = LinkGene(in_node=1,
+                             out_node=2,
                              weight=0.5,
                              mutation_number=0,
                              enable=True,
