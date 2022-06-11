@@ -5,9 +5,8 @@ if TYPE_CHECKING:
     
 from genome import Genome
 from network import Network
-from innovation import InnovTable
 from node import Node, NodeType
-from gene import LinkGene
+from genes import LinkGene
 from neat import Config
 import numpy as np
 

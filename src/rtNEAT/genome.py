@@ -3,7 +3,7 @@ import numpy as np
 from neat import Config
 from node import Node, NodeType
 from link import Link
-from gene import LinkGene
+from genes import LinkGene
 from innovation import Innovation, InnovationType, InnovTable
 from network import Network
 from typing import List, Iterator, Tuple, Dict

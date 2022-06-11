@@ -60,7 +60,6 @@ class LinkGene(BaseGene):
                  link_id: int = 0,
                  innovation_number: int = 0,
                  mutation_number: int = 0,
-                 recurrence: bool = False,
                  enable: bool = True,
                  freeze: bool = False,
                  ):
@@ -79,8 +78,7 @@ class LinkGene(BaseGene):
                                        InnovTable.get_innovation_number(increment=True))
         
         self.mutation_number: int = mutation_number
-         
-        self.recurrence: bool = recurrence
+
         
 class NodeGene(BaseGene):
     def __init__(self,
@@ -97,10 +95,7 @@ class NodeGene(BaseGene):
 
         
         self.id: int = node_id or InnovTable.get_node_number(increment=True)
-        
-        self.activation_phase: int = 0
-        self.activation_value: float = 0.0              # The total activation entering the Node
-        
+                
         self.type: NodeType = node_type     # HIDDEN, INPUT, OUTPUT, BIAS
        
         self.activation_function: ActivationFuncType = activation_function 
@@ -108,6 +103,9 @@ class NodeGene(BaseGene):
             
         #self.incoming: Dict[int, Link] = {}                          # A list of pointers to incoming weighted signals from other nodes
         #self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
+
+def reset_innovation_table():
+    InnovTable.reset_innovation_table()
 
 """ class Gene:
     def __init__(self,

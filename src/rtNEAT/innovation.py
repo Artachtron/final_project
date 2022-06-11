@@ -101,6 +101,7 @@ class InnovTable:
         InnovTable.history = []
         InnovTable.next_innovation_number = 1
         InnovTable.next_node_number = 1
+        InnovTable.next_link_number = 1
     
     @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,

@@ -1,14 +1,14 @@
 from population import Population
 from genome import Genome
 from node import Node, NodeType
-from gene import Gene
+from genes import LinkGene
 from neat import Config
 import numpy as np
 
 def function() -> Population:
     sensor_node = Node(node_id=0, node_type=NodeType.INPUT)
     action_node = Node(node_id=1, node_type=NodeType.OUTPUT)
-    gene = Gene(in_node=sensor_node, out_node=action_node, weight=1, innovation_number=0, mutation_number=0)
+    gene = LinkGene(in_node=sensor_node, out_node=action_node, weight=1, innovation_number=0, mutation_number=0)
     
     nodes = np.array([sensor_node, action_node])
     genes = np.array([gene])

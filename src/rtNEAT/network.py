@@ -8,9 +8,6 @@ from typing import List
 import numpy as np
 from node import Node, NodeType
 
-
-
-
 class Network:
     def __init__(self,
                  inputs: np.array,

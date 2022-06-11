@@ -1,12 +1,9 @@
-from audioop import bias
 import pytest
-from gene import Gene
 from node import Node, NodeType, sigmoid
 from link import Link
 from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
 import numpy as np
-import neat
 from neat import Config
 from organism import Organism
 
@@ -16,11 +13,6 @@ class TestNode:
                            node_type=NodeType.INPUT)
         assert sensor_node
         assert type(sensor_node) == Node
-        
-        yield 
-        InnovTable.reset_innovation_table()
-        
-        
         
     def test_node_fields(self):
         sensor_node = Node(node_type=NodeType.INPUT)
@@ -74,6 +66,7 @@ class TestLink:
         assert link.is_recurrent == False
         assert link.time_delay == False
         assert link.added_weight == 0.0
+      
         
 
 class TestGene:
@@ -82,6 +75,7 @@ class TestGene:
         self.sensor_node = Node(node_type=NodeType.INPUT)
         
         self.action_node = Node(node_type=NodeType.OUTPUT) 
+        yield InnovTable.reset_innovation_table()
         
     def test_create_gene(self):
         gene = Gene(in_node=self.sensor_node,
@@ -91,7 +85,7 @@ class TestGene:
         
         assert gene
         assert type(gene) == Gene
-        yield InnovTable.reset_innovation_table()
+        
         
     def test_gene_fields(self):
         gene = Gene(in_node=self.sensor_node,
