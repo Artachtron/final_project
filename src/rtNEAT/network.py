@@ -21,43 +21,18 @@ class Network:
         
         self.id = network_id
         
-        self.inputs: Dict[int, Node] = inputs # Nodes that input into the network
-        self.bias: Node = bias
-        self.outputs: Dict[int, Node] = outputs # Values output by the network
-        self.hidden: Dict[int, Node] = hidden #
-        self.all_nodes: Dict[int, Node] = all_nodes # A list of all the nodes
+        self._inputs: Dict[int, Node] = inputs # Nodes that input into the network
+        self._bias: Dict[int, Node] = bias
+        self._outputs: Dict[int, Node] = outputs # Values output by the network
+        self._hidden: Dict[int, Node] = hidden #
+        self._all_nodes: Dict[int, Node] = all_nodes # A list of all the nodes
         
-        self.links: Dict[int, Link] = {}
+        self._links: Dict[int, Link] = {}
 
         self.activation_phase: int = 0
         self.frozen: bool = frozen
-        self.number_nodes: int = -1 # The number of nodes in the net (-1 means not yet counted)
-        self.number_links: int = -1 # The number of links in the net (-1 means not yet counted)
-         # Allow for a network id
-         # Tells whether network can adapt or not
-        
-    @property
-    def n_inputs(self):
-        return len(self.inputs)
-    
-    @property
-    def n_outputs(self):
-        return len(self.outputs)
-    
-    @property
-    def n_nodes(self):
-        return len(self.all_nodes)
-    
-    @property
-    def n_links(self):
-        return len(self.links)    
-    
-    def get_all_nodes(self):
-        return np.array(list(self.all_nodes.values()))
-    
-    def get_links(self):
-        return np.array(list(self.links.values()))
-    
+
+            
     @staticmethod
     def genesis(genome: Genome) -> Network:
         network = Network(network_id=genome.id)
@@ -77,7 +52,7 @@ class Network:
     def _synthetize_links(self, link_genes: Dict[int, LinkGene]) -> Dict[int, Link]:
         for key, link_gene in link_genes.items():
             link = Link.synthesis(**link_gene.transcript())
-            self.links[key] = link
+            self._links[key] = link
             if link_gene.enabled: 
                 self._connect_link(link)                
         
@@ -88,28 +63,30 @@ class Network:
         Args:
             link (Link): link to add
         """        
-        in_node = self.all_nodes[link.in_node.id]
-        out_node = self.all_nodes[link.out_node.id] 
+        in_node = self._all_nodes[link.in_node.id]
+        out_node = self._all_nodes[link.out_node.id] 
         
         out_node.incoming[link.id] = link
         in_node.outgoing[link.id] = link
     
-    def _sort_nodes(self, nodes: Dict[int, Node]):
+    def _sort_nodes(self, nodes: Dict[int, Node]) -> None:
               
         for key, node in nodes.items():         
-            # Check for input or output designation of node
+            # Check for nodes' type 
+            # and sort them accordingly
+            # in their dictionary
             match node.type.name:
                 case 'INPUT':
-                    self.inputs[key] = node
+                    self._inputs[key] = node
                 case 'OUTPUT':
-                    self.outputs[key] = node
+                    self._outputs[key] = node
                 case 'HIDDEN':
-                    self.hidden[key] = node
+                    self._hidden[key] = node
                 case 'BIAS':
-                    self.bias[key] = node
+                    self._bias[key] = node
                     
-            # Keep track of all nodes, not just input and output    
-            self.all_nodes[key] = node
+            # Keep track of all nodes    
+            self._all_nodes[key] = node
     
     def activate(self, input_values: np.array) -> np.array:
         """ Activate the whole network after recieving input values
@@ -124,9 +101,9 @@ class Network:
             np.array: activated values coming out of outputs nodes
         """        
         # Compare the size of input values given to the network's inputs (minus bias)
-        if input_values.size != len(self.inputs) - 1:
+        if input_values.size != len(self._inputs) - 1:
             raise ValueError(f"""Input values {(input_values.size)} does not correspond
-                             to number of input nodes {len(self.inputs)}""")
+                             to number of input nodes {len(self._inputs)}""")
         
         # increment the activation_phase            
         self.activation_phase += 1 
@@ -144,27 +121,15 @@ class Network:
 
         Args:
             values (np.array): values to store in the input nodes
-
-        Raises:
-            ValueError: the node in the inputs list 
-                        are not of the proper type
-            ValueError: the bias node is not of the proper type
         """        
-        inputs: np.array = self.inputs[:-1]
-        bias_node: Node = self.inputs[-1]
-        
-        if bias_node.type != NodeType.BIAS:
-            raise ValueError
-
-        for node, value in zip(inputs, values):
-            if node.type != NodeType.INPUT:
-                raise ValueError
-            
+ 
+        for node, value in zip(self.inputs, values): 
             node.output_value = value
             node.activation_phase = self.activation_phase
-    
-        bias_node.output_value = 1
-        bias_node.activation_phase = self.activation_phase
+
+        for bias_node in self.bias:
+            bias_node.output_value = 1
+            bias_node.activation_phase = self.activation_phase
         
     def activate_outputs(self) -> np.array:
         """ Travel through the network calculating the
@@ -189,7 +154,45 @@ class Network:
         
         return np.array(output_values)
             
+    @property
+    def n_inputs(self) -> int:
+        return len(self._inputs)
     
+    @property
+    def n_outputs(self)-> int:
+        return len(self._outputs)
+    
+    @property
+    def n_nodes(self)-> int:
+        return len(self._all_nodes)
+    
+    @property
+    def n_links(self)-> int:
+        return len(self._links) 
+    
+    @property
+    def inputs(self)  -> np.array[Node]:  
+        return np.array(list(self._inputs.values()))
+    
+    @property
+    def outputs(self)  -> np.array[Node]:  
+        return np.array(list(self._outputs.values()))
+    
+    @property
+    def bias(self)  -> np.array[Node]:  
+        return np.array(list(self._bias.values()))
+    
+    @property
+    def hidden(self)  -> np.array[Node]:  
+        return np.array(list(self._hidden.values()))
+    
+    @property
+    def all_nodes(self) -> np.array:
+        return np.array(list(self._all_nodes.values()))
+    
+    @property
+    def links(self) -> np.array:
+        return np.array(list(self._links.values()))
     
     
     

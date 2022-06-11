@@ -13,8 +13,8 @@ class TestNetwork:
         network = Network()
         
         assert type(network) == Network
-        assert {'id', 'inputs', 'outputs', 'bias', 'hidden',
-                'all_nodes', 'activation_phase', 'frozen', 
+        assert {'id', '_inputs', '_outputs', '_bias', '_hidden',
+                '_all_nodes', 'activation_phase', 'frozen', 
                 'number_nodes','number_links'}.issubset(vars(network))
         
     class TestNetworkMethods:
@@ -31,22 +31,22 @@ class TestNetwork:
             network = Network(network_id=0)   
             network._synthetize_nodes(node_genes=node_genes)
             
-            for i, node in network.all_nodes.items():
+            for i, node in network._all_nodes.items():
                 assert node.id == i
                 assert node.__class__.__name__ == "Node"
                 assert node.type == node_types[i]
             
             #Sorted      
-            for node in network.bias.values():
+            for node in network.bias:
                 assert node.type == NodeType.BIAS
                 
-            for node in network.inputs.values():
+            for node in network.inputs:
                 assert node.type == NodeType.INPUT
                 
-            for node in network.hidden.values():
+            for node in network.hidden:
                 assert node.type == NodeType.HIDDEN    
             
-            for node in network.outputs.values():
+            for node in network.outputs:
                 assert node.type == NodeType.OUTPUT
                             
         def test_synthetize_links(self):
@@ -62,17 +62,16 @@ class TestNetwork:
             network._synthetize_nodes(node_genes=genome.node_genes)
             network._synthetize_links(link_genes=genome.link_genes)
             
-            assert len(network.links) == 10
-            for link in network.links.values():
+            assert len(network._links) == 10
+            for link in network._links.values():
                 assert link.__class__.__name__ == 'Link'
                 
             # ALl link have been attributed to incoming and outgoing links
-            assert sum([len(node.incoming) for node in network.all_nodes.values()]) == 10
-            assert sum([len(node.outgoing) for node in network.all_nodes.values()]) == 10
+            assert sum([len(node.incoming) for node in network._all_nodes.values()]) == 10
+            assert sum([len(node.outgoing) for node in network._all_nodes.values()]) == 10
             
-            network.calculate_properties()
-            assert network.number_links == 10
-            assert network.number_nodes == 50
+            assert network.n_links == 10
+            assert network.n_nodes == 50
             
         def test_network_genesis(self):
             genome = Genome(genome_id=0)
