@@ -1,37 +1,4 @@
 from typing import Callable, List
-import enum
-import math
-
-class ActivationFuncType(enum.Enum):
-    SIGMOID = 0
-    RELU = 1
-    
-class AggregationFuncType(enum.Enum):
-    SUM = 0
-
-def sigmoid(x):
-    """ Sigmoid activation function, Logistic activation with a range of 0 to 1
-    
-    Args:
-        x (float): input value
-        
-    Returns:
-        float: output value
-    """
-    try:
-        return (1.0 / (1.0 + math.exp(-x)))
-    except OverflowError:
-        return 0 if x < 0 else 1
-    
-def relu(x):
-    """ ReLu activation function, Limits the lower range of the input to 0
-    Args:
-        x (float): input value
-        
-    Returns:
-        float: output value
-    """
-    return max(0, x)
     
 class Config:
     @staticmethod
@@ -63,11 +30,7 @@ class Config:
         excess_coeff: float = 1.0,
         mutation_difference_coeff: float = 0.5,
         compatibility_threshod: float = 3.0,
-        
-        # Predictions
-        activation_function: Callable[[float], float] = sigmoid,
-        aggregation_func: Callable[[List[float]], float] = sum   
-    ):
+        ):
         # Network structures
         Config.num_inputs: int = num_inputs
         Config.num_outputs: int = num_outputs
@@ -94,8 +57,8 @@ class Config:
         Config.compatibility_threshod: float = compatibility_threshod
         
         # Predictions
-        Config.activation_function: Callable[[float], float] = activation_function
-        Config.aggregation_func: Callable[[List[float]], float] = aggregation_func
+        """ Config.activation_function: Callable[[float], float] = activation_function
+        Config.aggregation_func: Callable[[List[float]], float] = aggregation_func """
     
     
     

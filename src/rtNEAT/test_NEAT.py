@@ -1,6 +1,6 @@
 import pytest
 from gene import Gene
-from node import Node, NodePlace
+from node import Node, NodePlace, sigmoid
 from link import Link
 from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
@@ -679,8 +679,9 @@ class TestNetwork:
         
     def test_activate_callable_functions(self):
         values = [1,2,3,4,5]
-        Config.aggregation_func(values) == sum(values)
-        Config.activation_function(Config.aggregation_func(values)) == neat.sigmoid(sum(values))
+        node = Node()
+        node.aggregation_function.value(values) == sum(values)
+        node.activation_function.value(node.aggregation_function.value(values)) == sigmoid(sum(values))
         
     def test_activate_complete_no_hidden_nodes(self):
         n_inputs = self.n_inputs
@@ -718,7 +719,7 @@ class TestNetwork:
         inputs = list(inputs)
         for i, output_value in enumerate(outputs):
             values = [value * weight for value, weight in zip(inputs+[1], weights[i::n_outputs])]
-            assert output_value == neat.sigmoid(sum(values))
+            assert output_value == sigmoid(sum(values))
             
     def test_activate_simple_networks(self):
         #   
@@ -754,7 +755,7 @@ class TestNetwork:
             inputs = np.random.uniform(-1,1,2)
             outputs = network.activate(np.array(inputs))
             
-            assert outputs[0] == neat.sigmoid(neat.sigmoid(inputs[0]*weights[0] + inputs[1]*weights[1])*weights[2])
+            assert outputs[0] == sigmoid(sigmoid(inputs[0]*weights[0] + inputs[1]*weights[1])*weights[2])
        
     def test_activate_random_networks(self):
         n_links = np.random.randint(12,20)

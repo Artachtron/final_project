@@ -3,18 +3,54 @@ from innovation import InnovTable
 import enum  
 from typing import List
 from link import Link
-from neat import Config
+import math
+from functools import partial
+
    
 class NodePlace(enum.Enum):
     HIDDEN = 0
     INPUT = 1
     OUTPUT = 2
     BIAS = 3
+    
+def sigmoid(x):
+    """ Sigmoid activation function, Logistic activation with a range of 0 to 1
+    
+    Args:
+        x (float): input value
+        
+    Returns:
+        float: output value
+    """
+    try:
+        return (1.0 / (1.0 + math.exp(-x)))
+    except OverflowError:
+        return 0 if x < 0 else 1
+
+
+def relu(x):
+    """ ReLu activation function, Limits the lower range of the input to 0
+    Args:
+        x (float): input value
+        
+    Returns:
+        float: output value
+    """
+    return max(0, x)
+    
+class ActivationFuncType(enum.Enum):
+    SIGMOID = partial(sigmoid)
+    RELU = partial(relu)
+
+class AggregationFuncType(enum.Enum):
+    SUM = sum
 
 class Node:
     def __init__(self,
                   node_id: int = None,
                   node_place: NodePlace = NodePlace.HIDDEN,
+                  activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
+                  aggregation_function: AggregationFuncType=AggregationFuncType.SUM
                   ):
         
         self.id: int = node_id or InnovTable.get_node_number(increment=True)
@@ -24,7 +60,8 @@ class Node:
         
         self.node_place: NodePlace = node_place     # HIDDEN, INPUT, OUTPUT, BIAS
        
-        #self.ftype: ActivationFuncType = ActivationFuncType.SIGMOID
+        self.activation_function: ActivationFuncType = activation_function 
+        self.aggregation_function: AggregationFuncType = aggregation_function
     
         self.frozen: bool = False                   # When frozen, cannot be mutated (meaning its trait pointer is fixed)
         
@@ -72,10 +109,13 @@ class Node:
                     # necessary incoming activation values
                     values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
             
-            self.output_value = Config.activation_function(
-                                    Config.aggregation_func(values))
+            self.output_value = self.activation_function.value(
+                                    self.aggregation_function.value(values))
             
             # set the activation phase to the current one,
             # since the value is now already calculated
             self.activation_phase = activation_phase            
         return self.output_value
+    
+    
+    
