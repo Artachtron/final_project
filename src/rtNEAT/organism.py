@@ -27,9 +27,9 @@ class Organism:
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from
         
-        if generation == 0 and self.genotype.nodes is None:
+        if generation == 0 and not self.genotype.nodes:
             self._initial_generation_organism()
-        elif self.genotype.nodes is not None:
+        elif self.genotype.nodes:
             self.genotype.genesis()
  
     def update_phenotype(self) -> Organism:
@@ -61,10 +61,8 @@ class Organism:
         for node1 in inputs + bias:
             for node2 in outputs:
                 genes.append(Gene(  in_node=node1,
-                                    out_node=node2,
-                                    innovation_number=InnovTable.get_innovation_number()))
+                                    out_node=node2))
 
-                InnovTable.increment_innov()
         else:
             self.genotype.genes = np.array(genes)
         

@@ -1,3 +1,4 @@
+from audioop import bias
 import pytest
 from gene import Gene
 from node import Node, NodePlace, sigmoid
@@ -146,7 +147,7 @@ class TestGenome:
         for i, node in enumerate(genome.nodes.values(),1):
             assert node.id == i
         
-        for i in range(1,n_inputs):
+        for i in range(1,n_inputs-1):
             assert genome.nodes[i].node_place == NodePlace.INPUT
             assert len(genome.nodes[i].incoming) == 0
             assert len(genome.nodes[i].outgoing) == n_outputs
@@ -267,12 +268,12 @@ class TestGenome:
         def test_get_input_links(self):
             self.genome1.genesis()
             links = self.genome1._get_input_links(node_id=6)
-            assert len(links) == 2
-            assert links == [gene.link for gene in self.genes[2:]]
+            assert len(links) == 2 + 1
+            assert links[:-1] == [gene.link for gene in self.genes[2:]]
             
             links = self.genome1._get_input_links(node_id=5)
-            assert len(links) == 1
-            assert links == [self.genes[1].link]
+            assert len(links) == 1 + 1
+            assert links[:-1] == [self.genes[1].link]
 
         def test_choose_gene(self):
             self.genes[3].innovation_number = self.genes[2].innovation_number
@@ -449,7 +450,7 @@ class TestGenome:
             in_node = gene.link.in_node
             out_node = gene.link.out_node
             
-            assert len(out_node.incoming) == 1
+            assert len(out_node.incoming) == 1 + 1
             assert len(in_node.outgoing) == 1
             
             link = self.genome1._create_new_link(gene = gene) 
@@ -465,20 +466,21 @@ class TestGenome:
             assert link in out_node.incoming
             assert link in in_node.outgoing
             
-            assert len(out_node.incoming) == 2
+            assert len(out_node.incoming) == 2 + 1
             assert len(in_node.outgoing) == 2
             
         def test_genesis(self):        
             self.genome1.genesis() 
             assert self.genome1.phenotype.genotype == self.genome1
                  
-            node1, node2, node3, node4, node5, node6 = self.nodes.values()
+            node1, node2, node3, node4, node5, node6, bias = self.nodes.values()
             assert len(node1.incoming) == 0
-            assert len(node2.incoming) == 1
+            assert len(node2.incoming) == 1 + 1
             assert len(node3.incoming) == 0
-            assert len(node4.incoming) == 1
+            assert len(node4.incoming) == 1 + 1
             assert len(node5.incoming) == 0
-            assert len(node6.incoming) == 2
+            assert len(node6.incoming) == 2 + 1
+            assert len(bias.incoming) == 0
         
         def test_mutate_links_weight_simplified(self):
             Config.weight_mutate_prob = 1.0
@@ -579,7 +581,7 @@ class TestGenome:
             assert not node2.is_sensor()
             
             node1, node2 = self.genome1._select_nodes_for_link( recurrence = True)
-            assert node1 != node2
+            assert node1 == node2
             assert not node2.is_sensor()
                    
         def test_link_already_exists(self):
@@ -654,13 +656,33 @@ class TestGenome:
             assert gene.link.weight == new_weight
             
         def test_mutate_add_link(self):
+            n_outputs = 3
             genes_size = self.genes.size
             self.genome1.genesis()
-            assert self.genome1.genes.size == genes_size
+            assert self.genome1.genes.size == genes_size + n_outputs
             success = self.genome1._mutate_add_link(tries=1)
             
             assert success
-            assert self.genome1.genes.size == genes_size + 1
+            assert self.genome1.genes.size == genes_size + 1 + n_outputs
+            
+        def test_create_bias(self):
+            outputs = []
+            for _ in range(3):
+                outputs.append(Node(node_place=NodePlace.OUTPUT))
+                
+            assert len(outputs) == 3
+            
+            genome = Genome(genome_id=1,
+                            nodes={node.id:node for node in outputs})
+            assert len(genome.nodes) == len(outputs)
+            assert len(genome.genes) == 0
+            bias = genome._create_bias(outputs=outputs)
+            assert bias.node_place == NodePlace.BIAS
+            assert len(genome.nodes) == len(outputs) + 1
+            assert len(genome.genes) == len(outputs)
+            for gene, output in zip(genome.genes, outputs):
+                gene.link.in_node = bias
+                gene.link.out_node = output
             
 class TestNetwork:   
     @pytest.fixture(autouse=True)

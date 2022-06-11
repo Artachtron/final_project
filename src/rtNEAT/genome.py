@@ -12,8 +12,8 @@ from numpy.random import choice, randint, random, uniform
 class Genome:
     def __init__(self,
                  genome_id: int,
-                 nodes: Dict[int, Node] = None,
-                 genes: np.array = None):
+                 nodes: Dict[int, Node] = {},
+                 genes: np.array = np.array([], dtype=Gene)):
         
         self.id: int = genome_id
         self.nodes: Dict[int, Node] = nodes   # List of network's nodes 
@@ -421,7 +421,7 @@ class Genome:
             all_nodes.append(current_node)
             
         if bias is None:
-            bias = self._create_bias()
+            bias = self._create_bias(outputs=outputs)
             all_nodes.append(bias)
         
         inputs.append(bias) 
@@ -432,9 +432,15 @@ class Genome:
                                 hidden=hidden,
                                 all_nodes=all_nodes)
                    
-    def _create_bias(self):
+    def _create_bias(self, outputs: List[Node]) -> Node:
         bias = Node(node_place=NodePlace.BIAS)
+        self.insert_node(   nodes_dict=self.nodes,
+                            node=bias)
         
+        for output in outputs:
+            self.add_gene(Gene(in_node=bias,
+                               out_node=output))
+
         return bias
     
     
