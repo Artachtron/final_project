@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from neat import Config
-from node import Node, NodePlace
+from node import Node, NodeType
 from link import Link
 from gene import Gene
 from innovation import Innovation, InnovationType, InnovTable
@@ -163,9 +163,9 @@ class Genome:
         Returns:
             bool: is an input or output node
         """        
-        return (node.node_place == NodePlace.INPUT or
-                node.node_place == NodePlace.BIAS or
-                node.node_place == NodePlace.OUTPUT)
+        return (node.type == NodeType.INPUT or
+                node.type == NodeType.BIAS or
+                node.type == NodeType.OUTPUT)
     
     @staticmethod
     def _choose_gene_to_transmit(   parent1_gene: Gene, parent2_gene: Gene, parent1_genes: Iterator,
@@ -407,14 +407,14 @@ class Genome:
                 
         for current_node in self.nodes.values():         
             # Check for input or output designation of node
-            match current_node.node_place:
-                case NodePlace.INPUT:
+            match current_node.type:
+                case NodeType.INPUT:
                     inputs.append(current_node)
-                case NodePlace.OUTPUT:
+                case NodeType.OUTPUT:
                     outputs.append(current_node)
-                case NodePlace.BIAS:
+                case NodeType.BIAS:
                     bias = current_node
-                case NodePlace.HIDDEN:
+                case NodeType.HIDDEN:
                     hidden.append(current_node)
             
             # Keep track of all nodes, not just input and output    
@@ -433,7 +433,7 @@ class Genome:
                                 all_nodes=all_nodes)
                    
     def _create_bias(self, outputs: List[Node]) -> Node:
-        bias = Node(node_place=NodePlace.BIAS)
+        bias = Node(node_type=NodeType.BIAS)
         self.insert_node(   nodes_dict=self.nodes,
                             node=bias)
         
@@ -474,7 +474,7 @@ class Genome:
         
         while try_count < tries and not found:
             for gene in self.genes:
-                if gene.enabled and gene.link.in_node.node_place != NodePlace.BIAS:
+                if gene.enabled and gene.link.in_node.type != NodeType.BIAS:
                     found = True
                     the_gene = gene
                     
@@ -502,7 +502,7 @@ class Genome:
                                         Gene: the gene connecting out the new node
         """        
         new_node = Node(node_id=node_id,
-                        node_place=NodePlace.HIDDEN)
+                        node_type=NodeType.HIDDEN)
                 
         new_gene1 = Gene(weight=1.0,
                         in_node=in_node,

@@ -7,7 +7,7 @@ import math
 from functools import partial
 
    
-class NodePlace(enum.Enum):
+class NodeType(enum.Enum):
     HIDDEN = 0
     INPUT = 1
     OUTPUT = 2
@@ -48,7 +48,7 @@ class AggregationFuncType(enum.Enum):
 class Node:
     def __init__(self,
                   node_id: int = None,
-                  node_place: NodePlace = NodePlace.HIDDEN,
+                  node_type: NodeType = NodeType.HIDDEN,
                   activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
                   aggregation_function: AggregationFuncType=AggregationFuncType.SUM
                   ):
@@ -58,7 +58,7 @@ class Node:
         self.activation_phase: int = 0
         self.output_value: float = 0.0              # The total activation entering the Node
         
-        self.node_place: NodePlace = node_place     # HIDDEN, INPUT, OUTPUT, BIAS
+        self.type: NodeType = node_type     # HIDDEN, INPUT, OUTPUT, BIAS
        
         self.activation_function: ActivationFuncType = activation_function 
         self.aggregation_function: AggregationFuncType = aggregation_function
@@ -74,7 +74,7 @@ class Node:
     @classmethod
     def constructor_from_node(cls, node:Node):
         return Node(node_id=node.id,
-                    node_place=node.node_place)
+                    node_type=node.type)
         
     def is_sensor(self) -> bool:
         """ determine if the node is a sensor (INPUT or BIAS)
@@ -82,8 +82,8 @@ class Node:
         Returns:
             bool: node is a sensor
         """        
-        return (self.node_place == NodePlace.INPUT or 
-                self.node_place == NodePlace.BIAS)
+        return (self.type == NodeType.INPUT or 
+                self.type == NodeType.BIAS)
         
         
     def get_activation(self, activation_phase: int) -> float:

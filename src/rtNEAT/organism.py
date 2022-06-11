@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from genome import Genome
 from network import Network
 from innovation import InnovTable
-from node import Node, NodePlace
+from node import Node, NodeType
 from gene import Gene
 from neat import Config
 import numpy as np
@@ -43,16 +43,16 @@ class Organism:
         # Initialize inputs
         inputs = []
         for _ in range(Config.num_inputs):
-            inputs.append(Node(node_place=NodePlace.INPUT))               
+            inputs.append(Node(node_type=NodeType.INPUT))               
         
          # Initialize bias
         bias =[]
-        bias.append(Node(node_place=NodePlace.BIAS))
+        bias.append(Node(node_type=NodeType.BIAS))
                 
         # Initialize outputs    
         outputs = []  
         for _ in range(Config.num_outputs):
-            outputs.append(Node(node_place=NodePlace.OUTPUT))
+            outputs.append(Node(node_type=NodeType.OUTPUT))
 
         else:
             self.genotype.nodes = {node.id: node for node in inputs + bias + outputs}

@@ -1,7 +1,7 @@
 from audioop import bias
 import pytest
 from gene import Gene
-from node import Node, NodePlace, sigmoid
+from node import Node, NodeType, sigmoid
 from link import Link
 from innovation import Innovation, InnovationType, InnovTable
 from genome import Genome
@@ -13,7 +13,7 @@ from organism import Organism
 class TestNode:
     def test_create_node(self):
         sensor_node = Node(
-                           node_place=NodePlace.INPUT)
+                           node_type=NodeType.INPUT)
         assert sensor_node
         assert type(sensor_node) == Node
         
@@ -23,28 +23,28 @@ class TestNode:
         
         
     def test_node_fields(self):
-        sensor_node = Node(node_place=NodePlace.INPUT)
+        sensor_node = Node(node_type=NodeType.INPUT)
         
-        action_node = Node(node_place=NodePlace.OUTPUT)
+        action_node = Node(node_type=NodeType.OUTPUT)
       
-        assert set(['id', 'node_place', 'output_value', 'activation_phase', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
+        assert set(['id', 'type', 'output_value', 'activation_phase', 'frozen', 'incoming','outgoing']).issubset(vars(action_node))
         
         assert sensor_node.id == 1
-        assert sensor_node.node_place == NodePlace.INPUT
+        assert sensor_node.type == NodeType.INPUT
         assert sensor_node.output_value == 0.0
         assert sensor_node.frozen == False
         
         assert action_node.id == 2
-        assert action_node.node_place == NodePlace.OUTPUT
+        assert action_node.type == NodeType.OUTPUT
         assert action_node.output_value == 0.0
         assert action_node.frozen == False
 
     """ def test_add_incoming_link(self):
         sensor_node = Node(node_id=0,
-                           node_place=NodePlace.INPUT)
+                           node_type=NodePlace.INPUT)
         
         action_node = Node(node_id=1,
-                           node_place=NodePlace.OUTPUT)
+                           node_type=NodePlace.OUTPUT)
         
         assert len(action_node.incoming) == 0
         action_node.add_incoming(feednode=sensor_node, weight=1.0)
@@ -54,9 +54,9 @@ class TestNode:
 class TestLink:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.sensor_node = Node(node_place=NodePlace.INPUT)
+        self.sensor_node = Node(node_type=NodeType.INPUT)
         
-        self.action_node = Node(node_place=NodePlace.OUTPUT) 
+        self.action_node = Node(node_type=NodeType.OUTPUT) 
         
     def test_create_link(self):
         link = Link(in_node=self.sensor_node, out_node=self.action_node, weight=1.0)
@@ -79,9 +79,9 @@ class TestLink:
 class TestGene:
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.sensor_node = Node(node_place=NodePlace.INPUT)
+        self.sensor_node = Node(node_type=NodeType.INPUT)
         
-        self.action_node = Node(node_place=NodePlace.OUTPUT) 
+        self.action_node = Node(node_type=NodeType.OUTPUT) 
         
     def test_create_gene(self):
         gene = Gene(in_node=self.sensor_node,
@@ -108,9 +108,9 @@ class TestGene:
 class TestGenome:
     @pytest.fixture(autouse=True)
     def setup(self):
-        sensor_node = Node(node_place=NodePlace.INPUT)
+        sensor_node = Node(node_type=NodeType.INPUT)
             
-        action_node = Node(node_place=NodePlace.OUTPUT)
+        action_node = Node(node_type=NodeType.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
                     out_node=action_node,
@@ -148,12 +148,12 @@ class TestGenome:
             assert node.id == i
         
         for i in range(1,n_inputs-1):
-            assert genome.nodes[i].node_place == NodePlace.INPUT
+            assert genome.nodes[i].type == NodeType.INPUT
             assert len(genome.nodes[i].incoming) == 0
             assert len(genome.nodes[i].outgoing) == n_outputs
         
         for i in range(n_inputs+2, n_total):
-            assert genome.nodes[i].node_place == NodePlace.OUTPUT
+            assert genome.nodes[i].type == NodeType.OUTPUT
             assert len(genome.nodes[i].incoming) == n_inputs + 1
             assert len(genome.nodes[i].outgoing) == 0
             
@@ -163,8 +163,8 @@ class TestGenome:
         assert genome.genes.size == (n_inputs + 1) * n_outputs
         for i, gene in enumerate(genome.genes,1):
             assert gene.innovation_number == i
-            assert gene.link.in_node.node_place == NodePlace.INPUT or NodePlace.BIAS
-            assert gene.link.out_node.node_place == NodePlace.OUTPUT
+            assert gene.link.in_node.type == NodeType.INPUT or NodeType.BIAS
+            assert gene.link.out_node.type == NodeType.OUTPUT
         
         assert InnovTable.get_innovation_number() == (n_inputs + 1) * n_outputs + 1
         
@@ -179,13 +179,13 @@ class TestGenome:
     class TestGenomeMethods:  
         @pytest.fixture(autouse=True)
         def setup(self):
-            sensor_node = Node(node_place=NodePlace.INPUT)
+            sensor_node = Node(node_type=NodeType.INPUT)
             
-            sensor_node2 = Node(node_place=NodePlace.INPUT)
+            sensor_node2 = Node(node_type=NodeType.INPUT)
    
-            sensor_node3 = Node(node_place=NodePlace.INPUT)
+            sensor_node3 = Node(node_type=NodeType.INPUT)
             
-            action_node = Node(node_place=NodePlace.OUTPUT)
+            action_node = Node(node_type=NodeType.OUTPUT)
             
             gene0 = Gene(in_node=sensor_node,
                         out_node=action_node,
@@ -193,7 +193,7 @@ class TestGenome:
                         #innovation_number=0,
                         mutation_number=0)
             
-            action_node2 = Node(node_place=NodePlace.OUTPUT)
+            action_node2 = Node(node_type=NodeType.OUTPUT)
             
             gene1 = Gene(in_node=sensor_node2,
                         out_node=action_node2,
@@ -201,7 +201,7 @@ class TestGenome:
                         #innovation_number=1,
                         mutation_number=0)
             
-            action_node3 = Node(node_place=NodePlace.OUTPUT)
+            action_node3 = Node(node_type=NodeType.OUTPUT)
             
             gene2 = Gene(in_node=sensor_node3,
                     out_node=action_node3,
@@ -360,9 +360,9 @@ class TestGenome:
             assert len(new_nodes) == initial_size+1
             
         def test_mate_multipoint(self):
-            sensor_node = Node(node_place=NodePlace.INPUT)
+            sensor_node = Node(node_type=NodeType.INPUT)
             
-            action_node = Node(node_place=NodePlace.OUTPUT)
+            action_node = Node(node_type=NodeType.OUTPUT)
             
             gene3 = Gene(   in_node=sensor_node,
                             out_node=action_node,
@@ -510,7 +510,7 @@ class TestGenome:
                                                             old_weight=0.34)
            
             assert node.id == 3
-            assert node.node_place == NodePlace.HIDDEN
+            assert node.type == NodeType.HIDDEN
             assert gene1.link.in_node == in_node
             assert gene1.link.out_node == node
             assert gene1.link.weight == 1.0
@@ -668,7 +668,7 @@ class TestGenome:
         def test_create_bias(self):
             outputs = []
             for _ in range(3):
-                outputs.append(Node(node_place=NodePlace.OUTPUT))
+                outputs.append(Node(node_type=NodeType.OUTPUT))
                 
             assert len(outputs) == 3
             
@@ -677,7 +677,7 @@ class TestGenome:
             assert len(genome.nodes) == len(outputs)
             assert len(genome.genes) == 0
             bias = genome._create_bias(outputs=outputs)
-            assert bias.node_place == NodePlace.BIAS
+            assert bias.type == NodeType.BIAS
             assert len(genome.nodes) == len(outputs) + 1
             assert len(genome.genes) == len(outputs)
             for gene, output in zip(genome.genes, outputs):
@@ -754,11 +754,11 @@ class TestNetwork:
         
         for _ in range(100):
             weights = np.random.uniform(-1,1,3)
-            input1 = Node(node_place=NodePlace.INPUT)
-            input2 = Node(node_place=NodePlace.INPUT)
-            bias = Node(node_place=NodePlace.BIAS)
-            hidden = Node(node_place=NodePlace.HIDDEN)
-            output = Node(node_place=NodePlace.OUTPUT)
+            input1 = Node(node_type=NodeType.INPUT)
+            input2 = Node(node_type=NodeType.INPUT)
+            bias = Node(node_type=NodeType.BIAS)
+            hidden = Node(node_type=NodeType.HIDDEN)
+            output = Node(node_type=NodeType.OUTPUT)
             gene1 = Gene(in_node=input1, out_node=hidden, weight=weights[0])
             gene2 = Gene(in_node=input2, out_node=hidden, weight=weights[1])
             gene3 = Gene(in_node=hidden, out_node=output, weight=weights[2])
@@ -785,16 +785,16 @@ class TestNetwork:
         weights = np.random.uniform(-1,1,n_links)
         
         nodes = []
-        nodes.append(Node(node_place=NodePlace.BIAS))
+        nodes.append(Node(node_type=NodeType.BIAS))
         n_inputs = 0
         n_outputs = 0
         for _ in range(n_nodes):
-            node_place = np.random.choice([NodePlace.INPUT, NodePlace.OUTPUT, NodePlace.HIDDEN])
-            if node_place == NodePlace.INPUT:
+            node_type = np.random.choice([NodeType.INPUT, NodeType.OUTPUT, NodeType.HIDDEN])
+            if node_type == NodeType.INPUT:
                 n_inputs += 1
-            elif node_place == NodePlace.OUTPUT:
+            elif node_type == NodeType.OUTPUT:
                 n_outputs += 1
-            nodes.append(Node(node_place=node_place))
+            nodes.append(Node(node_type=node_type))
         
         genes = []
         
@@ -802,8 +802,8 @@ class TestNetwork:
             valid = False
             while not valid:
                 in_node, out_node = np.random.choice(nodes, 2)
-                valid = (in_node.node_place != NodePlace.OUTPUT and
-                         out_node.node_place != NodePlace.INPUT)
+                valid = (in_node.type != NodeType.OUTPUT and
+                         out_node.type != NodeType.INPUT)
                 
             genes.append(Gene(in_node=in_node,
                               out_node=out_node,
@@ -824,9 +824,9 @@ class TestNetwork:
 class TestInnovTable:
     @pytest.fixture(autouse=True)
     def setup(self):
-        sensor_node = Node(node_place=NodePlace.INPUT)
+        sensor_node = Node(node_type=NodeType.INPUT)
             
-        action_node = Node(node_place=NodePlace.OUTPUT)
+        action_node = Node(node_type=NodeType.OUTPUT)
         
         gene0 = Gene(in_node=sensor_node,
                     out_node=action_node,
@@ -965,11 +965,11 @@ class TestInnovTable:
     def setup(self):
         sensor_node = Node(node_id=0,
                                 
-                                node_place=NodePlace.INPUT)
+                                node_type=NodePlace.INPUT)
         
         action_node = Node(node_id=1,
                                 
-                                node_place=NodePlace.OUTPUT)
+                                node_type=NodePlace.OUTPUT)
         
         gene1 = Gene(in_node=sensor_node,
                     out_node=action_node,
@@ -979,11 +979,11 @@ class TestInnovTable:
         
         sensor_node2 = Node(node_id=2,
                                 
-                                node_place=NodePlace.INPUT)
+                                node_type=NodePlace.INPUT)
         
         action_node2 = Node(node_id=3,
                                 
-                                node_place=NodePlace.OUTPUT)
+                                node_type=NodePlace.OUTPUT)
         
         gene2 = Gene(in_node=sensor_node2,
                     out_node=action_node2,

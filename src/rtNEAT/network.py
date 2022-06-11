@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from typing import List
 
 import numpy as np
-from node import Node, NodePlace
+from node import Node, NodeType
 
 
 
@@ -99,11 +99,11 @@ class Network:
         inputs: np.array = self.inputs[:-1]
         bias_node: Node = self.inputs[-1]
         
-        if bias_node.node_place != NodePlace.BIAS:
+        if bias_node.type != NodeType.BIAS:
             raise ValueError
 
         for node, value in zip(inputs, values):
-            if node.node_place != NodePlace.INPUT:
+            if node.type != NodeType.INPUT:
                 raise ValueError
             
             node.output_value = value
@@ -127,7 +127,7 @@ class Network:
         output_values = []
         
         for node in self.outputs:
-            if node.node_place != NodePlace.OUTPUT:
+            if node.type != NodeType.OUTPUT:
                 raise ValueError
             
             output_value = node.get_activation(activation_phase=self.activation_phase) 
