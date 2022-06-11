@@ -36,6 +36,22 @@ class Network:
          # Allow for a network id
          # Tells whether network can adapt or not
         
+    @property
+    def n_inputs(self):
+        return len(self.inputs)
+    
+    @property
+    def n_outputs(self):
+        return len(self.outputs)
+    
+    @property
+    def n_nodes(self):
+        return len(self.all_nodes)
+    
+    @property
+    def n_links(self):
+        return len(self.links)    
+    
     def get_all_nodes(self):
         return np.array(list(self.all_nodes.values()))
     
@@ -48,7 +64,6 @@ class Network:
         
         network._synthetize_nodes(node_genes=genome.node_genes)    
         network._synthetize_links(link_genes=genome.link_genes)
-        network.calculate_properties()
         
         return network
     
@@ -95,10 +110,6 @@ class Network:
                     
             # Keep track of all nodes, not just input and output    
             self.all_nodes[key] = node
-                
-    def calculate_properties(self):
-        self.number_nodes = len(self.all_nodes)
-        self.number_links = len(self.links)
     
     def activate(self, input_values: np.array) -> np.array:
         """ Activate the whole network after recieving input values

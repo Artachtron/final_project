@@ -86,5 +86,8 @@ class TestNetwork:
             network = Network.genesis(genome)
             
             assert network.id == genome.id
-            assert network.number_links == 1000
-            assert network.number_nodes == 100
+            assert network.n_links == 1000
+            assert network.n_nodes == 100
+            assert network.n_inputs > 0
+            assert network.n_outputs > 0
+           
