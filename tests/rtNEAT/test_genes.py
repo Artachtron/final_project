@@ -4,8 +4,6 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 from project.src.rtNEAT.genes import BaseGene, LinkGene, NodeGene, NodeType, ActivationFuncType, AggregationFuncType, reset_innovation_table
 
 
-
-
 class TestGene:
     @pytest.fixture(autouse=True)
     def setup(self):

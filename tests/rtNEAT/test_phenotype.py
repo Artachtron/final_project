@@ -2,8 +2,9 @@
 import os, sys
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
-from project.src.rtNEAT.phenotype import Link, Node
+from project.src.rtNEAT.phenes import Link, Node
 from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFuncType
+from project.src.rtNEAT.genes import LinkGene, NodeGene
 
 
 class TestPhenotype:
@@ -53,3 +54,23 @@ class TestPhenotype:
         assert link.in_node.id == 0
         assert link.out_node.id == 1
         assert link.enabled == False
+        
+    def test_synthesis(self):
+        node_gene = NodeGene()
+        
+        node = Node.synthesis(**node_gene.transcription())
+        assert type(node) == Node
+        assert node.id == node_gene.id
+        
+        node2 = Node.synthesis(**NodeGene().transcription())
+
+        link_gene = LinkGene(in_node_id=node.id,
+                             out_node_id=node2.id)
+        
+        dict_link = link_gene.transcription()
+        dict_link['in_node'] = node
+        dict_link['out_node'] = node2
+        
+        link = Link.synthesis(**dict_link)
+        assert type(link) == Link
+        assert link.id == link_gene.id

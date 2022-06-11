@@ -51,6 +51,10 @@ class BaseGene:
         self.id: int = gene_id
         self.frozen: bool = freeze
         self.enabled: bool = enable
+       
+    def transcription(self):
+        raise NotImplementedError("Please Implement the transcription method")
+        
      
 class LinkGene(BaseGene):
     def __init__(self,
@@ -78,7 +82,11 @@ class LinkGene(BaseGene):
                                        InnovTable.get_innovation_number(increment=True))
         
         self.mutation_number: int = mutation_number
-
+        
+    def transcription(self):
+        return {'link_id':self.id, 'weight':self.weight,
+                'in_node':self.in_node, 'out_node':self.out_node,
+                 'enabled':self.enabled}
         
 class NodeGene(BaseGene):
     def __init__(self,
@@ -104,6 +112,12 @@ class NodeGene(BaseGene):
         #self.incoming: Dict[int, Link] = {}                          # A list of pointers to incoming weighted signals from other nodes
         #self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
 
+    def transcription(self):
+        return {'node_id':self.id, 'node_type':self.type,
+                'activation_function':self.activation_function,
+                'aggregation_function':self.aggregation_function,
+                'enabled':self.enabled}
+    
 def reset_innovation_table():
     InnovTable.reset_innovation_table()
 

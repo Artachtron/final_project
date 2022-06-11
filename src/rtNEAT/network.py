@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from genome import Genome
     
-from typing import List
+from typing import Dict
 
 import numpy as np
 from node import Node, NodeType
@@ -30,10 +30,10 @@ class Network:
         
     
     def create_network(genome: Genome,
-                       inputs: List[Node],
-                       outputs: List[Node],
-                       all_nodes: List[Node],
-                       hidden: List[Node]=[]) -> Network:
+                       inputs: Dict[int, Node],
+                       outputs: Dict[int, Node],
+                       all_nodes: Dict[int, Node],
+                       hidden: Dict[int, Node]=[]) -> Network:
         
         for current_gene in genome.genes:
             # Only create the link if the gene is enabled

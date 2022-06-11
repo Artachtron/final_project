@@ -3,23 +3,39 @@ from genes import NodeType, ActivationFuncType, AggregationFuncType
 from typing import Dict
 
 
-class Link:
-        def __init__(self,
-                    link_id: int,
-                    weight: float,
-                    in_node: Node,
-                    out_node: Node,
-                    enabled: bool = True,
-                    ):
-            
-            self.id = link_id
-            self.weight: float = weight # Weight of connection
-            self.in_node: Node = in_node # Node inputting into the link
-            self.out_node: Node = out_node # Node that the link affects
-            self.enabled: bool = enabled
+class BasePhene:
+    def __init__(self,
+                 phene_id: int,
+                 enabled: bool = True):
+        
+        self.id = phene_id
+        self.enabled = enabled
+        
+    @classmethod    
+    def synthesis(cls, **kwargs):
+        raise NotImplementedError("Please Implement the synthesis method")
+        
+class Link(BasePhene):
+    def __init__(self,
+                link_id: int,
+                weight: float,
+                in_node: Node,
+                out_node: Node,
+                enabled: bool = True,
+                ):
+        
+        super(Link, self).__init__(phene_id=link_id,
+                                    enabled=enabled)
+        
+        self.weight: float = weight # Weight of connection
+        self.in_node: Node = in_node # Node inputting into the link
+        self.out_node: Node = out_node # Node that the link affects
 
+    @classmethod
+    def synthesis(cls, **kwargs):
+        return Link(**kwargs)
 
-class Node:
+class Node(BasePhene):
     def __init__(self,
                   node_id: int,
                   node_type: NodeType = NodeType.HIDDEN,
@@ -28,11 +44,11 @@ class Node:
                   enabled: bool = True,
                   ):
 
-        self.id: int = node_id
+        super(Node, self).__init__( phene_id=node_id,
+                                    enabled=enabled)
         
         self.activation_phase: int = 0
         self.activation_value: float = 0.0              # The total activation entering the Node
-        self.enabled: bool = enabled
         self.type: NodeType = node_type     # HIDDEN, INPUT, OUTPUT, BIAS
        
         self.activation_function: ActivationFuncType = activation_function 
@@ -43,6 +59,9 @@ class Node:
         
         #Config.configure()
         
+    @classmethod
+    def synthesis(cls, **kwargs):
+        return Node(**kwargs)    
   
     @classmethod
     def constructor_from_node(cls, node:Node):
