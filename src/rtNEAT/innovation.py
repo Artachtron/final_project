@@ -14,6 +14,7 @@ class InnovTable:
     history: List[Innovation] = []
     next_innovation_number: int = 1
     next_node_number: int = 1
+    next_link_number: int = 1
      
     @staticmethod    
     def get_innovation_number(increment: bool=False) -> int:
@@ -37,6 +38,29 @@ class InnovTable:
             number (int, optional): innovation number's increment. Defaults to 1.
         """        
         InnovTable.next_innovation_number += amount
+        
+    @staticmethod    
+    def get_link_number(increment: bool=False) -> int:
+        """ Get the current link number
+
+        Returns:
+            int: current link number
+        """
+        number = InnovTable.next_link_number 
+        
+        if increment:
+            InnovTable.increment_link()
+         
+        return number
+    
+    @staticmethod
+    def increment_link(amount: int=1) -> None:
+        """ Increment the current link number by a given amount
+
+        Args:
+            number (int, optional): link number's increment. Defaults to 1.
+        """        
+        InnovTable.next_link_number += amount
     
     @staticmethod    
     def get_node_number(increment: bool=False) -> int:

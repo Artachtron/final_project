@@ -52,7 +52,7 @@ class Node:
                   activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
                   aggregation_function: AggregationFuncType=AggregationFuncType.SUM
                   ):
-        
+
         self.id: int = node_id or InnovTable.get_node_number(increment=True)
         
         self.activation_phase: int = 0

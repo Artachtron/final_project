@@ -3,7 +3,7 @@ import numpy as np
 from neat import Config
 from node import Node, NodeType
 from link import Link
-from gene import Gene
+from gene import LinkGene
 from innovation import Innovation, InnovationType, InnovTable
 from network import Network
 from typing import List, Iterator, Tuple, Dict
@@ -13,7 +13,7 @@ class Genome:
     def __init__(self,
                  genome_id: int,
                  nodes: Dict[int, Node] = {},
-                 genes: np.array = np.array([], dtype=Gene)):
+                 genes: np.array = np.array([], dtype=LinkGene)):
         
         self.id: int = genome_id
         self.nodes: Dict[int, Node] = nodes   # List of network's nodes 
@@ -122,11 +122,11 @@ class Genome:
         return self.genes[-1].innovation_number + 1
     
     def add_gene(self,
-                 gene: Gene) -> None:
+                 gene: LinkGene) -> None:
         """Adds a new gene that has been created through a mutation in the correct order into the list of genes in the genome
 
         Args:
-            gene (Gene): The gene to add to the genome's list of genes
+            gene (LinkGene): The gene to add to the genome's list of genes
         """
         innovation_number = gene.innovation_number
         gene_index = 0
@@ -168,22 +168,22 @@ class Genome:
                 node.type == NodeType.OUTPUT)
     
     @staticmethod
-    def _choose_gene_to_transmit(   parent1_gene: Gene, parent2_gene: Gene, parent1_genes: Iterator,
+    def _choose_gene_to_transmit(   parent1_gene: LinkGene, parent2_gene: LinkGene, parent1_genes: Iterator,
                                     parent2_genes: Iterator, p1_dominant: bool
-                                ) -> Tuple[Gene, bool, bool, Gene, Gene, Iterator, Iterator]:
+                                ) -> Tuple[LinkGene, bool, bool, LinkGene, LinkGene, Iterator, Iterator]:
         """Choose the gene to transmit to offspring
 
         Args:
-            parent1_gene (Gene):        the gene from the first genome
-            parent2_gene (Gene):        the gene from the second genome
+            parent1_gene (LinkGene):        the gene from the first genome
+            parent2_gene (LinkGene):        the gene from the second genome
             parent1_genes (Iterator):   the iterator of genes from first genome
             parent2_genes (Iterator):   the iterator of genes from second genome
             parent1_dominant (bool):    the first genome is the dominant one
 
         Returns:
-            Tuple[Gene, bool, bool, 
-            Gene, Gene, Iterator, Iterator]:    
-                                            Gene: the chosen gene that will be transmitted
+            Tuple[LinkGene, bool, bool, 
+            LinkGene, LinkGene, Iterator, Iterator]:    
+                                            LinkGene: the chosen gene that will be transmitted
                                             bool: the gene must be skipped
                                             bool: the gene must be disabled
                                             ... : args for the next iteration
@@ -231,14 +231,14 @@ class Genome:
         return chosen_gene, skip, disable, parent1_gene, parent2_gene, parent1_genes, parent2_genes
     
     @staticmethod   
-    def _check_gene_conflict(new_genes: List[Gene],
-                             chosen_gene: Gene) -> bool:
+    def _check_gene_conflict(new_genes: List[LinkGene],
+                             chosen_gene: LinkGene) -> bool:
         """ Check to see if the chosengene conflicts with an already chosen gene
             i.e. do they represent the same link
 
         Args:
-            new_genes (List[Gene]): the list of genes to check for conflicts
-            chosen_gene (Gene):     the chosen gene that should not conflict with existing ones
+            new_genes (List[LinkGene]): the list of genes to check for conflicts
+            chosen_gene (LinkGene):     the chosen gene that should not conflict with existing ones
 
         Returns:
            bool: a conflict was detected 
@@ -283,7 +283,7 @@ class Genome:
     def mate_multipoint(parent1: Genome, parent2: Genome, genome_id: int,) -> Genome:
         """mates this Genome with another Genome  
 		   For every point in each Genome, where each Genome shares
-		   the innovation number, the Gene is chosen randomly from 
+		   the innovation number, the LinkGene is chosen randomly from 
 		   either parent.  If one parent has an innovation absent in 
 		   the other, the baby will inherit the innovation 
 		   Otherwise, excess genes come from the dominant parent.
@@ -300,7 +300,7 @@ class Genome:
         new_nodes = {}    # already added nodes
         parent1_dominant: bool = choice([0,1])  # Determine which genome will give its excess genes
         
-        new_genes: List[Gene] = [] # already chosen genes
+        new_genes: List[LinkGene] = [] # already chosen genes
         
         # Make sure all sensors and outputs are included
         for current_node in parent2.nodes.values():
@@ -357,7 +357,7 @@ class Genome:
                                                                               target_node=in_node)
                 
                 # Add gene        
-                new_gene = Gene.constructor_from_gene(gene=chosen_gene,
+                new_gene = LinkGene.constructor_from_gene(gene=chosen_gene,
                                                       in_node=new_in_node,
                                                       out_node=new_out_node)
                 if disable:
@@ -372,11 +372,11 @@ class Genome:
         
         return baby_genome
     
-    def _create_new_link(self, gene: Gene) -> Link:
+    def _create_new_link(self, gene: LinkGene) -> Link:
         """ Create a new link from a gene's link
 
         Args:
-            gene (Gene): gene from which to get link's information
+            gene (LinkGene): gene from which to get link's information
 
         Returns:
             Link: the created link
@@ -438,7 +438,7 @@ class Genome:
                             node=bias)
         
         for output in outputs:
-            self.add_gene(Gene(in_node=bias,
+            self.add_gene(LinkGene(in_node=bias,
                                out_node=output))
 
         return bias
@@ -460,17 +460,17 @@ class Genome:
         # Record the innovation 
         current_gene.mutation_number = current_gene.link.weight
                          
-    def _find_random_gene(self, tries:int = 20) -> Tuple[Gene, bool]:
+    def _find_random_gene(self, tries:int = 20) -> Tuple[LinkGene, bool]:
         """ Find a random gene containing a node to mutate
 
         Returns:
-            Tuple[Gene, bool]:  Gene: gene containing the node to mutate
+            Tuple[LinkGene, bool]:  LinkGene: gene containing the node to mutate
                                 bool: gene was found
         """     
                   
         try_count: int = 0      # number of attempt already made
         found: bool = False     # a valid gene was found
-        the_gene: Gene = None   # the found gene
+        the_gene: LinkGene = None   # the found gene
         
         while try_count < tries and not found:
             for gene in self.genes:
@@ -484,7 +484,7 @@ class Genome:
     
     def _create_node(self, node_id: int, in_node: Node, out_node: Node, recurrence: bool,
                          innovation_number1: int, innovation_number2: int, old_weight: int
-                         ) -> Tuple[Node, Gene, Gene]:
+                         ) -> Tuple[Node, LinkGene, LinkGene]:
         """Create the new node and two genes connecting this node in and out
 
         Args:
@@ -497,21 +497,21 @@ class Genome:
             old_weight (int):           weight of the disabled old link
 
         Returns:
-            Tuple[Node, Gene, Gene]:    Node: the new node created
-                                        Gene: the gene connecting in the new node
-                                        Gene: the gene connecting out the new node
+            Tuple[Node, LinkGene, LinkGene]:    Node: the new node created
+                                        LinkGene: the gene connecting in the new node
+                                        LinkGene: the gene connecting out the new node
         """        
         new_node = Node(node_id=node_id,
                         node_type=NodeType.HIDDEN)
                 
-        new_gene1 = Gene(weight=1.0,
+        new_gene1 = LinkGene(weight=1.0,
                         in_node=in_node,
                         out_node=new_node,
                         recurrence=recurrence,
                         innovation_number=innovation_number1,
                         mutation_number=0)
     
-        new_gene2 = Gene(weight=old_weight,
+        new_gene2 = LinkGene(weight=old_weight,
                         in_node=new_node,
                         out_node=out_node,
                         recurrence=False,
@@ -521,14 +521,14 @@ class Genome:
         return new_node, new_gene1, new_gene2
     
     def _check_innovation_identical(self, innovation: Innovation, in_node: Node,
-                                    out_node: Node, the_gene: Gene) -> bool:
+                                    out_node: Node, the_gene: LinkGene) -> bool:
         """Check if the innovation already exists
 
         Args:
             innovation (Innovation):    innovation to check for
             in_node (Node):             incoming node of the innovation
             out_node (Node):            outgoing node of the innovation
-            the_gene (Gene):            the gene with the innovation number
+            the_gene (LinkGene):            the gene with the innovation number
 
         Returns:
             bool: the innovation already exist
@@ -538,16 +538,16 @@ class Genome:
                  innovation.node_out_id == out_node.id and
                  innovation.old_innovation_number == the_gene.innovation_number)
     
-    def _new_node_innovation(self, the_gene: Gene) -> Tuple[Node, Gene, Gene]:
+    def _new_node_innovation(self, the_gene: LinkGene) -> Tuple[Node, LinkGene, LinkGene]:
         """ Check to see if this innovation has already been done in another genome
 
         Args:
-            the_gene (Gene): the gene which innovation to check
+            the_gene (LinkGene): the gene which innovation to check
 
         Returns:
-            Tuple[Node, Gene, Gene]:    Node: the new node created
-                                        Gene: the gene connecting in the new node
-                                        Gene: the gene connecting out the new node
+            Tuple[Node, LinkGene, LinkGene]:    Node: the new node created
+                                        LinkGene: the gene connecting in the new node
+                                        LinkGene: the gene connecting out the new node
         """        
         # Extract the link
         the_link: Link = the_gene.link
@@ -646,7 +646,7 @@ class Genome:
                 
         return found
 
-    def _new_link_gene(self, recurrence: bool, in_node: Node, out_node: Node) -> Gene:
+    def _new_link_gene(self, recurrence: bool, in_node: Node, out_node: Node) -> LinkGene:
         """ Create a new gene representing a link between two nodes, and return this gene
 
         Args:
@@ -655,7 +655,7 @@ class Genome:
             out_node (Node):    outgoing node
 
         Returns:
-            Gene: the newly created gene
+            LinkGene: the newly created gene
         """        
         
         the_innovation = InnovTable.get_innovation( in_node=in_node,
@@ -663,7 +663,7 @@ class Genome:
                                                     innovation_type=InnovationType.NEW_LINK,
                                                     recurrence=recurrence)
             
-        new_gene = Gene(weight=the_innovation.weight,
+        new_gene = LinkGene(weight=the_innovation.weight,
                         in_node=in_node,
                         out_node=out_node,
                         recurrence=recurrence,
@@ -781,7 +781,7 @@ class Genome:
                     new_weight = [-1,1][randrange(2)]*random.random() * 3.0
                     
                     # Create the new gene
-                    new_gene = Gene(weight=new_weight,
+                    new_gene = LinkGene(weight=new_weight,
                                     in_node=sensor,
                                     out_node=output,
                                     recurrence=False,
@@ -803,7 +803,7 @@ class Genome:
                       the_innovation.node_out_id == output.id and
                       the_innovation.recurrence_flag == False):
                     
-                    new_gene = Gene(weight=the_innovation.weight,
+                    new_gene = LinkGene(weight=the_innovation.weight,
                                     recurrence=False,
                                     innovation_number=the_innovation.innovation_number1,
                                     mutation_number=0)

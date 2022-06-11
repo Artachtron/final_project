@@ -7,7 +7,7 @@ from genome import Genome
 from network import Network
 from innovation import InnovTable
 from node import Node, NodeType
-from gene import Gene
+from gene import LinkGene
 from neat import Config
 import numpy as np
 
@@ -60,7 +60,7 @@ class Organism:
         genes = []
         for node1 in inputs + bias:
             for node2 in outputs:
-                genes.append(Gene(  in_node=node1,
+                genes.append(LinkGene(  in_node=node1,
                                     out_node=node2))
 
         else:

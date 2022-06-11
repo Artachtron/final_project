@@ -1,10 +1,115 @@
-from __future__ import annotations
-from node import Node
-from link import Link
+import math
 from numpy.random import uniform
 from innovation import InnovTable
+from functools import partial
+import enum
 
-class Gene:
+class NodeType(enum.Enum):
+    HIDDEN = 0
+    INPUT = 1
+    OUTPUT = 2
+    BIAS = 3
+    
+def sigmoid(x):
+    """ Sigmoid activation function, Logistic activation with a range of 0 to 1
+    
+    Args:
+        x (float): input value
+        
+    Returns:
+        float: output value
+    """
+    try:
+        return (1.0 / (1.0 + math.exp(-x)))
+    except OverflowError:
+        return 0 if x < 0 else 1
+
+
+def relu(x):
+    """ ReLu activation function, Limits the lower range of the input to 0
+    Args:
+        x (float): input value
+        
+    Returns:
+        float: output value
+    """
+    return max(0, x)
+    
+class ActivationFuncType(enum.Enum):
+    SIGMOID = partial(sigmoid)
+    RELU = partial(relu)
+
+class AggregationFuncType(enum.Enum):
+    SUM = sum
+
+class BaseGene:
+    def __init__(self,
+                 gene_id: int,
+                 enable: bool,
+                 freeze: bool,):
+    
+        self.id: int = gene_id
+        self.frozen: bool = freeze
+        self.enabled: bool = enable
+     
+class LinkGene(BaseGene):
+    def __init__(self,
+                 in_node_id: int,
+                 out_node_id: int,
+                 weight: float = 0.0,
+                 link_id: int = 0,
+                 innovation_number: int = 0,
+                 mutation_number: int = 0,
+                 recurrence: bool = False,
+                 enable: bool = True,
+                 freeze: bool = False,
+                 ):
+        
+        link_id = link_id or InnovTable.get_link_number(increment=True)
+        
+        super(LinkGene, self).__init__(gene_id=link_id,
+                                       enable=enable,
+                                       freeze=freeze)
+        
+        self.in_node: int = in_node_id
+        self.out_node: int = out_node_id
+        self.weight: float = weight or uniform(-1,1)
+        
+        self.innovation_number: int = (innovation_number or
+                                       InnovTable.get_innovation_number(increment=True))
+        
+        self.mutation_number: int = mutation_number
+         
+        self.recurrence: bool = recurrence
+        
+class NodeGene(BaseGene):
+    def __init__(self,
+                 node_id: int = 0,
+                 node_type: NodeType = NodeType.HIDDEN,
+                 activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
+                 aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
+                 enable: bool = True,
+                 freeze: bool = False,):
+        
+        super(NodeGene, self).__init__(gene_id=node_id,
+                                       enable=enable,
+                                       freeze=freeze)
+
+        
+        self.id: int = node_id or InnovTable.get_node_number(increment=True)
+        
+        self.activation_phase: int = 0
+        self.activation_value: float = 0.0              # The total activation entering the Node
+        
+        self.type: NodeType = node_type     # HIDDEN, INPUT, OUTPUT, BIAS
+       
+        self.activation_function: ActivationFuncType = activation_function 
+        self.aggregation_function: AggregationFuncType = aggregation_function
+            
+        #self.incoming: Dict[int, Link] = {}                          # A list of pointers to incoming weighted signals from other nodes
+        #self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
+
+""" class Gene:
     def __init__(self,
                  in_node: Node,
                  out_node: Node,
@@ -32,5 +137,5 @@ class Gene:
                     out_node=out_node,
                     innovation_number=gene.innovation_number,
                     mutation_number=gene.mutation_number,
-                    recurrence= gene.link.is_recurrent)
+                    recurrence= gene.link.is_recurrent) """
                     
