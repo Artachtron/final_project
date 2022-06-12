@@ -67,7 +67,7 @@ class TestGene:
                              freeze=True)
         
         assert {'id', 'enabled', 'frozen',
-                'type', 'activation_function',
+                'type', 'bias', 'activation_function',
                 'aggregation_function'}.issubset(vars(node_gene))
         
         assert node_gene.id == 1
@@ -97,3 +97,33 @@ class TestGene:
         assert link_gene2 > link_gene1
         assert link_gene1 == link_gene3
         assert link_gene3 != link_gene2
+        
+    class TestGeneMethods:
+        @pytest.fixture(autouse=True)
+        def setup(self):
+            self.node_gene1 = NodeGene()
+            self.node_gene2 = NodeGene()
+            yield
+            self.node_gene1 = None
+            self.node_gene2 = None
+            reset_innovation_table()
+            
+        def test_distance(self):
+            self.node_gene1.bias = 1
+            self.node_gene2.bias = 0.5
+            dist = self.node_gene1.distance(other_node=self.node_gene2)
+            
+            assert dist == 0.5
+            
+            self.node_gene1.aggregation_function = None
+            dist = self.node_gene1.distance(other_node=self.node_gene2)
+            
+            assert dist == 0.5 + 1
+            
+            self.node_gene2.activation_function = None
+            dist = self.node_gene2.distance(other_node=self.node_gene1)
+            
+            assert dist == 0.5 + 1 + 1
+            
+            
+            

@@ -10,6 +10,8 @@ from numpy.random import choice, random, uniform
 
 from genes import LinkGene, NodeGene, BaseGene, NodeType
 
+Config.configure()
+
 class Genome:
     def __init__(self,
                  genome_id: int,
@@ -19,7 +21,8 @@ class Genome:
         self.id: int = genome_id
         self._node_genes: Dict[int, NodeGene] = node_genes   # List of network's nodes 
         self._link_genes: Dict[int, LinkGene] = link_genes   # List of link's genes
-   
+     
+    
     @property
     def node_genes(self):
         return np.array(list(self._node_genes.values()))
@@ -41,10 +44,10 @@ class Genome:
         return {'node genes': self.n_node_genes,
                 'link genes': self.n_link_genes}
       
-    def add_gene(self, link: LinkGene) -> None:
+    def add_link(self, link: LinkGene) -> None:
         self._link_genes[link.id] = link
      
-    def insert_node(self, node: NodeGene) -> None:
+    def add_node(self, node: NodeGene) -> None:
         self._node_genes[node.id] = node
     
     @staticmethod   
@@ -61,9 +64,6 @@ class Genome:
         """        
         genes_dict[gene.id] = gene        
         return genes_dict  
-      
-    def create_bias_gene(self) -> NodeGene:
-        return NodeGene(node_type=NodeType.BIAS)
     
     def get_link_genes(self) -> np.array[LinkGene]:
         return np.array(list(self._link_genes.values()))
@@ -86,11 +86,6 @@ class Genome:
                                                               node_type=NodeType.INPUT))
             count_node_id += 1
      
-         # Initialize bias
-        bias = NodeGene(node_id=count_node_id,
-                        node_type=NodeType.BIAS)  
-        count_node_id += 1
-                   
         # Initialize outputs    
         outputs = {}  
         for _ in range(n_outputs):
@@ -98,24 +93,20 @@ class Genome:
                                                  gene=NodeGene(node_id=count_node_id,
                                                                node_type=NodeType.OUTPUT)) 
             count_node_id += 1
-        # Connect all the inputs and bias to each output   
+        # Connect each input to each output   
         genes = {}
         count_link_id = 1
-        for node1 in list(inputs.values()) + [bias]:
+        for node1 in list(inputs.values()):
             for node2 in outputs.values():
                 genes = Genome.insert_gene_in_dict(genes_dict=genes,
                                                    gene=LinkGene(   link_id=count_link_id, 
                                                                     in_node=node1,
                                                                     out_node=node2))
                 count_link_id += 1
-                
-        Genome.insert_gene_in_dict(genes_dict=inputs,
-                                   gene=bias)
-        
+                        
         InnovTable.node_number = count_node_id
         InnovTable.node_number = count_link_id
         
-          
         return Genome(genome_id=genome_id,
                       node_genes=inputs|outputs,
                       link_genes=genes)
@@ -133,8 +124,54 @@ class Genome:
             
         self._mutate_link_weights()
     
+    
     @staticmethod
     def genetical_distance(genome1: Genome, genome2: Genome) -> float:
+        node_distance = Genome._genetical_gene_distance(gene_dict1 = genome1._node_genes,
+                                                        gene_dict2 = genome2._node_genes)
+        
+        link_distance = Genome._genetical_gene_distance(gene_dict1 = genome1._link_genes,
+                                                        gene_dict2 = genome2._link_genes)
+        
+        return node_distance + link_distance
+        
+    @staticmethod
+    def _genetical_gene_distance(gene_dict1: Dict[int, BaseGene],
+                                 gene_dict2: Dict[int, BaseGene]) -> float:
+        
+        max_g1: int = max(gene_dict1.keys())
+        max_g2: int = max(gene_dict2.keys()) 
+        
+        if max_g1 > max_g2:
+           big_genome, small_genome = gene_dict1, gene_dict2
+        else:
+            small_genome, big_genome = gene_dict1, gene_dict2
+            
+        excess_threshold = min(max_g1, max_g2)
+        num_excess: int = 0
+        num_disjoint: int = 0
+        num_matching: int = 1
+        mutation_difference: float = 0.0
+        
+        for node_id, gene_node in big_genome.items():
+            if node_id > excess_threshold:
+                num_excess += 1
+            elif node_id not in small_genome:
+                num_disjoint += 1
+            else:
+                num_matching += 1
+                other_node = small_genome[node_id]
+                mutation_difference += gene_node.mutation_distance(other_gene=other_node)
+                
+        node_distance: float = (num_excess * Config.excess_coeff + 
+                                num_disjoint * Config.disjoint_coeff+
+                                Config.mutation_difference_coeff * mutation_difference/num_matching)
+        
+        return node_distance  
+               
+    
+    @staticmethod
+    def compatibility(genome1: Genome, genome2: Genome) -> float:
         """ Find the genetical distance between two genomes
 
         Args:
@@ -181,7 +218,7 @@ class Genome:
                     mutation_difference_total += mutation_difference
                     g1_gene = next(g1_genome, None)
                     g2_gene = next(g2_genome, None)
-                 
+                    
                 # disjoint genes   
                 elif g1_innovation < g2_innovation:
                     g1_gene = next(g1_genome, None)
@@ -195,10 +232,10 @@ class Genome:
         disjoint = Config.disjoint_coeff * (number_disjoint)
         excess =  Config.excess_coeff * (number_excess)
         if number_matching > 0:
-             mutation_difference = Config.mutation_difference_coeff * (mutation_difference_total/number_matching)
+                mutation_difference = Config.mutation_difference_coeff * (mutation_difference_total/number_matching)
         else:
             mutation_difference = 0
-       
+        
         compatibility = disjoint + excess + mutation_difference
         return compatibility
     
@@ -611,8 +648,8 @@ class Genome:
                 
         new_node, new_gene1, new_gene2 = self._new_node_innovation(the_gene=the_gene)
                 
-        self.add_gene(gene=new_gene1)
-        self.add_gene(gene=new_gene2)
+        self.add_link(gene=new_gene1)
+        self.add_link(gene=new_gene2)
         self._node_genes = Genome.insert_gene_in_dict(self._node_genes, new_node)
         return True  
                     
@@ -734,7 +771,7 @@ class Genome:
             new_gene = self._new_link_gene(recurrence=recurrence,
                                            in_node=node1,
                                            out_node=node2)
-            self.add_gene(new_gene)
+            self.add_link(new_gene)
             return True
                                        
     def _get_input_links(self, node_id: int) -> List[Link]:

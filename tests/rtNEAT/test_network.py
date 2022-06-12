@@ -12,8 +12,8 @@ class TestNetwork:
         network = Network()
         
         assert type(network) == Network
-        assert {'id', '_inputs', '_outputs', '_bias',
-                '_hidden','_all_nodes', 'activation_phase',
+        assert {'id', '_inputs', '_outputs','_hidden',
+                '_all_nodes', 'activation_phase',
                 'frozen'}.issubset(vars(network))
         
     class TestNetworkMethods:
@@ -21,7 +21,6 @@ class TestNetwork:
         def setup(self):
             self.genome = Genome(genome_id=0, node_genes={}, link_genes={})
             self.network = Network(network_id=self.genome.id,
-                                   bias={},
                                    inputs={},
                                    outputs={},
                                    all_nodes={})
@@ -52,10 +51,7 @@ class TestNetwork:
                 assert node.__class__.__name__ == "Node"
                 assert node.type == node_types[i]
             
-            #Sorted      
-            for node in self.network.bias:
-                assert node.type == NodeType.BIAS
-                
+            #Sorted                     
             for node in self.network.inputs:
                 assert node.type == NodeType.INPUT
                 
@@ -67,11 +63,11 @@ class TestNetwork:
                             
         def test_synthetize_links(self):
             for _ in range(50):
-                self.genome.insert_node(NodeGene(node_type=choice(list(NodeType))))
+                self.genome.add_node(NodeGene(node_type=choice(list(NodeType))))
                 
             for _ in range(10):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
-                self.genome.add_gene(LinkGene(in_node=in_node,
+                self.genome.add_link(LinkGene(in_node=in_node,
                                          out_node=out_node))
                 
             self.network._synthetize_nodes(node_genes=self.genome._node_genes)
@@ -90,11 +86,11 @@ class TestNetwork:
             
         def test_network_genesis(self):
             for _ in range(100):
-                self.genome.insert_node(NodeGene(node_type=choice(list(NodeType))))
+                self.genome.add_node(NodeGene(node_type=choice(list(NodeType))))
                 
             for _ in range(1000):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
-                self.genome.add_gene(LinkGene(in_node=in_node,
+                self.genome.add_link(LinkGene(in_node=in_node,
                                          out_node=out_node))
                 
             self.network = Network.genesis(self.genome)

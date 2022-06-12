@@ -27,6 +27,8 @@ class Config:
         # Compatibility
         disjoint_coeff: float = 1.0,
         excess_coeff: float = 1.0,
+        node_diff_coeff: float = 0.5,
+        link_diff_coeff: float = 0.5,
         mutation_difference_coeff: float = 0.5,
         compatibility_threshod: float = 3.0,
         ):
@@ -54,6 +56,8 @@ class Config:
         Config.excess_coeff: float = excess_coeff
         Config.mutation_difference_coeff: float = mutation_difference_coeff
         Config.compatibility_threshod: float = compatibility_threshod
+        Config.node_diff_coeff: float = node_diff_coeff
+        Config.link_diff_coeff: float = link_diff_coeff
         
         # Predictions
         """ Config.activation_function: Callable[[float], float] = activation_function

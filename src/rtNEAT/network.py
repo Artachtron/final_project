@@ -12,7 +12,6 @@ from phenes import Node, Link
 class Network:
     def __init__(self,
                  network_id: int = 0,
-                 bias: Dict[int, Node] = {},
                  inputs: Dict[int, Node] = {},
                  outputs: Dict[int, Node] = {},
                  all_nodes: Dict[int, Node] = {},
@@ -22,7 +21,6 @@ class Network:
         self.id = network_id
         
         self._inputs: Dict[int, Node] = inputs # Nodes that input into the network
-        self._bias: Dict[int, Node] = bias
         self._outputs: Dict[int, Node] = outputs # Values output by the network
         self._hidden: Dict[int, Node] = hidden #
         self._all_nodes: Dict[int, Node] = all_nodes # A list of all the nodes
@@ -82,8 +80,6 @@ class Network:
                     self._outputs[key] = node
                 case 'HIDDEN':
                     self._hidden[key] = node
-                case 'BIAS':
-                    self._bias[key] = node
                     
             # Keep track of all nodes    
             self._all_nodes[key] = node
@@ -100,8 +96,8 @@ class Network:
         Returns:
             np.array: activated values coming out of outputs nodes
         """        
-        # Compare the size of input values given to the network's inputs (minus bias)
-        if input_values.size != len(self._inputs) - 1:
+        # Compare the size of input values given to the network's inputs
+        if input_values.size != len(self._inputs):
             raise ValueError(f"""Input values {(input_values.size)} does not correspond
                              to number of input nodes {len(self._inputs)}""")
         
@@ -117,8 +113,7 @@ class Network:
     
     def activate_inputs(self, values: np.array):
         """ Store the input values in the input nodes
-            and initiate the bias node with a value of 1
-
+    
         Args:
             values (np.array): values to store in the input nodes
         """        
@@ -126,10 +121,6 @@ class Network:
         for node, value in zip(self.inputs, values): 
             node.output_value = value
             node.activation_phase = self.activation_phase
-
-        for bias_node in self.bias:
-            bias_node.output_value = 1
-            bias_node.activation_phase = self.activation_phase
         
     def activate_outputs(self) -> np.array:
         """ Travel through the network calculating the
@@ -177,11 +168,7 @@ class Network:
     @property
     def outputs(self)  -> np.array[Node]:  
         return np.array(list(self._outputs.values()))
-    
-    @property
-    def bias(self)  -> np.array[Node]:  
-        return np.array(list(self._bias.values()))
-    
+        
     @property
     def hidden(self)  -> np.array[Node]:  
         return np.array(list(self._hidden.values()))
