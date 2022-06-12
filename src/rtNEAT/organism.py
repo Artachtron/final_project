@@ -5,11 +5,7 @@ if TYPE_CHECKING:
     
 from genome import Genome
 from network import Network
-from src.config import WorldTable
-
-from neat import Config
-
-
+from project.src.config import WorldTable
 
 class Organism:
     def __init__(self,

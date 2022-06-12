@@ -55,6 +55,9 @@ class BaseGene:
        
     def transcript(self):
         raise NotImplementedError("Please Implement the transcription method")
+    
+    """  def __lt__(self, other):
+        self. """
         
      
 class LinkGene(BaseGene):
@@ -63,7 +66,6 @@ class LinkGene(BaseGene):
                  out_node: int,
                  weight: float = 0.0,
                  link_id: int = 0,
-                 innovation_number: int = 0,
                  mutation_number: int = 0,
                  enable: bool = True,
                  freeze: bool = False,
@@ -78,9 +80,6 @@ class LinkGene(BaseGene):
         self.in_node: int = in_node
         self.out_node: int = out_node
         self.weight: float = weight or uniform(-1,1)
-        
-        self.innovation_number: int = (innovation_number or
-                                       InnovTable.get_innovation_number(increment=True))
         
         self.mutation_number: int = mutation_number
         

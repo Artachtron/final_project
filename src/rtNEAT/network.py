@@ -37,8 +37,8 @@ class Network:
     def genesis(genome: Genome) -> Network:
         network = Network(network_id=genome.id)
         
-        network._synthetize_nodes(node_genes=genome.node_genes)    
-        network._synthetize_links(link_genes=genome.link_genes)
+        network._synthetize_nodes(node_genes=genome._node_genes)    
+        network._synthetize_links(link_genes=genome._link_genes)
         
         return network
     
@@ -146,8 +146,8 @@ class Network:
         output_values = []
         
         for node in self.outputs:
-            if node.type != NodeType.OUTPUT:
-                raise ValueError
+            """ if node.type != NodeType.OUTPUT:
+                raise ValueError """
             
             output_value = node.get_activation(activation_phase=self.activation_phase) 
             output_values.append(output_value)

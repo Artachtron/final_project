@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from node import Node
+    from phenes import Node
+    
 import enum
 from typing import List
 from numpy.random import choice, random
@@ -13,9 +14,25 @@ class InnovationType(enum.Enum):
 class InnovTable:
     history: List[Innovation] = []
     next_innovation_number: int = 1
-    next_node_number: int = 1
-    next_link_number: int = 1
+    _node_number: int = 1
+    _link_number: int = 1
      
+    @property
+    def node_number(self) -> int:
+        return self._node_number
+    
+    @node_number.setter
+    def node_number(self, value: int) -> None:
+        self._node_number = max(self._node_number, value)
+        
+    @property
+    def link_number(self) -> int:
+        return self._link_number
+    
+    @link_number.setter
+    def link_number(self, value: int) -> None:
+        self._link_number = max(self._link_number, value)
+    
     @staticmethod    
     def get_innovation_number(increment: bool=False) -> int:
         """ Get the current innovation number
@@ -46,7 +63,7 @@ class InnovTable:
         Returns:
             int: current link number
         """
-        number = InnovTable.next_link_number 
+        number = InnovTable._link_number 
         
         if increment:
             InnovTable.increment_link()
@@ -60,7 +77,7 @@ class InnovTable:
         Args:
             number (int, optional): link number's increment. Defaults to 1.
         """        
-        InnovTable.next_link_number += amount
+        InnovTable._link_number += amount
     
     @staticmethod    
     def get_node_number(increment: bool=False) -> int:
@@ -69,7 +86,7 @@ class InnovTable:
         Returns:
             int: current node number
         """
-        number = InnovTable.next_node_number
+        number = InnovTable._node_number
         
         if increment:
             InnovTable.increment_node() 
@@ -83,7 +100,7 @@ class InnovTable:
         Args:
             number (int, optional): node number's increment. Defaults to 1.
         """        
-        InnovTable.next_node_number += amount
+        InnovTable._node_number += amount
     
     @staticmethod
     def add_innovation(new_innovation: Innovation) -> None:
@@ -100,8 +117,8 @@ class InnovTable:
         """        
         InnovTable.history = []
         InnovTable.next_innovation_number = 1
-        InnovTable.next_node_number = 1
-        InnovTable.next_link_number = 1
+        InnovTable._node_number = 1
+        InnovTable._link_number = 1
     
     @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,

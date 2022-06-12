@@ -4,6 +4,9 @@ import numpy as np
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.genome import Genome
 from project.src.rtNEAT.genes import NodeGene, LinkGene, reset_innovation_table, NodeType
+from project.src.rtNEAT.neat import Config
+
+Config.configure()
 
 class TestGenome:
     def test_create_genome(self):
@@ -24,8 +27,8 @@ class TestGenome:
         assert {'id','node_genes','link_genes'}.issubset(vars(genome))
         
         assert genome.id == 0
-        assert genome.node_genes == nodes
-        assert genome.link_genes == genes
+        assert genome._node_genes == nodes
+        assert genome._link_genes == genes
         
     def test_genesis(self):
         genome = Genome.genesis(genome_id=0,
@@ -35,6 +38,16 @@ class TestGenome:
         assert genome.n_node_genes == 3 + 5 + 1
         assert genome.n_link_genes == 4 * 5
         assert list(genome.size.values()) == [9, 20]
+        
+        genome2 = Genome.genesis(   genome_id=2,
+                                    n_inputs=3,
+                                    n_outputs=5)
+        
+        for node1, node2 in zip(genome.node_genes, genome2.node_genes):
+            assert node1.id == node2.id
+        
+        for link1, link2 in zip(genome.link_genes, genome2.link_genes):
+            assert link1.id == link2.id
         
     class TestGenomeMethods:
         @pytest.fixture(autouse=True)
@@ -78,7 +91,7 @@ class TestGenome:
             
             self.genome1 = Genome(genome_id=0,
                             node_genes=self.nodes,
-                            link_genes=self.genes)
+                            link_genes=self.links)
             
             np.random.seed(1)
 
@@ -95,10 +108,51 @@ class TestGenome:
                                  link_genes={})
             
             assert nodes_dict == {1: node}
-            assert genome.node_genes == {}
+            assert genome._node_genes == {}
             
             genome.insert_node(node=node)
-            assert genome.node_genes == nodes_dict
+            assert genome._node_genes == nodes_dict
+            
+        def test_genome_compatibility(self):
+            self.links[3].innovation_number = self.links[2].innovation_number
+            # Excess
+            genome1 = Genome(   genome_id=0,
+                                node_genes=self.nodes,
+                                link_genes=self.links)
+            
+            genome2 = Genome(   genome_id=1,
+                                node_genes={node.id: node for node in self.nodes.values() if node.id < 4},
+                                link_genes={link.id: link for link in self.links.values() if link.id < 2})
+            
+            genetical_distance = Genome.genetical_distance( genome1=genome1,
+                                                            genome2=genome2)
+            assert genetical_distance == 2.0 * Config.excess_coeff
+            
+            # Disjoint
+            genome3 = Genome(   genome_id=2,
+                                node_genes={node.id: node for node in self.nodes.values() if node.id in [0,1,4,5]},
+                                link_genes=self.links[0:3])
+                
+            genome4 = Genome(   genome_id=3,
+                                node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(2,5))},
+                                link_genes=self.links[1:3])
+                        
+            genetical_distance = Genome.genetical_distance(   genome1=genome4,
+                                                    genome2=genome3)
+            assert genetical_distance == 1.0 * Config.disjoint_coeff
+            
+            # Mutation
+            genome5 = Genome(   genome_id=4,
+                                node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(2,4))},
+                                link_genes=self.links[2:3])
+            
+            genome6 = Genome(   genome_id=5,
+                                node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(4,len(self.nodes)))},
+                                link_genes=self.links[3:])
+            
+            genetical_distance = Genome.genetical_distance(   genome1=genome5,
+                                                    genome2=genome6)
+            assert genetical_distance == 1.0 * Config.mutation_difference_coeff
             
 
             

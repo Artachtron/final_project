@@ -43,9 +43,9 @@ class TestGene:
                              enable=True,
                              freeze=False)
         
-        assert {'id', 'enabled', 'frozen', 'in_node',
-                'out_node','weight', 'mutation_number',
-                'innovation_number'}.issubset(vars(link_gene))
+        assert {'id', 'enabled', 'frozen',
+                'in_node','out_node','weight',
+                'mutation_number'}.issubset(vars(link_gene))
         
         assert link_gene.id == 1
         assert link_gene.enabled == True
@@ -54,7 +54,6 @@ class TestGene:
         assert link_gene.out_node == 2
         assert link_gene.weight == 0.5
         assert link_gene.mutation_number == 0
-        assert link_gene.innovation_number ==1
         
     def test_create_node_gene(self):
         node_gene = NodeGene() 

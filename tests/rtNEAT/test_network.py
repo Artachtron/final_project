@@ -29,8 +29,8 @@ class TestNetwork:
             
             yield 
             
-            self.genome.node_genes = {}
-            self.genome.link_genes = {}
+            self.genome._node_genes = {}
+            self.genome._link_genes = {}
             self.network._links = {}
             self.genome = None
             self.network = None
@@ -70,12 +70,12 @@ class TestNetwork:
                 self.genome.insert_node(NodeGene(node_type=choice(list(NodeType))))
                 
             for _ in range(10):
-                in_node, out_node = choice(list(self.genome.node_genes.values()), 2)
+                in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
                 self.genome.add_gene(LinkGene(in_node=in_node,
                                          out_node=out_node))
                 
-            self.network._synthetize_nodes(node_genes=self.genome.node_genes)
-            self.network._synthetize_links(link_genes=self.genome.link_genes)
+            self.network._synthetize_nodes(node_genes=self.genome._node_genes)
+            self.network._synthetize_links(link_genes=self.genome._link_genes)
             
             assert len(self.network._links) == 10
             for link in self.network._links.values():
@@ -93,7 +93,7 @@ class TestNetwork:
                 self.genome.insert_node(NodeGene(node_type=choice(list(NodeType))))
                 
             for _ in range(1000):
-                in_node, out_node = choice(list(self.genome.node_genes.values()), 2)
+                in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
                 self.genome.add_gene(LinkGene(in_node=in_node,
                                          out_node=out_node))
                 

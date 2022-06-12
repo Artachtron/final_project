@@ -17,19 +17,24 @@ class Genome:
                  link_genes: Dict[int, LinkGene] = {}):
         
         self.id: int = genome_id
-        self.node_genes: Dict[int, NodeGene] = node_genes   # List of network's nodes 
-        self.link_genes: Dict[int, LinkGene] = link_genes   # List of link's genes
-        
-        """ if genes is not None:
-            self.size = len(genes) """
+        self._node_genes: Dict[int, NodeGene] = node_genes   # List of network's nodes 
+        self._link_genes: Dict[int, LinkGene] = link_genes   # List of link's genes
    
     @property
+    def node_genes(self):
+        return np.array(list(self._node_genes.values()))
+    
+    @property
+    def link_genes(self):
+        return np.array(list(self._link_genes.values()))
+    
+    @property
     def n_node_genes(self):
-        return len(self.node_genes)
+        return len(self._node_genes)
     
     @property
     def n_link_genes(self):
-        return len(self.link_genes)
+        return len(self._link_genes)
     
     @property
     def size(self):
@@ -37,10 +42,10 @@ class Genome:
                 'link genes': self.n_link_genes}
       
     def add_gene(self, link: LinkGene) -> None:
-        self.link_genes[link.id] = link
+        self._link_genes[link.id] = link
      
     def insert_node(self, node: NodeGene) -> None:
-        self.node_genes[node.id] = node
+        self._node_genes[node.id] = node
     
     @staticmethod   
     def insert_gene_in_dict(genes_dict: Dict[int, BaseGene],
@@ -61,10 +66,10 @@ class Genome:
         return NodeGene(node_type=NodeType.BIAS)
     
     def get_link_genes(self) -> np.array[LinkGene]:
-        return np.array(list(self.link_genes.values()))
+        return np.array(list(self._link_genes.values()))
     
     def get_node_genes(self) -> np.array[LinkGene]:
-        return np.array(list(self.node_genes.values()))
+        return np.array(list(self._node_genes.values()))
     
     @staticmethod
     def genesis(genome_id: int, n_inputs: int, n_outputs: int):        
@@ -74,29 +79,42 @@ class Genome:
         """        
         # Initialize inputs
         inputs = {}
+        count_node_id = 1
         for _ in range(n_inputs):
             inputs = Genome.insert_gene_in_dict(genes_dict=inputs,
-                                                gene=NodeGene(node_type=NodeType.INPUT))
+                                                gene=NodeGene(node_id=count_node_id,
+                                                              node_type=NodeType.INPUT))
+            count_node_id += 1
      
          # Initialize bias
-        bias = NodeGene(node_type=NodeType.BIAS)
+        bias = NodeGene(node_id=count_node_id,
+                        node_type=NodeType.BIAS)  
+        count_node_id += 1
                    
         # Initialize outputs    
         outputs = {}  
         for _ in range(n_outputs):
             outputs = Genome.insert_gene_in_dict(genes_dict=outputs,
-                                                 gene=NodeGene(node_type=NodeType.OUTPUT)) 
-        
+                                                 gene=NodeGene(node_id=count_node_id,
+                                                               node_type=NodeType.OUTPUT)) 
+            count_node_id += 1
         # Connect all the inputs and bias to each output   
         genes = {}
+        count_link_id = 1
         for node1 in list(inputs.values()) + [bias]:
             for node2 in outputs.values():
                 genes = Genome.insert_gene_in_dict(genes_dict=genes,
-                                                   gene=LinkGene(   in_node=node1,
+                                                   gene=LinkGene(   link_id=count_link_id, 
+                                                                    in_node=node1,
                                                                     out_node=node2))
+                count_link_id += 1
                 
         Genome.insert_gene_in_dict(genes_dict=inputs,
                                    gene=bias)
+        
+        InnovTable.node_number = count_node_id
+        InnovTable.link_number = count_link_id
+        
           
         return Genome(genome_id=genome_id,
                       node_genes=inputs|outputs,
@@ -136,8 +154,8 @@ class Genome:
         mutation_difference_total: float= 0.0
         number_matching: int = 0
         
-        g1_genome = iter(genome1.link_genes)
-        g2_genome = iter(genome2.link_genes)
+        g1_genome = iter(genome1._link_genes)
+        g2_genome = iter(genome2._link_genes)
         
         g1_gene = next(g1_genome)
         g2_gene = next(g2_genome)
@@ -190,7 +208,7 @@ class Genome:
         Returns:
             int: last node's id
         """    
-        return max(list(self.node_genes.keys())) + 1
+        return max(list(self._node_genes.keys())) + 1
 
     def get_last_gene_innovation_number(self) -> int:
         """ Return last innovation number in Genome
@@ -198,10 +216,10 @@ class Genome:
         Returns:
             int: last gene's innovation number
         """    
-        return self.link_genes[-1].innovation_number + 1
+        return self._link_genes[-1].innovation_number + 1
            
     @staticmethod 
-    def _is_IO_node(node: Node) -> bool:
+    def _is_IO_node(node: NodeGene) -> bool:
         """ Check if the node is an input or output node
 
         Args:
@@ -304,7 +322,7 @@ class Genome:
         return False
     
     @staticmethod
-    def _check_new_node_existence(new_nodes: Dict[int, Node], target_node: Node) -> Tuple[Node, List[Node]]:
+    def _check_new_node_existence(new_nodes: Dict[int, NodeGene], target_node: NodeGene) -> Tuple[NodeGene, List[NodeGene]]:
         """ Find if the target node already exists in the new nodes list return the final list and new node
 
         Args:
@@ -320,9 +338,9 @@ class Genome:
             new_node = new_nodes[target_node.id]
             
         else:
-            new_node = Node.constructor_from_node(target_node)
-            new_nodes = Genome.insert_gene_in_dict(genes_dict=new_nodes,
-                                           gene=new_node)
+            new_node = NodeGene.constructor_from_node(target_node)
+            new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
+                                                    gene=new_node)
             
         return new_node, new_nodes
     
@@ -350,19 +368,19 @@ class Genome:
         new_genes: List[LinkGene] = [] # already chosen genes
         
         # Make sure all sensors and outputs are included
-        for current_node in parent2.node_genes.values():
+        for current_node in parent2._node_genes.values():
             if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
-                new_output_node = Node.constructor_from_node(current_node)
+                new_output_node = NodeGene.constructor_from_node(current_node)
                 
                 # Add the new node
                 new_nodes = Genome.insert_gene_in_dict(genes_dict=new_nodes,
                                                gene=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
-        parent1_genes = iter(parent1.link_genes)
-        parent2_genes =iter(parent2.link_genes)
+        parent1_genes = iter(parent1._link_genes)
+        parent2_genes =iter(parent2._link_genes)
         parent1_gene = next(parent1_genes, None)
         parent2_gene = next(parent2_genes, None)
         args = (parent1_gene, parent2_gene, parent1_genes, parent2_genes)
@@ -448,7 +466,7 @@ class Genome:
     def _mutate_link_weights(self) -> None:
         """Simplified mutate link weight method
         """        
-        for current_gene in self.link_genes:
+        for current_gene in self._link_genes:
             if current_gene.frozen:
                 continue
             
@@ -474,7 +492,7 @@ class Genome:
         the_gene: LinkGene = None   # the found gene
         
         while try_count < tries and not found:
-            for gene in self.link_genes:
+            for gene in self._link_genes:
                 if gene.enabled and gene.link.in_node.type != NodeType.BIAS:
                     found = True
                     the_gene = gene
@@ -483,9 +501,9 @@ class Genome:
         
         return the_gene, found
     
-    def _create_node(self, node_id: int, in_node: Node, out_node: Node, recurrence: bool,
+    def _create_node(self, node_id: int, in_node: NodeGene, out_node: NodeGene, recurrence: bool,
                          innovation_number1: int, innovation_number2: int, old_weight: int
-                         ) -> Tuple[Node, LinkGene, LinkGene]:
+                         ) -> Tuple[NodeGene, LinkGene, LinkGene]:
         """Create the new node and two genes connecting this node in and out
 
         Args:
@@ -502,27 +520,27 @@ class Genome:
                                         LinkGene: the gene connecting in the new node
                                         LinkGene: the gene connecting out the new node
         """        
-        new_node = Node(node_id=node_id,
+        new_node = NodeGene(node_id=node_id,
                         node_type=NodeType.HIDDEN)
                 
-        new_gene1 = LinkGene(weight=1.0,
-                        in_node=in_node,
-                        out_node=new_node,
-                        recurrence=recurrence,
-                        innovation_number=innovation_number1,
-                        mutation_number=0)
-    
-        new_gene2 = LinkGene(weight=old_weight,
-                        in_node=new_node,
-                        out_node=out_node,
-                        recurrence=False,
-                        innovation_number=innovation_number2,
-                        mutation_number=0)
+        new_gene1 = LinkGene(link_id=innovation_number1,
+                            weight=1.0,
+                            in_node=in_node,
+                            out_node=new_node,
+                            recurrence=recurrence,
+                            mutation_number=0)
+        
+        new_gene2 = LinkGene(link_id=innovation_number2,
+                            weight=old_weight,
+                            in_node=new_node,
+                            out_node=out_node,
+                            recurrence=False,
+                            mutation_number=0)
         
         return new_node, new_gene1, new_gene2
     
-    def _check_innovation_identical(self, innovation: Innovation, in_node: Node,
-                                    out_node: Node, the_gene: LinkGene) -> bool:
+    def _check_innovation_identical(self, innovation: Innovation, in_node: NodeGene,
+                                    out_node: NodeGene, the_gene: LinkGene) -> bool:
         """Check if the innovation already exists
 
         Args:
@@ -539,7 +557,7 @@ class Genome:
                  innovation.node_out_id == out_node.id and
                  innovation.old_innovation_number == the_gene.innovation_number)
     
-    def _new_node_innovation(self, the_gene: LinkGene) -> Tuple[Node, LinkGene, LinkGene]:
+    def _new_node_innovation(self, the_gene: LinkGene) -> Tuple[NodeGene, LinkGene, LinkGene]:
         """ Check to see if this innovation has already been done in another genome
 
         Args:
@@ -555,8 +573,8 @@ class Genome:
         old_weight: float = the_link.weight
         
         # Extract the nodes
-        in_node: Node = the_link.in_node
-        out_node: Node = the_link.out_node
+        in_node: NodeGene = the_link.in_node
+        out_node: NodeGene = the_link.out_node
 
         recurrence = the_link.is_recurrent
         
@@ -567,12 +585,12 @@ class Genome:
                                                     old_innovation_number=the_gene.innovation_number)
      
         new_node, new_gene1, new_gene2 = self._create_node( node_id=the_innovation.new_node_id,
-                                                                in_node=in_node,
-                                                                out_node=out_node,
-                                                                recurrence=recurrence,
-                                                                innovation_number1=the_innovation.innovation_number1,
-                                                                innovation_number2=the_innovation.innovation_number2,
-                                                                old_weight=old_weight)
+                                                            in_node=in_node,
+                                                            out_node=out_node,
+                                                            recurrence=recurrence,
+                                                            innovation_number1=the_innovation.innovation_number1,
+                                                            innovation_number2=the_innovation.innovation_number2,
+                                                            old_weight=old_weight)
         
                 
         return  new_node, new_gene1, new_gene2
@@ -595,10 +613,10 @@ class Genome:
                 
         self.add_gene(gene=new_gene1)
         self.add_gene(gene=new_gene2)
-        self.node_genes = Genome.insert_gene_in_dict(self.node_genes, new_node)
+        self._node_genes = Genome.insert_gene_in_dict(self._node_genes, new_node)
         return True  
                     
-    def _select_nodes_for_link(self,recurrence: bool) -> Tuple[Node,Node]:
+    def _select_nodes_for_link(self,recurrence: bool) -> Tuple[NodeGene,NodeGene]:
         """ Select 2 random nodes to link together
 
         Args:
@@ -625,7 +643,7 @@ class Genome:
         
         return node1, node2
     
-    def _link_already_exists(self, recurrence: bool, node1: Node, node2: Node) -> bool:
+    def _link_already_exists(self, recurrence: bool, node1: NodeGene, node2: NodeGene) -> bool:
         """See if a recurrent link already exists
 
         Args:
@@ -637,7 +655,7 @@ class Genome:
             Tuple[bool, int]:   bool: found an already existing link  
         """  
         found: bool = False 
-        for the_gene in self.link_genes:
+        for the_gene in self._link_genes:
             if (the_gene.link.in_node == node1 and
                 the_gene.link.out_node == node2 and
                 the_gene.link.is_recurrent == recurrence):
@@ -647,7 +665,7 @@ class Genome:
                 
         return found
 
-    def _new_link_gene(self, recurrence: bool, in_node: Node, out_node: Node) -> LinkGene:
+    def _new_link_gene(self, recurrence: bool, in_node: NodeGene, out_node: NodeGene) -> LinkGene:
         """ Create a new gene representing a link between two nodes, and return this gene
 
         Args:
@@ -673,7 +691,7 @@ class Genome:
                     
         return new_gene
       
-    def _find_valid_link(self, tries:int, recurrence: bool) -> Tuple[bool, Node, Node]: 
+    def _find_valid_link(self, tries:int, recurrence: bool) -> Tuple[bool, NodeGene, NodeGene]: 
         """ Find a valid open link to add a new link after mutation
 
         Args:
@@ -728,142 +746,6 @@ class Genome:
         Returns:
             List[Link]: the list of links connecting to the node
         """        
-        return [gene.link for gene in self.link_genes if gene.link.out_node.id == node_id]
+        return [gene.link for gene in self._link_genes if gene.link.out_node.id == node_id]
                                
-    
-    """ def mutate_add_sensor(self, innovations: List, current_innovation: int):
-        
-        # Find all the sensors and outputs
-        sensors = []
-        outputs = []
-        for node in self.nodes:
-            if node.node_type == NodeType.SENSOR:
-                sensors.append(node)
-            elif node.node_place == NodeType.OUTPUT:
-                outputs.append(node)
-        
-        # eliminate from contention any sensors that are already connected
-        for sensor in sensors:
-            outputConnections = 0
-            
-            for gene in self.genes:
-                if gene.link.out_node.node_place == NodeType.OUTPUT:
-                    outputConnections += 1
-            
-        if outputConnections == len(outputs):
-            sensors.remove(node)
-        
-        # If all sensors are connected, quit
-        if len(sensors) == 0:
-            return
-        
-        # Pick randomly from remaining sensors
-        sensor = sensors[random.randint(0, len(sensors) - 1)]
-        
-        # Add new links to chosen sensor, avoiding redundancy
-        for output in outputs:
-            found = False
-            
-            for gene in self.genes:
-                if (gene.link.in_node == sensor and
-                    gene.link.out_node == output):
-                    found = True
-        
-        
-        innovs = iter(innovations)       
-        # Record the innovation
-        if not found:
-            the_innovation = next(innovs, None)
-            done = False
-            while not done:
-                # The innovation is novel
-                if not the_innovation:
-                    # Choose the new weight
-                    new_weight = [-1,1][randrange(2)]*random.random() * 3.0
-                    
-                    # Create the new gene
-                    new_gene = LinkGene(weight=new_weight,
-                                    in_node=sensor,
-                                    out_node=output,
-                                    recurrence=False,
-                                    innovation_number=current_innovation,
-                                    mutation_number=new_weight) 
-                    
-                    new_innovation = Innovation(node_in_id=sensor.id,
-                                                node_out_id=output.id,
-                                                innovation_number1=current_innovation,
-                                                new_weight=new_weight)
-                    
-                    innovations.append(new_innovation)
-                    current_innovation += 1
-                    
-                    done = True
-                    
-                elif (the_innovation.innovation_type == InnovationType.NEWLINK and
-                      the_innovation.node_in_id == sensor.id and
-                      the_innovation.node_out_id == output.id and
-                      the_innovation.recurrence_flag == False):
-                    
-                    new_gene = LinkGene(weight=the_innovation.weight,
-                                    recurrence=False,
-                                    innovation_number=the_innovation.innovation_number1,
-                                    mutation_number=0)
-                    
-                    done = True
-                    
-                else:
-                    the_innovation = next(innovs, None)
-                    
-            self.add_gene(gene=new_gene) """
-            
-            
-    """ def mutate_link_weights(self, power: float, rate: float) -> None:
-            number: float = 0.0                 # counts gene placement
-            total_genes: int = self.genes.size
-            end_part: float = total_genes * 0.8 # Signifies the last part of the genome
-            power_mod: float = 1.0              # Modified power by gene number The power of mutation will rise farther into the genome
-                                                # on the theory that the older genes are more fit since they have stood the test of time      
-            
-            severe: bool = getrandbits(1) # Once in a while really shake things up
-            
-            #The following if determines the probabilities of doing cold gaussian
-            #mutation, meaning the probability of replacing a link weight with
-            #another, entirely random weight.  It is meant to bias such mutations
-            #to the tail of a genome, because that is where less time-tested genes
-            #reside.  The gausspoint and coldgausspoint represent values above
-            #which a random float will signify that kind of mutation. 
-            
-            # Loop on all genes
-            for current_gene in self.genes:
-                # Don't mutate weights of frozen links
-                if not current_gene.frozen:
-                    if severe:
-                        gauss_point = 0.3
-                        cold_gauss_point = 0.1
-                        
-                    elif total_genes > 10 and number > end_part:
-                        gauss_point = 0.5       # Mutate by modification % of connections
-                        cold_gauss_point = 0.3  # Mutate the rest by replacement % of the time
-                        
-                    else:
-                        # Half the time don't do any cold mutations
-                        if getrandbits(1):
-                            gauss_point = 1.0 - rate
-                            cold_gauss_point = 1.0 - rate - 0.1
-                        else:
-                            gauss_point = 1.0 - rate
-                            cold_gauss_point = 1.0 - rate
-                            
-                    random_number = choice([-1,1]) * random() * power * power_mod
-                    
-                    random_choice = random()
-                    if random_choice > gauss_point:
-                        current_gene.link.weight += random_number
-                    elif random_choice > cold_gauss_point:
-                        current_gene.link.weight = random_number
-                    
-                    # Record the innovation 
-                    current_gene.mutation_number = current_gene.link.weight
-                    
-                    number += 1 """
     
