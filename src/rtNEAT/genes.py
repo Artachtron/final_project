@@ -52,12 +52,14 @@ class BaseGene:
         self.id: int = gene_id
         self.frozen: bool = freeze
         self.enabled: bool = enable
+        
+    def __lt__(self, other) -> bool:
+        return self.id < other.id
        
     def transcript(self):
         raise NotImplementedError("Please Implement the transcription method")
     
-    """  def __lt__(self, other):
-        self. """
+    
         
      
 class LinkGene(BaseGene):

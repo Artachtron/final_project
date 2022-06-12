@@ -76,3 +76,24 @@ class TestGene:
         assert node_gene.type == NodeType.BIAS
         assert node_gene.activation_function == ActivationFuncType.SIGMOID
         assert node_gene.aggregation_function == AggregationFuncType.SUM
+        
+    def test_genes_comparison(self):
+        node_gene1 = NodeGene()
+        node_gene2 = NodeGene()
+        node_gene3 = node_gene1
+
+        assert node_gene1 < node_gene2
+        assert node_gene2 > node_gene1
+        assert node_gene1 == node_gene3
+        assert node_gene3 != node_gene2
+        
+        link_gene1 = LinkGene(in_node=node_gene1.id,
+                              out_node=node_gene2.id)
+        link_gene2 = LinkGene(in_node=node_gene1.id,
+                              out_node=node_gene2.id)
+        link_gene3 = link_gene1
+        
+        assert link_gene1 < link_gene2
+        assert link_gene2 > link_gene1
+        assert link_gene1 == link_gene3
+        assert link_gene3 != link_gene2
