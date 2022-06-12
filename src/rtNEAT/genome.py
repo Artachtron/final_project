@@ -113,7 +113,7 @@ class Genome:
                                    gene=bias)
         
         InnovTable.node_number = count_node_id
-        InnovTable.link_number = count_link_id
+        InnovTable.node_number = count_link_id
         
           
         return Genome(genome_id=genome_id,

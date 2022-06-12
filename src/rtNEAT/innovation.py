@@ -11,50 +11,29 @@ class InnovationType(enum.Enum):
     NEW_NODE = 0
     NEW_LINK = 1
 
-class InnovTable:
-    history: List[Innovation] = []
-    next_innovation_number: int = 1
-    _node_number: int = 1
-    _link_number: int = 1
-     
+class InnovTableProperties(type):
     @property
-    def node_number(self) -> int:
-        return self._node_number
+    def node_number(cls) -> int:
+        return cls._node_number
     
     @node_number.setter
-    def node_number(self, value: int) -> None:
-        self._node_number = max(self._node_number, value)
-        
+    def node_number(cls, value: int) -> None:
+        cls._node_number = max(cls.node_number, value)
+            
     @property
-    def link_number(self) -> int:
-        return self._link_number
+    def link_number(cls) -> int:
+        return cls._link_number
     
     @link_number.setter
-    def link_number(self, value: int) -> None:
-        self._link_number = max(self._link_number, value)
-    
-    @staticmethod    
-    def get_innovation_number(increment: bool=False) -> int:
-        """ Get the current innovation number
+    def link_number(cls, value: int) -> None:
+        cls._link_number = max(cls.link_number, value)
 
-        Returns:
-            int: current innovation number
-        """
-        number = InnovTable.next_innovation_number 
-        
-        if increment:
-            InnovTable.increment_innov()
-         
-        return number
-    
-    @staticmethod
-    def increment_innov(amount: int=1) -> None:
-        """ Increment the current innovation number by a given amount
+class InnovTable(object, metaclass=InnovTableProperties):
+    history: List[Innovation] = []
 
-        Args:
-            number (int, optional): innovation number's increment. Defaults to 1.
-        """        
-        InnovTable.next_innovation_number += amount
+    _node_number: int = 1
+    _link_number: int = 1
+       
         
     @staticmethod    
     def get_link_number(increment: bool=False) -> int:
@@ -116,7 +95,6 @@ class InnovTable:
         """ Reset the values of the innovation table
         """        
         InnovTable.history = []
-        InnovTable.next_innovation_number = 1
         InnovTable._node_number = 1
         InnovTable._link_number = 1
     
