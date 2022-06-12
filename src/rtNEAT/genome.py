@@ -1,14 +1,14 @@
 from __future__ import annotations
 import numpy as np
 from neat import Config
-from phenes import Node, NodeType
+
 from link import Link
 
 from innovation import Innovation, InnovationType, InnovTable
 from typing import List, Iterator, Tuple, Dict
 from numpy.random import choice, random, uniform
 
-from genes import LinkGene, NodeGene, BaseGene
+from genes import LinkGene, NodeGene, BaseGene, NodeType
 
 class Genome:
     def __init__(self,
@@ -23,6 +23,18 @@ class Genome:
         """ if genes is not None:
             self.size = len(genes) """
    
+    @property
+    def n_node_genes(self):
+        return len(self.node_genes)
+    
+    @property
+    def n_link_genes(self):
+        return len(self.link_genes)
+    
+    @property
+    def size(self):
+        return {'node genes': self.n_node_genes,
+                'link genes': self.n_link_genes}
       
     def add_gene(self, link: LinkGene) -> None:
         self.link_genes[link.id] = link
@@ -45,7 +57,7 @@ class Genome:
         genes_dict[gene.id] = gene        
         return genes_dict  
       
-    def create_bias_gene(self) -> Node:
+    def create_bias_gene(self) -> NodeGene:
         return NodeGene(node_type=NodeType.BIAS)
     
     def get_link_genes(self) -> np.array[LinkGene]:
@@ -55,7 +67,7 @@ class Genome:
         return np.array(list(self.node_genes.values()))
     
     @staticmethod
-    def genesis(n_inputs: int, n_outputs: int):        
+    def genesis(genome_id: int, n_inputs: int, n_outputs: int):        
         """ Initialize a genome based on configuration.
             Create the input nodes, output gene nodes and
             gene links connecting each input to each output 
@@ -64,20 +76,20 @@ class Genome:
         inputs = {}
         for _ in range(n_inputs):
             inputs = Genome.insert_gene_in_dict(genes_dict=inputs,
-                                                gene=Node(node_type=NodeType.INPUT))
+                                                gene=NodeGene(node_type=NodeType.INPUT))
      
-        
          # Initialize bias
-        bias = Node(node_type=NodeType.BIAS)
+        bias = NodeGene(node_type=NodeType.BIAS)
                    
         # Initialize outputs    
         outputs = {}  
         for _ in range(n_outputs):
             outputs = Genome.insert_gene_in_dict(genes_dict=outputs,
-                                                 gene=Node(node_type=NodeType.OUTPUT)) 
-            
+                                                 gene=NodeGene(node_type=NodeType.OUTPUT)) 
+        
+        # Connect all the inputs and bias to each output   
         genes = {}
-        for node1 in list(inputs.values()) + bias:
+        for node1 in list(inputs.values()) + [bias]:
             for node2 in outputs.values():
                 genes = Genome.insert_gene_in_dict(genes_dict=genes,
                                                    gene=LinkGene(   in_node=node1,
@@ -86,8 +98,9 @@ class Genome:
         Genome.insert_gene_in_dict(genes_dict=inputs,
                                    gene=bias)
           
-        return Genome(node_genes=inputs.items()|outputs.items(),
-                      genes=genes)
+        return Genome(genome_id=genome_id,
+                      node_genes=inputs|outputs,
+                      link_genes=genes)
       
          
             
@@ -103,15 +116,15 @@ class Genome:
         self._mutate_link_weights()
     
     @staticmethod
-    def compatibility(genome1: Genome, genome2: Genome) -> float:
-        """ Find the compatibility score between two genomes
+    def genetical_distance(genome1: Genome, genome2: Genome) -> float:
+        """ Find the genetical distance between two genomes
 
         Args:
             genome1 (Genome): the first genome to compare compatibility
             genome1 (Genome): the second genome to compare compatibility
 
         Returns:
-            float: compatibility score
+            float: genetical distance
         """        
         g1_innovation: int
         g2_innovation: int

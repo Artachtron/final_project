@@ -126,7 +126,7 @@ class Entity(EntitySprite):
                                      blue_energy=blue_energy,
                                      red_energy=red_energy)
 
-        self.id = entitiy_id or WorldTable.get_next_entity_id(increment=True)
+        self.id = entitiy_id or WorldTable.get_organism_id(increment=True)
         self.organism = self._create_organism() 
                
         self._age: int = 0

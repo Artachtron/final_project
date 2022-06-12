@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     
 
 class WorldTable:
-    next_entity_id: int  = 1
+    next_organism_id: int  = 1
 
     entities = []
     
@@ -14,27 +14,27 @@ class WorldTable:
     tree_count: int = 0
      
     @staticmethod    
-    def get_next_entity_id(increment: bool=False) -> int:
+    def get_organism_id(increment: bool=False) -> int:
         """ Get the current innovation number
 
         Returns:
             int: current innovation number
         """
-        number = WorldTable.next_entity_id
+        number = WorldTable.next_organism_id
         
         if increment:
-            WorldTable.increment_entity_id()
+            WorldTable.increment_organism_id()
          
         return number
     
     @staticmethod
-    def increment_entity_id(amount: int=1) -> None:
+    def increment_organism_id(amount: int=1) -> None:
         """ Increment the current innovation number by a given amount
 
         Args:
             number (int, optional): innovation number's increment. Defaults to 1.
         """        
-        WorldTable.next_entity_id += amount
+        WorldTable.next_organism_id += amount
         
     
     @staticmethod
@@ -53,10 +53,10 @@ class WorldTable:
                 WorldTable.tree_count +=1
         
     @staticmethod
-    def reset_innovation_table() -> None:
+    def reset_world_table() -> None:
         """ Reset the values of the innovation table
         """       
          
         WorldTable.history = []
-        WorldTable.next_entity_id = 1
+        WorldTable.next_organism_id = 1
         
