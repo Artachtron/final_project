@@ -5,21 +5,20 @@ from phenes import Node, NodeType
 from link import Link
 
 from innovation import Innovation, InnovationType, InnovTable
-from network import Network
 from typing import List, Iterator, Tuple, Dict
 from numpy.random import choice, random, uniform
 
-from genes import LinkGene, NodeGene
+from genes import LinkGene, NodeGene, BaseGene
 
 class Genome:
     def __init__(self,
                  genome_id: int,
-                 nodes: Dict[int, NodeGene] = {},
-                 links: Dict[int, LinkGene] = {}):
+                 node_genes: Dict[int, NodeGene] = {},
+                 link_genes: Dict[int, LinkGene] = {}):
         
         self.id: int = genome_id
-        self.node_genes: Dict[int, NodeGene] = nodes   # List of network's nodes 
-        self.link_genes: Dict[int, LinkGene] = links   # List of link's genes
+        self.node_genes: Dict[int, NodeGene] = node_genes   # List of network's nodes 
+        self.link_genes: Dict[int, LinkGene] = link_genes   # List of link's genes
         
         """ if genes is not None:
             self.size = len(genes) """
@@ -32,19 +31,19 @@ class Genome:
         self.node_genes[node.id] = node
     
     @staticmethod   
-    def insert_node_in_dict(nodes_dict: Dict[int, NodeGene],
-                    node: NodeGene) -> Dict[int, NodeGene]:
-        """ Insert a node into a list of nodes
+    def insert_gene_in_dict(genes_dict: Dict[int, BaseGene],
+                            gene: BaseGene) -> Dict[int, BaseGene]:
+        """ Insert a gene into a dictionary of genes
 
         Args:
-            nodes_dict (np.Dict[int, Node]):    list of nodes to insert in
-            node (Node):                        node to insert
+            genes_dict (Dict[int, BaseGene]):   dictionary of genes to insert in
+            gene (BaseGene):                        gene to insert
 
         Returns:
-            Dict[int, Node]: the final list of nodes after insertion
+            Dict[int, BaseGene]: the final dicitonary of genes after insertion
         """        
-        nodes_dict[node.id] = node        
-        return nodes_dict  
+        genes_dict[gene.id] = gene        
+        return genes_dict  
       
     def create_bias_gene(self) -> Node:
         return NodeGene(node_type=NodeType.BIAS)
@@ -55,53 +54,40 @@ class Genome:
     def get_node_genes(self) -> np.array[LinkGene]:
         return np.array(list(self.node_genes.values()))
     
-    def genesis(self):
-        """ Generate a mind network from this genome with specified id
-        """
+    @staticmethod
+    def genesis(n_inputs: int, n_outputs: int):        
+        """ Initialize a genome based on configuration.
+            Create the input nodes, output gene nodes and
+            gene links connecting each input to each output 
+        """        
+        # Initialize inputs
+        inputs = {}
+        for _ in range(n_inputs):
+            inputs = Genome.insert_gene_in_dict(genes_dict=inputs,
+                                                gene=Node(node_type=NodeType.INPUT))
+     
         
-        bias: NodeGene = None         
-        inputs: Dict[int, NodeGene] = {}
-        outputs: Dict[int, NodeGene] = {}
-        hidden: Dict[int, NodeGene] = {}
-        all_nodes: Dict[int, NodeGene] = {}
-              
-        for key, node in self.node_genes.items:         
-            # Check for input or output designation of node
-            match node.type.name:
-                case 'INPUT':
-                    inputs[key] = node
-                case 'OUTPUT':
-                    outputs[key] = node
-                case 'HIDDEN':
-                    hidden[key] = node
-                case 'BIAS':
-                    bias = node
-                
-            
-            # Keep track of all nodes, not just input and output    
-            all_nodes[key] = node
-            
-        if bias is None:
-            bias = self._create_bias(outputs=outputs)
-            all_nodes[key] = bias
-                                  
-        Network.create_network( genome=self,
-                                inputs=inputs,
-                                bias=bias,
-                                outputs=outputs,
-                                hidden=hidden,
-                                all_nodes=all_nodes)
-                   
-    def _create_bias(self, outputs: Dict[int, NodeGene]) -> Node:
+         # Initialize bias
         bias = Node(node_type=NodeType.BIAS)
-        self.insert_node_in_dict(   nodes_dict=self.node_genes,
-                            node=bias)
-        
-        for output in outputs:
-            self.add_gene(LinkGene(in_node=bias,
-                               out_node=output))
-
-        return bias  
+                   
+        # Initialize outputs    
+        outputs = {}  
+        for _ in range(n_outputs):
+            outputs = Genome.insert_gene_in_dict(genes_dict=outputs,
+                                                 gene=Node(node_type=NodeType.OUTPUT)) 
+            
+        genes = {}
+        for node1 in list(inputs.values()) + bias:
+            for node2 in outputs.values():
+                genes = Genome.insert_gene_in_dict(genes_dict=genes,
+                                                   gene=LinkGene(   in_node=node1,
+                                                                    out_node=node2))
+                
+        Genome.insert_gene_in_dict(genes_dict=inputs,
+                                   gene=bias)
+          
+        return Genome(node_genes=inputs.items()|outputs.items(),
+                      genes=genes)
       
          
             
@@ -322,8 +308,8 @@ class Genome:
             
         else:
             new_node = Node.constructor_from_node(target_node)
-            new_nodes = Genome.insert_node_in_dict(nodes_dict=new_nodes,
-                                           node=new_node)
+            new_nodes = Genome.insert_gene_in_dict(genes_dict=new_nodes,
+                                           gene=new_node)
             
         return new_node, new_nodes
     
@@ -358,8 +344,8 @@ class Genome:
                 new_output_node = Node.constructor_from_node(current_node)
                 
                 # Add the new node
-                new_nodes = Genome.insert_node_in_dict(nodes_dict=new_nodes,
-                                               node=new_output_node)
+                new_nodes = Genome.insert_gene_in_dict(genes_dict=new_nodes,
+                                               gene=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
         parent1_genes = iter(parent1.link_genes)
@@ -415,8 +401,8 @@ class Genome:
                 new_genes.append(new_gene)
         
         baby_genome = Genome(   genome_id=genome_id,
-                                nodes=new_nodes,
-                                links=np.array(new_genes))
+                                node_genes=new_nodes,
+                                link_genes=np.array(new_genes))
         
         return baby_genome
     
@@ -596,7 +582,7 @@ class Genome:
                 
         self.add_gene(gene=new_gene1)
         self.add_gene(gene=new_gene2)
-        self.node_genes = Genome.insert_node_in_dict(self.node_genes, new_node)
+        self.node_genes = Genome.insert_gene_in_dict(self.node_genes, new_node)
         return True  
                     
     def _select_nodes_for_link(self,recurrence: bool) -> Tuple[Node,Node]:
