@@ -101,6 +101,16 @@ class LinkGene(BaseGene):
         return {'link_id':self.id, 'weight':self.weight,
                 'in_node':self.in_node, 'out_node':self.out_node,
                  'enabled':self.enabled}
+        
+    def mutate(self, reset_weight: bool, mutate_power: float) -> None:
+        if self.frozen: return
+        
+        if reset_weight:
+            self.weight = uniform(-1,1)
+        else:
+            self.weight += uniform(-1,1) * mutate_power
+            
+        self.mutation_number = self.weight
 
         
 class NodeGene(BaseGene):

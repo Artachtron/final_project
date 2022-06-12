@@ -13,6 +13,7 @@ class TestGene:
         
     def test_create_base_gene(self):
         base_gene = BaseGene(gene_id=1,
+                             mutation_number = 0,
                              enable=True,
                              freeze=False)  
         
@@ -20,6 +21,7 @@ class TestGene:
                 
     def test_base_gene_fields(self):
         base_gene = BaseGene(gene_id=1,
+                             mutation_number = 0,
                              enable=True,
                              freeze=False) 
         

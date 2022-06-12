@@ -189,46 +189,60 @@ class TestGenome:
             assert dist == 0.5/3 + 0.5/5
             
         
-        def test_genome_compatibility(self):
-            self.links[3].innovation_number = self.links[2].innovation_number
-            # Excess
-            genome1 = Genome(   genome_id=0,
-                                node_genes=self.nodes,
-                                link_genes=self.links)
+        def test_mutate_links_weight(self):
+            """ Config.weight_mutate_prob = 1.0
+            Config.new_link_prob = 0.5
+            Config.weight_mutate_power = 0.5 """
             
-            genome2 = Genome(   genome_id=1,
-                                node_genes={node.id: node for node in self.nodes.values() if node.id < 4},
-                                link_genes={link.id: link for link in self.links.values() if link.id < 2})
+            weights = [gene.weight for gene in self.genome1.link_genes]
+            self.genome1._mutate_link_weights()
+            new_weights = [gene.weight for gene in self.genome1.link_genes]
             
-            genetical_distance = Genome.genetical_distance( genome1=genome1,
-                                                            genome2=genome2)
-            assert genetical_distance == 2.0 * Config.excess_coeff
-            
-            # Disjoint
-            genome3 = Genome(   genome_id=2,
-                                node_genes={node.id: node for node in self.nodes.values() if node.id in [0,1,4,5]},
-                                link_genes=self.links[0:3])
-                
-            genome4 = Genome(   genome_id=3,
-                                node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(2,5))},
-                                link_genes=self.links[1:3])
+            assert new_weights[2] != weights[2] 
+         
+        def test_mutate_add_node(self):
+            nodes = {node.id: node for node in self.nodes.values() if node.id > 4}
+            links = {link.id: link for link in self.links.values() if link.id > 3}
+
+            genome1 = Genome(genome_id=1,
+                             node_genes=nodes,
+                             link_genes=links)
                         
-            genetical_distance = Genome.genetical_distance(   genome1=genome4,
-                                                    genome2=genome3)
-            assert genetical_distance == 1.0 * Config.disjoint_coeff
+            initial_link = genome1.get_last_link_id()
+            initial_node = genome1.get_last_node_id()
             
-            # Mutation
-            genome5 = Genome(   genome_id=4,
-                                node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(2,4))},
-                                link_genes=self.links[2:3])
+            # Innovation is novel
+            assert len(genome1.node_genes) == 2
+            assert genome1.n_link_genes == 1
+            success = genome1._mutate_add_node()
+            assert genome1.link_genes[0].enabled == False
+            assert success
+            assert genome1.get_last_link_id() == initial_link+2
+            assert genome1.get_last_node_id() == initial_node+1
+            assert len(genome1.node_genes) == 3
+            assert genome1.n_link_genes == 3
+            nodes = {node.id: node for node in self.nodes.values() if node.id > 4}
+            assert list(set(genome1._node_genes.keys()) - set(nodes.keys()))[0] == 7
             
-            genome6 = Genome(   genome_id=5,
-                                node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(4,len(self.nodes)))},
-                                link_genes=self.links[3:])
-            
-            genetical_distance = Genome.genetical_distance(   genome1=genome5,
-                                                    genome2=genome6)
-            assert genetical_distance == 1.0 * Config.mutation_difference_coeff
+            # Innovation exists
+            links = {link.id: link for link in self.links.values() if link.id > 3}
+            genome2 = Genome(genome_id=2,
+                             node_genes=nodes,
+                             link_genes=links)
+                                 
+            genome2.link_genes[0].enabled = True
+            #assert genome2.get_last_link_id() == initial_innov+2
+            new_link = LinkGene(in_node=1,
+                                out_node=2)
+            assert new_link.id == initial_link+3
+            assert len(genome2.node_genes) == 2
+            assert genome2.n_link_genes == 1
+            success = genome2._mutate_add_node()
+            assert success
+            assert genome2.get_last_link_id() == initial_link+2
+            assert genome2.get_last_node_id() == initial_node+1
+            assert len(genome2.node_genes) == 3
+            assert genome2.n_link_genes == 3
             
 
             
