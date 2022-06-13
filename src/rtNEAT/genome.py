@@ -274,9 +274,8 @@ class Genome:
         """Simplified mutate link weight method
         """        
         for current_link in self.link_genes:
-            if random() < Config.weight_mutate_prob:
-                current_link.mutate(reset_weight = random() < Config.new_link_prob,
-                                    mutate_power = Config.weight_mutate_power)           
+            if random() < Config.weight_mutate_prob:                
+                current_link.mutate()           
                         
     
     def _link_already_exists(self, node1: NodeGene, node2: NodeGene) -> bool:
@@ -576,10 +575,10 @@ class Genome:
         return chosen_genes
     
     @staticmethod
-    def _add_missing_nodes(chosen_links: Dict[int, LinkGene], new_nodes: Dict[int, NodeGene],
+    def _add_missing_nodes(new_links: Dict[int, LinkGene], new_nodes: Dict[int, NodeGene],
                            main_nodes: Dict[int, NodeGene]) -> Dict[int, NodeGene]:
             
-        for link in chosen_links.values():
+        for link in new_links.values():
             in_node = link.in_node
             out_node = link.out_node
             if in_node not in new_nodes:
@@ -594,38 +593,44 @@ class Genome:
                 
         return new_nodes
     
-    def reproduce(parent1: Genome, parent2: Genome) -> Genome:       
+    def reproduce(genome_id:int, parent1: Genome, parent2: Genome) -> Genome:       
         main_genome, sub_genome  = choice([parent1, parent2], 2, replace=False)
         
+        new_nodes: Dict[int, NodeGene] = {}
         # Make sure all sensors and outputs are included
-        """ for current_node in parent1.node_genes:
+        for current_node in parent1.node_genes:
             if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
                 new_node: NodeGene = current_node.duplicate()
                 
                 # Add the new node
-                IO_nodes: Dict[int, NodeGene] =  Genome.insert_gene_in_dict(genes_dict=IO_nodes,
-                                                                            gene=new_node) """
+                Genome.insert_gene_in_dict(genes_dict=new_nodes,
+                                           gene=new_node)
+                
         # Choose the links to transmit to offspring   
-        main_links: Dict[int, LinkGene] = main_genome.link_genes 
-        sub_links: Dict[int, LinkGene] = sub_genome.link_genes  
-        chosen_links = Genome._genes_to_transmit(main_genome=main_links,
+        main_links: Dict[int, LinkGene] = main_genome._link_genes 
+        sub_links: Dict[int, LinkGene] = sub_genome._link_genes  
+        new_links = Genome._genes_to_transmit(main_genome=main_links,
                                                  sub_genome=sub_links)
         
-        main_nodes: Dict[int, NodeGene] = main_genome.node_genes
-        sub_nodes: Dict[int, NodeGene] = sub_genome.node_genes
+        main_nodes: Dict[int, NodeGene] = main_genome._node_genes
+        sub_nodes: Dict[int, NodeGene] = sub_genome._node_genes
         chosen_nodes = Genome._genes_to_transmit(main_genome=main_nodes,
                                                  sub_genome=sub_nodes)
-        
-      
+        new_nodes |= chosen_nodes
         # Make sure all the nodes in the links chosen
         # are present in offspring's genome
-        chosen_nodes: Dict[int, NodeGene] = Genome._add_missing_nodes(chosen_links=chosen_links,
-                                                                      new_nodes=chosen_nodes,
-                                                                      main_nodes=main_nodes) 
-            
-     
+        Genome._add_missing_nodes(new_links=new_links,
+                                  new_nodes=new_nodes,
+                                  main_nodes=main_nodes)
+        
+        baby_genome = Genome(   genome_id=genome_id,
+                                node_genes=new_nodes,
+                                link_genes=new_links)
+        
+        return baby_genome 
+
            
     @staticmethod
     def mate_multipoint(parent1: Genome, parent2: Genome, genome_id: int,) -> Genome:

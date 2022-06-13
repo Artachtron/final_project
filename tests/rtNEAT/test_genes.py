@@ -14,16 +14,16 @@ class TestGene:
     def test_create_base_gene(self):
         base_gene = BaseGene(gene_id=1,
                              mutation_number = 0,
-                             enable=True,
-                             freeze=False)  
+                             enabled=True,
+                             frozen=False)  
         
         assert type(base_gene) == BaseGene 
                 
     def test_base_gene_fields(self):
         base_gene = BaseGene(gene_id=1,
                              mutation_number = 0,
-                             enable=True,
-                             freeze=False) 
+                             enabled=True,
+                             frozen=False) 
         
         assert set(['id', 'enabled', 'frozen']).issubset(vars(base_gene))
         assert base_gene.id == 1
@@ -42,8 +42,8 @@ class TestGene:
                              out_node=2,
                              weight=0.5,
                              mutation_number=0,
-                             enable=True,
-                             freeze=False)
+                             enabled=True,
+                             frozen=False)
         
         assert {'id', 'enabled', 'frozen',
                 'in_node','out_node','weight',
@@ -65,8 +65,8 @@ class TestGene:
         
     def test_node_gene_fields(self):
         node_gene = NodeGene(node_type=NodeType.BIAS,
-                             enable=False,
-                             freeze=True)
+                             enabled=False,
+                             frozen=True)
         
         assert {'id', 'enabled', 'frozen',
                 'type', 'bias', 'activation_function',

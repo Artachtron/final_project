@@ -1,6 +1,6 @@
 import pytest, os, sys
 import numpy as np
-from numpy.random import uniform
+from numpy.random import choice
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.genome import Genome
@@ -449,6 +449,7 @@ class TestGenome:
             @pytest.fixture(autouse=True)
             def setup(self):
                 reset_innovation_table()
+                np.random.seed(1)
                 yield
                 
                 
@@ -558,8 +559,8 @@ class TestGenome:
                                                gene=NodeGene())
                 for i in range(1,50):
                     Genome.insert_gene_in_dict(genes_dict=links,
-                                               gene=LinkGene(in_node=nodes[i],
-                                                             out_node=nodes[2*i]))
+                                               gene=LinkGene(in_node=i,
+                                                             out_node=2*i))
                 
                 links1 = {link.id: link for link in links.values() if link.id%2 == 0}
                 links2 = {link.id: link for link in links.values() if link.id%2 == 1}
@@ -614,7 +615,7 @@ class TestGenome:
                                                          out_node=5))
                 
                 assert len(new_nodes) == 10    
-                Genome._add_missing_nodes(chosen_links=chosen_links,
+                Genome._add_missing_nodes(new_links=chosen_links,
                                           new_nodes=new_nodes,
                                           main_nodes=main_nodes)
                 
@@ -625,7 +626,7 @@ class TestGenome:
                                            gene=LinkGene(in_node=12,
                                                          out_node=5))
                 
-                Genome._add_missing_nodes(chosen_links=chosen_links,
+                Genome._add_missing_nodes(new_links=chosen_links,
                                           new_nodes=new_nodes,
                                           main_nodes=main_nodes)
                 
@@ -636,7 +637,7 @@ class TestGenome:
                                            gene=LinkGene(in_node=13,
                                                          out_node=14))
                 
-                Genome._add_missing_nodes(chosen_links=chosen_links,
+                Genome._add_missing_nodes(new_links=chosen_links,
                                           new_nodes=new_nodes,
                                           main_nodes=main_nodes)
                 
@@ -659,9 +660,95 @@ class TestGenome:
                                            gene=LinkGene(in_node=14,
                                                          out_node=13))
                 
-                Genome._add_missing_nodes(chosen_links=chosen_links,
+                Genome._add_missing_nodes(new_links=chosen_links,
                                           new_nodes=new_nodes,
                                           main_nodes=main_nodes)
                 
                 assert len(new_nodes) == 16
+                
+            def test_reproduce(self):
+                nodes = {}
+                links = {}
+                
+                for _ in range(1,101):
+                    Genome.insert_gene_in_dict(genes_dict=nodes,
+                                               gene=NodeGene(node_type=choice([NodeType.HIDDEN,
+                                                                                NodeType.INPUT,
+                                                                                NodeType.OUTPUT])))
+                for i in range(1,51):
+                    Genome.insert_gene_in_dict(genes_dict=links,
+                                               gene=LinkGene(in_node=i,
+                                                             out_node=2*i))
+                
+                links1 = {link.id: link for link in links.values() if link.id%2 == 0}
+                links2 = {link.id: link for link in links.values() if link.id%2 == 1} 
+                
+                genome =  Genome(genome_id=0,
+                                 node_genes=nodes,
+                                 link_genes=links)
+                
+                genome1 = Genome(genome_id=1,
+                                 node_genes=nodes,
+                                 link_genes=links1)
+                
+                genome2 = Genome(genome_id=2,
+                                 node_genes=nodes,
+                                 link_genes=links2) 
+                
+                baby = Genome.reproduce(genome_id=4,
+                                        parent1=genome1,
+                                        parent2=genome2)  
+                
+                assert baby.id == 4
+                assert baby.n_link_genes == 25
+                assert baby.n_node_genes == 100
+                
+                #genome dominant
+                baby = Genome.reproduce(genome_id=5,
+                                        parent1=genome1,
+                                        parent2=genome)  
+                
+                assert baby.id == 5
+                assert baby.n_link_genes == 50
+                assert baby.n_node_genes == 100
+                
+                #genome1 dominant
+                baby = Genome.reproduce(genome_id=6,
+                                        parent1=genome,
+                                        parent2=genome1)  
+                
+                assert baby.id == 6
+                assert baby.n_link_genes == 25
+                assert baby.n_node_genes == 100
+                
+                
+                # unlinked nodes
+                nodes2 = {key: node.duplicate() for key, node in nodes.items()}
+                genome3 = Genome(genome_id=3,
+                                 node_genes=nodes2,
+                                 link_genes=links)
+                
+                for _ in range(200):
+                    Genome.insert_gene_in_dict(genes_dict=nodes2,
+                                               gene=NodeGene(node_type=choice([NodeType.HIDDEN,
+                                                                                NodeType.INPUT,
+                                                                                NodeType.OUTPUT])))
+                # genome dominant    
+                baby = Genome.reproduce(genome_id=7,
+                                        parent1=genome,
+                                        parent2=genome3)  
+                
+                assert baby.id == 7
+                assert baby.n_link_genes == 50
+                assert baby.n_node_genes == 100
+                
+                # genome4 dominant
+                baby = Genome.reproduce(genome_id=8,
+                                        parent1=genome,
+                                        parent2=genome3)  
+                
+                assert baby.id == 8
+                assert baby.n_link_genes == 50
+                assert baby.n_node_genes == 300
+                
                 
