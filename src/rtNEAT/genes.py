@@ -233,7 +233,8 @@ class NodeGene(BaseGene):
                 
         self.type: NodeType = node_type                                         # HIDDEN, INPUT, OUTPUT, BIAS
        
-        self.bias: float = bias or uniform(-1,1)                                # bias value to add to the activation value
+        self.bias: float =((bias and not self.is_sensor()) or                   # bias value to add to the activation value
+                            uniform(-1,1))  
         self.activation_function: ActivationFuncType = activation_function      # function to calculate activation
         self.aggregation_function: AggregationFuncType = aggregation_function   # function to aggregates incoming values
             
@@ -255,6 +256,11 @@ class NodeGene(BaseGene):
         # if frozen can't be mutated 
         if self.frozen: return
         
+        # modify bias value
+        if (random() < Config.mutate_bias_prob and
+            not self.is_sensor()):
+            self.bias = uniform(-1,1)
+            
         # disable the link
         if random() < Config.disable_prob:
             self.disabled = True
@@ -302,7 +308,15 @@ class NodeGene(BaseGene):
         return (self.id == other_gene.id and
                 self.type == other_gene.type or
                 self.id == other_gene.id)
-        
+     
+    def is_sensor(self) -> bool:
+        """ determine if the node is a sensor (INPUT or BIAS)
+
+        Returns:
+            bool: node is a sensor
+        """        
+        return (self.type == NodeType.INPUT or 
+                self.type == NodeType.BIAS)   
        
 def reset_innovation_table():
     InnovTable.reset_innovation_table()

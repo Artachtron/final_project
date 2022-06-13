@@ -136,7 +136,8 @@ class Genome:
         for _ in range(n_inputs):
             inputs = Genome.insert_gene_in_dict(genes_dict=inputs,
                                                 gene=NodeGene(node_id=count_node_id,
-                                                              node_type=NodeType.INPUT))
+                                                              node_type=NodeType.INPUT,
+                                                              bias=0.0))
             count_node_id += 1
      
         # Initialize outputs    

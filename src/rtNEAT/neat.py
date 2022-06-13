@@ -16,9 +16,11 @@ class Config:
         enable_prob: float = 0.1,
         weight_mutate_power: float = 0.5,
         link_mutate_prob: float = 0.1,
+         ## Node mutation
         node_mutate_prob: float = 0.1,
-        new_link_prob: float = 0.1,
+        mutate_bias_prob: float = 0.1,
         ## add link mutation
+        new_link_prob: float = 0.1,
         add_link_prob: float = 0.05,
         add_link_tries: int = 20,
         recurrence_only_prob: float = 0,
@@ -50,6 +52,7 @@ class Config:
         Config.new_link_prob: float = new_link_prob
         ## Node mutation
         Config.node_mutate_prob: float  = node_mutate_prob
+        Config.mutate_bias_prob: float = mutate_bias_prob
         ## add link mutation
         Config.add_link_prob: float = add_link_prob
         Config.add_link_tries: int = add_link_tries
