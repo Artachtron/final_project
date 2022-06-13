@@ -379,18 +379,7 @@ class Genome:
         
         else:
             return False
-                                               
-    def _get_input_links(self, node_id: int) -> List[Link]:
-        """ get all the links that connects to the node and return the list
-
-        Args:
-            node_id (int): id of the node
-
-        Returns:
-            List[Link]: the list of links connecting to the node
-        """        
-        return [gene.link for gene in self._link_genes if gene.link.out_node.id == node_id]
-    
+                                                   
             
     def get_last_node_id(self) -> int:
         """ Return id of final Node in Genome
