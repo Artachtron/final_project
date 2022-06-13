@@ -53,13 +53,13 @@ class TestNetwork:
                 assert node.type == node_types[i]
             
             #Sorted                     
-            for node in self.network.inputs:
+            for node in self.network.get_inputs():
                 assert node.type == NodeType.INPUT
                 
-            for node in self.network.hidden:
+            for node in self.network.get_hidden():
                 assert node.type == NodeType.HIDDEN    
             
-            for node in self.network.outputs:
+            for node in self.network.get_outputs():
                 assert node.type == NodeType.OUTPUT
                             
         def test_synthetize_links(self):

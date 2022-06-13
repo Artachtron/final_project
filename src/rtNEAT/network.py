@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from genome import Genome
     from genes import NodeGene, LinkGene
     
-from typing import Dict
+from typing import Dict, Set
 
 import numpy as np
 from phenes import Node, Link
@@ -83,7 +83,7 @@ class Network:
                     
             # Keep track of all nodes    
             self._all_nodes[key] = node
-    
+        
     def activate(self, input_values: np.array) -> np.array:
         """ Activate the whole network after recieving input values
 
@@ -163,23 +163,65 @@ class Network:
     
     @property
     def inputs(self)  -> np.array[Node]:  
-        return np.array(list(self._inputs.values()))
+        return self._inputs
     
     @property
     def outputs(self)  -> np.array[Node]:  
-        return np.array(list(self._outputs.values()))
-        
+        return self._outputs
+    
     @property
     def hidden(self)  -> np.array[Node]:  
-        return np.array(list(self._hidden.values()))
+        return self._hidden.values()
     
     @property
     def all_nodes(self) -> np.array:
-        return np.array(list(self._all_nodes.values()))
+        return self._all_nodes.values()
     
     @property
     def links(self) -> np.array:
-        return np.array(list(self._links.values()))
+        return self._links.values()
+    
+    def get_inputs(self) ->  Set[Node]:
+        """Return only the Nodes values from the dictionary
+
+        Returns:
+            np.array[Node]: Array of inputs Nodes
+        """        
+        return set(self._inputs.values())
+    
+    def get_outputs(self) ->  Set[Node]:
+        """Return only the Nodes values from the dictionary
+
+        Returns:
+            np.array[Node]: Array of outputs Nodes
+        """        
+        return set(self._outputs.values())
+    
+    def get_hidden(self) -> Set[Node]:
+        """Return only the Nodes values from the dictionary
+
+        Returns:
+            np.array[Node]: Array of hidden Nodes
+        """
+        return set(self._hidden.values())
+    
+    def get_all_nodes(self) ->  Set[Node]:
+        """Return only the Nodes values from the dictionary
+
+        Returns:
+            np.array[Node]: Array of all Nodes
+        """        
+        return set(self._all_nodes.values())
+    
+    def get_links(self) ->  Set[Link]:
+        """Return only the Nodes values from the dictionary
+
+        Returns:
+            np.array[Link]: Array of Links
+        """        
+        return set(self._links.values())
+        
+   
     
     
         

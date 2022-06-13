@@ -8,8 +8,8 @@ class BasePhene:
                  phene_id: int,
                  enabled: bool = True):
         
-        self.id = phene_id
-        self.enabled = enabled
+        self.id: int = phene_id
+        self.enabled: bool = enabled
         
     @classmethod    
     def synthesis(cls, kwargs):
@@ -97,7 +97,7 @@ class Node(BasePhene):
         # then just return the value      
         if self.activation_phase != activation_phase:
             
-            values = []
+            values = [self.bias]
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
             for link in self.incoming:
@@ -108,7 +108,7 @@ class Node(BasePhene):
                     values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
             
             self.activation_value = self.activation_function.value(
-                                    self.aggregation_function.value(values))
+                                    self.aggregation_function.value(values)) 
             
             # set the activation phase to the current one,
             # since the value is now already calculated
