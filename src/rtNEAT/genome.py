@@ -3,7 +3,7 @@ import numpy as np
 from neat import Config
 
 from innovation import InnovationType, InnovTable
-from typing import List, Tuple, Dict, Set
+from typing import Tuple, Dict, Set
 from numpy.random import choice, random
 
 from genes import LinkGene, NodeGene, BaseGene, NodeType
@@ -16,36 +16,73 @@ class Genome:
                  node_genes: Dict[int, NodeGene] = {},
                  link_genes: Dict[int, LinkGene] = {}):
         
-        self.id: int = genome_id
-        self._node_genes: Dict[int, NodeGene] = node_genes   # List of network's nodes 
-        self._link_genes: Dict[int, LinkGene] = link_genes   # List of link's genes
+        self.id: int = genome_id                             # unique identifier
+        self._node_genes: Dict[int, NodeGene] = node_genes   # list of network's nodes 
+        self._link_genes: Dict[int, LinkGene] = link_genes   # list of link's genes
+        self.ancestors: Set = {}                             # set of ancestors
      
     
     @property
-    def node_genes(self) -> Set[NodeGene]:
-        return set(self._node_genes.values())
+    def node_genes(self) -> Dict[int, NodeGene]:
+        """Return the dictionary of NodeGenes
+
+        Returns:
+            Dict[int, NodeGene]: dictionary of NodeGenes
+        """        
+        return self._node_genes
     
     @property
-    def link_genes(self) -> Set[LinkGene]:
-        return set(self._link_genes.values())
+    def link_genes(self) -> Dict[int, LinkGene]:
+        """Return the dictionary of LinkGenes
+
+        Returns:
+            Dict[int, LinkGene]: dictionary of LinkGenes
+        """
+        return self._link_genes
     
     @property
-    def n_node_genes(self):
+    def n_node_genes(self) -> int:
+        """Return the number of NodeGenes
+
+        Returns:
+            int: number of NodeGenes
+        """        
         return len(self._node_genes)
     
     @property
-    def n_link_genes(self):
+    def n_link_genes(self) -> int:
+        """Return the number of LinkGenes
+
+        Returns:
+            int: number of LinkGenes
+        """           
         return len(self._link_genes)
     
     @property
-    def size(self):
+    def size(self) -> Dict[str, int]:
+        """Return a dictionary with the size of the Genome,
+           with the number of NodeGenes and LinkGenes
+
+        Returns:
+            Dict[str, int]: dictionary with the size of the Genome
+        """        
         return {'node genes': self.n_node_genes,
                 'link genes': self.n_link_genes}
       
     def add_link(self, link: LinkGene) -> None:
+        """Add a LinkGene to the list of LinkGenes
+
+        Args:
+            link (LinkGene): LinkGene to add
+        """        
         self._link_genes[link.id] = link
      
     def add_node(self, node: NodeGene) -> None:
+        """Add a NodeGene to the list of NodeGenes
+
+        Args:
+            link (NodeGene): NodeGene to add
+        """
         self._node_genes[node.id] = node
     
     @staticmethod   
@@ -54,30 +91,48 @@ class Genome:
         """ Insert a gene into a dictionary of genes
 
         Args:
-            genes_dict (Dict[int, BaseGene]):   dictionary of genes to insert in
-            gene (BaseGene):                        gene to insert
+            genes_dict (Dict[int, BaseGene]):   dictionary of genes to insert into
+            gene (BaseGene):                    gene to insert
 
         Returns:
-            Dict[int, BaseGene]: the final dicitonary of genes after insertion
+            Dict[int, BaseGene]: the final dictionary of genes after insertion
         """        
         genes_dict[gene.id] = gene        
         return genes_dict  
     
-    def get_link_genes(self) -> np.array[LinkGene]:
-        return np.array(list(self._link_genes.values()))
+    def get_link_genes(self) ->  Set[LinkGene]:
+        """Return only the LinkGenes values from the dictionary
+
+        Returns:
+            np.array[LinkGene]: Array of LinkGenes
+        """        
+        return set(self._link_genes.values())
     
-    def get_node_genes(self) -> np.array[LinkGene]:
-        return np.array(list(self._node_genes.values()))
+    def get_node_genes(self) ->  Set[NodeGene]:
+        """Return only the NodeGenes values from the dictionary
+
+        Returns:
+            np.array[NodeGene]: Array of NodeGenes
+        """   
+        return set(self._node_genes.values())
     
     @staticmethod
-    def genesis(genome_id: int, n_inputs: int, n_outputs: int):        
-        """ Initialize a genome based on configuration.
-            Create the input nodes, output gene nodes and
-            gene links connecting each input to each output 
-        """        
+    def genesis(genome_id: int, n_inputs: int, n_outputs: int) -> Genome:        
+        """Initialize a genome based on configuration.
+           Create the input GeneNodes, output GeneNodes and
+           GeneLinks connecting each input to each output 
+
+        Args:
+            genome_id (int):    id of the genome to initialize
+            n_inputs (int):     number of inputs
+            n_outputs (int):    number of outputs
+
+        Returns:
+            Genome: genome created
+        """               
         # Initialize inputs
-        inputs = {}
-        count_node_id = 1
+        count_node_id: int = 1            # keep track of number of nodes created for ids
+        inputs: Dict[int, NodeGene] = {}  # dictionary of inputs
         for _ in range(n_inputs):
             inputs = Genome.insert_gene_in_dict(genes_dict=inputs,
                                                 gene=NodeGene(node_id=count_node_id,
@@ -85,93 +140,150 @@ class Genome:
             count_node_id += 1
      
         # Initialize outputs    
-        outputs = {}  
+        outputs: Dict[int, NodeGene] = {}  # dictionary of outputs
         for _ in range(n_outputs):
             outputs = Genome.insert_gene_in_dict(genes_dict=outputs,
                                                  gene=NodeGene(node_id=count_node_id,
                                                                node_type=NodeType.OUTPUT)) 
             count_node_id += 1
+            
         # Connect each input to each output   
-        genes = {}
-        count_link_id = 1
+        links: Dict[int, LinkGene] = {}     # dictionary of links
+        count_link_id: int = 1              # keep track of number of links created for ids
         for node1 in list(inputs.values()):
             for node2 in outputs.values():
-                genes = Genome.insert_gene_in_dict(genes_dict=genes,
+                links = Genome.insert_gene_in_dict(genes_dict=links,
                                                    gene=LinkGene(   link_id=count_link_id, 
                                                                     in_node=node1,
                                                                     out_node=node2))
                 count_link_id += 1
-                        
+        
+        # Set the innovation tables to the number
+        # of links and nodes craeted             
         InnovTable.node_number = count_node_id
         InnovTable.node_number = count_link_id
         
         return Genome(genome_id=genome_id,
                       node_genes=inputs|outputs,
-                      link_genes=genes)
+                      link_genes=links)
     
     @staticmethod
-    def genetical_distance(genome1: Genome, genome2: Genome) -> float:
-        node_distance = Genome._genetical_gene_distance(gene_dict1 = genome1._node_genes,
-                                                        gene_dict2 = genome2._node_genes)
+    def genetic_distance(genome1: Genome, genome2: Genome) -> float:
+        """Calculate the genetic distance between two genomes
+
+        Args:
+            genome1 (Genome): first genome
+            genome2 (Genome): second genome
+
+        Returns:
+            float: calculated genetic distance
+        """        
+        node_distance: float = Genome._genetic_gene_distance(gene_dict1 = genome1._node_genes,
+                                                               gene_dict2 = genome2._node_genes)
         
-        link_distance = Genome._genetical_gene_distance(gene_dict1 = genome1._link_genes,
-                                                        gene_dict2 = genome2._link_genes)
+        link_distance: float = Genome._genetic_gene_distance(gene_dict1 = genome1._link_genes,
+                                                               gene_dict2 = genome2._link_genes)
         
         return node_distance + link_distance
         
     @staticmethod
-    def _genetical_gene_distance(gene_dict1: Dict[int, BaseGene],
+    def _genetic_gene_distance(gene_dict1: Dict[int, BaseGene],
                                  gene_dict2: Dict[int, BaseGene]) -> float:
-        
+        """Calculate the genetic distance between a set of genes
+
+        Args:
+            gene_dict1 (Dict[int, BaseGene]): first set of genes
+            gene_dict2 (Dict[int, BaseGene]): second set of genes
+
+        Returns:
+            float: calculated genetic distance
+        """        
+        # Find the maximum innovation numbers for each genome
         max_g1: int = max(gene_dict1.keys())
         max_g2: int = max(gene_dict2.keys()) 
         
+        # Order the genomes depending on which has the highest innovation number
         if max_g1 > max_g2:
            big_genome, small_genome = gene_dict1, gene_dict2
         else:
             small_genome, big_genome = gene_dict1, gene_dict2
-            
-        excess_threshold: int = min(max_g1, max_g2)
-        num_excess: int = 0
-        num_disjoint: int = 0
-        num_matching: int = 1
-        mutation_difference: float = 0.0
         
+        # Threshold above which genes are in excess in the big genome 
+        # (meaning all ids above this threshold are above
+        # the max ids from the small genome)
+        excess_threshold: int = min(max_g1, max_g2)
+        
+        num_excess: int = 0               # number of excess genes
+        num_disjoint: int = 0             # number of disjoint genes
+        num_matching: int = 0             # number of matching genes
+        mutation_difference: float = 0.0  # total mutation difference
+        
+        # Loop through all the genes from the big genome
         for node_id, gene_node in big_genome.items():
+            # genes with ids above the threshold are excess genes
             if node_id > excess_threshold:
                 num_excess += 1
+            # genes present only in the big genome
+            # below the excess threshold are disjoint
             elif node_id not in small_genome:
                 num_disjoint += 1
-            else:
+            # deal with genes present in both genomes
+            elif node_id in small_genome:
                 num_matching += 1
                 other_node = small_genome[node_id]
+                # Calculate the mutation difference between same innovation genes
                 mutation_difference += gene_node.mutation_distance(other_gene=other_node)
-                
-        node_distance: float = (num_excess * Config.excess_coeff + 
-                                num_disjoint * Config.disjoint_coeff+
-                                Config.mutation_difference_coeff * mutation_difference/num_matching)
         
-        return node_distance
+        # Add the disjoint genes present in small genome 
+        # but not in the big genome,
+        # obtained by subtracting the number of matching genome
+        # from the total size of genome  
+        num_disjoint += len(small_genome) - num_matching
+        
+        # Calulate the final genetic distance by applying formula,
+        # with coefficient from settings
+        genetic_distance: float = (num_excess * Config.excess_coeff + 
+                                   num_disjoint * Config.disjoint_coeff +
+                                   Config.mutation_difference_coeff * 
+                                    mutation_difference/max(num_matching, 1))
+            
+        return genetic_distance
     
     def mutate(self) -> None:
         """ Mutate the genome
-        """        
+        """ 
+        # Add a node to the genome       
         if random() < Config.add_node_prob:
             self._mutate_add_node()
-            
+        # Add a link to the genome    
         if random() < Config.add_link_prob:
             self._mutate_add_link(tries=Config.add_link_tries)
-            
-        self._mutate_link_weights() 
+        # Modify the weights of the links
+        # and their enabled status    
+        self._mutate_links() 
+        self._mutate_nodes()
         
+    def _mutate_links(self) -> None:
+        """mutate the LinkGenes
+        """        
+        for link in self.get_link_genes():
+            if random() < Config.link_mutate_prob:                
+                link.mutate() 
+                 
+    def _mutate_nodes(self) -> None:
+        """mutate the NodeGenes
+        """        
+        for node in self.get_nodes_genes():
+            if random() < Config.node_mutate_prob:    
+                node.mutate()      
+    
     def _find_random_link(self) -> LinkGene:
-        """ Find a random link gene containing a node to mutate
+        """ Find a random LinkGene containing a NodeGene to mutate
 
         Returns:
-            LinkGene:  LinkGene: link gene containing the node to mutate
-                                
+            LinkGene: LinkGene containing the NodeGene to mutate                         
         """     
-        enabled_links = [link for link in self.link_genes if link.enabled]
+        enabled_links: Tuple = tuple(link for link in self.get_link_genes() if link.enabled)
         
         if enabled_links:
             return choice(enabled_links)
@@ -179,39 +291,38 @@ class Genome:
         else:
             return None    
     
-    def _create_node(self, node_id: int, in_node: NodeGene, out_node: NodeGene,
+    def _create_node(self, node_id: int, in_node: int, out_node: int,
                          innovation_number1: int, innovation_number2: int,
                          old_weight: int) -> Tuple[NodeGene, LinkGene, LinkGene]:
-        """Create the new node and two genes connecting this node in and out
+        """Create the new NodeGene and two LinkGenes connecting this NodeGene in and out
 
         Args:
-            node_id (int):              node's id
-            in_node (Node):             incoming node
-            out_node (Node):            outgoing node
-            recurrence (bool):          recurrence flag
+            node_id (int):              id of the NodeGene
+            in_node (int):              id of incoming NodeGene
+            out_node (int):             id of outgoing NodeGene
             innovation_number1 (int):   incoming link's innovation number
-            innovation_number2 (int):   outgoing link's innovation number'
+            innovation_number2 (int):   outgoing link's innovation number
             old_weight (int):           weight of the disabled old link
 
         Returns:
-            Tuple[Node, LinkGene, LinkGene]:    Node: the new node created
-                                        LinkGene: the gene connecting in the new node
-                                        LinkGene: the gene connecting out the new node
+            Tuple[NodeGene, LinkGene, LinkGene]:    NodeGene: new NodeGene created
+                                                    LinkGene: new LinkGene connecting in the new NodeGene
+                                                    LinkGene: new LinkGene connecting out the new NodeGene
         """        
         new_node = NodeGene(node_id=node_id,
                             node_type=NodeType.HIDDEN)
                 
         new_link1 = LinkGene(link_id=innovation_number1,
-                            weight=1.0,
-                            in_node=in_node,
-                            out_node=new_node,
-                            mutation_number=0)
+                             weight=1.0,
+                             in_node=in_node,
+                             out_node=new_node,
+                             mutation_number=0)
         
         new_link2 = LinkGene(link_id=innovation_number2,
-                            weight=old_weight,
-                            in_node=new_node,
-                            out_node=out_node,
-                            mutation_number=0)
+                             weight=old_weight,
+                             in_node=new_node,
+                             out_node=out_node,
+                             mutation_number=0)
         
         return new_node, new_link1, new_link2
     
@@ -219,19 +330,19 @@ class Genome:
         """ Check to see if this innovation has already been done in another genome
 
         Args:
-            the_gene (LinkGene): the gene which innovation to check
+            old_link (LinkGene): LinkGene which innovation to check
 
         Returns:
-            Tuple[Node, LinkGene, LinkGene]:    Node: the new node created
-                                        LinkGene: the gene connecting in the new node
-                                        LinkGene: the gene connecting out the new node
+            Tuple[Node, LinkGene, LinkGene]:    NodeGene: new NodeGene created
+                                                LinkGene: new LinkGene connecting in the new NodeGene
+                                                LinkGene: new LinkGene connecting out the new NodeGene
         """        
         # Extract the link
         old_weight: float = old_link.weight
         
         # Extract the nodes
-        in_node: NodeGene = old_link.in_node
-        out_node: NodeGene = old_link.out_node
+        in_node: int = old_link.in_node
+        out_node: int = old_link.out_node
         
         the_innovation = InnovTable.get_innovation( in_node=in_node,
                                                     out_node=out_node,
@@ -248,84 +359,96 @@ class Genome:
         return  new_node, new_link1, new_link2
                     
     def _mutate_add_node(self) -> bool:
-        """Mutate genome by adding a node representation 
+        """Mutate genome by adding a NodeGene
 
         Returns:
-            bool: mutation worked
+            bool: True if mutation was successful
+                  False if failure
         """        
-        link = self._find_random_link()
-               
-        if not link:
-            return
+        link: LinkGene = self._find_random_link()
         
-        # Disabled the gene
+        # End if no link was found      
+        if not link:
+            return False
+        
+        # Disabled the old link
         link.enabled = False
                 
         new_node, new_link1, new_link2 = self._new_node_innovation(old_link=link)
-                
+           
+        # Add the new NodeGene and 
+        # the two new LinkGenes 
+        # to the genome
         self.add_link(link=new_link1)
         self.add_link(link=new_link2)
         self.add_node(node=new_node)
-        return True   
-    
-    def _mutate_link_weights(self) -> None:
-        """Simplified mutate link weight method
-        """        
-        for current_link in self.link_genes:
-            if random() < Config.weight_mutate_prob:                
-                current_link.mutate()           
-                        
-    
+        
+        return True 
+      
     def _link_already_exists(self, node1: NodeGene, node2: NodeGene) -> bool:
-        """See if a recurrent link already exists
+        """See if a LinkGene connecting the two NodeGenes already exists
 
         Args:
-            recurrence (bool):  is recurrent
-            node1 (Node):       in node
-            node2 (Node):       out node
+            node1 (NodeGene): first NodeGene
+            node2 (NodeGene): second NodeGene
 
         Returns:
-            Tuple[bool, int]:   bool: found an already existing link  
-        """  
-        found: bool = False 
-        for link in self.link_genes:
+            bool: True if a similar LinkGene already exists
+                  False if it's novel
+        """         
+        for link in self.get_link_genes():
             if (link.in_node == node1 and
                 link.out_node == node2):
                 
-                found = True
-                break
-                
-        return found
+                return True
+        
+        else:
+            return False        
+        
     
     def _new_link_gene(self, in_node: NodeGene, out_node: NodeGene) -> LinkGene:
-        """ Create a new gene representing a link between two nodes, and return this gene
+        """reate a new LinkGene between two NodeGenes, and return it
 
         Args:
-            recurrence (bool):  recurrence flag
-            in_node (Node):     incoming node
-            out_node (Node):    outgoing node
+            in_node (NodeGene):     incoming NodeGene
+            out_node (NodeGene):    outgoing NodeGene
 
         Returns:
-            LinkGene: the newly created gene
-        """        
-        new_gene = None
+            LinkGene: newly created LinkGene
+        """           
+        new_link: LinkGene = None
         
         the_innovation = InnovTable.get_innovation( in_node=in_node,
                                                     out_node=out_node,
                                                     innovation_type=InnovationType.NEW_LINK)
             
-        new_gene = LinkGene(weight=the_innovation.weight,
+        new_link = LinkGene(weight=the_innovation.weight,
                             in_node=in_node,
                             out_node=out_node,
                             link_id=the_innovation.innovation_number1,
                             mutation_number=0)
                     
-        return new_gene
+        return new_link
       
     def _is_valid_link(self, node_in: NodeGene, node_out: NodeGene) -> bool:
+        """Check if a LinkGene is valid, the incoming NodeGene cannot be an output,
+           the outgoing NodeGene cannot be an input, the two cannot be the same
+
+        Args:
+            node_in (NodeGene):     incoming NodeGene
+            node_out (NodeGene):    outgoing NodeGene
+
+        Returns:
+            bool: True if the LinkGene is valid
+                  False if not valid
+        """   
+        # Verify that the two NodeGenes
+        # are not the same     
         if node_in == node_out:
             return False
         
+        # incoming NodeGene not an output and
+        # outgoing NodeGene not an input
         if (node_in.type.name == NodeType.OUTPUT.name or
             node_out.type.name == NodeType.INPUT.name):
             return False
@@ -333,39 +456,43 @@ class Genome:
         return True  
       
     def _find_valid_link(self, tries: int=20) -> Tuple[NodeGene, NodeGene]: 
-        """ Find a valid open link to add a new link after mutation
+        """ Find a valid open link to add a new LinkGene after mutation
 
         Args:
             tries (int): Number of tries before giving up
 
         Returns:
-            Tuple[bool, Node, Node]:    bool: An open link was found
-                                        Node: the first node of the link
-                                        Node: the second node of the link
-        """        
+            Tuple[Node, Node]:  Node: incoming NodeGene
+                                Node: outgoing NodeGene
+        """  
+        # Try until it's time to give up      
         for _ in range(tries + 1):
-            # Select two nodes at random
-            node1, node2 = choice(tuple(self.node_genes), 2)
+            # Select two NodeGenes at random
+            node1, node2 = choice(tuple(self.get_node_genes()), 2)
             
-            if not self._is_valid_link( node_in=node1,
-                                        node_out=node2):
-                continue
+            # Check if the LinkGene is valid
+            if self._is_valid_link(node_in=node1,
+                                   node_out=node2):
+                
+                # Search for open link between the two NodeGenes
+                if not self._link_already_exists(node1=node1,
+                                                 node2=node2):
+                    return node1, node2
+                        
+        else:
+            return None, None
             
-            # Search for open link between the two nodes
-            if not self._link_already_exists(node1=node1,
-                                             node2=node2):
-                return node1, node2
-            
-        return None, None
                       
     def _mutate_add_link(self, tries: int=20) -> bool:
-        """Mutate the genome by adding a new link between 2 random Nodes 
+        """Mutate the genome by adding a new LinkGene
+           between 2 random NodeGenes 
 
         Args:
-            tries (int):                Amount of tries before giving up
+            tries (int): Amount of tries before giving up
 
         Returns:
-            bool: Successful mutation
+            bool: True if mutation was successful
+                  False if failure
         """       
         # Find an open link
         node1, node2 = self._find_valid_link(tries=tries)
@@ -382,30 +509,31 @@ class Genome:
                                                    
             
     def get_last_node_id(self) -> int:
-        """ Return id of final Node in Genome
+        """ Return highest id of NodeGene in Genome
 
         Returns:
-            int: last node's id
+            int: max NodeGene's id
         """    
-        return max(list(self._node_genes.keys()))
+        return max(set(self._node_genes.keys()))
 
     def get_last_link_id(self) -> int:
-        """ Return last innovation number in Genome
+        """ Return highest id of LinkGene in Genome
 
         Returns:
-            int: last gene's innovation number
+            int: max LinkGene's id
         """    
-        return max(list(self._link_genes.keys()))
+        return max(set(self._link_genes.keys()))
            
     @staticmethod 
     def _is_IO_node(node: NodeGene) -> bool:
-        """ Check if the node is an input or output node
+        """ Check if the NodeGene is an input or output
 
         Args:
-            node (Node): the node to check
+            node (NodeGene): NodeGene to check
 
         Returns:
-            bool: is an input or output node
+            bool: True if the NodeGene is an input, bias or output,
+                  False if the NodeGene is an Hidden one
         """        
         return node.type.name in {"INPUT", "OUTPUT", "BIAS"}
     
@@ -413,6 +541,17 @@ class Genome:
     @staticmethod
     def _check_gene_conflict(chosen_genes: Dict[int, BaseGene],
                              chosen_gene: BaseGene) -> bool:
+        """Check if the BaseGene already has an equivalent
+           in the dictionary of already added BaseGenes
+
+        Args:
+            chosen_genes (Dict[int, BaseGene]): dictionary of already chosen BaseGenes
+            chosen_gene (BaseGene):             BaseGene to check for conflict (equivalent)   
+        
+        Returns:
+            bool: True if an equivalent BaseGene was found in the dictionary,
+                  False if no equivalent was found
+        """        
         
         for gene in chosen_genes.values():
             if gene.is_allele(other_gene=chosen_gene):
@@ -423,10 +562,21 @@ class Genome:
     
     @staticmethod
     def _insert_non_conflict_gene(genes_dict: Dict[int, BaseGene],
-                                  gene: BaseGene):
+                                  gene: BaseGene) -> Dict[int, BaseGene]:
+        """Insert a BaseGene into a dictionary only if it doesn't conflict
+           with already present BaseGene in the dictionary
+
+        Args:
+            genes_dict (Dict[int, BaseGene]):   dictionary of BaseGene to check into
+            gene (BaseGene):                    BaseGene to check for conflict (equivalent)
+
+        Returns:
+            Dict[int, BaseGene]: final dictionary with BaseGene added if it doesn't conflict
+        """        
         
+        # Only insert if there is no conflict
         if not Genome._check_gene_conflict(chosen_gene=gene,
-                                            chosen_genes=genes_dict):
+                                           chosen_genes=genes_dict):
                 
                 genes_dict = Genome.insert_gene_in_dict(genes_dict=genes_dict,
                                                         gene=gene.duplicate())
@@ -436,15 +586,29 @@ class Genome:
     @staticmethod
     def _genes_to_transmit(main_genome: Dict[int, BaseGene],
                            sub_genome: Dict[int, BaseGene]) -> Dict[int, BaseGene]:
+        """Select the BaseGenes to transmit to offspring, take extra BaseGenes from
+           the main genome, choose randomly if BaseGenes are present in both genomes
+
+        Args:
+            main_genome (Dict[int, BaseGene]): dominant genome's dicitonary of BaseGenes
+            sub_genome (Dict[int, BaseGene]):  subsidiary genome's dicitonary of BaseGenes
+
+        Returns:
+            Dict[int, BaseGene]: final dictionary of chosen BaseGenes to transmit
+        """        
         
         chosen_genes: Dict[int, BaseGene] = {}
+        # Loop through all the BaseGenes 
+        # from the main genome
         for key in main_genome:
             if key in sub_genome:
+                # If present in both, choose randomly between genomes
                 chosen_gene = choice([main_genome[key], sub_genome[key]])
             
             else:
                 chosen_gene = main_genome[key]
-                
+            
+            # Verify for conflict before adding the BaseGene    
             Genome._insert_non_conflict_gene(genes_dict=chosen_genes,
                                              gene=chosen_gene)
                 
@@ -453,15 +617,33 @@ class Genome:
     @staticmethod
     def _add_missing_nodes(new_links: Dict[int, LinkGene], new_nodes: Dict[int, NodeGene],
                            main_nodes: Dict[int, NodeGene]) -> Dict[int, NodeGene]:
-            
+        """Verify that all the NodeGenes referenced by LinkGenes are present in the dictionary
+           before passing it to offspring, if not: add the missing GeneNodes
+           
+        Args:
+            new_links (Dict[int, LinkGene]):    dictionary of LinkGenes that will be transmitted
+            new_nodes (Dict[int, NodeGene]):    dictionary of NodeGenes that will be transmitted
+            main_nodes (Dict[int, NodeGene]):   dictionary of NodeGenes from the main genome
+
+        Returns:
+            Dict[int, NodeGene]: final dictionary with all the missing GeneNodes added
+        """        
+        
+        # Loop through the LinkGenes that will be transmitted
         for link in new_links.values():
+            
+            # Take the incoming and
+            # outgoing GeneNodes
             in_node = link.in_node
             out_node = link.out_node
+            
+            # Add if not already in the
+            # dictionary and no conflict
             if in_node not in new_nodes:
                 new_node = main_nodes[in_node]
                 Genome._insert_non_conflict_gene(genes_dict=new_nodes,
                                                  gene=new_node)
-                            
+            # Same for outgoing GeneNode                
             if out_node not in new_nodes:
                 new_node = main_nodes[out_node]
                 Genome._insert_non_conflict_gene(genes_dict=new_nodes,
@@ -469,16 +651,30 @@ class Genome:
                 
         return new_nodes
     
-    def reproduce(genome_id:int, parent1: Genome, parent2: Genome) -> Genome:       
+    def reproduce(genome_id:int, parent1: Genome, parent2: Genome) -> Genome:
+        """Create new Genome from 2 parents, selecting which genes to transmit
+
+        Args:
+            genome_id (int):    id of the baby Genome
+            parent1 (Genome):   first parent Genome
+            parent2 (Genome):   second parent Genome
+
+        Returns:
+            Genome: baby genome created
+        """        
+        
+        # Choose randomly which parent will be the dominant one,
+        # which will transmit most of its genes      
         main_genome, sub_genome  = choice([parent1, parent2], 2, replace=False)
         
         new_nodes: Dict[int, NodeGene] = {}
+        
         # Make sure all sensors and outputs are included
-        for current_node in parent1.node_genes:
-            if(Genome._is_IO_node(current_node)):
+        for node in parent1.get_node_genes():
+            if(Genome._is_IO_node(node)):
                 
                 # Create a new node off the sensor or output
-                new_node: NodeGene = current_node.duplicate()
+                new_node: NodeGene = node.duplicate()
                 
                 # Add the new node
                 Genome.insert_gene_in_dict(genes_dict=new_nodes,

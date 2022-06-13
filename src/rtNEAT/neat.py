@@ -15,7 +15,8 @@ class Config:
         disable_prob: float = 0.05,
         enable_prob: float = 0.1,
         weight_mutate_power: float = 0.5,
-        weight_mutate_prob: float = 0.1,
+        link_mutate_prob: float = 0.1,
+        node_mutate_prob: float = 0.1,
         new_link_prob: float = 0.1,
         ## add link mutation
         add_link_prob: float = 0.05,
@@ -45,8 +46,10 @@ class Config:
         Config.enable_prob: float = enable_prob
         ## link weight mutation
         Config.weight_mutate_power: float  = weight_mutate_power
-        Config.weight_mutate_prob: float  = weight_mutate_prob
+        Config.link_mutate_prob: float  = link_mutate_prob
         Config.new_link_prob: float = new_link_prob
+        ## Node mutation
+        Config.node_mutate_prob: float  = node_mutate_prob
         ## add link mutation
         Config.add_link_prob: float = add_link_prob
         Config.add_link_tries: int = add_link_tries

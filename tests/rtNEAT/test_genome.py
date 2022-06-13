@@ -114,7 +114,7 @@ class TestGenome:
                     
                 self.genome3 = Genome(genome_id=3,
                                     node_genes={node.id: node for node in self.nodes.values() if node.id in [1,2,3,5,6]},
-                                    link_genes={link.id: link for link in self.links.values() if link.id < 4})
+                                    link_genes={link.id: link for link in self.links.values() if link.id < 5})
                 
                 self.genome4 = Genome(genome_id=4,
                                     node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(1,7))},
@@ -143,52 +143,52 @@ class TestGenome:
             def test_genetical_gene_distance(self):
                 # Node distance
                 ## Excess nodes
-                dist = Genome._genetical_gene_distance( gene_dict1 = self.genome1._node_genes,
-                                                        gene_dict2 = self.genome2._node_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1._node_genes,
+                                                      gene_dict2 = self.genome2._node_genes)
                 assert dist == 2
                 
                 ## Disjoint
-                dist = Genome._genetical_gene_distance( gene_dict1 = self.genome3._node_genes,
-                                                        gene_dict2 = self.genome4._node_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome3._node_genes,
+                                                      gene_dict2 = self.genome4._node_genes)
                 assert dist == 1
                             
                 ## Mutation
-                dist = Genome._genetical_gene_distance( gene_dict1 = self.genome2._node_genes,
-                                                        gene_dict2 = self.genome2_extended._node_genes)
-                assert dist == 0.5/5
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome2._node_genes,
+                                                      gene_dict2 = self.genome2_extended._node_genes)
+                assert dist == 0.5/4
                 
                 # Link distance
                 ## Excess nodes
-                dist = Genome._genetical_gene_distance( gene_dict1 = self.genome1._link_genes,
-                                                        gene_dict2 = self.genome2._link_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1._link_genes,
+                                                      gene_dict2 = self.genome2._link_genes)
                 assert dist == 2
                 
                 ## Disjoint
-                dist = Genome._genetical_gene_distance( gene_dict1 = self.genome3._link_genes,
-                                                        gene_dict2 = self.genome4._link_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome3._link_genes,
+                                                      gene_dict2 = self.genome4._link_genes)
                 assert dist == 1
                             
                 ## Mutation
-                dist = Genome._genetical_gene_distance( gene_dict1 = self.genome2._link_genes,
-                                                        gene_dict2 = self.genome2_extended._link_genes)
-                assert dist == 0.5/3
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome2._link_genes,
+                                                      gene_dict2 = self.genome2_extended._link_genes)
+                assert dist == 0.5/2
                 
             def test_genetical_distance(self):
                 # Full distance
                 ## Excess nodes
-                dist = Genome.genetical_distance(   genome1 = self.genome1,
-                                                    genome2 = self.genome2)
+                dist = Genome.genetic_distance( genome1 = self.genome1,
+                                                genome2 = self.genome2)
                 assert dist == 4
                 
                 ## Disjoint
-                dist = Genome.genetical_distance(   genome1 = self.genome3,
-                                                    genome2 = self.genome4)
+                dist = Genome.genetic_distance( genome1 = self.genome3,
+                                                genome2 = self.genome4)
                 assert dist == 2
                             
                 ## Mutation
-                dist = Genome.genetical_distance(   genome1 = self.genome2,
-                                                    genome2 = self.genome2_extended)
-                assert dist == 0.5/3 + 0.5/5
+                dist = Genome.genetic_distance( genome1 = self.genome2,
+                                                genome2 = self.genome2_extended)
+                assert dist == 0.5/2 + 0.5/4
             
         class TestMutation:
             @pytest.fixture(autouse=True)
@@ -249,19 +249,19 @@ class TestGenome:
                 Config.new_link_prob = 0.5
                 Config.weight_mutate_power = 0.5 """
                 
-                weights = [gene.weight for gene in self.genome1.link_genes]
-                self.genome1._mutate_link_weights()
-                new_weights = [gene.weight for gene in self.genome1.link_genes]
+                weights = [gene.weight for gene in self.genome1.get_link_genes()]
+                self.genome1._mutate_links()
+                new_weights = [gene.weight for gene in self.genome1.get_link_genes()]
                 
                 assert new_weights[2] != weights[2] 
             
             def test_find_random_link(self):
                 # Random link in link genes' list
                 link = self.genome1._find_random_link()
-                assert link in self.genome1.link_genes
+                assert link in self.genome1.get_link_genes()
                 
                 # No link valid
-                for link in self.genome1.link_genes:
+                for link in self.genome1.get_link_genes():
                     link.enabled = False
                 
                 link = self.genome1._find_random_link()    
@@ -436,7 +436,7 @@ class TestGenome:
                     
             def test_mutate_add_link(self):
                 initial_link_size = self.genome1.n_link_genes
-                assert len(self.genome1.link_genes) == initial_link_size
+                assert len(self.genome1.get_link_genes()) == initial_link_size
                 
                 count_success = 0
                 for _ in range(1,10):

@@ -56,15 +56,15 @@ class TestPhenes:
         assert link.out_node.id == 1
         assert link.enabled == False
     
-    class PhenesMethhods:  
+    class TestPhenesMethhods:  
         def test_synthesis(self):
-            node_gene = Node()
+            node_gene = NodeGene()
             
             node = Node.synthesis(node_gene.transcript())
             assert type(node) == Node
             assert node.id == node_gene.id
             
-            node2 = Node.synthesis(Node().transcript())
+            node2 = Node.synthesis(NodeGene().transcript())
 
             link_gene = LinkGene(in_node=node.id,
                                 out_node=node2.id)
