@@ -43,12 +43,12 @@ class TestGenome:
                                     n_inputs=3,
                                     n_outputs=5)
         
-        for node1, node2 in zip(genome.node_genes, genome2.node_genes):
-            assert node1.id == node2.id
+        for id1, id2 in zip(genome._node_genes, genome2._node_genes):
+            assert id1 == id2
         
-        for link1, link2 in zip(genome.link_genes, genome2.link_genes):
-            assert link1.id == link2.id
-        
+        for id1, id2 in zip(genome._link_genes, genome2._link_genes):
+            assert id1 == id2
+            
     class TestGenomeMethods:
         @pytest.fixture(autouse=True)
         def setup(self):
@@ -200,6 +200,74 @@ class TestGenome:
             
             assert new_weights[2] != weights[2] 
          
+        def test_find_random_link(self):
+            # Random link in link genes' list
+            link = self.genome1._find_random_link()
+            assert link in self.genome1.link_genes
+            
+            # No link valid
+            for link in self.genome1.link_genes:
+                link.enabled = False
+            
+            link = self.genome1._find_random_link()    
+            assert not link
+            
+            # only one valid link to choose from
+            self.genome1._link_genes[2].enabled = True
+            for _ in range(100):
+                link = self.genome1._find_random_link()
+                assert link == self.genome1._link_genes[2]
+                
+        def test_create_new_node(self):
+            in_node, out_node = list(self.nodes.values())[:2]
+            node, link1, link2 = self.genome1._create_node(node_id=3,
+                                                            in_node=in_node,
+                                                            out_node=out_node,
+                                                            innovation_number1=1,
+                                                            innovation_number2=2,
+                                                            old_weight=0.34)
+           
+            assert node.id == 3
+            assert node.type.name == NodeType.HIDDEN.name
+            assert link1.in_node == in_node
+            assert link1.out_node == node
+            assert link1.weight == 1.0
+            assert link1.id == 1
+            assert link2.in_node == node
+            assert link2.out_node == out_node
+            assert link2.weight == 0.34
+            assert link2.id == 2
+            
+        def test_new_node_innovation(self):
+            # New innovation
+            link = self.genome1._link_genes[1]
+            current_node = self.genome1.get_last_node_id() 
+            current_link = self.genome1.get_last_link_id()   
+            new_node, new_link1, new_link2 = self.genome1._new_node_innovation(old_link=link)
+            
+            assert new_node.id == current_node + 1
+            assert new_link1.id == current_link + 1
+            assert new_link1.weight == 1.0
+            assert new_link2.id == current_link + 2
+            assert new_link2.weight == link.weight
+            
+            # New innovation2 
+            link = self.genome1._link_genes[2]
+            new_node, new_link1, new_link2 = self.genome1._new_node_innovation(old_link=link)
+            assert new_node.id == current_node + 2
+            assert new_link1.id == current_link + 3
+            assert new_link2.id == current_link + 4
+            
+            # Same innovation as first one
+            link = self.genome2._link_genes[1]
+            link.weight = 0.5
+            new_node, new_link1, new_link2 = self.genome1._new_node_innovation(old_link=link)
+            assert new_node.id == current_node + 1
+            assert new_link1.id == current_link + 1
+            assert new_link1.weight == 1
+            assert new_link2.id == current_link + 2
+            assert new_link2.weight == link.weight 
+         
         def test_mutate_add_node(self):
             nodes = {node.id: node for node in self.nodes.values() if node.id > 4}
             links = {link.id: link for link in self.links.values() if link.id > 3}
@@ -215,7 +283,7 @@ class TestGenome:
             assert len(genome1.node_genes) == 2
             assert genome1.n_link_genes == 1
             success = genome1._mutate_add_node()
-            assert genome1.link_genes[0].enabled == False
+            assert genome1._link_genes[4].enabled == False
             assert success
             assert genome1.get_last_link_id() == initial_link+2
             assert genome1.get_last_node_id() == initial_node+1
@@ -230,7 +298,7 @@ class TestGenome:
                              node_genes=nodes,
                              link_genes=links)
                                  
-            genome2.link_genes[0].enabled = True
+            genome2._link_genes[4].enabled = True
             #assert genome2.get_last_link_id() == initial_innov+2
             new_link = LinkGene(in_node=1,
                                 out_node=2)
@@ -244,8 +312,80 @@ class TestGenome:
             assert len(genome2.node_genes) == 3
             assert genome2.n_link_genes == 3
             
-
+        def test_is_valid_link(self):
+            hidden_node = NodeGene(node_type=NodeType.HIDDEN)
+            input_node = NodeGene(node_type=NodeType.INPUT)
+            output_node = NodeGene(node_type=NodeType.OUTPUT)
             
-
+            # Valid
+            node1, node2 = input_node, output_node
             
-        
+            validity = self.genome1._is_valid_link( node_in=node1,
+                                                    node_out=node2)
+            assert validity
+            
+            # Not valid, same in and out node
+            node1, node2 = hidden_node, hidden_node
+
+            validity = self.genome1._is_valid_link( node_in=node1,
+                                                    node_out=node2)
+            assert not validity
+            
+            #Not valid, input as out node
+            node1, node2 = hidden_node, input_node
+            
+            validity = self.genome1._is_valid_link( node_in=node1,
+                                                    node_out=node2)
+            assert not validity
+            
+             #Not valid, output as hidden
+            node1, node2 = output_node, hidden_node
+            
+            validity = self.genome1._is_valid_link( node_in=node1,
+                                                    node_out=node2)
+            assert not validity
+            
+        def test_find_valid_link(self):
+            for _ in range(100):
+                node_in, node_out = self.genome1._find_valid_link()
+                
+                if node_in:
+                    assert node_in.type != NodeType.OUTPUT
+                    assert node_out.type != NodeType.INPUT  
+                    assert node_in != node_out  
+                    
+        def test_new_link_gene(self):
+            #New innovation
+            node1, node2 = self.nodes[1], self.nodes[4]
+            current_link = self.genome1.get_last_link_id() 
+            
+            link = self.genome1._new_link_gene( in_node=node1,
+                                                out_node=node2)
+            
+            assert link.id == current_link + 1
+            weight = link.weight
+            
+            #New innovation 2
+            node1, node2 = self.nodes[1], self.nodes[5]
+            link = self.genome1._new_link_gene( in_node=node1,
+                                                out_node=node2)
+            assert link.id == current_link + 2
+            assert link.weight != weight
+            
+            #Same as first innovation
+            node1, node2 = self.nodes[1], self.nodes[4]
+            link = self.genome1._new_link_gene( in_node=node1,
+                                                out_node=node2)
+            assert link.id == current_link + 1
+            assert link.weight == weight
+                
+        def test_mutate_add_link(self):
+            initial_link_size = self.genome1.n_link_genes
+            assert len(self.genome1.link_genes) == initial_link_size
+            
+            count_success = 0
+            for _ in range(1,10):
+                if self.genome1._mutate_add_link(tries=20):
+                    count_success += 1
+                    assert self.genome1.n_link_genes == initial_link_size + count_success
+            

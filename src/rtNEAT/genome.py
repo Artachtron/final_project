@@ -5,7 +5,7 @@ from neat import Config
 from link import Link
 
 from innovation import Innovation, InnovationType, InnovTable
-from typing import List, Iterator, Tuple, Dict
+from typing import List, Iterator, Tuple, Dict, Set
 from numpy.random import choice, random, uniform
 
 from genes import LinkGene, NodeGene, BaseGene, NodeType
@@ -24,12 +24,12 @@ class Genome:
      
     
     @property
-    def node_genes(self):
-        return np.array(list(self._node_genes.values()))
+    def node_genes(self) -> Set[NodeGene]:
+        return set(self._node_genes.values())
     
     @property
-    def link_genes(self):
-        return np.array(list(self._link_genes.values()))
+    def link_genes(self) -> Set[LinkGene]:
+        return set(self._link_genes.values())
     
     @property
     def n_node_genes(self):
@@ -167,11 +167,11 @@ class Genome:
         self._mutate_link_weights() 
         
     def _find_random_link(self) -> LinkGene:
-        """ Find a random gene containing a node to mutate
+        """ Find a random link gene containing a node to mutate
 
         Returns:
-            Tuple[LinkGene, bool]:  LinkGene: gene containing the node to mutate
-                                bool: gene was found
+            LinkGene:  LinkGene: link gene containing the node to mutate
+                                
         """     
         enabled_links = [link for link in self.link_genes if link.enabled]
         
@@ -269,6 +269,131 @@ class Genome:
         self.add_link(link=new_link2)
         self.add_node(node=new_node)
         return True   
+    
+    def _mutate_link_weights(self) -> None:
+        """Simplified mutate link weight method
+        """        
+        for current_link in self.link_genes:
+            if random() < Config.weight_mutate_prob:
+                current_link.mutate(reset_weight = random() < Config.new_link_prob,
+                                    mutate_power = Config.weight_mutate_power)           
+                        
+    
+    def _link_already_exists(self, node1: NodeGene, node2: NodeGene) -> bool:
+        """See if a recurrent link already exists
+
+        Args:
+            recurrence (bool):  is recurrent
+            node1 (Node):       in node
+            node2 (Node):       out node
+
+        Returns:
+            Tuple[bool, int]:   bool: found an already existing link  
+        """  
+        found: bool = False 
+        for link in self.link_genes:
+            if (link.in_node == node1 and
+                link.out_node == node2):
+                
+                found = True
+                break
+                
+        return found
+    
+    def _new_link_gene(self, in_node: NodeGene, out_node: NodeGene) -> LinkGene:
+        """ Create a new gene representing a link between two nodes, and return this gene
+
+        Args:
+            recurrence (bool):  recurrence flag
+            in_node (Node):     incoming node
+            out_node (Node):    outgoing node
+
+        Returns:
+            LinkGene: the newly created gene
+        """        
+        new_gene = None
+        
+        the_innovation = InnovTable.get_innovation( in_node=in_node,
+                                                    out_node=out_node,
+                                                    innovation_type=InnovationType.NEW_LINK)
+            
+        new_gene = LinkGene(weight=the_innovation.weight,
+                            in_node=in_node,
+                            out_node=out_node,
+                            link_id=the_innovation.innovation_number1,
+                            mutation_number=0)
+                    
+        return new_gene
+      
+    def _is_valid_link(self, node_in: NodeGene, node_out: NodeGene) -> bool:
+        if node_in == node_out:
+            return False
+        
+        if (node_in.type.name == NodeType.OUTPUT.name or
+            node_out.type.name == NodeType.INPUT.name):
+            return False
+        
+        return True  
+      
+    def _find_valid_link(self, tries: int=20) -> Tuple[NodeGene, NodeGene]: 
+        """ Find a valid open link to add a new link after mutation
+
+        Args:
+            tries (int): Number of tries before giving up
+
+        Returns:
+            Tuple[bool, Node, Node]:    bool: An open link was found
+                                        Node: the first node of the link
+                                        Node: the second node of the link
+        """        
+        for _ in range(tries + 1):
+            # Select two nodes at random
+            node1, node2 = choice(tuple(self.node_genes), 2)
+            
+            if not self._is_valid_link( node_in=node1,
+                                        node_out=node2):
+                continue
+            
+            # Search for open link between the two nodes
+            if not self._link_already_exists(node1=node1,
+                                             node2=node2):
+                return node1, node2
+            
+        return None, None
+                      
+    def _mutate_add_link(self, tries: int=20) -> bool:
+        """Mutate the genome by adding a new link between 2 random Nodes 
+
+        Args:
+            tries (int):                Amount of tries before giving up
+
+        Returns:
+            bool: Successful mutation
+        """       
+        # Find an open link
+        node1, node2 = self._find_valid_link(tries=tries)
+                    
+        # Continue only if an open link was found
+        if node1:
+            new_link = self._new_link_gene(in_node=node1,
+                                           out_node=node2)
+            self.add_link(new_link)
+            return True
+        
+        else:
+            return False
+                                               
+    def _get_input_links(self, node_id: int) -> List[Link]:
+        """ get all the links that connects to the node and return the list
+
+        Args:
+            node_id (int): id of the node
+
+        Returns:
+            List[Link]: the list of links connecting to the node
+        """        
+        return [gene.link for gene in self._link_genes if gene.link.out_node.id == node_id]
+    
             
     def get_last_node_id(self) -> int:
         """ Return id of final Node in Genome
@@ -528,146 +653,6 @@ class Genome:
         
         return current_link
            
-    def _mutate_link_weights(self) -> None:
-        """Simplified mutate link weight method
-        """        
-        for current_link in self.link_genes:
-            if random() < Config.weight_mutate_prob:
-                current_link.mutate(reset_weight = random() < Config.new_link_prob,
-                                    mutate_power = Config.weight_mutate_power)           
-                         
-    
-                    
-    def _select_nodes_for_link(self,recurrence: bool) -> Tuple[NodeGene,NodeGene]:
-        """ Select 2 random nodes to link together
-
-        Args:
-            loop_recurrence (bool): is a recurrent loop
-
-        Returns:
-            Tuple[Node,Node]:   Node: the in_node of the link
-                                Node: the out_node of the link
-        """ 
-        inputs = self.phenotype.inputs
-        neurons = self.phenotype.hidden + self.phenotype.outputs
-        if recurrence:
-            loop_recurrence: bool  = choice([0,1])     
-            if loop_recurrence:
-                node1 = choice(neurons)
-                node2 = node1
-            else:
-                node1 = choice(inputs+neurons)
-                node2 = choice(neurons)
-
-        else:
-            node1 = choice(inputs+neurons)
-            node2 = choice(neurons)
-        
-        return node1, node2
-    
-    def _link_already_exists(self, recurrence: bool, node1: NodeGene, node2: NodeGene) -> bool:
-        """See if a recurrent link already exists
-
-        Args:
-            recurrence (bool):  is recurrent
-            node1 (Node):       in node
-            node2 (Node):       out node
-
-        Returns:
-            Tuple[bool, int]:   bool: found an already existing link  
-        """  
-        found: bool = False 
-        for the_gene in self._link_genes:
-            if (the_gene.link.in_node == node1 and
-                the_gene.link.out_node == node2 and
-                the_gene.link.is_recurrent == recurrence):
-                
-                found = True
-                break
-                
-        return found
-
-    def _new_link_gene(self, recurrence: bool, in_node: NodeGene, out_node: NodeGene) -> LinkGene:
-        """ Create a new gene representing a link between two nodes, and return this gene
-
-        Args:
-            recurrence (bool):  recurrence flag
-            in_node (Node):     incoming node
-            out_node (Node):    outgoing node
-
-        Returns:
-            LinkGene: the newly created gene
-        """        
-        
-        the_innovation = InnovTable.get_innovation( in_node=in_node,
-                                                    out_node=out_node,
-                                                    innovation_type=InnovationType.NEW_LINK,
-                                                    recurrence=recurrence)
-            
-        new_gene = LinkGene(weight=the_innovation.weight,
-                        in_node=in_node,
-                        out_node=out_node,
-                        recurrence=recurrence,
-                        innovation_number=the_innovation.innovation_number1,
-                        mutation_number=0)
-                    
-        return new_gene
-      
-    def _find_valid_link(self, tries:int, recurrence: bool) -> Tuple[bool, NodeGene, NodeGene]: 
-        """ Find a valid open link to add a new link after mutation
-
-        Args:
-            tries (int): Number of tries before giving up
-
-        Returns:
-            Tuple[bool, Node, Node]:    bool: An open link was found
-                                        Node: the first node of the link
-                                        Node: the second node of the link
-        """        
-        
-        for _ in range(tries + 1):
-            # Select two nodes at random
-            node1, node2 = self._select_nodes_for_link( recurrence=recurrence)
-            # Search for open link between the two nodes
-            found: bool = not self._link_already_exists(node1=node1,
-                                                        node2=node2,
-                                                        recurrence=True)
-            if found: 
-                return found, node1, node2
-                      
-    def _mutate_add_link(self, tries: int) -> bool:
-        """Mutate the genome by adding a new link between 2 random Nodes 
-
-        Args:
-            tries (int):                Amount of tries before giving up
-
-        Returns:
-            bool: Successful mutation
-        """
-         # Decide whether to make this recurrent
-        recurrence: bool = random() < Config.recurrence_only_prob
-        
-        # Find an open link
-        found, node1, node2 = self._find_valid_link(tries=tries,
-                                                    recurrence=recurrence)
-                    
-        # Continue only if an open link was found
-        if found:
-            new_gene = self._new_link_gene(recurrence=recurrence,
-                                           in_node=node1,
-                                           out_node=node2)
-            self.add_link(new_gene)
-            return True
-                                       
-    def _get_input_links(self, node_id: int) -> List[Link]:
-        """ get all the links that connects to the node and return the list
-
-        Args:
-            node_id (int): id of the node
-
-        Returns:
-            List[Link]: the list of links connecting to the node
-        """        
-        return [gene.link for gene in self._link_genes if gene.link.out_node.id == node_id]
+   
                                
     
