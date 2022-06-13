@@ -128,4 +128,64 @@ class TestGene:
             assert dist == 0.5 + 1 + 1
             
             
+        def test_gene_copy(self):
+            # Nodes
+            node = NodeGene()
+            copy_node = node.duplicate()
+            
+            assert node.type == copy_node.type
+            assert node.id == copy_node.id
+            
+            copy_node.type = NodeType.INPUT
+            copy_node.id = node.id + 1
+            
+            assert node.type != copy_node.type
+            assert node.id != copy_node.id
+            
+            # Links
+            link = LinkGene(in_node=node,
+                            out_node=copy_node)
+            
+            copy_link = link.duplicate()
+                        
+            assert link.id == copy_link.id
+            assert link.in_node == copy_link.in_node
+            assert link.out_node == copy_link.out_node
+            assert link.weight == copy_link.weight
+           
+            copy_link.id = link.id + 1
+            copy_link.in_node = link.out_node  
+            copy_link.out_node = link.in_node
+            copy_link.weight = link.weight + 0.01
+            
+            assert copy_link.id != link.id
+            assert copy_link.in_node != link.in_node
+            assert copy_link.out_node != link.out_node
+            assert copy_link.weight != link.weight       
+                              
+        def test_is_allele(self):
+            node = NodeGene()
+            node2 = NodeGene()
+            copy_node = node.duplicate()
+            
+            assert node.is_allele(copy_node)
+            assert not node.is_allele(node2)
+            
+            link = LinkGene(in_node=node,
+                            out_node=node2)
+            
+            link2 = LinkGene(in_node=node,
+                            out_node=node2)
+            
+            link3 = LinkGene(in_node=node2,
+                             out_node=node)
+            
+            link4 = LinkGene(in_node=node,
+                             out_node=copy_node)
+            
+            assert link.is_allele(link2)
+            assert link.is_allele(link3)
+            assert not link.is_allele(link4)
+            
+            
             

@@ -3,7 +3,7 @@ from numpy.random import choice
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.network import Network
-from project.src.rtNEAT.genes import NodeGene, LinkGene, NodeType
+from project.src.rtNEAT.genes import NodeGene, LinkGene, NodeType, reset_innovation_table
 from project.src.rtNEAT.genome import Genome
 
 
@@ -19,6 +19,7 @@ class TestNetwork:
     class TestNetworkMethods:
         @pytest.fixture(autouse=True)
         def setup(self):
+            reset_innovation_table()
             self.genome = Genome(genome_id=0, node_genes={}, link_genes={})
             self.network = Network(network_id=self.genome.id,
                                    inputs={},

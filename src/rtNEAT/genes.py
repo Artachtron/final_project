@@ -111,6 +111,19 @@ class LinkGene(BaseGene):
             self.weight += uniform(-1,1) * mutate_power
             
         self.mutation_number = self.weight
+        
+    def duplicate(self):
+        return LinkGene(link_id=self.id,
+                        in_node=self.in_node,
+                        out_node=self.out_node,
+                        weight=self.weight)
+        
+    def is_allele(self, other_link) -> bool:
+        return ((self.in_node == other_link.in_node and
+                self.out_node == other_link.out_node) or 
+                (self.out_node == other_link.in_node and
+                self.in_node == other_link.out_node) or
+                self.id == other_link.id)
 
         
 class NodeGene(BaseGene):
@@ -159,6 +172,16 @@ class NodeGene(BaseGene):
         distance += int(self.aggregation_function != other_node.aggregation_function)
         
         return distance
+    
+   
+    def duplicate(self):
+        return NodeGene(node_id=self.id,
+                        node_type=self.type)
+        
+    def is_allele(self, other_node: NodeGene) -> bool:
+        return (self.id == other_node.id and
+                self.type == other_node.type or
+                self.id == other_node.id)
     
 def reset_innovation_table():
     InnovTable.reset_innovation_table()

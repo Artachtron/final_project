@@ -6,7 +6,7 @@ from link import Link
 
 from innovation import Innovation, InnovationType, InnovTable
 from typing import List, Iterator, Tuple, Dict, Set
-from numpy.random import choice, random, uniform
+from numpy.random import choice, random, randint
 
 from genes import LinkGene, NodeGene, BaseGene, NodeType
 
@@ -421,13 +421,11 @@ class Genome:
         Returns:
             bool: is an input or output node
         """        
-        return (node.type == NodeType.INPUT or
-                node.type == NodeType.BIAS or
-                node.type == NodeType.OUTPUT)
+        return node.type.name in {"INPUT", "OUTPUT", "BIAS"}
     
     @staticmethod
-    def _choose_gene_to_transmit(   parent1_gene: LinkGene, parent2_gene: LinkGene, parent1_genes: Iterator,
-                                    parent2_genes: Iterator, p1_dominant: bool
+    def _choose_gene_to_transmit(   parent1_gene: LinkGene, parent2_gene: LinkGene,
+                                    parent1_genes: Iterator, parent2_genes: Iterator, p1_dominant: bool
                                 ) -> Tuple[LinkGene, bool, bool, LinkGene, LinkGene, Iterator, Iterator]:
         """Choose the gene to transmit to offspring
 
@@ -531,11 +529,61 @@ class Genome:
             new_node = new_nodes[target_node.id]
             
         else:
-            new_node = NodeGene.constructor_from_node(target_node)
+            new_node = target_node.duplicate()
             new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
                                                     gene=new_node)
             
         return new_node, new_nodes
+    
+    @staticmethod
+    def _check_gene_conflict(chosen_genes: Dict[int, BaseGene],
+                             chosen_gene: BaseGene) -> bool:
+        
+        for gene in chosen_genes:
+            if gene.is_allele(other_gene=chosen_gene):
+                return True
+            
+        else:
+            return False
+    
+    @staticmethod
+    def _choose_genes_to_transmit(main_genome: Dict[int, BaseGene],
+                                  sub_genome: Dict[int, BaseGene]) -> Dict[int, BaseGene]:
+        chosen_genes = {}
+        for key in main_genome:
+            if key in sub_genome:
+                chosen_gene = choice([main_genome[key], sub_genome[key]])
+            
+            else:
+                chosen_gene = main_genome[key]
+                
+            if not Genome._check_gene_conflict(chosen_gene=chosen_gene,
+                                               chosen_genes=chosen_genes):
+                
+                chosen_genes[key] = chosen_gene
+                
+        return chosen_genes
+    
+    def reproduce(parent1: Genome, parent2: Genome) -> Genome:
+        new_nodes = {}    # already added nodes
+        
+        main_genome, sub_genome  = choice([parent1, parent2], 2, replace=False)
+
+        new_genes: List[LinkGene] = [] # already chosen genes
+        
+        # Make sure all sensors and outputs are included
+        for current_node in parent1.node_genes:
+            if(Genome._is_IO_node(current_node)):
+                
+                # Create a new node off the sensor or output
+                new_output_node = current_node.duplicate()
+                
+                # Add the new node
+                new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
+                                                        gene=new_output_node)
+                
+        
+    
     
     @staticmethod
     def mate_multipoint(parent1: Genome, parent2: Genome, genome_id: int,) -> Genome:
@@ -556,7 +604,7 @@ class Genome:
         """        
                 
         new_nodes = {}    # already added nodes
-        parent1_dominant: bool = choice([0,1])  # Determine which genome will give its excess genes
+        parent1_dominant: bool = choice((0,1))  # Determine which genome will give its excess genes
         
         new_genes: List[LinkGene] = [] # already chosen genes
         
@@ -565,11 +613,11 @@ class Genome:
             if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
-                new_output_node = NodeGene.constructor_from_node(current_node)
+                new_output_node = current_node.duplicate()
                 
                 # Add the new node
-                new_nodes = Genome.insert_gene_in_dict(genes_dict=new_nodes,
-                                               gene=new_output_node)
+                new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
+                                                        gene=new_output_node)
           
         # Now move through the Genes of each parent until both genomes end  
         parent1_genes = iter(parent1._link_genes)
