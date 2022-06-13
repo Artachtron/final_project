@@ -1,9 +1,12 @@
 from __future__ import annotations
 import math
-from numpy.random import uniform
+from numpy.random import uniform, random
 from innovation import InnovTable
 from functools import partial
 import enum
+from neat import Config
+Config.configure()
+
 from typing import Dict
 
 class NodeType(enum.Enum):
@@ -48,12 +51,12 @@ class BaseGene:
     def __init__(self,
                  gene_id: int,
                  mutation_number: int,
-                 enable: bool,
-                 freeze: bool,):
+                 enabled: bool,
+                 frozen: bool,):
     
         self.id: int = gene_id
-        self.frozen: bool = freeze
-        self.enabled: bool = enable
+        self.frozen: bool = frozen
+        self.enabled: bool = enabled
         self.mutation_number: int = mutation_number
         
     def __lt__(self, other) -> bool:
@@ -74,16 +77,16 @@ class LinkGene(BaseGene):
                  weight: float = 0.0,
                  mutation_number: int = 0,
                  link_id: int = 0,
-                 enable: bool = True,
-                 freeze: bool = False,
+                 enabled: bool = True,
+                 frozen: bool = False,
                  ):
         
         link_id = link_id or InnovTable.get_link_number(increment=True)
         
         super(LinkGene, self).__init__(gene_id=link_id,
                                        mutation_number=mutation_number,
-                                       enable=enable,
-                                       freeze=freeze)
+                                       enabled=enabled,
+                                       frozen=frozen)
         
         self.in_node: int = in_node
         self.out_node: int = out_node
@@ -102,21 +105,28 @@ class LinkGene(BaseGene):
                 'in_node':self.in_node, 'out_node':self.out_node,
                  'enabled':self.enabled}
         
-    def mutate(self, reset_weight: bool, mutate_power: float) -> None:
+    def mutate(self) -> None:
         if self.frozen: return
         
-        if reset_weight:
+        if random() < Config.new_link_prob:
             self.weight = uniform(-1,1)
         else:
-            self.weight += uniform(-1,1) * mutate_power
+            self.weight += uniform(-1,1) * Config.weight_mutate_power
             
-        self.mutation_number = self.weight
+            self.mutation_number = self.weight
+            
+        if random() < Config.disable_prob:
+            self.disabled = True
+        elif random() < Config.enable_prob:
+            self.enabled = True      
         
     def duplicate(self):
         return LinkGene(link_id=self.id,
                         in_node=self.in_node,
                         out_node=self.out_node,
-                        weight=self.weight)
+                        weight=self.weight,
+                        enabled=self.enabled,
+                        frozen=self.frozen)
         
     def is_allele(self, other_gene) -> bool:
         return ((self.in_node == other_gene.in_node and
@@ -134,13 +144,13 @@ class NodeGene(BaseGene):
                  bias: float = 0.0,
                  activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
                  aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
-                 enable: bool = True,
-                 freeze: bool = False,):
+                 enabled: bool = True,
+                 frozen: bool = False,):
         
         super(NodeGene, self).__init__(gene_id=node_id,
                                        mutation_number=mutation_number,
-                                       enable=enable,
-                                       freeze=freeze)
+                                       enabled=enabled,
+                                       frozen=frozen)
 
         
         self.id: int = node_id or InnovTable.get_node_number(increment=True)
@@ -170,49 +180,23 @@ class NodeGene(BaseGene):
         distance = abs(self.bias - other_node.bias)
         distance += int(self.activation_function != other_node.activation_function)
         distance += int(self.aggregation_function != other_node.aggregation_function)
+        distance += int(self.enabled != other_node.enabled)
         
         return distance
-    
-   
+       
     def duplicate(self):
         return NodeGene(node_id=self.id,
-                        node_type=self.type)
+                        node_type=self.type,
+                        enabled=self.enabled,
+                        frozen=self.frozen)
         
     def is_allele(self, other_gene: NodeGene) -> bool:
         return (self.id == other_gene.id and
                 self.type == other_gene.type or
                 self.id == other_gene.id)
+        
+    
     
 def reset_innovation_table():
     InnovTable.reset_innovation_table()
 
-""" class Gene:
-    def __init__(self,
-                 in_node: Node,
-                 out_node: Node,
-                 innovation_number: int=None,
-                 weight: float=None,
-                 mutation_number: int=0,
-                 recurrence: bool=False):
-        
-        weight = weight or uniform(-1,1)
-              
-        self.link = Link(   weight=weight,
-                            in_node=in_node,
-                            out_node=out_node,
-                            recurrence=recurrence)
-        
-        self.innovation_number: int = innovation_number or InnovTable.get_innovation_number(increment=True)
-        self.mutation_number: int = mutation_number # Used to see how much mutation has changed the link
-        self.enabled: bool = True # When this is off the Gene is disabled
-        self.frozen: bool = False # When frozen, the linkweight cannot be mutated
-     
-    @classmethod   
-    def constructor_from_gene(cls, gene: Gene, in_node: Node, out_node: Node):
-        return Gene(weight=gene.link.weight,
-                    in_node=in_node,
-                    out_node=out_node,
-                    innovation_number=gene.innovation_number,
-                    mutation_number=gene.mutation_number,
-                    recurrence= gene.link.is_recurrent) """
-                    

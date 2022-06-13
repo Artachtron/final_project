@@ -63,7 +63,6 @@ class Node(BasePhene):
         self.incoming: Dict[int, Link] = {}                         # A list of pointers to incoming weighted signals from other nodes
         self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
         
-        #Config.configure()
         
     @classmethod
     def synthesis(cls, kwargs) -> Node:

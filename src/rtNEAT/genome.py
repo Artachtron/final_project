@@ -2,11 +2,9 @@ from __future__ import annotations
 import numpy as np
 from neat import Config
 
-from link import Link
-
-from innovation import Innovation, InnovationType, InnovTable
-from typing import List, Iterator, Tuple, Dict, Set
-from numpy.random import choice, random, randint
+from innovation import InnovationType, InnovTable
+from typing import List, Tuple, Dict, Set
+from numpy.random import choice, random
 
 from genes import LinkGene, NodeGene, BaseGene, NodeType
 
@@ -422,118 +420,7 @@ class Genome:
         """        
         return node.type.name in {"INPUT", "OUTPUT", "BIAS"}
     
-    @staticmethod
-    def _choose_gene_to_transmit(   parent1_gene: LinkGene, parent2_gene: LinkGene,
-                                    parent1_genes: Iterator, parent2_genes: Iterator, p1_dominant: bool
-                                ) -> Tuple[LinkGene, bool, bool, LinkGene, LinkGene, Iterator, Iterator]:
-        """Choose the gene to transmit to offspring
-
-        Args:
-            parent1_gene (LinkGene):        the gene from the first genome
-            parent2_gene (LinkGene):        the gene from the second genome
-            parent1_genes (Iterator):   the iterator of genes from first genome
-            parent2_genes (Iterator):   the iterator of genes from second genome
-            parent1_dominant (bool):    the first genome is the dominant one
-
-        Returns:
-            Tuple[LinkGene, bool, bool, 
-            LinkGene, LinkGene, Iterator, Iterator]:    
-                                            LinkGene: the chosen gene that will be transmitted
-                                            bool: the gene must be skipped
-                                            bool: the gene must be disabled
-                                            ... : args for the next iteration
-                                        
-        """        
-        disable: bool = False   # if the gene must be disabled
-        skip: bool = False      # if the gene must be skipped and not transmitted
-        
-        if not parent1_gene: 
-            chosen_gene = parent2_gene
-            parent2_gene = next(parent2_genes, None)
-            if p1_dominant: skip = True
-                    
-        elif not parent2_gene:
-            chosen_gene = parent1_gene
-            parent1_gene = next(parent1_genes, None)
-            if not p1_dominant: skip = True
-        
-        else:
-            p1_innovation = parent1_gene.innovation_number
-            p2_innovation = parent2_gene.innovation_number
-            
-            if p1_innovation == p2_innovation:
-                np.random.seed(1)
-                chosen_gene = choice([parent1_gene, parent2_gene])
-            
-                # If one is disabled, the corresponding gene in the offspring will likely be disabled
-                if not parent1_gene.enabled or not parent2_gene.enabled:
-                    if random() < 0.75:
-                        disable = True
                 
-                parent1_gene = next(parent1_genes, None)
-                parent2_gene = next(parent2_genes, None)  
-                
-            elif p1_innovation < p2_innovation:
-                chosen_gene = parent1_gene
-                parent1_gene = next(parent1_genes, None)
-                if not p1_dominant: skip = True
-                    
-            elif p2_innovation < p1_innovation:
-                chosen_gene = parent2_gene
-                parent2_gene = next(parent2_genes, None)
-                if p1_dominant: skip = True
-                    
-        return chosen_gene, skip, disable, parent1_gene, parent2_gene, parent1_genes, parent2_genes
-    
-    @staticmethod   
-    def _check_gene_conflict(new_genes: List[LinkGene],
-                             chosen_gene: LinkGene) -> bool:
-        """ Check to see if the chosengene conflicts with an already chosen gene
-            i.e. do they represent the same link
-
-        Args:
-            new_genes (List[LinkGene]): the list of genes to check for conflicts
-            chosen_gene (LinkGene):     the chosen gene that should not conflict with existing ones
-
-        Returns:
-           bool: a conflict was detected 
-        """        
-        for current_gene in new_genes:
-            if not( not(current_gene.link.in_node.id == chosen_gene.link.in_node.id and 
-                        current_gene.link.out_node.id == chosen_gene.link.out_node.id and
-                        current_gene.link.is_recurrent == chosen_gene.link.is_recurrent) and
-                    not(current_gene.link.in_node.id == chosen_gene.link.out_node.id and
-                        current_gene.link.out_node.id == chosen_gene.link.in_node.id and
-                        current_gene.link.is_recurrent == chosen_gene.link.is_reccurent) and
-                    not (chosen_gene.link.is_recurrent)):
-                
-                return True
-        
-        return False
-    
-    @staticmethod
-    def _check_new_node_existence(new_nodes: Dict[int, NodeGene], target_node: NodeGene) -> Tuple[NodeGene, List[NodeGene]]:
-        """ Find if the target node already exists in the new nodes list return the final list and new node
-
-        Args:
-            new_nodes Dict[int, Node]: the list of nodes already added
-            target_node (Node): the node to check existence in the list
-
-        Returns:
-            Tuple[Node, List[Node]]:    Node: the new node, either an existing node or a created one
-                                        List[Node]: the final list of nodes (updated if new node wasn't already in it)
-        """                
-                       
-        if target_node.id in new_nodes:
-            new_node = new_nodes[target_node.id]
-            
-        else:
-            new_node = target_node.duplicate()
-            new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
-                                                    gene=new_node)
-            
-        return new_node, new_nodes
-    
     @staticmethod
     def _check_gene_conflict(chosen_genes: Dict[int, BaseGene],
                              chosen_gene: BaseGene) -> bool:
@@ -614,6 +501,7 @@ class Genome:
         new_links = Genome._genes_to_transmit(main_genome=main_links,
                                                  sub_genome=sub_links)
         
+        # Choose the nodes to transmit to offspring
         main_nodes: Dict[int, NodeGene] = main_genome._node_genes
         sub_nodes: Dict[int, NodeGene] = sub_genome._node_genes
         chosen_nodes = Genome._genes_to_transmit(main_genome=main_nodes,
@@ -625,128 +513,13 @@ class Genome:
                                   new_nodes=new_nodes,
                                   main_nodes=main_nodes)
         
-        baby_genome = Genome(   genome_id=genome_id,
-                                node_genes=new_nodes,
-                                link_genes=new_links)
+        baby_genome = Genome(genome_id=genome_id,
+                             node_genes=new_nodes,
+                             link_genes=new_links)
         
         return baby_genome 
 
-           
-    @staticmethod
-    def mate_multipoint(parent1: Genome, parent2: Genome, genome_id: int,) -> Genome:
-        """mates this Genome with another Genome  
-		   For every point in each Genome, where each Genome shares
-		   the innovation number, the LinkGene is chosen randomly from 
-		   either parent.  If one parent has an innovation absent in 
-		   the other, the baby will inherit the innovation 
-		   Otherwise, excess genes come from the dominant parent.
-
-        Args:
-            parent1 (Genome): genome of the first parent
-            parent2 (Genome): genome of the second parent
-            genome_id (int): id of the child genome
-
-        Returns:
-            Genome: the child genome created
-        """        
-                
-        new_nodes = {}    # already added nodes
-        parent1_dominant: bool = choice((0,1))  # Determine which genome will give its excess genes
         
-        new_genes: List[LinkGene] = [] # already chosen genes
-        
-        # Make sure all sensors and outputs are included
-        for current_node in parent2._node_genes.values():
-            if(Genome._is_IO_node(current_node)):
-                
-                # Create a new node off the sensor or output
-                new_output_node = current_node.duplicate()
-                
-                # Add the new node
-                new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
-                                                        gene=new_output_node)
-          
-        # Now move through the Genes of each parent until both genomes end  
-        parent1_genes = iter(parent1._link_genes)
-        parent2_genes =iter(parent2._link_genes)
-        parent1_gene = next(parent1_genes, None)
-        parent2_gene = next(parent2_genes, None)
-        args = (parent1_gene, parent2_gene, parent1_genes, parent2_genes)
-        while parent1_gene or parent2_gene:
-         
-            chosen_gene, skip, disable, *args = Genome._choose_gene_to_transmit(*args,
-                                                                      p1_dominant=parent1_dominant)
-            parent1_gene, parent2_gene = args[0:2]           
-            
-            conflict = Genome._check_gene_conflict( new_genes=new_genes,
-                                                    chosen_gene=chosen_gene)     
-            if conflict: skip = True
-            
-            if not skip:
-                # Now add the chosengene to the baby
-                
-                # Check for the nodes, add them if not in the baby Genome already
-                in_node = chosen_gene.link.in_node
-                out_node = chosen_gene.link.out_node 
-
-                #Check for inode in the newnodes list
-                if in_node.id < out_node.id:
-                    # inode before onode
-
-                    # Checking for inode's existence                       
-                    new_in_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
-                                                                             target_node=in_node)
-                        
-                    # Checking for onode's existence
-                    new_out_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
-                                                                              target_node=out_node)
-                    
-                # If the onode has a higher id than the inode we want to add it first     
-                else:
-                    new_out_node, new_nodes = Genome._check_new_node_existence( new_nodes=new_nodes,
-                                                                                target_node=out_node)
-                        
-                    new_in_node, new_nodes = Genome._check_new_node_existence(new_nodes=new_nodes,
-                                                                              target_node=in_node)
-                
-                # Add gene        
-                new_gene = LinkGene.constructor_from_gene(gene=chosen_gene,
-                                                      in_node=new_in_node,
-                                                      out_node=new_out_node)
-                if disable:
-                    new_gene.enabled = False
-                    disable = False
-                    
-                new_genes.append(new_gene)
-        
-        baby_genome = Genome(   genome_id=genome_id,
-                                node_genes=new_nodes,
-                                link_genes=np.array(new_genes))
-        
-        return baby_genome
-    
-    def _create_new_link(self, gene: LinkGene) -> Link:
-        """ Create a new link from a gene's link
-
-        Args:
-            gene (LinkGene): gene from which to get link's information
-
-        Returns:
-            Link: the created link
-        """        
-        current_link = gene.link
-        in_node = current_link.in_node
-        out_node = current_link.out_node
-        
-        """ new_link = Link(weight=current_link.weight,
-                        in_node=in_node,
-                        out_node=out_node,
-                        recurrence=current_link.is_recurrent) """
-                        
-        out_node.incoming.append(current_link)
-        in_node.outgoing.append(current_link)
-        
-        return current_link
            
    
                                

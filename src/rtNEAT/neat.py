@@ -11,6 +11,9 @@ class Config:
         num_outputs: int = 12,
     
         # Mutations
+        ## Disable gene
+        disable_prob: float = 0.05,
+        enable_prob: float = 0.1,
         weight_mutate_power: float = 0.5,
         weight_mutate_prob: float = 0.1,
         new_link_prob: float = 0.1,
@@ -37,6 +40,9 @@ class Config:
         Config.num_outputs: int = num_outputs
         
         # Mutations
+        ## Disable gene
+        Config.disable_prob: float = disable_prob
+        Config.enable_prob: float = enable_prob
         ## link weight mutation
         Config.weight_mutate_power: float  = weight_mutate_power
         Config.weight_mutate_prob: float  = weight_mutate_prob
