@@ -539,7 +539,7 @@ class Genome:
     def _check_gene_conflict(chosen_genes: Dict[int, BaseGene],
                              chosen_gene: BaseGene) -> bool:
         
-        for gene in chosen_genes:
+        for gene in chosen_genes.values():
             if gene.is_allele(other_gene=chosen_gene):
                 return True
             
@@ -547,9 +547,22 @@ class Genome:
             return False
     
     @staticmethod
-    def _choose_genes_to_transmit(main_genome: Dict[int, BaseGene],
-                                  sub_genome: Dict[int, BaseGene]) -> Dict[int, BaseGene]:
-        chosen_genes = {}
+    def _insert_non_conflict_gene(genes_dict: Dict[int, BaseGene],
+                                  gene: BaseGene):
+        
+        if not Genome._check_gene_conflict(chosen_gene=gene,
+                                            chosen_genes=genes_dict):
+                
+                genes_dict = Genome.insert_gene_in_dict(genes_dict=genes_dict,
+                                                        gene=gene.duplicate())
+                
+        return genes_dict
+        
+    @staticmethod
+    def _genes_to_transmit(main_genome: Dict[int, BaseGene],
+                           sub_genome: Dict[int, BaseGene]) -> Dict[int, BaseGene]:
+        
+        chosen_genes: Dict[int, BaseGene] = {}
         for key in main_genome:
             if key in sub_genome:
                 chosen_gene = choice([main_genome[key], sub_genome[key]])
@@ -557,34 +570,63 @@ class Genome:
             else:
                 chosen_gene = main_genome[key]
                 
-            if not Genome._check_gene_conflict(chosen_gene=chosen_gene,
-                                               chosen_genes=chosen_genes):
-                
-                chosen_genes[key] = chosen_gene
+            Genome._insert_non_conflict_gene(genes_dict=chosen_genes,
+                                             gene=chosen_gene)
                 
         return chosen_genes
     
-    def reproduce(parent1: Genome, parent2: Genome) -> Genome:
-        new_nodes = {}    # already added nodes
-        
+    @staticmethod
+    def _add_missing_nodes(chosen_links: Dict[int, LinkGene], new_nodes: Dict[int, NodeGene],
+                           main_nodes: Dict[int, NodeGene]) -> Dict[int, NodeGene]:
+            
+        for link in chosen_links.values():
+            in_node = link.in_node
+            out_node = link.out_node
+            if in_node not in new_nodes:
+                new_node = main_nodes[in_node]
+                Genome._insert_non_conflict_gene(genes_dict=new_nodes,
+                                                 gene=new_node)
+                            
+            if out_node not in new_nodes:
+                new_node = main_nodes[out_node]
+                Genome._insert_non_conflict_gene(genes_dict=new_nodes,
+                                                 gene=new_node)
+                
+        return new_nodes
+    
+    def reproduce(parent1: Genome, parent2: Genome) -> Genome:       
         main_genome, sub_genome  = choice([parent1, parent2], 2, replace=False)
-
-        new_genes: List[LinkGene] = [] # already chosen genes
         
         # Make sure all sensors and outputs are included
-        for current_node in parent1.node_genes:
+        """ for current_node in parent1.node_genes:
             if(Genome._is_IO_node(current_node)):
                 
                 # Create a new node off the sensor or output
-                new_output_node = current_node.duplicate()
+                new_node: NodeGene = current_node.duplicate()
                 
                 # Add the new node
-                new_nodes = Genome.insert_gene_in_dict( genes_dict=new_nodes,
-                                                        gene=new_output_node)
-                
+                IO_nodes: Dict[int, NodeGene] =  Genome.insert_gene_in_dict(genes_dict=IO_nodes,
+                                                                            gene=new_node) """
+        # Choose the links to transmit to offspring   
+        main_links: Dict[int, LinkGene] = main_genome.link_genes 
+        sub_links: Dict[int, LinkGene] = sub_genome.link_genes  
+        chosen_links = Genome._genes_to_transmit(main_genome=main_links,
+                                                 sub_genome=sub_links)
         
-    
-    
+        main_nodes: Dict[int, NodeGene] = main_genome.node_genes
+        sub_nodes: Dict[int, NodeGene] = sub_genome.node_genes
+        chosen_nodes = Genome._genes_to_transmit(main_genome=main_nodes,
+                                                 sub_genome=sub_nodes)
+        
+      
+        # Make sure all the nodes in the links chosen
+        # are present in offspring's genome
+        chosen_nodes: Dict[int, NodeGene] = Genome._add_missing_nodes(chosen_links=chosen_links,
+                                                                      new_nodes=chosen_nodes,
+                                                                      main_nodes=main_nodes) 
+            
+     
+           
     @staticmethod
     def mate_multipoint(parent1: Genome, parent2: Genome, genome_id: int,) -> Genome:
         """mates this Genome with another Genome  

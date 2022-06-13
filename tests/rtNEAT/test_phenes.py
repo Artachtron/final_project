@@ -60,11 +60,11 @@ class TestPhenes:
         def test_synthesis(self):
             node_gene = Node()
             
-            node = Node.synthesis(**node_gene.transcript())
+            node = Node.synthesis(node_gene.transcript())
             assert type(node) == Node
             assert node.id == node_gene.id
             
-            node2 = Node.synthesis(**Node().transcript())
+            node2 = Node.synthesis(Node().transcript())
 
             link_gene = LinkGene(in_node=node.id,
                                 out_node=node2.id)
@@ -73,6 +73,6 @@ class TestPhenes:
             dict_link['in_node'] = node
             dict_link['out_node'] = node2 """
             
-            link = Link.synthesis(**link_gene.transcript())
+            link = Link.synthesis(link_gene.transcript())
             assert type(link) == Link
             assert link.id == link_gene.id

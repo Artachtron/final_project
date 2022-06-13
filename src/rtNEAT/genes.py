@@ -118,12 +118,12 @@ class LinkGene(BaseGene):
                         out_node=self.out_node,
                         weight=self.weight)
         
-    def is_allele(self, other_link) -> bool:
-        return ((self.in_node == other_link.in_node and
-                self.out_node == other_link.out_node) or 
-                (self.out_node == other_link.in_node and
-                self.in_node == other_link.out_node) or
-                self.id == other_link.id)
+    def is_allele(self, other_gene) -> bool:
+        return ((self.in_node == other_gene.in_node and
+                self.out_node == other_gene.out_node) or 
+                (self.out_node == other_gene.in_node and
+                self.in_node == other_gene.out_node) or
+                self.id == other_gene.id)
 
         
 class NodeGene(BaseGene):
@@ -178,10 +178,10 @@ class NodeGene(BaseGene):
         return NodeGene(node_id=self.id,
                         node_type=self.type)
         
-    def is_allele(self, other_node: NodeGene) -> bool:
-        return (self.id == other_node.id and
-                self.type == other_node.type or
-                self.id == other_node.id)
+    def is_allele(self, other_gene: NodeGene) -> bool:
+        return (self.id == other_gene.id and
+                self.type == other_gene.type or
+                self.id == other_gene.id)
     
 def reset_innovation_table():
     InnovTable.reset_innovation_table()

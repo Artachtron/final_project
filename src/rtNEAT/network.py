@@ -43,13 +43,13 @@ class Network:
     def _synthetize_nodes(self, node_genes: Dict[int, NodeGene]):
         nodes = {}
         for key, node_gene in node_genes.items():
-            nodes[key] = Node.synthesis(**node_gene.transcript())
+            nodes[key] = Node.synthesis(node_gene.transcript())
 
         self._sort_nodes(nodes)
       
     def _synthetize_links(self, link_genes: Dict[int, LinkGene]) -> Dict[int, Link]:
         for key, link_gene in link_genes.items():
-            link = Link.synthesis(**link_gene.transcript())
+            link = Link.synthesis(link_gene.transcript())
             self._links[key] = link
             if link_gene.enabled: 
                 self._connect_link(link)                

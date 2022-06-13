@@ -1,6 +1,6 @@
 import pytest, os, sys
 import numpy as np
-from numpy.random import choice, randint
+from numpy.random import uniform
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.genome import Genome
@@ -446,6 +446,12 @@ class TestGenome:
                         
                         
         class TestReproduction:
+            @pytest.fixture(autouse=True)
+            def setup(self):
+                reset_innovation_table()
+                yield
+                
+                
             def test_is_IO_node(self):
                 hidden_node = NodeGene(node_type=NodeType.HIDDEN)
                 input_node = NodeGene(node_type=NodeType.INPUT)
@@ -458,26 +464,204 @@ class TestGenome:
                 #Output
                 assert Genome._is_IO_node(node=output_node)
             
-            def test_choose_gene(self):
+            def test_check_genes_conflict(self):
+                # Nodes
+                nodes = {}
+                Genome.insert_gene_in_dict(genes_dict=nodes,
+                                           gene=NodeGene())
+                
+                Genome.insert_gene_in_dict(genes_dict=nodes,
+                                            gene=NodeGene())
+            
+                ## conflict
+                conflict = Genome._check_gene_conflict(chosen_genes=nodes,
+                                                        chosen_gene=nodes[1]) 
+                assert conflict
+                
+                ## no conflict
+                conflict = Genome._check_gene_conflict(chosen_genes=nodes,
+                                                        chosen_gene=NodeGene())
+                assert not conflict
+                
+                # Links
+                links = {}
+                Genome.insert_gene_in_dict(genes_dict=links,
+                                           gene=LinkGene(in_node=1,
+                                                         out_node=2))
+                ## conflict
+                conflict = Genome._check_gene_conflict(chosen_genes=links,
+                                                        chosen_gene=links[1]) 
+                assert conflict
+                
+                ## conflict 2
+                conflict = Genome._check_gene_conflict(chosen_genes=links,
+                                                        chosen_gene=LinkGene(in_node=2,
+                                                                             out_node=1))
+                assert conflict
+                
+                ## no conflict
+                conflict = Genome._check_gene_conflict(chosen_genes=links,
+                                                        chosen_gene=LinkGene(in_node=NodeGene(),
+                                                                             out_node=2))
+                assert not conflict
+                
+            def test_insert_non_conflict_gene(self):
+                 # Nodes
+                nodes = {}
+                Genome.insert_gene_in_dict(genes_dict=nodes,
+                                           gene=NodeGene())
+                
+                Genome.insert_gene_in_dict(genes_dict=nodes,
+                                            gene=NodeGene())
+            
+                assert len(nodes) == 2
+                ## conflict                 
+                Genome._insert_non_conflict_gene(genes_dict=nodes,
+                                                 gene=nodes[1])
+                assert len(nodes) == 2
+                
+                ## no conflict
+                Genome._insert_non_conflict_gene(genes_dict=nodes,
+                                                 gene=NodeGene())
+                assert len(nodes) == 3
+                
+                # Links
+                links = {}
+                Genome.insert_gene_in_dict(genes_dict=links,
+                                           gene=LinkGene(in_node=1,
+                                                         out_node=2))
+                assert len(links) == 1
+                ## conflict
+                Genome._insert_non_conflict_gene(genes_dict=links,
+                                                 gene=links[1])
+                assert len(links) == 1
+                
+                ## conflict 2
+                Genome._insert_non_conflict_gene(genes_dict=links,
+                                                 gene=LinkGene(in_node=2,
+                                                                out_node=1))
+                assert len(links) == 1
+                
+                ## no conflict
+                Genome._insert_non_conflict_gene(genes_dict=links,
+                                                 gene=LinkGene(in_node=NodeGene().id,
+                                                               out_node=2))
+                assert len(links) == 2
+                
+            
+            def test_choose_gene_to_transmit(self):
                 nodes = {}
                 links = {}
                 
-                for _ in range(1,20):
+                for _ in range(1,100):
                     Genome.insert_gene_in_dict(genes_dict=nodes,
                                                gene=NodeGene())
-                for _ in range(1,10):
+                for i in range(1,50):
                     Genome.insert_gene_in_dict(genes_dict=links,
-                                               gene=LinkGene(in_node=nodes[randint(1,20)],
-                                                             out_node=nodes[randint(1,20)]))
+                                               gene=LinkGene(in_node=nodes[i],
+                                                             out_node=nodes[2*i]))
                 
-                links1 = {link for link in links}
+                links1 = {link.id: link for link in links.values() if link.id%2 == 0}
+                links2 = {link.id: link for link in links.values() if link.id%2 == 1}
+                links3 = {link.id: link.duplicate() for link in links1.values()} 
+                
+                # No disjoint
+                chosen_genes = Genome._genes_to_transmit(main_genome=links1,
+                                                                sub_genome=links2)
+                
+                assert len(chosen_genes) == len(links1)
+               
+                for gene, link in zip(chosen_genes, links1):
+                    assert gene == link
+                
+                # No disjoint 2
+                chosen_genes = Genome._genes_to_transmit(main_genome=links2,
+                                                                sub_genome=links1)
+                
+                assert len(chosen_genes) == len(links2)
+               
+                for gene, link in zip(chosen_genes, links2):
+                    assert gene == link
+                  
+                  
+                # Disjoint  
+                chosen_genes = Genome._genes_to_transmit(main_genome=links1,
+                                                                sub_genome=links3)
+                
+                assert len(chosen_genes) == len(links1)
+                
+                for gene, link, link3 in zip(chosen_genes, links1.values(), links3):
+                    assert gene == link  or gene == link3
                     
-                genome1 = Genome(genome_id=1,
-                                 node_genes=nodes,
-                                 link_genes=links)
+            def test_add_missing_nodes(self):
+                new_nodes = {}
+                main_nodes = {}
+                for _ in range(10):
+                    node = NodeGene()
+                    Genome.insert_gene_in_dict(genes_dict=new_nodes,
+                                               gene=node)
+                    Genome.insert_gene_in_dict(genes_dict=main_nodes,
+                                               gene=node)
+                    
+                for _ in range(20):
+                   node = NodeGene() 
+                   Genome.insert_gene_in_dict( genes_dict=main_nodes,
+                                               gene=node)
+                # No missing node
+                chosen_links = {}
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=2,
+                                                         out_node=5))
                 
-                genome2 = Genome(genome_id=2,
-                                 node_genes=nodes,
-                                 link_genes=links)
+                assert len(new_nodes) == 10    
+                Genome._add_missing_nodes(chosen_links=chosen_links,
+                                          new_nodes=new_nodes,
+                                          main_nodes=main_nodes)
                 
-                _choose_genes_to_transmit
+                assert len(new_nodes) == 10
+                
+                # one missing node
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=12,
+                                                         out_node=5))
+                
+                Genome._add_missing_nodes(chosen_links=chosen_links,
+                                          new_nodes=new_nodes,
+                                          main_nodes=main_nodes)
+                
+                assert len(new_nodes) == 11
+                
+                # two missing nodes
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=13,
+                                                         out_node=14))
+                
+                Genome._add_missing_nodes(chosen_links=chosen_links,
+                                          new_nodes=new_nodes,
+                                          main_nodes=main_nodes)
+                
+                assert len(new_nodes) == 13
+                
+                # Three missing nodes
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=23,
+                                                         out_node=24))
+                
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=25,
+                                                         out_node=23))
+                
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=25,
+                                                         out_node=23))
+                
+                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                                           gene=LinkGene(in_node=14,
+                                                         out_node=13))
+                
+                Genome._add_missing_nodes(chosen_links=chosen_links,
+                                          new_nodes=new_nodes,
+                                          main_nodes=main_nodes)
+                
+                assert len(new_nodes) == 16
+                

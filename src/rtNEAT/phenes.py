@@ -12,7 +12,7 @@ class BasePhene:
         self.enabled = enabled
         
     @classmethod    
-    def synthesis(cls, **kwargs):
+    def synthesis(cls, kwargs):
         raise NotImplementedError("Please Implement the synthesis method")
         
 class Link(BasePhene):
@@ -32,7 +32,7 @@ class Link(BasePhene):
         self.out_node: Node = out_node # Node that the link affects
 
     @classmethod
-    def synthesis(cls, **kwargs) -> Link:
+    def synthesis(cls, kwargs) -> Link:
         """ Synthesize a Link from a GeneLink
             and return it
 
@@ -66,7 +66,7 @@ class Node(BasePhene):
         #Config.configure()
         
     @classmethod
-    def synthesis(cls, **kwargs) -> Node:
+    def synthesis(cls, kwargs) -> Node:
         """ Synthesize a Node from a GeneLink
             and return it
 
@@ -74,12 +74,7 @@ class Node(BasePhene):
             Node: the created Node
         """ 
         return Node(**kwargs)    
-  
-    @classmethod
-    def constructor_from_node(cls, node:Node) -> Node:
-        return Node(node_id=node.id,
-                    node_type=node.type)
-                
+                  
     def is_sensor(self) -> bool:
         """ determine if the node is a sensor (INPUT or BIAS)
 
