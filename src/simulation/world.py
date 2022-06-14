@@ -5,11 +5,26 @@ from display import Display
 import numpy as np
 from typing import Tuple, Final
 
+from src.simulation.display import DisplayedObject
+from src.simulation.simulation import SimulatedObject
+
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
 
-
+class PhysicalObject:
+    def __init__(self,
+                 object_id: int):
+        
+        self.id = object_id
+        
+        self.sim_body: SimulatedObject
+        self.dis_body: DisplayedObject
+        
+    def _init_physical_body(self):
+        self.sim_body = SimulatedObject(sim_body_id=self.id)
+        self.dis_body = DisplayedObject(dis_body_id=self.id)
+        
 
 class World:
     GRID_HEIGHT: Final[int] = 20
@@ -20,13 +35,13 @@ class World:
     
     def __init__(self,
                  world_id: int,
-                 grid_dimensions: Tuple[int, int],
+                 dimensions: Tuple[int, int],
                  block_size: int,
                  sim_speed: int,
                  display_active: bool):
         
         self.id: int = world_id
-        self.grid_dimensions: Tuple[int, int] = grid_dimensions
+        self.dimensions: Tuple[int, int] = dimensions
         self.block_size: int = block_size
         self.sim_speed: int = sim_speed
         self.display_active: bool = display_active
@@ -35,29 +50,31 @@ class World:
         self.simulation: Simulation
         self.display: Display
         
-        self.init_world()
+        self._init_world()
         
-    def init_world(self):
+    def _init_world(self):
         self.grid = Grid(grid_id=self.id,
-                         dimensions=(self.grid_dimensions[0],
-                                     self.grid_dimensions[1]),
+                         dimensions=(self.dimensions[0],
+                                     self.dimensions[1]),
                          block_size=self.block_size)
         
         self.simulation = Simulation(sim_id=self.id)
         
         self.diplay = Display(display_id=self.id,
                               sim_speed=self.sim_speed,
-                              grid_dimensions=self.grid_dimensions,
+                              dimensions=self.dimensions,
                               block_size=self.block_size)
         
+    def update(self):
+        self.grid.update()
+        self.simulation.update()
         
+        if self.display_active:
+            self.diplay.update()    
              
 def main():
     configure()
-    
-    display.init_pygame(block_size=BLOCK_SIZE,
-                        grid_dimensions=(GRID_WIDTH,
-                                         GRID_WIDTH))
+
     init_world()
       
     while True:
@@ -83,16 +100,12 @@ def main():
     Config.num_outputs = n_outputs 
     print(Config.num_inputs, Config.num_outputs) """
             
-def init_grid():
-    global grid
-    grid = Grid(height=GRID_HEIGHT, width=GRID_WIDTH, block_size=BLOCK_SIZE)
 
 def init_world() -> None:
     """Initialize the world
     """    
-    init_grid()
-    init_population(counts=(INITIAL_ANIMAL_POPULATION, INITIAL_TREE_POPULATION))
-    init_energies()
+    # init_population(counts=(INITIAL_ANIMAL_POPULATION, INITIAL_TREE_POPULATION))
+    #init_energies()
    
 def init_population(**kwargs) -> None:
     """Populate the world with the initial population

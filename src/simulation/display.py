@@ -6,20 +6,23 @@ from typing import Final, Tuple
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
+class DisplayedObject:
+    pass
+
 class Display:
     def __init__(self,
                  display_id: int,
                  sim_speed: int,
                  block_size: int,
-                 grid_dimensions: Tuple[int, int]):
+                 dimensions: Tuple[int, int]):
         
         self.id = display_id
         self.sim_speed: int = sim_speed
         self.block_size: int = block_size
-        self.grid_dimensions: Tuple[int, int] = grid_dimensions
+        self.dimensions: Tuple[int, int] = dimensions
         
-        self.window_height: int = block_size * grid_dimensions[0]
-        self.window_width: int = block_size * grid_dimensions[1]
+        self.window_height: int = block_size * dimensions[0]
+        self.window_width: int = block_size * dimensions[1]
         
         self.tick_counter = 0
         self.clock

@@ -6,6 +6,16 @@ import pygame as pg
 from typing import Tuple
 
 assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/energies")
+from simulation import SimulatedObject
+
+class Resource(SimulatedObject):
+    def __init__(self,
+                 resource_id: int,
+                 position: Tuple[int, int]):
+        
+        super(Resource, self).__init__(sim_body_id=resource_id,
+                                       position=position)   
+    
 
 class EnergyType(enum.Enum):
     BLUE = "blue energy"
@@ -19,6 +29,7 @@ class Energy(pg.sprite.Sprite):
                  position: Tuple[int,int],
                  quantity: int = 10,
                  ):
+        
         super().__init__()
         self.type: EnergyType = energy_type
         self.quantity: int = quantity

@@ -2,7 +2,12 @@ import numpy as np
 from typing import Tuple, Final
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType
 from entities import Entity, Animal, Tree, Seed, EntityType
-import pygame as pg
+import enum
+
+class SubGridType(enum.Enum):
+    EntityGrid = 0
+    EnergyGrid = 1
+    ColorGrid = 2
 
 class SubGrid:
     def __init__(self, dimensions: Tuple[int,int], data_type: str, initial_value):
@@ -93,8 +98,8 @@ class Grid:
         self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3), data_type=np.uint8, initial_value=255)
         self.BLOCK_SIZE: Final[int] = block_size
         
-        self.energy_group = pg.sprite.Group()
-        self.entity_group = pg.sprite.Group()
+        """ self.energy_group = pg.sprite.Group()
+        self.entity_group = pg.sprite.Group() """
      
     @property
     def entity_grid(self) -> np.array:
