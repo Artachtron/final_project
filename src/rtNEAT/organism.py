@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from entities import Entity
+    from simulation.entities import Entity
     
 from genome import Genome
 from network import Network
-from project.src.config import WorldTable
+from project.src.simulation.config import WorldTable
 
 class Organism:
     def __init__(self,

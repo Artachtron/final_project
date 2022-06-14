@@ -14,10 +14,6 @@ import numpy as np
 import sys, os
 from itertools import combinations
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rtNEAT')))
-from project.src.rtNEAT.organism import Organism
-from project.src.rtNEAT.genome import Genome
-
 assets_path = join(
     Path(
         dirname(
@@ -46,7 +42,7 @@ class Entity:
     
     def __init__(self,
                  position: Tuple[int, int],
-                 entitiy_id: int = None,
+                 entity_id: int = None,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -55,22 +51,18 @@ class Entity:
                  red_energy: int = 10,
                  ):
              
-        self.id: int = entitiy_id
+        self.id: int = entity_id
         
         self.position: Tuple[int, int] = position
         self.size: int = size
         
         self._energies_stock: dict[EnergyType, int] = {EnergyType.BLUE.value: blue_energy,
                                                        EnergyType.RED.value: red_energy}
-        
         self._age: int = 0
-        self._max_age: int = max_age if max_age else size * Entity.MAX_AGE_SIZE_COEFFICIENT
+        self._max_age: int = max_age or size * Entity.MAX_AGE_SIZE_COEFFICIENT
         self._adult_size: int = adult_size
+        self.is_adult: bool = False
         self._reached_adulthood()
-
-        self.entity_grid.set_cell_value(cell_coordinates=(self.position),
-                                        value=self)
-        
         
         self._action_cost: int = action_cost if self.is_adult else action_cost
         
@@ -87,62 +79,17 @@ class Entity:
     def red_energy(self):
         return self._energies_stock["red energy"]       
     
-    def _reached_adulthood(self) -> None:
-        """Check if the entity reached maturity size and assign the result in the is_adult instance variable
-        """
-        self.is_adult = self.size >= self._adult_size
-   
-    
-    def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
-        """Gain energy from specified type to energies stock
+    def _increase_age(self, amount: int = 1) -> None:
+        """Increase age of certain amount
 
         Args:
-            energy_type (EnergyType):   type of energy to gain
-            quantity (int):             amount of energy to gain
+            amount (int, optional): amount to increase age by. Defaults to 1.
         """
-        self._energies_stock[energy_type.value] += quantity
-        
-    def _loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
-        """Loose energy of specified type from energies stock
+        self._age += amount
 
-        Args:
-            energy_type (EnergyType):   type of energy to loose
-            quantity (int):             amount of energy to loose
-        """
-        energy_amount = self._energies_stock[energy_type.value]
-        if energy_amount - quantity > 0:
-            self._energies_stock[energy_type.value] -= quantity
-        else:
-            quantity = energy_amount
-            self._energies_stock[energy_type.value] = 0
-
-        if self._energies_stock[EnergyType.BLUE.value] <= 0:
+        if self._age > self._max_age:
             self._die()
-
-        return quantity
-
-    def _perform_action(self):
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
-    
-    def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
-        """Check if the entity has enough energy to perform an action, use the energy if it's the case
-
-        Args:
-            energy_type (EnergyType):   type of energy to loose
-            quantity (int):             amount of energy to loose
-
-        Returns:
-            bool: if the entity had enough energy
-        """        
-        if self.energies[energy_type.value] >= quantity:
-            self._loose_energy(energy_type=energy_type,
-                               quantity=quantity)
-            return True
-        else:
-            return False
-    
+            
     def _grow(self) -> None:
         """grow the entity to bigger size, consumming red energy
         """
@@ -161,19 +108,80 @@ class Entity:
         
         if not self.is_adult:
             self._reached_adulthood()
-
-    def _increase_age(self, amount: int = 1) -> None:
-        """Increase age of certain amount
+    
+    def _reached_adulthood(self) -> None:
+        """Check if the entity reached maturity size and assign the result in the is_adult instance variable
+        """
+        self.is_adult = self.size >= self._adult_size
+   
+    def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
+        """Gain energy from specified type to energies stock
 
         Args:
-            amount (int, optional): amount to increase age by. Defaults to 1.
+            energy_type (EnergyType):   type of energy to gain
+            quantity (int):             amount of energy to gain
+            
+        Raises:
+            ValueError: amount should not be negative
         """
-        self._age += amount
-       # self.loose_energy(energy_type=EnergyType.BLUE, quantity=self.action_cost)
+        if quantity < 0 :
+            raise ValueError
+        
+        self._energies_stock[energy_type.value] += quantity
+        
+    def _loose_energy(self, energy_type: EnergyType, quantity: int) -> int:
+        """Loose energy of specified type from energies stock,
+           if quantity greater than stock set stock to 0
 
-        if self._age > self._max_age:
+        Args:
+            energy_type (EnergyType):   type of energy to loose
+            quantity (int):             amount of energy to loose
+        
+        Raises:
+            ValueError: quantity should not be negative
+            
+        Returns:
+            int: quantity of energy that was lost
+        """
+        if quantity < 0 :
+            raise ValueError
+        
+        energy_amount = self._energies_stock[energy_type.value]
+        if energy_amount - quantity > 0:
+            self._energies_stock[energy_type.value] -= quantity
+        else:
+            quantity = energy_amount
+            self._energies_stock[energy_type.value] = 0
+
+        if self._energies_stock[EnergyType.BLUE.value] <= 0:
             self._die()
 
+        return quantity
+
+    def _perform_action(self) -> None:
+        """Consume blue energy when performing an action
+        """        
+        self._loose_energy(
+            energy_type=EnergyType.BLUE,
+            quantity=self._action_cost)
+    
+    def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
+        """Check if the entity has enough energy to perform an action, use the energy if it's the case
+
+        Args:
+            energy_type (EnergyType):   type of energy to loose
+            quantity (int):             amount of energy to loose
+
+        Returns:
+            bool: if the entity had enough energy
+        """        
+        if can_perform:= (self.energies[energy_type.value] >= quantity):
+            self._loose_energy(energy_type=energy_type,
+                               quantity=quantity)
+           
+        return can_perform
+        
+        
     def _die(self) -> None:
         """Death of the entity
         """
@@ -479,11 +487,33 @@ class Animal(Entity):
     INITIAL_RED_ENERGY: Final[int] = 10
     REPRODUCTION_ENERGY_COST: Final[int] = 10
     
-    def __init__(self, *args, **kwargs):
-        super(Animal, self).__init__(*args, **kwargs)
+    def __init__(self,
+                 position: Tuple[int, int],
+                 animal_id: int = None,
+                 adult_size: int = 0,
+                 max_age: int = 0,
+                 size: int = 20,
+                 action_cost: int = 1,
+                 blue_energy: int = 10,
+                 red_energy: int = 10,
+                 ):
+        
+        super(Animal, self).__init__(position=position,
+                                     entity_id=animal_id,
+                                     adult_size=adult_size,
+                                     max_age=max_age,
+                                     size=size,
+                                     action_cost=action_cost,
+                                     blue_energy=blue_energy,
+                                     red_energy=red_energy)
             
-        self.seed_pocket: Seed = None
+        self._pocket: Seed = None
 
+    
+    
+ 
+    
+    
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
 
@@ -552,7 +582,7 @@ class Animal(Entity):
 
             free_cell = self._select_free_cell(subgrid=self.entity_grid)
             if free_cell:
-                if self.seed_pocket:
+                if self._pocket:
                     self.replant_seed(position=free_cell)
                 else:
                     self.grid.create_entity(
@@ -568,32 +598,32 @@ class Animal(Entity):
         Args:
             position (Tuple[int, int]): cell coordinates on which to plant seed
         """
-        if not self.seed_pocket:
+        if not self._pocket:
             return
-        seed = self.seed_pocket
+        seed = self._pocket
         self.grid.create_entity(entity_type="tree",
                                 position=position,
                                 blue_energy=seed.blue_energy(),
                                 red_energy=seed.red_energy(),
                                 max_age=seed._max_age,
                                 production_type=seed.production_type)
-        self.seed_pocket = None
+        self._pocket = None
 
     def store_seed(self, seed: Seed) -> None:
         """Pick up a seed and stor it"""
-        if not self.seed_pocket:
-            self.seed_pocket = seed
+        if not self._pocket:
+            self._pocket = seed
 
         self._perform_action()
 
     def recycle_seed(self) -> None:
         """Destroy seed stored and drop energy content
         """
-        if not self.seed_pocket:
+        if not self._pocket:
             return
 
-        self._decompose(self.seed_pocket)
-        self.seed_pocket = None
+        self._decompose(self._pocket)
+        self._pocket = None
         self._perform_action()
 
     def on_death(self) -> None:
@@ -618,14 +648,14 @@ class Animal(Entity):
         self.activate_mind()
         
     def activate_mind(self) -> None:
-        inputs = self.normalize_inputs()
+        inputs = self._normalize_inputs()
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
  
-        self.interpret_outputs(outputs=outputs)                                                       
+        self._interpret_outputs(outputs=outputs)                                                       
         #Outputs
         
-    def normalize_inputs(self):
+    def _normalize_inputs(self):
          #Inputs
         ## Internal properties
         age = self._age/100
@@ -640,7 +670,7 @@ class Animal(Entity):
         
         return np.array([age, size, blue_energy/100, red_energy/100] + see_entities + see_energies + see_colors)
     
-    def interpret_outputs(self, outputs: np.array):
+    def _interpret_outputs(self, outputs: np.array):
         pass
     
     def random_update(self) -> None:
@@ -672,13 +702,27 @@ class Animal(Entity):
 
 class Tree(Entity):
     def __init__(self,
+                 position: Tuple[int, int],
+                 tree_id: int = None,
+                 adult_size: int = 0,
+                 max_age: int = 0,
+                 size: int = 20,
+                 action_cost: int = 1,
+                 blue_energy: int = 10,
+                 red_energy: int = 10,
                  production_type: EnergyType = None,
-                 *args,
-                 **kwargs
                  ):
         
-        super(Tree, self).__init__(*args, **kwargs)
-        self.production_type: EnergyType = (production_type or
+        super(Tree, self).__init__( position=position,
+                                    entity_id=tree_id,
+                                    adult_size=adult_size,
+                                    max_age=max_age,
+                                    size=size,
+                                    action_cost=action_cost,
+                                    blue_energy=blue_energy,
+                                    red_energy=red_energy)
+        
+        self._production_type: EnergyType = (production_type or
                                             np.random.choice(list(EnergyType)))
 
     def produce_energy(self) -> None:
@@ -690,8 +734,9 @@ class Tree(Entity):
 
         count_trees_around = len(self._find_tree_cells())
 
-        self._gain_energy(energy_type=self.production_type,
+        self._gain_energy(energy_type=self._production_type,
                          quantity=int((5 * self.size) / 2**count_trees_around))
+        
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
 
