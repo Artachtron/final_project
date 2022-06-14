@@ -6,7 +6,7 @@ import enum
 
 class SubGridType(enum.Enum):
     EntityGrid = 0
-    EnergyGrid = 1
+    ResourceGrid = 1
     ColorGrid = 2
 
 class SubGrid:

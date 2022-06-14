@@ -1,13 +1,21 @@
 import pygame as pg
 import sys
 
-from typing import Final, Tuple
+from typing import Tuple
+from os.path import dirname, realpath, join
+from pathlib import Path
+
+grid = None
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 class DisplayedObject:
-    pass
+    def __init__(self,
+                 dis_body_id: int):
+        
+        self.id = dis_body_id
+
 
 class Display:
     def __init__(self,
@@ -68,26 +76,23 @@ class Display:
                 
     def draw_entities(self) -> None:
         """Draw the entities"""
-        grid.entity_group.draw(SCREEN)
+        
+        grid.entity_group.draw(self.screen)
 
     def draw_energies(self) -> None:
         """Draw the energies"""
-        grid.energy_group.draw(SCREEN)
+        grid.energy_group.draw(self.screen)
         
     def update_world(self) -> None:
         """Update the world"""
-        if  self.tick_counter == 0:
-            update_entities()
+        """ if  self.tick_counter == 0:
+            update_entities() """
 
     def update_entities(self) -> None:
         """Update the entities"""
         grid.entity_group.update()
 
-from os.path import dirname, realpath, join
-from pathlib import Path
 
-
-    
 class EntitySprite(pg.sprite.Sprite):
     def __init__(self,
                 image_filename: str,

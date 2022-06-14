@@ -32,4 +32,10 @@ class SimulatedObject:
         self.id = sim_body_id
         self.position = Position(position=position)
         
+class Simulation:
+    def __init__(self,
+                 sim_id: int):
+    
+        self.id = sim_id
+        
 

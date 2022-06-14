@@ -4,9 +4,10 @@ from pathlib import Path
 import pygame as pg
 
 from typing import Tuple
+from simulation import SimulatedObject
 
 assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/energies")
-from simulation import SimulatedObject
+
 
 class Resource(SimulatedObject):
     def __init__(self,
@@ -14,8 +15,8 @@ class Resource(SimulatedObject):
                  position: Tuple[int, int]):
         
         super(Resource, self).__init__(sim_body_id=resource_id,
-                                       position=position)   
-    
+                                       position=position) 
+            
 
 class EnergyType(enum.Enum):
     BLUE = "blue energy"

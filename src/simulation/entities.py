@@ -10,7 +10,6 @@ import random
 from energies import EnergyType, Energy
 import numpy as np
 from itertools import combinations
-from simulation import SimulatedObject
 
 class Direction(enum.Enum):
     RIGHT = (1, 0)
@@ -42,9 +41,9 @@ class Entity:
                  red_energy: int = 10,
                  ):
         
-        super(Entity, self).__init__(sim_body_id=entity_id,
-                                     position=position)
-        
+        self.id = entity_id
+        self.position = position    
+            
         self.size: int = size
         
         self._energies_stock: dict[EnergyType, int] = {EnergyType.BLUE.value: blue_energy,

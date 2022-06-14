@@ -1,6 +1,6 @@
 from population import Population
 from genome import Genome
-from node import Node, NodeType
+from phenes import Node, NodeType
 from genes import LinkGene
 from neat import Config
 import numpy as np

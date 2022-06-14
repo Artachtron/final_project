@@ -5,9 +5,10 @@ from display import Display
 import numpy as np
 from typing import Tuple, Final
 
-from src.simulation.display import DisplayedObject
-from src.simulation.simulation import SimulatedObject
+from display import DisplayedObject
+from simulation import SimulatedObject
 
+grid = None
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
@@ -38,7 +39,7 @@ class World:
                  dimensions: Tuple[int, int],
                  block_size: int,
                  sim_speed: int,
-                 display_active: bool):
+                 display_active: bool = False):
         
         self.id: int = world_id
         self.dimensions: Tuple[int, int] = dimensions
@@ -72,14 +73,14 @@ class World:
         if self.display_active:
             self.diplay.update()    
              
-def main():
+""" def main():
     configure()
 
     init_world()
       
     while True:
         #update_world()
-        display.main()        
+        display.main() """        
 
 """ def configure():
     internal_properties = 4
@@ -168,7 +169,10 @@ def init_energies() -> None:
     """Initialize the energies on the grid (only for tests)
     """
     pass
-                   
+        
+def main():
+    pass
+           
 if __name__ == "__main__":
     main()
     
