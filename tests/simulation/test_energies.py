@@ -16,7 +16,7 @@ class TestEnergy:
                         energy_type=EnergyType.BLUE,
                         position=(20,20)) 
         
-        assert {'id', 'type', 'size', 'quantity',
+        assert {'type', 'size', 'quantity',
                 'appearance', 'position'}.issubset(vars(energy))
         
         assert energy.id == 0

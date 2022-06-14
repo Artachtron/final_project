@@ -33,7 +33,7 @@ class SimulatedObject:
                  position: Tuple[int, int],
                  appearance: str):
     
-        self.id = sim_obj_id
+        self.__id = sim_obj_id
         self.size = size
         self.position = Position(*position)
         
@@ -41,6 +41,10 @@ class SimulatedObject:
         self.dis_obj: DisplayedObject
         
         # self._init_displayed_object()
+    
+    @property
+    def id(self):
+        return self.__id
         
     def _init_displayed_object(self):
         try:

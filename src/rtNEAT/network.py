@@ -19,7 +19,7 @@ class Network:
                  hidden: Dict[int, Node] = {},
                  frozen: bool = False):
         
-        self.id = network_id
+        self.__id = network_id
         
         self._inputs: Dict[int, Node] = inputs # Nodes that input into the network
         self._outputs: Dict[int, Node] = outputs # Values output by the network
@@ -31,6 +31,9 @@ class Network:
         self.activation_phase: int = 0
         self.frozen: bool = frozen
 
+    @property
+    def id(self):
+        return self.__id 
             
     @staticmethod
     def genesis(genome: Genome) -> Network:

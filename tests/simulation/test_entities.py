@@ -21,7 +21,7 @@ class TestEntity:
                         blue_energy=12,
                         red_energy=27)
         
-        assert {'id', 'position', '_adult_size', '_age',
+        assert {'position', '_adult_size', '_age',
                 '_max_age', 'size', '_action_cost', 'is_adult',
                 '_energies_stock'}.issubset(vars(entity))
         
@@ -244,7 +244,7 @@ class TestTree:
                         red_energy=27,
                         production_type=EnergyType.BLUE) 
         
-        assert {'id', 'position', '_adult_size', '_age',
+        assert {'position', '_adult_size', '_age',
                 '_max_age', 'size', '_action_cost', 'is_adult',
                 '_energies_stock', '_production_type'}.issubset(vars(tree))
         
@@ -307,7 +307,7 @@ class TestAnimal:
                         blue_energy=12,
                         red_energy=27)
         
-        assert {'id', 'position', '_adult_size', '_age',
+        assert {'position', '_adult_size', '_age',
                 '_max_age', 'size', '_action_cost', 'is_adult',
                 '_energies_stock', '_pocket'}.issubset(vars(animal))
         

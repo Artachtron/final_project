@@ -17,7 +17,7 @@ class Organism:
         super(Organism, self).__init__(sim_body_id=organism_id,
                                        position=position)
         
-        self.id = organism_id or WorldTable.get_organism_id
+        self.__id = organism_id or WorldTable.get_organism_id
         self.genotype: Genome # The Organism's genotype 
         self.mind: Network
                 
@@ -25,7 +25,7 @@ class Organism:
         self.genaration: int = generation # Tells which generation this Organism is from
         
         self.genesis()
-                
+                    
     def genesis(self) -> Organism:
         NUM_INPUTS = 96
         NUM_OUTPUTS = 12
@@ -36,6 +36,9 @@ class Organism:
         
         self.mind = Network.genesis(self.genotype)
         
-
-                   
+    @property
+    def id(self):
+        return self.__id
+        
+           
      

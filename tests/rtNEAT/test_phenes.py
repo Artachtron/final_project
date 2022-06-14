@@ -17,7 +17,7 @@ class TestPhenes:
                     node_type=NodeType.BIAS,
                     enabled=False)
         
-        assert {'id', 'type', 'enabled',
+        assert {'type', 'enabled',
                 'activation_function','aggregation_function',
                 'activation_phase', 'activation_value',
                 'incoming','outgoing'}.issubset(vars(node))
@@ -47,7 +47,7 @@ class TestPhenes:
                     out_node=Node(1),
                     enabled=False)
         
-        assert {'id', 'weight', 'in_node', 'out_node',
+        assert {'weight', 'in_node', 'out_node',
                 'enabled'}.issubset(vars(link))
         
         assert link.id == 1

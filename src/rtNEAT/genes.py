@@ -54,10 +54,14 @@ class BaseGene:
                  enabled: bool,
                  frozen: bool,):
     
-        self.id: int = gene_id                          # unique (per genome) identifier corresponding to innovation number
+        self.__id: int = gene_id                          # unique (per genome) identifier corresponding to innovation number
         self.frozen: bool = frozen                      # if the gene can be mutated
         self.enabled: bool = enabled                    # if the phene will participate in the activation calculation
         self.mutation_number: int = mutation_number     # allow to calculate distance between two genes with the same innovation number
+        
+    @property
+    def id(self):
+        return self.__id
         
     def __lt__(self, other: BaseGene) -> bool:
         """Compare two instances of genes by id

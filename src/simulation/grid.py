@@ -108,7 +108,7 @@ class Grid:
                  dimensions: Tuple[int,int],
                  block_size: int=20):
         
-        self.id = grid_id
+        self.__id = grid_id
         self.dimensions: Tuple[int,int] = dimensions
         
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions,
@@ -127,6 +127,10 @@ class Grid:
         
         """ self.energy_group = pg.sprite.Group()
         self.entity_group = pg.sprite.Group() """
+    
+    @property
+    def id(self):
+        return self.__id
      
     @property
     def entity_grid(self) -> np.array:

@@ -15,7 +15,7 @@ class TestGrid:
                     dimensions=(20,20),
                     block_size=20)
         
-        assert {'id', 'dimensions', 'BLOCK_SIZE',
+        assert {'dimensions', 'BLOCK_SIZE',
                 '_resource_grid', '_entity_grid',
                 '_color_grid'}.issubset(vars(grid))
         

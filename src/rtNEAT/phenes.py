@@ -8,8 +8,12 @@ class BasePhene:
                  phene_id: int,
                  enabled: bool = True):
         
-        self.id: int = phene_id
+        self.__id: int = phene_id
         self.enabled: bool = enabled
+     
+    @property
+    def id(self):
+        return self.__id 
         
     @classmethod    
     def synthesis(cls, kwargs):

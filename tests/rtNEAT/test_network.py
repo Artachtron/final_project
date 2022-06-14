@@ -12,7 +12,7 @@ class TestNetwork:
         network = Network()
         
         assert type(network) == Network
-        assert {'id', '_inputs', '_outputs','_hidden',
+        assert {'_inputs', '_outputs','_hidden',
                 '_all_nodes', 'activation_phase',
                 'frozen'}.issubset(vars(network))
         

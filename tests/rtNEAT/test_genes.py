@@ -25,7 +25,7 @@ class TestGene:
                              enabled=True,
                              frozen=False) 
         
-        assert set(['id', 'enabled', 'frozen']).issubset(vars(base_gene))
+        assert set(['enabled', 'frozen']).issubset(vars(base_gene))
         assert base_gene.id == 1
         assert base_gene.enabled == True
         assert base_gene.frozen == False
@@ -45,7 +45,7 @@ class TestGene:
                              enabled=True,
                              frozen=False)
         
-        assert {'id', 'enabled', 'frozen',
+        assert {'enabled', 'frozen',
                 'in_node','out_node','weight',
                 'mutation_number'}.issubset(vars(link_gene))
         
@@ -68,7 +68,7 @@ class TestGene:
                              enabled=False,
                              frozen=True)
         
-        assert {'id', 'enabled', 'frozen',
+        assert {'enabled', 'frozen',
                 'type', 'bias', 'activation_function',
                 'aggregation_function'}.issubset(vars(node_gene))
         
@@ -137,11 +137,9 @@ class TestGene:
             assert node.id == copy_node.id
             
             copy_node.type = NodeType.INPUT
-            copy_node.id = node.id + 1
-            
+                
             assert node.type != copy_node.type
-            assert node.id != copy_node.id
-            
+                       
             # Links
             link = LinkGene(in_node=node,
                             out_node=copy_node)
@@ -153,12 +151,10 @@ class TestGene:
             assert link.out_node == copy_link.out_node
             assert link.weight == copy_link.weight
            
-            copy_link.id = link.id + 1
             copy_link.in_node = link.out_node  
             copy_link.out_node = link.in_node
             copy_link.weight = link.weight + 0.01
             
-            assert copy_link.id != link.id
             assert copy_link.in_node != link.in_node
             assert copy_link.out_node != link.out_node
             assert copy_link.weight != link.weight       
