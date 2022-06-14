@@ -1,24 +1,44 @@
 import numpy as np
-from typing import Tuple, Final
-from energies import BlueEnergy, RedEnergy, Energy, EnergyType
+from typing import Tuple, Final, Any
+from energies import BlueEnergy, RedEnergy, Energy, EnergyType, Resource
 from entities import Entity, Animal, Tree, Seed, EntityType
 import enum
 
 class SubGridType(enum.Enum):
-    EntityGrid = 0
-    ResourceGrid = 1
-    ColorGrid = 2
+    ENTITY = 0
+    RESOURCE = 1
+    COLOR = 2
 
 class SubGrid:
-    def __init__(self, dimensions: Tuple[int,int], data_type: str, initial_value):
+    def __init__(self, dimensions: Tuple[int,int],
+                 data_type: Any = Any,
+                 initial_value: Any = None):
+        
         self.dimensions: Tuple[int,int] = dimensions
-        self._subgrid: np.array = np.full(self.dimensions, fill_value=initial_value, dtype=data_type)
+        self._array: np.array = np.full(self.dimensions, fill_value=initial_value, dtype=data_type)
+        self.data_type = data_type
+        self.initial_value = initial_value
      
     @property
-    def subgrid(self) -> np.array:
-        return self._subgrid
+    def array(self) -> np.array:
+        return self._array
     
-    def set_cell_value(self, cell_coordinates: Tuple[int, int], value: int) -> None:
+    def update_cell(self, new_position: Tuple[int, int], value: Any) -> None:
+        """ if not issubclass(value.__class__, self.data_type):
+            raise TypeError """
+        
+        # Reset the old position
+        old_position = value.position.vect
+        self.set_cell_value(coordinates=old_position,
+                            value=None)
+        
+        # Insert the new value at the given coordinates
+        self.set_cell_value(coordinates=new_position,
+                            value=self)
+        
+        
+    
+    def set_cell_value(self, coordinates: Tuple[int, int], value: Any) -> None:
         """Update the value of a cell from the grid
 
         Args:
@@ -26,7 +46,7 @@ class SubGrid:
             value (int):                The new value to assign
         """
         try:
-            self._subgrid[cell_coordinates] = value
+            self._array[coordinates] = value
         except IndexError:
             print("{cell_coordinates} is out of bounds")
             
@@ -42,7 +62,7 @@ class SubGrid:
         try:
             if cell_coordinates[0] < 0 or cell_coordinates[1] < 0:
                 raise IndexError
-            return self._subgrid[tuple(cell_coordinates)]
+            return self._array[tuple(cell_coordinates)]
         except IndexError:
             print(f"{cell_coordinates} is out of bounds")
             return False
@@ -51,7 +71,7 @@ class SubGrid:
         x1, x2, y1, y2 = (initial_pos[0] - radius, initial_pos[0] + radius+1,
                           initial_pos[1] - radius, initial_pos[1] + radius+1)
         
-        ndim = self._subgrid.ndim
+        ndim = self._array.ndim
         if ndim == 3:
             width, height, depth = self.dimensions
             padded_subregion = np.full(fill_value=-255, shape=(x2-x1, y2-y1, depth))
@@ -74,7 +94,7 @@ class SubGrid:
             down_pad = y2 - height
             y2 = height
     
-        subregion = self._subgrid[x1:x2, y1:y2]
+        subregion = self._array[x1:x2, y1:y2]
         
         x_shape, y_shape = subregion.shape[:2]
         
@@ -86,16 +106,28 @@ class SubGrid:
             
 class Grid:
     def __init__(self,
-                 grid_id:int,
+                 grid_id: int,
                  dimensions: Tuple[int,int],
                  block_size: int=20):
         
-        self.grid_id = grid_id
+        self.id = grid_id
         self.dimensions: Tuple[int,int] = dimensions
         
-        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Entity, initial_value=None)
-        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Energy, initial_value=None)
-        self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3), data_type=np.uint8, initial_value=255)
+        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions,
+                                             data_type=Entity,
+                                             initial_value=None,
+                                             valid_type=Entity)
+        
+        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions,
+                                               data_type=Energy,
+                                               initial_value=None,
+                                               valid_type=Resource)
+        
+        self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3),
+                                            data_type=np.uint8,
+                                            initial_value=255,
+                                            valid_type=Tuple[int, int, int])
+        
         self.BLOCK_SIZE: Final[int] = block_size
         
         """ self.energy_group = pg.sprite.Group()

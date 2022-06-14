@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from grid import SubGrid
+    from grid import Grid, SubGrid
     
 from typing import Tuple, Set, Final
 from types import NoneType
@@ -10,7 +10,8 @@ import random
 from energies import EnergyType, Energy
 import numpy as np
 from itertools import combinations
-from simulation import SimulatedObject
+
+from simulation import SimulatedObject, Position
 
 class Direction(enum.Enum):
     RIGHT = (1, 0)
@@ -43,6 +44,7 @@ class Entity(SimulatedObject):
                  appearance: str = None,
                  ):
         
+        appearance = "models/entities/" + appearance
         super(Entity, self).__init__(sim_obj_id=entity_id,
                                      position=position,
                                      size=size,
@@ -178,6 +180,9 @@ class Entity(SimulatedObject):
            
         return can_perform
         
+     
+    ################################################################################################ 
+     
         
     def _die(self) -> None:
         """Death of the entity
@@ -201,8 +206,8 @@ class Entity(SimulatedObject):
             quantity (int):                      amount of energy to drop
             cell_coordinates (Tuple[int,int]):  coordinates of the cell on which to drop energy
         """
-        if self._check_coordinates(
-                cell_coordinates=cell_coordinates,
+        if self._available_coordinates(
+                coordinates=cell_coordinates,
                 subgrid=self.grid.resource_grid):
             quantity = self._loose_energy(
                 energy_type=energy_type, quantity=quantity)
@@ -256,8 +261,8 @@ class Entity(SimulatedObject):
     
     
 
-    def _check_coordinates(
-            self, cell_coordinates: Tuple[int, int], subgrid) -> bool:
+    def _available_coordinates(
+            self, coordinates: Tuple[int, int], subgrid) -> bool:
         """Check if the next move is valid
 
         Args:
@@ -267,9 +272,9 @@ class Entity(SimulatedObject):
             bool: Validity of the next move
         """
         return self._is_cell_in_bounds(
-            next_move=cell_coordinates,
+            next_move=coordinates,
             subgrid=subgrid) and self._is_vacant_cell(
-            next_move=cell_coordinates,
+            next_move=coordinates,
             subgrid=subgrid)
 
     def _is_vacant_cell(self, subgrid, next_move: Tuple[int, int]) -> bool:
@@ -507,10 +512,20 @@ class Animal(Entity):
             
         self._pocket: Seed = None
 
-    
-    
- 
-    
+    def _move(self, direction: Direction, grid: Grid) -> None:
+        subgrid: SubGrid = grid.entity_grid
+        next_pos = Position.add(position=self.position,
+                                vect=direction)
+        
+        if self._available_coordinates(coordinates=next_pos.vect,
+                                       subgrid=subgrid):
+            
+            subgrid.update(new_position=next_pos,
+                           entity=self)
+        
+            self.position = next_pos
+
+        self._perform_action()
     
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
@@ -519,8 +534,8 @@ class Animal(Entity):
             direction (Direction): direction in which to move
         """
         next_move = tuple(np.add(self.position, direction.value))
-        if self._check_coordinates(
-                cell_coordinates=next_move,
+        if self._available_coordinates(
+                coordinates=next_move,
                 subgrid=self.grid.entity_grid):
             self.entity_grid.set_cell_value(
                 cell_coordinates=(self.position), value=None)
@@ -678,7 +693,7 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
             coordinates = tuple(np.add(self.position, (x, y)))
-            if self._check_coordinates(cell_coordinates=coordinates,
+            if self._available_coordinates(coordinates=coordinates,
                                        subgrid=self.grid.resource_grid):
                 self._drop_energy(energy_type=np.random.choice(EnergyType),
                                  cell_coordinates=coordinates,

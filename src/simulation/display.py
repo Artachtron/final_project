@@ -10,7 +10,7 @@ grid = None
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-class DisplayedObject:
+class DisplayedObject(pg.sprite.Sprite):
     def __init__(self,
                  dis_obj_id: int,
                  size: int,
@@ -18,6 +18,23 @@ class DisplayedObject:
                  appearance: str):
         
         self.id = dis_obj_id
+        self.size = size
+        self.position = position
+        
+        assets_path = join(
+    Path(
+        dirname(
+            realpath(__file__))).parent.absolute(),
+    "assets/")
+        
+        self.image: pg.Surface = pg.image.load(join(assets_path,
+                                            appearance)).convert_alpha()
+        
+        pos_x, pos_y = self.position
+        self.rect: pg.Rect = self.image.get_rect(
+            center=(pos_x *grid.BLOCK_SIZE + grid.BLOCK_SIZE /2,
+                pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE /2))
+        
 
 
 class Display:

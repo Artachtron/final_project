@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Tuple
 from display import DisplayedObject
 
@@ -8,6 +9,10 @@ class Position:
         self._x = position[0]
         self._y = position[1]
         
+    @property
+    def vect(self):
+        return self._x, self._y
+    
     @property
     def x(self):
         return self._x
@@ -23,6 +28,17 @@ class Position:
     @y.setter
     def y(self, value):
         self._y = value
+    
+    def add(self, vect: Tuple[int, int]):
+        self._x += vect[0]
+        self._y += vect[1]
+     
+    @staticmethod   
+    def add(position: Position, vect: Tuple[int, int]):
+        pos = tuple(position.vect)
+
+        return Position((pos[0] + vect[0], 
+                         pos[1] + vect[1]))
         
 
 class SimulatedObject:
@@ -42,10 +58,16 @@ class SimulatedObject:
         self._init_displayed_object()
         
     def _init_displayed_object(self):
-        self.dis_obj = DisplayedObject(dis_obj_id=self.id,
-                                       size=self.size,
-                                       position=self.position,
-                                       appearance=self.appearance)
+        try:
+            self.dis_obj = DisplayedObject(dis_obj_id=self.id,
+                                        size=self.size,
+                                        position=self.position,
+                                        appearance=self.appearance)
+        except AttributeError:
+            pass
+        
+        except FileNotFoundError:
+            pass
         
 class Simulation:
     def __init__(self,
