@@ -1,19 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from project.src.simulation.entities import Entity
     
 from typing import Tuple
   
 from genome import Genome
 from network import Network
 
-from project.src.simulation.simulation import SimulatedObject
-
 from project.src.simulation.config import WorldTable
 
 
-class Organism(SimulatedObject):
+class Organism:
     def __init__(self,
                  position: Tuple[int, int] =(-1, -1),
                  organism_id: int = 0,
@@ -25,7 +20,6 @@ class Organism(SimulatedObject):
         self.id = organism_id or WorldTable.get_organism_id
         self.genotype: Genome # The Organism's genotype 
         self.mind: Network
-        self.body: Entity
                 
         self.species: int = 0 # The Organism's Species 
         self.genaration: int = generation # Tells which generation this Organism is from

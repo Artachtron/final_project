@@ -10,6 +10,7 @@ import random
 from energies import EnergyType, Energy
 import numpy as np
 from itertools import combinations
+from simulation import SimulatedObject
 
 class Direction(enum.Enum):
     RIGHT = (1, 0)
@@ -24,7 +25,7 @@ class EntityType(enum.Enum):
     Seed = "seed"
 
 
-class Entity:
+class Entity(SimulatedObject):
     MAX_AGE_SIZE_COEFFICIENT: Final[int] = 5
     GROWTH_ENERGY_REQUIRED: Final[int] = 10
     CHILD_ENERGY_COST_DIVISOR: Final[int] = 2
@@ -39,7 +40,13 @@ class Entity:
                  action_cost: int = 1,
                  blue_energy: int = 10,
                  red_energy: int = 10,
+                 appearance: str = None,
                  ):
+        
+        super(Entity, self).__init__(sim_obj_id=entity_id,
+                                     position=position,
+                                     size=size,
+                                     appearance=appearance)
         
         self.id = entity_id
         self.position = position    
@@ -495,7 +502,8 @@ class Animal(Entity):
                                      size=size,
                                      action_cost=action_cost,
                                      blue_energy=blue_energy,
-                                     red_energy=red_energy)
+                                     red_energy=red_energy,
+                                     appearance="animal.png")
             
         self._pocket: Seed = None
 
@@ -710,7 +718,8 @@ class Tree(Entity):
                                     size=size,
                                     action_cost=action_cost,
                                     blue_energy=blue_energy,
-                                    red_energy=red_energy)
+                                    red_energy=red_energy,
+                                    appearance="tree.png")
         
         self._production_type: EnergyType = (production_type or
                                             np.random.choice(list(EnergyType)))

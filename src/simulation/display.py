@@ -12,9 +12,12 @@ WHITE = (255, 255, 255)
 
 class DisplayedObject:
     def __init__(self,
-                 dis_body_id: int):
+                 dis_obj_id: int,
+                 size: int,
+                 position: int,
+                 appearance: str):
         
-        self.id = dis_body_id
+        self.id = dis_obj_id
 
 
 class Display:
@@ -29,12 +32,13 @@ class Display:
         self.block_size: int = block_size
         self.dimensions: Tuple[int, int] = dimensions
         
-        self.window_height: int = block_size * dimensions[0]
-        self.window_width: int = block_size * dimensions[1]
+        self.window_width: int = block_size * dimensions[0]
+        self.window_height: int = block_size * dimensions[1]
+        
         
         self.tick_counter = 0
-        self.clock
-        self.screen
+        self.clock: pg.Clock
+        self.screen: pg.Screen
         
         self._init_pygame()
         

@@ -1,4 +1,5 @@
 from typing import Tuple
+from display import DisplayedObject
 
 class Position:
     def __init__(self,
@@ -26,11 +27,25 @@ class Position:
 
 class SimulatedObject:
     def __init__(self,
-                 sim_body_id: int,
-                 position: Tuple[int, int]):
+                 sim_obj_id: int,
+                 size: int,
+                 position: Tuple[int, int],
+                 appearance: str):
     
-        self.id = sim_body_id
+        self.id = sim_obj_id
+        self.size = size
         self.position = Position(position=position)
+        
+        self.appearance = appearance
+        self.dis_obj: DisplayedObject
+        
+        self._init_displayed_object()
+        
+    def _init_displayed_object(self):
+        self.dis_obj = DisplayedObject(dis_obj_id=self.id,
+                                       size=self.size,
+                                       position=self.position,
+                                       appearance=self.appearance)
         
 class Simulation:
     def __init__(self,

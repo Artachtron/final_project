@@ -14,7 +14,7 @@ class Resource(SimulatedObject):
                  resource_id: int,
                  position: Tuple[int, int]):
         
-        super(Resource, self).__init__(sim_body_id=resource_id,
+        super(Resource, self).__init__(sim_obj_id=resource_id,
                                        position=position) 
             
 

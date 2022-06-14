@@ -15,16 +15,28 @@ INITIAL_TREE_POPULATION: Final[int] = 2
 
 class PhysicalObject:
     def __init__(self,
-                 object_id: int):
+                 object_id: int,
+                 position: Tuple[int, int],
+                 size: int,
+                 appearance: str):
         
         self.id = object_id
+        self.position = position
+        self.size = size
         
-        self.sim_body: SimulatedObject
-        self.dis_body: DisplayedObject
+        self.appearance = appearance
         
-    def _init_physical_body(self):
-        self.sim_body = SimulatedObject(sim_body_id=self.id)
-        self.dis_body = DisplayedObject(dis_body_id=self.id)
+        self.sim_obj: SimulatedObject
+        self.dis_obj: DisplayedObject
+        
+    """ def _init_physical_obj(self):
+        self.sim_obj = SimulatedObject(sim_body_id=self.id,
+                                       position=self.position,
+                                       size=self.size)
+        self.dis_obj = DisplayedObject(dis_body_id=self.id,
+                                       size=self.size,
+                                       position=self.position,
+                                       appearance=self.appearance) """
         
 
 class World:
@@ -36,9 +48,10 @@ class World:
     
     def __init__(self,
                  world_id: int,
-                 dimensions: Tuple[int, int],
-                 block_size: int,
-                 sim_speed: int,
+                 dimensions: Tuple[int, int] = (GRID_HEIGHT,
+                                                GRID_WIDTH),
+                 block_size: int= BLOCK_SIZE,
+                 sim_speed: int = SIMULATION_SPEED,
                  display_active: bool = False):
         
         self.id: int = world_id
@@ -61,7 +74,7 @@ class World:
         
         self.simulation = Simulation(sim_id=self.id)
         
-        self.diplay = Display(display_id=self.id,
+        self.display = Display(display_id=self.id,
                               sim_speed=self.sim_speed,
                               dimensions=self.dimensions,
                               block_size=self.block_size)
