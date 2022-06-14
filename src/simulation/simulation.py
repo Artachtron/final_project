@@ -55,7 +55,7 @@ class SimulatedObject:
         self.appearance = appearance
         self.dis_obj: DisplayedObject
         
-        self._init_displayed_object()
+        # self._init_displayed_object()
         
     def _init_displayed_object(self):
         try:

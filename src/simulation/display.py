@@ -24,7 +24,7 @@ class DisplayedObject(pg.sprite.Sprite):
         assets_path = join(
     Path(
         dirname(
-            realpath(__file__))).parent.absolute(),
+            realpath(__file__))).parent.parent.absolute(),
     "assets/")
         
         self.image: pg.Surface = pg.image.load(join(assets_path,

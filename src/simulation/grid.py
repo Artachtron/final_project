@@ -148,7 +148,7 @@ class Grid:
     def height(self) -> int:
         return self.dimensions[1]
         
-    def create_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int, int]):
+    def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Create energy on the grid
 
         Args:
@@ -156,14 +156,20 @@ class Grid:
             quantity (int):             amount of energy to be created
             cell (Tuple[int, int]):     cell of the grid on which the energy should be created
         """        
-        print(f"{energy_type} was created at {cell_coordinates}")
+        print(f"{energy_type} was created at {coordinates}")
         match energy_type.value:
             case EnergyType.BLUE.value:
-                energy = BlueEnergy(grid=self, position=cell_coordinates, quantity=quantity)
+                energy = BlueEnergy(energy_id=0,
+                                    position=coordinates,
+                                    quantity=quantity)
+                
             case EnergyType.RED.value:
-                energy = RedEnergy(grid=self, position=cell_coordinates, quantity=quantity)
+                energy = RedEnergy(energy_id=0,
+                                   position=coordinates,
+                                   quantity=quantity)
           
-        self.energy_group.add(energy)
+        self.resource_grid.set_cell_value(coordinates=coordinates,
+                                          value=energy)
                 
     def remove_energy(self, energy: Energy) -> None:
         """Remove energy from the grid
@@ -197,14 +203,13 @@ class Grid:
               
         match entity_type:
             case EntityType.Animal.value:
-                entity = Animal(grid=self, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, adult_size=adult_size)
+                entity = Animal(position=position, size=size, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, adult_size=adult_size)
             case EntityType.Tree.value:
                 production_type = production_type if production_type else np.random.choice(list(EnergyType))
-                entity = Tree(grid=self, production_type=production_type, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age)
+                entity = Tree(production_type=production_type, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age)
             case EntityType.Seed.value:
-                entity = Seed(grid=self, position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
+                entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
         
-        self.entity_group.add(entity)
         return entity
         
     def remove_entity(self, entity: Entity):

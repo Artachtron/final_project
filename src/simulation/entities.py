@@ -41,7 +41,7 @@ class Entity(SimulatedObject):
                  action_cost: int = 1,
                  blue_energy: int = 10,
                  red_energy: int = 10,
-                 appearance: str = None,
+                 appearance: str = "",
                  ):
         
         appearance = "models/entities/" + appearance
@@ -177,6 +177,29 @@ class Entity(SimulatedObject):
            
         return can_perform
         
+    def _drop_energy(self, energy_type: EnergyType, quantity: int,
+                    coordinates: Tuple[int, int], grid: Grid) -> None:
+        """Drop some energy on a cell
+
+        Args:
+            energy_type (EnergyType):       type of energy (blue/red) to drop
+            quantity (int):                 amount of energy to drop
+            coordinates (Tuple[int,int]):   coordinates of the cell on which to drop energy
+            grid (Grid):                    grid on which to drop energy         
+        """
+        
+        resource_grid: SubGrid = grid.resource_grid
+        if self._is_available_coordinates(coordinates=coordinates,
+                                          subgrid=resource_grid):
+            
+            quantity = self._loose_energy(energy_type=energy_type,
+                                          quantity=quantity)
+
+            grid.create_energy(energy_type=energy_type,
+                               quantity=quantity,
+                               coordinates=coordinates)
+
+        self._perform_action()
      
     ################################################################################################ 
      
@@ -194,27 +217,7 @@ class Entity(SimulatedObject):
     
     
     
-    def _drop_energy(self, energy_type: EnergyType, quantity: int,
-                    cell_coordinates: Tuple[int, int]) -> None:
-        """Drop some energy on a cell
-
-        Args:
-            energy_type (EnergyType):           type of energy (blue/red) to drop
-            quantity (int):                      amount of energy to drop
-            cell_coordinates (Tuple[int,int]):  coordinates of the cell on which to drop energy
-        """
-        if self._is_available_coordinates(
-                coordinates=cell_coordinates,
-                subgrid=self.grid.resource_grid):
-            quantity = self._loose_energy(
-                energy_type=energy_type, quantity=quantity)
-
-            self.grid.create_energy(
-                energy_type=energy_type,
-                quantity=quantity,
-                cell_coordinates=cell_coordinates)
-
-        self._perform_action()
+    
 
     def _pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
         """Pick energy up from a cell
@@ -515,19 +518,21 @@ class Animal(Entity):
             direction (Direction):  direction in which to move
             grid (Grid):            grid on which to move 
         """        
-        subgrid: SubGrid = grid.entity_grid
+        entity_grid: SubGrid = grid.entity_grid
         next_pos = Position.add(position=self.position,
                                 vect=direction.value)
         
         if self._is_available_coordinates(coordinates=next_pos.vect,
-                                          subgrid=subgrid):
+                                          subgrid=entity_grid):
             
-            subgrid.update_cell(new_coordinate=next_pos.vect,
+            entity_grid.update_cell(new_coordinate=next_pos.vect,
                                 value=self)
         
             self.position = next_pos
 
         self._perform_action()
+        
+        ###########################################################################
            
     def reproduce(self, mate: Animal) -> Animal:
         """Create an offspring from 2 mates
@@ -677,7 +682,7 @@ class Animal(Entity):
             if self._is_available_coordinates(coordinates=coordinates,
                                        subgrid=self.grid.resource_grid):
                 self._drop_energy(energy_type=np.random.choice(EnergyType),
-                                 cell_coordinates=coordinates,
+                                 coordinates=coordinates,
                                  quantity=1)
 
         if np.random.uniform() < 0.01:
