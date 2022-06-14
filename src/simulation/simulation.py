@@ -1,34 +1,19 @@
 from __future__ import annotations
-from typing import Tuple
+from typing import NamedTuple, Tuple
 from display import DisplayedObject
 
-class Position:
-    def __init__(self,
-                 position: Tuple[int, int]):
-        
-        self._x = position[0]
-        self._y = position[1]
-        
+    
+class Position(NamedTuple):
+    x: int
+    y: int
+     
+    def __call__(self):
+        return self.x, self.y
+           
     @property
     def vect(self):
-        return self._x, self._y
-    
-    @property
-    def x(self):
-        return self._x
-    
-    @x.setter
-    def x(self, value):
-        self._x = value
+        return self.x, self.y
         
-    @property
-    def y(self):
-        return self._y
-    
-    @y.setter
-    def y(self, value):
-        self._y = value
-    
     def add(self, vect: Tuple[int, int]):
         self._x += vect[0]
         self._y += vect[1]
@@ -37,8 +22,8 @@ class Position:
     def add(position: Position, vect: Tuple[int, int]):
         pos = tuple(position.vect)
 
-        return Position((pos[0] + vect[0], 
-                         pos[1] + vect[1]))
+        return Position(pos[0] + vect[0], 
+                        pos[1] + vect[1])
         
 
 class SimulatedObject:
@@ -50,7 +35,7 @@ class SimulatedObject:
     
         self.id = sim_obj_id
         self.size = size
-        self.position = Position(position=position)
+        self.position = Position(*position)
         
         self.appearance = appearance
         self.dis_obj: DisplayedObject

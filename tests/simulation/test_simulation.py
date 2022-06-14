@@ -9,6 +9,11 @@ class TestSimulation:
         sim = Simulation(sim_id=0)
         assert type(sim) == Simulation
         
+""" class TestPosition:
+    def test_test(self):
+        p = Position(1,2) """
+  
+        
 class TestSimulatedObject:
     def test_create_simulated_object(self):
         sim = SimulatedObject(sim_obj_id=0,
