@@ -23,7 +23,7 @@ class SubGrid:
     def array(self) -> np.array:
         return self._array
     
-    def update_cell(self, new_position: Tuple[int, int], value: Any) -> None:
+    def update_cell(self, new_coordinate: Tuple[int, int], value: Any) -> None:
         """ if not issubclass(value.__class__, self.data_type):
             raise TypeError """
         
@@ -33,11 +33,9 @@ class SubGrid:
                             value=None)
         
         # Insert the new value at the given coordinates
-        self.set_cell_value(coordinates=new_position,
-                            value=self)
-        
-        
-    
+        self.set_cell_value(coordinates=new_coordinate,
+                            value=value)
+            
     def set_cell_value(self, coordinates: Tuple[int, int], value: Any) -> None:
         """Update the value of a cell from the grid
 
@@ -48,9 +46,9 @@ class SubGrid:
         try:
             self._array[coordinates] = value
         except IndexError:
-            print("{cell_coordinates} is out of bounds")
+            print("{coordinates} is out of bounds")
             
-    def get_cell_value(self, cell_coordinates: Tuple[int, int]) -> Entity|Energy:
+    def get_cell_value(self, coordinates: Tuple[int, int]) -> Entity|Energy:
         """Get the value of a cell
 
         Args:
@@ -60,11 +58,11 @@ class SubGrid:
             int: The value of the cell 0 for empty, 1 for full
         """
         try:
-            if cell_coordinates[0] < 0 or cell_coordinates[1] < 0:
+            if coordinates[0] < 0 or coordinates[1] < 0:
                 raise IndexError
-            return self._array[tuple(cell_coordinates)]
+            return self._array[tuple(coordinates)]
         except IndexError:
-            print(f"{cell_coordinates} is out of bounds")
+            print(f"{coordinates} is out of bounds")
             return False
         
     def get_sub_region(self, initial_pos: Tuple[int,int], radius:int=1) -> np.array:
@@ -115,18 +113,15 @@ class Grid:
         
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions,
                                              data_type=Entity,
-                                             initial_value=None,
-                                             valid_type=Entity)
+                                             initial_value=None)
         
         self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions,
-                                               data_type=Energy,
-                                               initial_value=None,
-                                               valid_type=Resource)
+                                               data_type=Resource,
+                                               initial_value=None)
         
         self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3),
                                             data_type=np.uint8,
-                                            initial_value=255,
-                                            valid_type=Tuple[int, int, int])
+                                            initial_value=255)
         
         self.BLOCK_SIZE: Final[int] = block_size
         

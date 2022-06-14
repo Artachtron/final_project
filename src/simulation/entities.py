@@ -49,10 +49,7 @@ class Entity(SimulatedObject):
                                      position=position,
                                      size=size,
                                      appearance=appearance)
-        
-        self.id = entity_id
-        self.position = position    
-            
+                   
         self.size: int = size
         
         self._energies_stock: dict[EnergyType, int] = {EnergyType.BLUE.value: blue_energy,
@@ -206,7 +203,7 @@ class Entity(SimulatedObject):
             quantity (int):                      amount of energy to drop
             cell_coordinates (Tuple[int,int]):  coordinates of the cell on which to drop energy
         """
-        if self._available_coordinates(
+        if self._is_available_coordinates(
                 coordinates=cell_coordinates,
                 subgrid=self.grid.resource_grid):
             quantity = self._loose_energy(
@@ -261,7 +258,7 @@ class Entity(SimulatedObject):
     
     
 
-    def _available_coordinates(
+    def _is_available_coordinates(
             self, coordinates: Tuple[int, int], subgrid) -> bool:
         """Check if the next move is valid
 
@@ -271,11 +268,10 @@ class Entity(SimulatedObject):
         Returns:
             bool: Validity of the next move
         """
-        return self._is_cell_in_bounds(
-            next_move=coordinates,
-            subgrid=subgrid) and self._is_vacant_cell(
-            next_move=coordinates,
-            subgrid=subgrid)
+        return (self._is_cell_in_bounds(next_move=coordinates,
+                                       subgrid=subgrid) and
+                self._is_vacant_cell(next_move=coordinates,
+                                     subgrid=subgrid))
 
     def _is_vacant_cell(self, subgrid, next_move: Tuple[int, int]) -> bool:
         """Check if a cell is vacant
@@ -286,7 +282,7 @@ class Entity(SimulatedObject):
         Returns:
             bool: Vacancy of the cell
         """
-        return not subgrid.get_cell_value(cell_coordinates=next_move)
+        return not subgrid.get_cell_value(coordinates=next_move)
 
     def _is_cell_in_bounds(self, subgrid, next_move: Tuple[int, int]) -> bool:
         """Check if a cell is in the bounds of the grid
@@ -513,41 +509,26 @@ class Animal(Entity):
         self._pocket: Seed = None
 
     def _move(self, direction: Direction, grid: Grid) -> None:
+        """Move the animal in the given direction
+
+        Args:
+            direction (Direction):  direction in which to move
+            grid (Grid):            grid on which to move 
+        """        
         subgrid: SubGrid = grid.entity_grid
         next_pos = Position.add(position=self.position,
-                                vect=direction)
+                                vect=direction.value)
         
-        if self._available_coordinates(coordinates=next_pos.vect,
-                                       subgrid=subgrid):
+        if self._is_available_coordinates(coordinates=next_pos.vect,
+                                          subgrid=subgrid):
             
-            subgrid.update(new_position=next_pos,
-                           entity=self)
+            subgrid.update_cell(new_coordinate=next_pos.vect,
+                                value=self)
         
             self.position = next_pos
 
         self._perform_action()
-    
-    def move(self, direction: Direction) -> None:
-        """Move the animal in the given direction
-
-        Args:
-            direction (Direction): direction in which to move
-        """
-        next_move = tuple(np.add(self.position, direction.value))
-        if self._available_coordinates(
-                coordinates=next_move,
-                subgrid=self.grid.entity_grid):
-            self.entity_grid.set_cell_value(
-                cell_coordinates=(self.position), value=None)
-            self.entity_grid.set_cell_value(
-                cell_coordinates=next_move, value=self)
-            self.position = next_move
-
-            self.rect.x = next_move[0] * self.grid.BLOCK_SIZE
-            self.rect.y = next_move[1] * self.grid.BLOCK_SIZE
-        self._perform_action()
-
-       
+           
     def reproduce(self, mate: Animal) -> Animal:
         """Create an offspring from 2 mates
 
@@ -693,7 +674,7 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
             coordinates = tuple(np.add(self.position, (x, y)))
-            if self._available_coordinates(coordinates=coordinates,
+            if self._is_available_coordinates(coordinates=coordinates,
                                        subgrid=self.grid.resource_grid):
                 self._drop_energy(energy_type=np.random.choice(EnergyType),
                                  cell_coordinates=coordinates,

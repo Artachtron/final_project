@@ -1,8 +1,9 @@
 import os, sys, pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.entities import Animal, Entity, Tree
+from project.src.simulation.entities import Animal, Entity, Tree, Direction
 from project.src.simulation.energies import EnergyType
+from project.src.simulation.grid import SubGrid, Grid
 
 class TestEntity:
     def test_create_entity(self):
@@ -149,6 +150,8 @@ class TestEntity:
             assert can == False
             assert self.entity.red_energy == 1998
             
+        
+            
 class TestTree:
     def test_create_tree(self):
         tree = Tree(position=(20,20)) 
@@ -235,7 +238,7 @@ class TestAnimal:
                 '_energies_stock', '_pocket'}.issubset(vars(animal))
         
         assert animal.id == 3
-        assert animal.position == (20,10)
+        assert animal.position.vect == (20,10)
         assert animal._adult_size == 15
         assert animal._max_age == 100
         assert animal._age == 0
@@ -244,6 +247,79 @@ class TestAnimal:
         assert animal._energies_stock == {'blue energy': 12, 'red energy': 27}
         assert animal.is_adult == False
         assert animal._pocket == None
+        
+    class TestAnimalMethods:
+            @pytest.fixture(autouse=True)
+            def setup(self):
+                self.animal = Animal(position=(3,3),
+                                    animal_id=3,
+                                    adult_size=15,
+                                    max_age=100,
+                                    size=13,
+                                    action_cost=1,
+                                    blue_energy=12,
+                                    red_energy=27)
+                
+                """ self.entity_grid = SubGrid(dimensions=(20,20),
+                                       data_type=Entity,
+                                       initial_value=None) """
+                
+                self.grid = Grid(grid_id=0,
+                                 dimensions=(20,20))
+                
+                self.entity_grid = self.grid.entity_grid
+                
+                yield
+                
+                self.entity = None
+                
+            def test_available_coordinates(self):
+                # Free cell
+                free = self.animal._is_available_coordinates(coordinates=(12,15),
+                                                             subgrid=self.entity_grid)
+                
+                assert free
+                
+                # Occupied cell
+                self.entity_grid.set_cell_value(coordinates=(12,15),
+                                            value=self.animal)
+                
+                free = self.animal._is_available_coordinates(coordinates=(12,15),
+                                                             subgrid=self.entity_grid)
+                
+                assert not free
+                
+            def test_move(self):
+                animal = self.animal
+              
+                # Down
+                assert animal.position.vect == (3,3)
+                assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
+                animal._move(Direction.DOWN,
+                             grid=self.grid)
+                assert animal.position.vect == (3,4)
+                assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal
+                assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
+                
+                # Up
+                animal._move(Direction.UP,
+                             grid=self.grid)
+                assert animal.position.vect == (3,3)
+                assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
+                assert self.entity_grid.get_cell_value(coordinates=(2,3)) == None
+                
+                # Left
+                animal._move(Direction.LEFT,
+                             grid=self.grid)
+                assert animal.position.vect == (2,3)
+                assert self.entity_grid.get_cell_value(coordinates=(2,3)) == animal
+                assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
+                
+                # Right
+                animal._move(Direction.RIGHT,
+                             grid=self.grid)
+                assert animal.position.vect == (3,3)
+                assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
         
 
         
