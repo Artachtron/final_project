@@ -1,10 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from grid import Grid, SubGrid
+    from grid import SubGrid
     
-from config import WorldTable    
-import pygame as pg
 from os.path import dirname, realpath, join
 from pathlib import Path
 from typing import Tuple, Set, Final
@@ -40,76 +38,13 @@ class EntityType(enum.Enum):
     Seed = "seed"
 
 
-class EntitySprite(pg.sprite.Sprite):
-    def __init__(self,
-                 image_filename: str,
-                 grid,
-                 position: Tuple[int, int],
-                 size: int = 20,
-                 blue_energy: int = 10,
-                 red_energy: int = 10,
-                 ):
-        super().__init__()
-        self.position: Tuple[int, int] = position
-        image: pg.Surface = pg.image.load(
-            join(assets_path,
-                image_filename)).convert_alpha()
-        self.size: int = size
-        self.image: pg.Surface = pg.transform.scale(image, (size, size))
-        pos_x, pos_y = self.position
-        self.rect: pg.Rect = self.image.get_rect(
-            center=(pos_x *grid.BLOCK_SIZE + grid.BLOCK_SIZE /2,
-                pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE /2))
-
-        self._energies_stock: dict[EnergyType, int] = {
-            EnergyType.BLUE.value: blue_energy,
-            EnergyType.RED.value: red_energy}
-
-        self.grid = grid
-        self.entity_grid = grid.entity_grid
-
-    @property
-    def energies_stock(self):
-        return self._energies_stock
-
-    def get_blue_energy(self):
-        return self._energies_stock["blue energy"]
-
-    def get_red_energy(self):
-        return self._energies_stock["red energy"]
-
-
-class Seed(EntitySprite):
-    def __init__(self,
-                 grid,
-                 position: Tuple[int, int],
-                 production_type: EnergyType,
-                 max_age: int = 0,
-                 size: int = 15,
-                 blue_energy: int = 0,
-                 red_energy: int = 0,
-                 ):
-        super(Seed, self).__init__(image_filename="Seed.png",
-                                   size=size,
-                                   grid=grid,
-                                   position=position,
-                                   blue_energy=blue_energy,
-                                   red_energy=red_energy)
-        self.grid.resource_grid.set_cell_value(
-            cell_coordinates=(self.position), value=self)
-        self._max_age = max_age if max_age else size * 5
-        self.production_type = production_type
-
-
-class Entity(EntitySprite):
+class Entity:
     MAX_AGE_SIZE_COEFFICIENT: Final[int] = 5
     GROWTH_ENERGY_REQUIRED: Final[int] = 10
     CHILD_ENERGY_COST_DIVISOR: Final[int] = 2
     CHILD_GROWTH_ENERGY_REQUIRED: Final[int] = GROWTH_ENERGY_REQUIRED/CHILD_ENERGY_COST_DIVISOR
     
     def __init__(self,
-                 image_filename: str,
-                 grid: Grid,
                  position: Tuple[int, int],
                  entitiy_id: int = None,
                  adult_size: int = 0,
@@ -119,16 +54,15 @@ class Entity(EntitySprite):
                  blue_energy: int = 10,
                  red_energy: int = 10,
                  ):
-        super(Entity, self).__init__(image_filename=image_filename,
-                                     size=size,
-                                     grid=grid,
-                                     position=position,
-                                     blue_energy=blue_energy,
-                                     red_energy=red_energy)
-
-        self.id = entitiy_id or WorldTable.get_organism_id(increment=True)
-        self.organism = self._create_organism() 
-               
+             
+        self.id: int = entitiy_id
+        
+        self.position: Tuple[int, int] = position
+        self.size: int = size
+        
+        self._energies_stock: dict[EnergyType, int] = {EnergyType.BLUE.value: blue_energy,
+                                                       EnergyType.RED.value: red_energy}
+        
         self._age: int = 0
         self._max_age: int = max_age if max_age else size * Entity.MAX_AGE_SIZE_COEFFICIENT
         self._adult_size: int = adult_size
@@ -140,63 +74,25 @@ class Entity(EntitySprite):
         
         self._action_cost: int = action_cost if self.is_adult else action_cost
         
-        
-    def _create_organism(self):
-        organism = Organism(organism_id=self.id,
-                        genome=Genome(genome_id=self.id),
-                        generation = 0,
-                        entity=self)
-        
-        return organism
-        
+    
+    @property
+    def energies(self):
+        return self._energies_stock
+
+    @property
+    def blue_energy(self):
+        return self._energies_stock["blue energy"]
+    
+    @property
+    def red_energy(self):
+        return self._energies_stock["red energy"]       
     
     def _reached_adulthood(self) -> None:
         """Check if the entity reached maturity size and assign the result in the is_adult instance variable
         """
         self.is_adult = self.size >= self._adult_size
    
-    def _drop_energy(self, energy_type: EnergyType, quantity: int,
-                    cell_coordinates: Tuple[int, int]) -> None:
-        """Drop some energy on a cell
-
-        Args:
-            energy_type (EnergyType):           type of energy (blue/red) to drop
-            quantity (int):                      amount of energy to drop
-            cell_coordinates (Tuple[int,int]):  coordinates of the cell on which to drop energy
-        """
-        if self._check_coordinates(
-                cell_coordinates=cell_coordinates,
-                subgrid=self.grid.resource_grid):
-            quantity = self._loose_energy(
-                energy_type=energy_type, quantity=quantity)
-
-            self.grid.create_energy(
-                energy_type=energy_type,
-                quantity=quantity,
-                cell_coordinates=cell_coordinates)
-
-        self._perform_action()
-
-    def _pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
-        """Pick energy up from a cell
-
-        Args:
-            cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
-        """
-        resource_grid = self.grid.resource_grid
-        resource = resource_grid.get_cell_value(
-            cell_coordinates=cell_coordinates)
-        if resource:
-            if type(resource).__base__ == Energy:
-                self._gain_energy(
-                    energy_type=resource.type,
-                    quantity=resource.quantity)
-            elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
-                self.store_seed(seed=resource)
-            self.grid.remove_energy(energy=resource)
-
-        self._perform_action()
-
+    
     def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Gain energy from specified type to energies stock
 
@@ -205,12 +101,7 @@ class Entity(EntitySprite):
             quantity (int):             amount of energy to gain
         """
         self._energies_stock[energy_type.value] += quantity
-
-    def _perform_action(self):
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
-    
+        
     def _loose_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Loose energy of specified type from energies stock
 
@@ -230,6 +121,11 @@ class Entity(EntitySprite):
 
         return quantity
 
+    def _perform_action(self):
+        self._loose_energy(
+            energy_type=EnergyType.BLUE,
+            quantity=self._action_cost)
+    
     def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
         """Check if the entity has enough energy to perform an action, use the energy if it's the case
 
@@ -240,7 +136,7 @@ class Entity(EntitySprite):
         Returns:
             bool: if the entity had enough energy
         """        
-        if self.energies_stock[energy_type.value] >= quantity:
+        if self.energies[energy_type.value] >= quantity:
             self._loose_energy(energy_type=energy_type,
                                quantity=quantity)
             return True
@@ -285,6 +181,75 @@ class Entity(EntitySprite):
         self.on_death()
 
         print(f"{self} died at age {self._age}")
+        
+        
+        
+    
+    
+    
+    def _drop_energy(self, energy_type: EnergyType, quantity: int,
+                    cell_coordinates: Tuple[int, int]) -> None:
+        """Drop some energy on a cell
+
+        Args:
+            energy_type (EnergyType):           type of energy (blue/red) to drop
+            quantity (int):                      amount of energy to drop
+            cell_coordinates (Tuple[int,int]):  coordinates of the cell on which to drop energy
+        """
+        if self._check_coordinates(
+                cell_coordinates=cell_coordinates,
+                subgrid=self.grid.resource_grid):
+            quantity = self._loose_energy(
+                energy_type=energy_type, quantity=quantity)
+
+            self.grid.create_energy(
+                energy_type=energy_type,
+                quantity=quantity,
+                cell_coordinates=cell_coordinates)
+
+        self._perform_action()
+
+    def _pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
+        """Pick energy up from a cell
+
+        Args:
+            cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
+        """
+        resource_grid = self.grid.resource_grid
+        resource = resource_grid.get_cell_value(
+            cell_coordinates=cell_coordinates)
+        if resource:
+            if type(resource).__base__ == Energy:
+                self._gain_energy(
+                    energy_type=resource.type,
+                    quantity=resource.quantity)
+            elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
+                self.store_seed(seed=resource)
+            self.grid.remove_energy(energy=resource)
+
+        self._perform_action()
+
+    def _decompose(self, entity: Entity) -> None:
+        """decompose an entity into its energy components
+
+        Args:
+            entity (EntitySprite): entity to decompose in energy
+        """
+        resource_grid = self.grid.resource_grid
+        free_cell = self._select_free_cell(subgrid=resource_grid)
+        self.grid.create_energy(energy_type=EnergyType.RED,
+                                quantity=entity.energies[EnergyType.RED.value],
+                                cell_coordinates=free_cell)
+        free_cell = self._select_free_cell(subgrid=resource_grid)
+        self.grid.create_energy(energy_type=EnergyType.BLUE,
+                                quantity=entity.energies[EnergyType.BLUE.value],
+                                cell_coordinates=free_cell)
+    
+    
+
+    
+    
+    
 
     def _check_coordinates(
             self, cell_coordinates: Tuple[int, int], subgrid) -> bool:
@@ -497,21 +462,7 @@ class Entity(EntitySprite):
             return random.choice(tuple(free_cells))
         return None
 
-    def _decompose(self, entity: EntitySprite) -> None:
-        """decompose an entity into its energy components
-
-        Args:
-            entity (EntitySprite): entity to decompose in energy
-        """
-        resource_grid = self.grid.resource_grid
-        free_cell = self._select_free_cell(subgrid=resource_grid)
-        self.grid.create_energy(energy_type=EnergyType.RED,
-                                quantity=entity.energies_stock[EnergyType.RED.value],
-                                cell_coordinates=free_cell)
-        free_cell = self._select_free_cell(subgrid=resource_grid)
-        self.grid.create_energy(energy_type=EnergyType.BLUE,
-                                quantity=entity.energies_stock[EnergyType.BLUE.value],
-                                cell_coordinates=free_cell)
+  
 
     def _distance_to_object(self, distant_object: Entity|Energy) -> float:
         from math import sqrt
@@ -529,14 +480,9 @@ class Animal(Entity):
     REPRODUCTION_ENERGY_COST: Final[int] = 10
     
     def __init__(self, *args, **kwargs):
-        super(
-            Animal,
-            self).__init__(
-            image_filename='Animal.png',
-            *args,
-            **kwargs)
+        super(Animal, self).__init__(*args, **kwargs)
+            
         self.seed_pocket: Seed = None
-     
 
     def move(self, direction: Direction) -> None:
         """Move the animal in the given direction
@@ -627,8 +573,8 @@ class Animal(Entity):
         seed = self.seed_pocket
         self.grid.create_entity(entity_type="tree",
                                 position=position,
-                                blue_energy=seed.get_blue_energy(),
-                                red_energy=seed.get_red_energy(),
+                                blue_energy=seed.blue_energy(),
+                                red_energy=seed.red_energy(),
                                 max_age=seed._max_age,
                                 production_type=seed.production_type)
         self.seed_pocket = None
@@ -684,7 +630,7 @@ class Animal(Entity):
         ## Internal properties
         age = self._age/100
         size = self.size/100
-        blue_energy, red_energy = (energy/100 for energy in self.energies_stock.values())
+        blue_energy, red_energy = (energy/100 for energy in self.energies.values())
         ## Perceptions
         see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
         see_energies = [int(x) for x in self._find_occupied_cells_by_energies()]
@@ -730,9 +676,10 @@ class Tree(Entity):
                  *args,
                  **kwargs
                  ):
-        super(Tree, self).__init__(image_filename='Plant.png', *args, **kwargs)
-        self.production_type: EnergyType = production_type if production_type else np.random.choice(
-            list(EnergyType))
+        
+        super(Tree, self).__init__(*args, **kwargs)
+        self.production_type: EnergyType = (production_type or
+                                            np.random.choice(list(EnergyType)))
 
     def produce_energy(self) -> None:
         """Produce energy
@@ -752,9 +699,30 @@ class Tree(Entity):
         """Action on tree death, create a seed on dead tree position"""
         self.grid.create_entity(entity_type="seed",
                                 position=self.position,
-                                blue_energy=self.get_blue_energy(),
-                                red_energy=self.get_red_energy(),
+                                blue_energy=self.blue_energy(),
+                                red_energy=self.red_energy(),
                                 max_age=self._max_age)
 
     def test_update(self):
         pass
+
+class Seed(Entity):
+    def __init__(self,
+                 position: Tuple[int, int],
+                 production_type: EnergyType,
+                 max_age: int = 0,
+                 size: int = 15,
+                 blue_energy: int = 0,
+                 red_energy: int = 0,
+                 ):
+        
+        super(Seed, self).__init__(size=size,
+                                   position=position,
+                                   blue_energy=blue_energy,
+                                   red_energy=red_energy)
+        
+        self.grid.resource_grid.set_cell_value(
+            cell_coordinates=(self.position), value=self)
+        
+        self._max_age = max_age if max_age else size * 5
+        self.production_type = production_type

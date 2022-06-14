@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import cached_property
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from genome import Genome
@@ -144,42 +145,42 @@ class Network:
             output_values.append(output_value)
         
         return np.array(output_values)
-            
-    @property
+    
+    @cached_property
     def n_inputs(self) -> int:
         return len(self._inputs)
     
-    @property
+    @cached_property
     def n_outputs(self)-> int:
         return len(self._outputs)
     
-    @property
+    @cached_property
     def n_nodes(self)-> int:
         return len(self._all_nodes)
     
-    @property
+    @cached_property
     def n_links(self)-> int:
         return len(self._links) 
     
-    @property
+    @cached_property
     def inputs(self)  -> np.array[Node]:  
         return self._inputs
     
-    @property
+    @cached_property
     def outputs(self)  -> np.array[Node]:  
         return self._outputs
     
-    @property
+    @cached_property
     def hidden(self)  -> np.array[Node]:  
-        return self._hidden.values()
+        return self._hidden
     
-    @property
+    @cached_property
     def all_nodes(self) -> np.array:
-        return self._all_nodes.values()
+        return self._all_nodes
     
-    @property
+    @cached_property
     def links(self) -> np.array:
-        return self._links.values()
+        return self._links
     
     def get_inputs(self) ->  Set[Node]:
         """Return only the Nodes values from the dictionary

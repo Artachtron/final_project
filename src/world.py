@@ -1,24 +1,9 @@
-import pygame as pg
-import sys, os
+import display
 from grid import Grid
 
 import numpy as np
 from typing import Tuple, Final
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rtNEAT')))
-from project.src.rtNEAT.neat import Config
-
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
-GRID_HEIGHT: Final[int] = 20
-GRID_WIDTH: Final[int] = 20
-BLOCK_SIZE: Final[int] = 20
-
-SIMULATION_SPEED: Final[int] = 20
-
-WINDOW_HEIGHT: Final[int] = BLOCK_SIZE * GRID_HEIGHT
-WINDOW_WIDTH: Final[int] = BLOCK_SIZE * GRID_WIDTH
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
@@ -27,28 +12,14 @@ INITIAL_TREE_POPULATION: Final[int] = 2
 def main():
     configure()
     
-    global tick_counter
-    tick_counter = 0
-    
-    init_pygame()
+    display.init_pygame()
     init_world()
       
     while True:
         update_world()
-        draw_world()
-        
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
+        display.main()        
 
-        pg.display.update()
-        CLOCK.tick(60)
-        tick_counter += 1
-        if tick_counter == SIMULATION_SPEED:
-            tick_counter = 0
-
-def configure():
+""" def configure():
     internal_properties = 4
     see_entities = 8
     see_energies = 9
@@ -63,9 +34,9 @@ def configure():
     
     Config.configure(num_inputs=n_inputs,
                               num_outputs=n_outputs)
-    """ Config.num_inputs = n_inputs
-    Config.num_outputs = n_outputs """
-    print(Config.num_inputs, Config.num_outputs)
+    Config.num_inputs = n_inputs
+    Config.num_outputs = n_outputs 
+    print(Config.num_inputs, Config.num_outputs) """
             
 def init_grid():
     global grid
@@ -77,13 +48,6 @@ def init_world() -> None:
     init_grid()
     init_population(counts=(INITIAL_ANIMAL_POPULATION, INITIAL_TREE_POPULATION))
     init_energies()
- 
-def init_pygame() -> None:
-    """Initialize pygame"""
-    global SCREEN, CLOCK
-    pg.init()
-    SCREEN = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    CLOCK = pg.time.Clock()
    
 def init_population(**kwargs) -> None:
     """Populate the world with the initial population
@@ -146,42 +110,7 @@ def init_energies() -> None:
     """Initialize the energies on the grid (only for tests)
     """
     pass
-           
-def draw_world() -> None:
-    """Draw the world, grid and entities"""
-    draw_grid()
-    draw_entities()
-    draw_energies()
-    
-def draw_grid() -> None:
-    """Draw the grid"""
-    #SCREEN.fill(WHITE)
-    color_grid = grid.color_grid.subgrid
-    for x in range(0, WINDOW_WIDTH, BLOCK_SIZE):
-        for y in range(0, WINDOW_HEIGHT, BLOCK_SIZE):
-            rect = pg.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
-            pg.draw.rect(SCREEN, color_grid[int(x/BLOCK_SIZE),int(y/BLOCK_SIZE)], rect, 0)
-            pg.draw.rect(SCREEN, BLACK, rect, 1)
-
-def update_world() -> None:
-    """Update the world"""
-    if tick_counter == 0:
-        update_entities()
-
-    #print(grid.grid.transpose())
-
-def update_entities() -> None:
-    """Update the entities"""
-    grid.entity_group.update()
-        
-def draw_entities() -> None:
-    """Draw the entities"""
-    grid.entity_group.draw(SCREEN)
-
-def draw_energies() -> None:
-    """Draw the energies"""
-    grid.energy_group.draw(SCREEN)
-  
+                   
 if __name__ == "__main__":
     main()
     
