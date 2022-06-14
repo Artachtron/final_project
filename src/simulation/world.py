@@ -1,5 +1,6 @@
-import display
 from grid import Grid
+from simulation import Simulation
+from display import Display
 
 import numpy as np
 from typing import Tuple, Final
@@ -8,15 +9,59 @@ from typing import Tuple, Final
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
 
+
+
+class World:
+    GRID_HEIGHT: Final[int] = 20
+    GRID_WIDTH: Final[int] = 20
+    BLOCK_SIZE: Final[int] = 20
+
+    SIMULATION_SPEED: Final[int] = 20 
+    
+    def __init__(self,
+                 world_id: int,
+                 grid_dimensions: Tuple[int, int],
+                 block_size: int,
+                 sim_speed: int,
+                 display_active: bool):
+        
+        self.id: int = world_id
+        self.grid_dimensions: Tuple[int, int] = grid_dimensions
+        self.block_size: int = block_size
+        self.sim_speed: int = sim_speed
+        self.display_active: bool = display_active
+        
+        self.grid: Grid
+        self.simulation: Simulation
+        self.display: Display
+        
+        self.init_world()
+        
+    def init_world(self):
+        self.grid = Grid(grid_id=self.id,
+                         dimensions=(self.grid_dimensions[0],
+                                     self.grid_dimensions[1]),
+                         block_size=self.block_size)
+        
+        self.simulation = Simulation(sim_id=self.id)
+        
+        self.diplay = Display(display_id=self.id,
+                              sim_speed=self.sim_speed,
+                              grid_dimensions=self.grid_dimensions,
+                              block_size=self.block_size)
+        
+        
              
 def main():
     configure()
     
-    display.init_pygame()
+    display.init_pygame(block_size=BLOCK_SIZE,
+                        grid_dimensions=(GRID_WIDTH,
+                                         GRID_WIDTH))
     init_world()
       
     while True:
-        update_world()
+        #update_world()
         display.main()        
 
 """ def configure():

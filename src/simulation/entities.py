@@ -3,8 +3,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import SubGrid
     
-from os.path import dirname, realpath, join
-from pathlib import Path
 from typing import Tuple, Set, Final
 from types import NoneType
 import enum
@@ -13,13 +11,6 @@ from energies import EnergyType, Energy
 import numpy as np
 import sys, os
 from itertools import combinations
-
-assets_path = join(
-    Path(
-        dirname(
-            realpath(__file__))).parent.absolute(),
-    "assets/models/entities")
-
 
 class Direction(enum.Enum):
     RIGHT = (1, 0)

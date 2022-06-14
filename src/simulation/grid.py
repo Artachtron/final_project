@@ -80,10 +80,13 @@ class SubGrid:
         return padded_subregion
             
 class Grid:
-    def __init__(self, height: int, width: int, block_size: int=20):
-        self._height: int = height
-        self._width: int = width
-        self.dimensions: Tuple[int,int] = (self._width, self._height)
+    def __init__(self,
+                 grid_id:int,
+                 dimensions: Tuple[int,int],
+                 block_size: int=20):
+        
+        self.grid_id = grid_id
+        self.dimensions: Tuple[int,int] = dimensions
         
         self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Entity, initial_value=None)
         self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions, data_type=Energy, initial_value=None)
@@ -106,13 +109,13 @@ class Grid:
         return self._color_grid
         
     @property
-    def height(self) -> int:
-        return self._height
+    def width(self) -> int:
+        return self.dimensions[0]
     
     @property
-    def width(self) -> int:
-        return self._width
-    
+    def height(self) -> int:
+        return self.dimensions[1]
+        
     def create_energy(self, energy_type: EnergyType, quantity: int, cell_coordinates: Tuple[int, int]):
         """Create energy on the grid
 
