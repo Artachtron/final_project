@@ -513,27 +513,34 @@ class Animal(Entity):
         # Energy cost of action
         self._perform_action()
         
-        ###########################################################################
-           
-    def _plant_tree(self) -> None:
+    def _plant_tree(self, grid: Grid) -> None:
         """Private method:
             Action: Plant a tree nearby, consume red energy
         """
         
+        resource_grid: SubGrid = grid.resource_grid
+        
+        # Verifiy that enough enough energy is available
         if self._can_perform_action(energy_type=EnergyType.RED,
                                     quantity=Animal.PLANTING_COST):
-
-            free_cell = self._select_free_cell(subgrid=self.entity_grid)
+            
+            # Get a free cell around
+            free_cell = resource_grid.select_free_coordinate(position=self.position())
             if free_cell:
+                # If animal possess a seed plant it,
+                # else plant a new tree
                 if self._pocket:
                     self.replant_seed(position=free_cell)
+                    
                 else:
-                    self.grid.create_entity(
-                        entity_type="tree", position=free_cell)
-
-            self._loose_energy(
-                energy_type=EnergyType.BLUE,
-                quantity=self._action_cost)
+                    grid.create_entity(entity_type="tree",
+                                       position=free_cell)
+            # Energy cost of action
+            self._perform_action()
+        
+        ###########################################################################
+           
+    
     
     
     def reproduce(self, mate: Animal) -> Animal:

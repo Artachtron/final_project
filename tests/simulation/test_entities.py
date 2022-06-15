@@ -1,7 +1,7 @@
 import os, sys, pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.entities import Animal, Entity, Tree, Direction
+from project.src.simulation.entities import Animal, Entity, Tree, Direction, EntityType
 from project.src.simulation.energies import EnergyType
 from project.src.simulation.grid import Grid
 
@@ -225,6 +225,9 @@ class TestEntity:
                 assert self.entity.red_energy == 0
                 red_energy2 = self.grid.resource_grid.get_cell_value(coordinates=red_cell2)
                 assert red_energy2.quantity == 7
+                
+           
+                
             
 class TestTree:
     def test_create_tree(self):
@@ -430,6 +433,25 @@ class TestAnimal:
                              grid=self.grid)
                 assert animal2.position.vect == (19,19)
                 assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+                
+                
+            def test_plant_tree(self):
+                animal = self.grid.create_entity(entity_type=EntityType.Animal.value, position=(3,3), size=10, blue_energy=10, red_energy=10)
+                assert animal.red_energy == 10
+                animal._plant_tree(grid=self.grid)
+                assert animal.red_energy == 0
+                tree_cell = self.entity_grid._find_coordinates_with_class(position=(3,3),
+                                                                          target_class=Tree)[0]
+                tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
+                assert tree.__class__.__name__ == "Tree"
+                
+                # No free cells
+                grid2 = Grid(grid_id=0,
+                             dimensions=(1,1))
+                animal2 = grid2.create_entity(entity_type=EntityType.Animal.value, position=(0,0), size=10, blue_energy=10, red_energy=10)
+                animal2._plant_tree(grid=self.grid)
+                assert len(grid2.entity_grid._find_coordinates_with_class(position=(0,0),
+                                                                          target_class=Tree)) == 0
         
             
 

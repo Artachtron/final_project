@@ -1,7 +1,7 @@
 import enum
 from os.path import dirname, realpath, join
 from pathlib import Path
-import pygame as pg
+from numpy.random import randint
 
 from typing import Tuple
 from simulation import SimulatedObject

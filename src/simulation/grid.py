@@ -83,16 +83,17 @@ class SubGrid:
             Set[Tuple[int,int]]: set of found cells' coordinates
         """
         
-        a = list(range(-radius, radius+1))  # List from (-radius, radius)
-        b = combinations(a*2, 2)            # ALl the combinations of coordinates
+        a = list(range(radius*2 + 1))  # List from (0, 2*radius)
+        b = combinations(a*2, 2)       # ALl the combinations of coordinates
     
+        subregion = self.get_sub_region(initial_pos=position,
+                                        radius=radius) 
         # Optimised code to search if the cell at those coordinates contain an object
         # that is a subclass of the class given, if yes add it to the list of coordinates
-        positions = [coordinate for x, y in set(b) 
-                     if (self.get_cell_value(
-                         coordinate:=tuple(np.add(position,(x,y)))
-                         ).__class__.__name__==
-                          target_class.__name__)]
+        
+        positions = [tuple(np.add(position, coordinate)-1) for x, y in set(b) if
+                     (subregion[coordinate:=tuple((x,y))]).__class__.__name__==
+                                                           target_class.__name__]
 
         return positions
     
