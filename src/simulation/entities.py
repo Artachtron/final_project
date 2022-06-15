@@ -261,45 +261,7 @@ class Entity(SimulatedObject):
     
     
 
-    def _is_available_coordinates(
-            self, coordinates: Tuple[int, int], subgrid) -> bool:
-        """Check if the next move is valid
-
-        Args:
-            next_move (Tuple[int,int]): Coordinates of the cell to check
-
-        Returns:
-            bool: Validity of the next move
-        """
-        return (self._is_cell_in_bounds(next_move=coordinates,
-                                       subgrid=subgrid) and
-                self._is_vacant_cell(next_move=coordinates,
-                                     subgrid=subgrid))
-
-    def _is_vacant_cell(self, subgrid, next_move: Tuple[int, int]) -> bool:
-        """Check if a cell is vacant
-
-        Args:
-            next_move (Tuple[int,int]): Coordinates of the cell to check
-
-        Returns:
-            bool: Vacancy of the cell
-        """
-        return not subgrid.get_cell_value(coordinates=next_move)
-
-    def _is_cell_in_bounds(self, subgrid, next_move: Tuple[int, int]) -> bool:
-        """Check if a cell is in the bounds of the grid
-
-        Args:
-            next_move (Tuple[int,int]): Coordinates of the cell to check
-
-        Returns:
-            bool: Cell is inside the grid
-        """
-        next_x, next_y = next_move
-        if next_x < 0 or next_x >= subgrid.dimensions[0] or next_y < 0 or next_y >= subgrid.dimensions[1]:
-            return False
-        return True
+    
 
     def _find_cells_coordinate_by_value(self, subgrid, value,
                              radius: int = 1) -> Set[Tuple[int, int]]:
@@ -522,8 +484,7 @@ class Animal(Entity):
         next_pos = Position.add(position=self.position,
                                 vect=direction.value)
         
-        if self._is_available_coordinates(coordinates=next_pos.vect,
-                                          subgrid=entity_grid):
+        if entity_grid.are_available_coordinates(coordinates=next_pos.vect):
             
             entity_grid.update_cell(new_coordinate=next_pos.vect,
                                 value=self)

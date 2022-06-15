@@ -347,21 +347,6 @@ class TestAnimal:
                 
                 self.entity = None
                 
-            def test_available_coordinates(self):
-                # Free cell
-                free = self.animal._is_available_coordinates(coordinates=(12,15),
-                                                             subgrid=self.entity_grid)
-                
-                assert free
-                
-                # Occupied cell
-                self.entity_grid.set_cell_value(coordinates=(12,15),
-                                            value=self.animal)
-                
-                free = self.animal._is_available_coordinates(coordinates=(12,15),
-                                                             subgrid=self.entity_grid)
-                
-                assert not free
                 
             def test_move(self):
                 animal = self.animal

@@ -23,6 +23,48 @@ class SubGrid:
     def array(self) -> np.array:
         return self._array
     
+    
+    def are_available_coordinates(self, coordinates: Tuple[int, int]) -> bool:
+        """Check if the coordinates correspond to valid cell,
+           the cell has to be on the grid and be vacant
+
+        Args:
+            coordinates (Tuple[int,int]): Coordinates of the cell to check
+
+        Returns:
+            bool:   True if the cell is on the grid and vacant,
+                    False if the cell is not on the grid or occupied
+        """
+        return (self.are_coordinates_in_bounds(coordinates=coordinates) and
+                self.are_vacant_coordinates(coordinates=coordinates))
+
+    def are_vacant_coordinates(self, coordinates: Tuple[int, int]) -> bool:
+        """Check if a cell is vacant
+
+        Args:
+            coordinates (Tuple[int,int]): Coordinates of the cell to check
+
+        Returns:
+            bool:   True if the cell is vacant,
+                    False if the cell is already occupied
+        """
+        return not self.get_cell_value(coordinates=coordinates)
+
+    def are_coordinates_in_bounds(self, coordinates: Tuple[int, int]) -> bool:
+        """Check if a cell is in the bounds of the grid
+
+        Args:
+            coordinates (Tuple[int,int]): Coordinates of the cell to check
+
+        Returns:
+            bool:   True if the coordinates are in the bounds of the grid,
+                    False if the coordinates are out of the grid
+        """
+        x, y = coordinates
+        if x < 0 or x >= self.dimensions[0] or y < 0 or y >= self.dimensions[1]:
+            return False
+        return True
+    
     def update_cell(self, new_coordinate: Tuple[int, int], value: Any) -> None:
         """ if not issubclass(value.__class__, self.data_type):
             raise TypeError """
@@ -48,14 +90,14 @@ class SubGrid:
         except IndexError:
             print("{coordinates} is out of bounds")
             
-    def get_cell_value(self, coordinates: Tuple[int, int]) -> Entity|Energy:
+    def get_cell_value(self, coordinates: Tuple[int, int]) -> Any:
         """Get the value of a cell
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
 
         Returns:
-            int: The value of the cell 0 for empty, 1 for full
+            Any: The value of the cell, None is empty
         """
         try:
             if coordinates[0] < 0 or coordinates[1] < 0:

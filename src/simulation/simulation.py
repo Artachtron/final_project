@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import NamedTuple, Tuple
+from typing import Tuple
 from display import DisplayedObject
+from dataclasses import dataclass
 
-    
-class Position(NamedTuple):
+@dataclass
+class Position:
     x: int
     y: int
      
