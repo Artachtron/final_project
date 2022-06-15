@@ -4,12 +4,11 @@ if TYPE_CHECKING:
     from grid import Grid, SubGrid
     
 from typing import Tuple, Set, Final, Dict
-from types import NoneType
 import enum
 import random
-from energies import EnergyType, Energy
+from energies import EnergyType, Energy, Resource
 import numpy as np
-from itertools import combinations
+
 
 from simulation import SimulatedObject, Position
 
@@ -66,7 +65,7 @@ class Entity(SimulatedObject):
                                Entity.MAX_AGE_SIZE_COEFF))
         
         self._adult_size: int = adult_size                     # size to reach before becoming adult
-        self.is_adult: bool = False                            # can reproduce only if adult
+        self._is_adult: bool = False                           # can reproduce only if adult
         self._reached_adulthood()                              # check if the adult size was reached                          
         
         self._action_cost: int = action_cost                   # blue energy cost of each action
@@ -126,24 +125,24 @@ class Entity(SimulatedObject):
         
         # Red energy cost depend on adulthood status,
         # cost less energy for a child
-        if self.is_adult:
-            energy_required = self.size * Entity.GROWTH_ENERGY_REQUIRED
+        if self._is_adult:
+            energy_required = self._size * Entity.GROWTH_ENERGY_REQUIRED
             
         else:
-            energy_required = self.size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
+            energy_required = self._size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
         
         # Perfrom action if possible: if enough energy is available   
         if self._can_perform_action(energy_type=EnergyType.RED, quantity=energy_required):
             # Increase size,
             # maximum age,
             # action cost
-            self.size += 1
+            self._size += 1
             self._max_age += 5
             self._action_cost += 1
         
         # Check if new size
         # changes adulthood status
-        if not self.is_adult:
+        if not self._is_adult:
             self._reached_adulthood()
     
     def _reached_adulthood(self) -> None:
@@ -151,7 +150,7 @@ class Entity(SimulatedObject):
             Check if the entity reached maturity size and
             assign the result in the is_adult instance variable
         """
-        self.is_adult = self.size >= self._adult_size
+        self._is_adult = self._size >= self._adult_size
    
     def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Private method:
@@ -190,7 +189,7 @@ class Entity(SimulatedObject):
         if quantity < 0 :
             raise ValueError
         
-        energy_amount = self._energies_stock[energy_type.value]
+        energy_amount: int = self._energies_stock[energy_type.value]
         # if quantity is more than stock, set stock to 0
         if energy_amount - quantity > 0:
             self._energies_stock[energy_type.value] -= quantity
@@ -247,8 +246,7 @@ class Entity(SimulatedObject):
         
         resource_grid: SubGrid = grid.resource_grid
         # Check if the coordinates are available to drop on
-        if self._is_available_coordinates(coordinates=coordinates,
-                                          subgrid=resource_grid):
+        if resource_grid.are_available_coordinates(coordinates=coordinates):
             
             # Remove energy amount from stock
             quantity = self._loose_energy(energy_type=energy_type,
@@ -287,9 +285,9 @@ class Entity(SimulatedObject):
         Args:
             coordinates (Tuple[int, int]): coordinates to pick up energy from
         """
-        resource_grid = self.grid.resource_grid
-        resource = resource_grid.get_cell_value(
-            cell_coordinates=coordinates)
+        resource_grid: SubGrid = self.grid.resource_grid
+        resource: Resource = resource_grid.get_cell_value(
+                    cell_coordinates=coordinates)
         if resource:
             if type(resource).__base__ == Energy:
                 self._gain_energy(
@@ -324,27 +322,7 @@ class Entity(SimulatedObject):
 
 
 
-    def _find_cells_coordinate_by_value(self, subgrid, value,
-                                        radius: int = 1) -> Set[Tuple[int, int]]:
-        """Find the list of cells in a range with specified value
-
-        Args:
-            subgrid (_type_):       subgrid to look for cells
-            value (_type_):         value to search for
-            radius (int, optional): radius of search. Defaults to 1.
-
-        Returns:
-            Set[Tuple[int,int]]: set of found cells' coordinates
-        """
-      
-        pos = self.position
-        a = list(range(-radius, radius+1))
-        b = combinations(a*2, 2)
-    
-        positions = [coordinate for x, y in set(b) 
-                     if issubclass(type(subgrid.get_cell_value(coordinate:=tuple(np.add(pos,(x,y))))), value)]
-
-        return positions
+   
     
     def _find_occupied_cells_by_value(self, subgrid, value,
                              radius: int = 1, include_self: bool = False) -> np.array[bool]:
@@ -359,7 +337,7 @@ class Entity(SimulatedObject):
         Returns:
             np.array[bool]: List of occupied (True) and empty cells (False)
         """        
-        position: Tuple[int, int] = self.position
+        position: Tuple[int, int] = self._position
         occupied_cells = []
         
         for x in range(-radius, radius + 1):
@@ -413,8 +391,8 @@ class Entity(SimulatedObject):
         trees: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(subgrid=self.entity_grid,
                                                                 value=Tree,
                                                                 radius=radius)
-        if not include_self and self.position in trees:
-            trees.remove(self.position)
+        if not include_self and self._position in trees:
+            trees.remove(self._position)
         return trees
 
     def _find_animal_cells(self, include_self: bool = False,
@@ -430,8 +408,8 @@ class Entity(SimulatedObject):
         """
         animals: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
             subgrid=self.entity_grid, value=Animal, radius=radius)
-        if not include_self and self.position in animals:
-            animals.remove(self.position)
+        if not include_self and self._position in animals:
+            animals.remove(self._position)
         return animals
 
     def _find_entities_cells(self, include_self: bool = False,
@@ -447,8 +425,8 @@ class Entity(SimulatedObject):
         """
         entities: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
             subgrid=self.entity_grid, value=Entity, radius=radius)
-        if not include_self and self.position in entities:
-            entities.remove(self.position)
+        if not include_self and self._position in entities:
+            entities.remove(self._position)
         return entities
 
     def _find_energies_cells(self, radius: int = 1) -> Set[Tuple[int, int]]:
@@ -464,42 +442,14 @@ class Entity(SimulatedObject):
             subgrid=self.grid.resource_grid, value=Energy, radius=radius)
         return energies
 
-    def _find_free_cells(
-            self, subgrid: SubGrid, radius: int = 1) -> Set[Tuple[int, int]]:
-        """Find a free cell in range
+   
 
-        Args:
-            subgrid (SubGrid):      subgrid to look for free cells
-            radius (int, optional): radius of search. Defaults to 1.
-
-        Returns:
-            Set[Tuple[int,int]]: set of free cells' coordinates
-        """
-        return self._find_cells_coordinate_by_value(
-            subgrid=subgrid, value=NoneType, radius=radius)
-
-    def _select_free_cell(self, subgrid: SubGrid, radius: int = 1) -> Tuple[int, int]:
-        """Select randomly from the free cells available
-
-        Args:
-            subgrid (_type_):       subgrid to look for free cell
-            radius (int, optional): radius of search. Defaults to 1.
-
-        Returns:
-            Tuple[int,int]: coordinates of the free cell
-        """
-        free_cells: Set[Tuple[int, int]] = self._find_free_cells(
-            subgrid=subgrid, radius=radius)
-
-        if len(free_cells) != 0:
-            return random.choice(tuple(free_cells))
-        return None
-
+   
   
 
     def _distance_to_object(self, distant_object: Entity|Energy) -> float:
         from math import sqrt
-        distance = sqrt((self.position[0] - distant_object.position[0])**2 + (self.position[1] - distant_object.position[1])**2)
+        distance = sqrt((self._position[0] - distant_object._position[0])**2 + (self._position[1] - distant_object._position[1])**2)
         return round(distance, 2)
     
     def update(self):
@@ -508,13 +458,15 @@ class Entity(SimulatedObject):
 
 
 class Animal(Entity):
-    INITIAL_BLUE_ENERGY: Final[int] = 10
-    INITIAL_RED_ENERGY: Final[int] = 10
+    """ INITIAL_BLUE_ENERGY: Final[int] = 10
+    INITIAL_RED_ENERGY: Final[int] = 10 """
+    
     REPRODUCTION_ENERGY_COST: Final[int] = 10
+    PLANTING_COST: Final[int] = 10
     
     def __init__(self,
                  position: Tuple[int, int],
-                 animal_id: int = None,
+                 animal_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -533,11 +485,11 @@ class Animal(Entity):
                                      red_energy=red_energy,
                                      appearance="animal.png")
             
-        self._pocket: Seed = None
+        self._pocket: Seed = None   # Pocket in which to store seed
 
     def _move(self, direction: Direction, grid: Grid) -> None:
-        """ Private method: 
-            Move the animal in the given direction
+        """Private method: 
+            Action: Move the animal in the given direction
 
         Args:
             direction (Direction):  direction in which to move
@@ -547,62 +499,29 @@ class Animal(Entity):
         next_pos = Position.add(position=self.position,
                                 vect=direction.value)
         
-        if entity_grid.are_available_coordinates(coordinates=next_pos.vect):
+        # Check that coordinates are available to move
+        if entity_grid.are_available_coordinates(coordinates=next_pos()):
             
+            # Ask the grid to update, changing old position to empty,
+            #and new position to occupied by self
             entity_grid.update_cell(new_coordinate=next_pos.vect,
                                     value=self)
-        
+            
+            # update self position
             self.position = next_pos
 
+        # Energy cost of action
         self._perform_action()
         
         ###########################################################################
            
-    def reproduce(self, mate: Animal) -> Animal:
-        """Create an offspring from 2 mates
-
-        Args:
-            mate (Animal): Animal to mate with
-
-        Returns:
-            Animal: Generated offsrping
-        """        
-        self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
-        
-        if not (self.is_adult and mate.is_adult):
-            return
-        
-        if self._distance_to_object(distant_object=mate) > 2:
-            return
-        
-        self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self.size
-        mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate.size
-        
-        if (self._can_perform_action(energy_type=EnergyType.RED,
-                                    quantity=self_energy_cost) and
-            mate._can_perform_action(energy_type=EnergyType.RED,
-                                     quantity=mate_energy_cost)):
-        
-            birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
-            adult_size = int((self.size + mate.size)/2)
-            
-            child = self.grid.create_entity(entity_type=EntityType.Animal.value,
-                                    position=birth_position,
-                                    size=1,
-                                    blue_energy=Animal.INITIAL_BLUE_ENERGY,
-                                    red_energy=Animal.INITIAL_RED_ENERGY,
-                                    adult_size=adult_size)
-            return child
-
     def _plant_tree(self) -> None:
         """Private method:
-           Plant a tree nearby, consume red energy
+            Action: Plant a tree nearby, consume red energy
         """
-        PLANTING_COST: Final[int] = 10
-        if self._energies_stock[EnergyType.RED.value] >= PLANTING_COST:
-            self._loose_energy(
-                energy_type=EnergyType.RED,
-                quantity=PLANTING_COST)
+        
+        if self._can_perform_action(energy_type=EnergyType.RED,
+                                    quantity=Animal.PLANTING_COST):
 
             free_cell = self._select_free_cell(subgrid=self.entity_grid)
             if free_cell:
@@ -615,6 +534,45 @@ class Animal(Entity):
             self._loose_energy(
                 energy_type=EnergyType.BLUE,
                 quantity=self._action_cost)
+    
+    
+    def reproduce(self, mate: Animal) -> Animal:
+        """Create an offspring from 2 mates
+
+        Args:
+            mate (Animal): Animal to mate with
+
+        Returns:
+            Animal: Generated offsrping
+        """        
+        self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
+        
+        if not (self._is_adult and mate._is_adult):
+            return
+        
+        if self._distance_to_object(distant_object=mate) > 2:
+            return
+        
+        self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
+        mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
+        
+        if (self._can_perform_action(energy_type=EnergyType.RED,
+                                    quantity=self_energy_cost) and
+            mate._can_perform_action(energy_type=EnergyType.RED,
+                                     quantity=mate_energy_cost)):
+        
+            birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
+            adult_size = int((self._size + mate._size)/2)
+            
+            child = self.grid.create_entity(entity_type=EntityType.Animal.value,
+                                    position=birth_position,
+                                    size=1,
+                                    blue_energy=Animal.INITIAL_BLUE_ENERGY,
+                                    red_energy=Animal.INITIAL_RED_ENERGY,
+                                    adult_size=adult_size)
+            return child
+
+    
 
     def replant_seed(self, position: Tuple[int, int]) -> None:
         """Replant seed store in pockect
@@ -683,7 +641,7 @@ class Animal(Entity):
          #Inputs
         ## Internal properties
         age = self._age/100
-        size = self.size/100
+        size = self._size/100
         blue_energy, red_energy = (energy/100 for energy in self.energies.values())
         ## Perceptions
         see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
@@ -760,7 +718,7 @@ class Tree(Entity):
         count_trees_around = len(self._find_tree_cells())
 
         self._gain_energy(energy_type=self._production_type,
-                         quantity=int((5 * self.size) / 2**count_trees_around))
+                         quantity=int((5 * self._size) / 2**count_trees_around))
         
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
@@ -768,7 +726,7 @@ class Tree(Entity):
     def on_death(self) -> None:
         """Action on tree death, create a seed on dead tree position"""
         self.grid.create_entity(entity_type="seed",
-                                position=self.position,
+                                position=self._position,
                                 blue_energy=self.blue_energy(),
                                 red_energy=self.red_energy(),
                                 max_age=self._max_age)
@@ -792,7 +750,7 @@ class Seed(Entity):
                                    red_energy=red_energy)
         
         self.grid.resource_grid.set_cell_value(
-            cell_coordinates=(self.position), value=self)
+            cell_coordinates=(self._position), value=self)
         
         self._max_age = max_age if max_age else size * 5
         self.production_type = production_type

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 from typing import Tuple
 from display import DisplayedObject
 from dataclasses import dataclass
@@ -35,10 +36,10 @@ class SimulatedObject:
                  appearance: str):
     
         self.__id = sim_obj_id
-        self.size = size
-        self.position = Position(*position)
+        self._size = size
+        self._position = Position(*position)
         
-        self.appearance = appearance
+        self._appearance = appearance
         self.dis_obj: DisplayedObject
         
         # self._init_displayed_object()
@@ -46,13 +47,29 @@ class SimulatedObject:
     @property
     def id(self):
         return self.__id
+
+    @property
+    def size(self):
+        return self._size
+    
+    @size.setter
+    def size(self, value):
+        self._size = value
+    
+    @property
+    def position(self):
+        return self._position
+    
+    @position.setter
+    def position(self, value):
+        self._position = value
         
     def _init_displayed_object(self):
         try:
             self.dis_obj = DisplayedObject(dis_obj_id=self.id,
-                                        size=self.size,
-                                        position=self.position,
-                                        appearance=self.appearance)
+                                        size=self._size,
+                                        position=self._position,
+                                        appearance=self._appearance)
         except AttributeError:
             pass
         

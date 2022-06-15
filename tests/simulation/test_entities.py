@@ -21,19 +21,19 @@ class TestEntity:
                         blue_energy=12,
                         red_energy=27)
         
-        assert {'position', '_adult_size', '_age',
-                '_max_age', 'size', '_action_cost', 'is_adult',
+        assert {'_position', '_adult_size', '_age',
+                '_max_age', '_size', '_action_cost', '_is_adult',
                 '_energies_stock'}.issubset(vars(entity))
         
         assert entity.id == 3
-        assert entity.position.vect == (20,10)
+        assert entity._position.vect == (20,10)
         assert entity._adult_size == 15
         assert entity._max_age == 100
         assert entity._age == 0
-        assert entity.size == 13
+        assert entity._size == 13
         assert entity._action_cost == 1
         assert entity._energies_stock == {'blue energy': 12, 'red energy': 27}
-        assert entity.is_adult == False
+        assert entity._is_adult == False
         
     class TestEntityMethods:
         @pytest.fixture(autouse=True)
@@ -57,20 +57,20 @@ class TestEntity:
             assert self.entity._age == 1 
             
         def test_grow(self):
-            assert self.entity.size == 13
+            assert self.entity._size == 13
             self.entity._grow()
-            assert self.entity.size == 14
+            assert self.entity._size == 14
             
         def test_reached_adulthood(self):
             for _ in range(10):
-                if self.entity.size < self.entity._adult_size:
-                    assert not self.entity.is_adult
+                if self.entity._size < self.entity._adult_size:
+                    assert not self.entity._is_adult
                 else:
-                    assert self.entity.is_adult
+                    assert self.entity._is_adult
 
                 self.entity._grow()
                     
-            assert self.entity.is_adult
+            assert self.entity._is_adult
         
         def test_gain_energy(self):
             #Initial values
@@ -244,19 +244,19 @@ class TestTree:
                         red_energy=27,
                         production_type=EnergyType.BLUE) 
         
-        assert {'position', '_adult_size', '_age',
-                '_max_age', 'size', '_action_cost', 'is_adult',
+        assert {'_position', '_adult_size', '_age',
+                '_max_age', '_size', '_action_cost', '_is_adult',
                 '_energies_stock', '_production_type'}.issubset(vars(tree))
         
         assert tree.id == 3
-        assert tree.position.vect == (20,10)
+        assert tree._position.vect == (20,10)
         assert tree._adult_size == 15
         assert tree._max_age == 100
         assert tree._age == 0
-        assert tree.size == 13
+        assert tree._size == 13
         assert tree._action_cost == 1
         assert tree._energies_stock == {'blue energy': 12, 'red energy': 27}
-        assert tree.is_adult == False
+        assert tree._is_adult == False
         assert tree._production_type == EnergyType.BLUE
         
     class TestTreeMethods:
@@ -307,8 +307,8 @@ class TestAnimal:
                         blue_energy=12,
                         red_energy=27)
         
-        assert {'position', '_adult_size', '_age',
-                '_max_age', 'size', '_action_cost', 'is_adult',
+        assert {'_position', '_adult_size', '_age',
+                '_max_age', '_size', '_action_cost', '_is_adult',
                 '_energies_stock', '_pocket'}.issubset(vars(animal))
         
         assert animal.id == 3
@@ -316,10 +316,10 @@ class TestAnimal:
         assert animal._adult_size == 15
         assert animal._max_age == 100
         assert animal._age == 0
-        assert animal.size == 13
+        assert animal._size == 13
         assert animal._action_cost == 1
         assert animal._energies_stock == {'blue energy': 12, 'red energy': 27}
-        assert animal.is_adult == False
+        assert animal._is_adult == False
         assert animal._pocket == None
         
     class TestAnimalMethods:

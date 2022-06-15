@@ -28,8 +28,6 @@ class Resource(SimulatedObject):
                                        appearance=appearance)
         
          
-            
-
 class EnergyType(enum.Enum):
     BLUE = "blue energy"
     RED = "red energy"
@@ -50,7 +48,7 @@ class Energy(Resource):
                                      appearance=appearance,
                                      quantity=quantity)
         
-        self.type: EnergyType = energy_type
+        self._type: EnergyType = energy_type
 
 class RedEnergy(Energy):
     def __init__(self, *args, **kwargs):

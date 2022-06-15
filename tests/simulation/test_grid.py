@@ -1,10 +1,9 @@
 import os, sys, pytest
-from tokenize import cookie_re
 import numpy as np
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
 from project.src.simulation.grid import Grid, SubGrid
-from project.src.simulation.entities import Animal
+from project.src.simulation.entities import Animal, Tree, EntityType
 
 class TestGrid:
     def test_create_grid(self):
@@ -124,6 +123,16 @@ class TestSubGrid:
             assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_3)
             assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_4)
             
+            pos_5 = (10,0)
+            pos_6 = (0,15)
+            pos_7 = (3,0)
+            pos_8 = (0,4)
+            
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_5)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_6)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_7)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_8)
+            
         def test_are_vacant_coordinates(self):
             # Free cell
             free = self.entity_grid.are_vacant_coordinates(coordinates=(12,15))
@@ -137,4 +146,78 @@ class TestSubGrid:
             free = self.entity_grid.are_vacant_coordinates(coordinates=(12,15))
             
             assert not free
+            
+        def test_find_coordinates_with_class(self):
+            tree1 = self.grid.create_entity(entity_type=EntityType.Tree.value,
+                                            position=(1,1))
+            
+            assert len(self.entity_grid._find_coordinates_with_class(position=(1,1),
+                                                                     target_class=Tree)) == 1
+            
+            tree2 = self.grid.create_entity(entity_type=EntityType.Tree.value,
+                                            position=(2,1))
+            
+            len(self.entity_grid._find_coordinates_with_class(position=(1,1),
+                                                              target_class=Tree))  == 2
+            
+            
+            
+            # Does not detect animal
+            animal = self.grid.create_entity(entity_type=EntityType.Animal.value,
+                                             position=(1,2))
+            
+            len(self.entity_grid._find_coordinates_with_class(position=(1,1),
+                                                              target_class=Tree))  == 2
+            
+        
+        def test_find_free_coordinates(self):
+            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 9
+            
+            self.grid.create_entity(entity_type=EntityType.Tree.value,
+                                            position=(1,1))
+            
+            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 8
+            
+            self.grid.create_entity(entity_type=EntityType.Tree.value,
+                                            position=(0,1))
+            
+            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 7
+            
+            self.grid.create_entity(entity_type=EntityType.Tree.value,
+                                            position=(0,0))
+            
+            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
+            
+            # Out of search range, no change
+            self.grid.create_entity(entity_type=EntityType.Tree.value,
+                                            position=(3,3))
+            
+            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
+        
+        def test_select_free_coordinates(self):
+            cells = []
+            position = self.animal.position()
+            radius = 1
+            for x in range(-radius,radius+1):
+                for y in range(-radius,radius+1):
+                    cells.append(tuple(np.add(position,(x,y))))
+            
+            for _ in range(100):
+                free_cell = self.entity_grid.select_free_coordinate(position=position,
+                                                                    radius=radius)
+                assert free_cell in cells
+                
+            position = (3,5)
+            self.animal.position = position
+            radius = 2
+            cells = []
+            for x in range(-radius,radius+1):
+                for y in range(-radius,radius+1):
+                    cells.append(tuple(np.add(position,(x,y))))
+            
+            for _ in range(100):
+                free_cell = self.entity_grid.select_free_coordinate(position=position,
+                                                                    radius=radius)
+                assert free_cell 
+                assert free_cell in cells
         
