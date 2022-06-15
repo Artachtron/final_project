@@ -25,6 +25,25 @@ class TestGrid:
         assert grid.dimensions == (20,20)
         assert grid.BLOCK_SIZE == 20
         
+        
+    class TestGridMethods:
+        @pytest.fixture(autouse=True)
+        def setup(self):
+ 
+            self.grid = Grid(grid_id=0,
+                                dimensions=(20,20))
+            
+            yield
+            
+            self.entity = None
+            
+        def test_place_on_grid(self):
+            position = (2,3)
+            tree = Tree(position=position)
+            assert not self.grid.entity_grid.get_cell_value(coordinates=position)
+            self.grid.place_on_entity(element=tree)
+            assert self.grid.entity_grid.get_cell_value(coordinates=position)
+        
 class TestSubGrid:
     def test_create_subgrid(self):
         subgrid = SubGrid(dimensions=(20,20),
@@ -220,4 +239,6 @@ class TestSubGrid:
                                                                     radius=radius)
                 assert free_cell 
                 assert free_cell in cells
+                
+        
         

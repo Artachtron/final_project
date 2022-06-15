@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple, Final, Any, Set 
+from typing import Tuple, Final, Any, Set , Dict
 from types import NoneType
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType, Resource
 from entities import Entity, Animal, Tree, Seed, EntityType
@@ -26,6 +26,19 @@ class SubGrid:
     def array(self) -> np.array:
         return self._array
     
+    def place_on_grid(self, element: Any) -> bool:
+        coordinates = element.position()
+        
+        if success:= (self.are_vacant_coordinates(coordinates=coordinates) and
+                      self._is_of_valid_type(element=element)):
+            
+            self.set_cell_value(coordinates=coordinates,
+                                value=element)
+            
+        return success
+            
+    def _is_of_valid_type(self, element: Any) -> bool:
+        return Grid.is_subclass(element, self.data_type)
     
     def are_available_coordinates(self, coordinates: Tuple[int, int]) -> bool:
         """Check if the coordinates correspond to valid cell,
@@ -68,32 +81,46 @@ class SubGrid:
         return not (x < 0 or x >= self.dimensions[0] or
                     y < 0 or y >= self.dimensions[1])
  
-    
     def _find_coordinates_with_class(self, target_class: Any, position: Tuple[int, int],
                                      radius: int = 1) -> Set[Tuple[int, int]]:
         """Private method:
             Find the list of cells at given radius distance from specified class
-
         Args:
             target_class (Any):         class to search for
             position (Tuple[int,int]):  starting position to look around
             radius (int, optional):     radius of search. Defaults to 1.
-
         Returns:
             Set[Tuple[int,int]]: set of found cells' coordinates
         """
         
-        a = list(range(radius*2 + 1))  # List from (0, 2*radius)
-        b = combinations(a*2, 2)       # ALl the combinations of coordinates
-    
-        subregion = self.get_sub_region(initial_pos=position,
-                                        radius=radius) 
-        # Optimised code to search if the cell at those coordinates contain an object
-        # that is a subclass of the class given, if yes add it to the list of coordinates
+        if not (self.are_coordinates_in_bounds(coordinates=np.add(position,-radius)) and
+                self.are_coordinates_in_bounds(coordinates=np.add(position, radius))):
+            
+            a = list(range(radius*2 + 1))  # List from (0, 2*radius)
+            b = combinations(a*2, 2)       # ALl the combinations of coordinates
         
-        positions = [tuple(np.add(position, coordinate)-1) for x, y in set(b) if
-                     (subregion[coordinate:=tuple((x,y))]).__class__.__name__==
-                                                           target_class.__name__]
+            subregion = self.get_sub_region(initial_pos=position,
+                                            radius=radius) 
+        
+            # Optimised code to search if the cell at those coordinates contain an object
+            # that is a subclass of the class given, if yes add it to the list of coordinates.
+            # Avoid indexError when out of bounds
+            positions = [tuple(np.add(position, coordinate)-1) for x, y in set(b) if
+                        (subregion[coordinate:=tuple((x,y))]).__class__.__name__==
+                                                            target_class.__name__]
+        
+        else:
+        # Faster when no risk of indexError  
+            a = list(range(-radius, radius+1))  # List from (-radius, radius)
+            b = combinations(a*2, 2)            # ALl the combinations of coordinates
+        
+            # Optimised code to search if the cell at those coordinates contain an object
+            # that is a subclass of the class given, if yes add it to the list of coordinates   
+            positions = [coordinate for x, y in set(b) 
+                        if (self.get_cell_value(
+                            coordinate:=tuple(np.add(position,(x,y)))
+                            ).__class__.__name__==
+                            target_class.__name__)]
 
         return positions
     
@@ -117,8 +144,8 @@ class SubGrid:
         
         return positions
     
-    def select_free_coordinate(self, position: Tuple[int, int],
-                               radius: int = 1) -> Tuple[int, int]:
+    def select_free_coordinates(self, position: Tuple[int, int],
+                                radius: int = 1) -> Tuple[int, int]:
         """Public method:
             Select randomly from the free cells available
 
@@ -264,6 +291,29 @@ class Grid:
     @property
     def height(self) -> int:
         return self.dimensions[1]
+    
+    @staticmethod
+    def is_subclass(derived, base) -> bool:
+        for cls in derived.__class__.__mro__[:-1]:
+            if cls.__name__ == base.__name__:
+                return True
+        
+        return False
+    
+    def place_on_resource(self, element:Any) :
+        self.resource_grid.place_on_grid(element=element)
+        
+    def place_on_entity(self, element:Any) :
+        self.entity_grid.place_on_grid(element=element)
+        
+    def create_seed(self, coordinates: Tuple[int, int], genetic_data: Dict):
+        seed = Seed(seed_id=genetic_data['tree_id'],
+                    position=coordinates,
+                    genetic_data=genetic_data)
+        
+        self.resource_grid.set_cell_value(coordinates=coordinates,
+                                          value=seed)
+         
         
     def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Create energy on the grid
@@ -295,9 +345,9 @@ class Grid:
             energy (Energy): energy to remove
         """
         resource_grid = self.resource_grid
-        self.energy_group.remove(energy)
-        position = energy._position
-        resource_grid.set_cell_value(cell_coordinates=position, value=None)
+        position = energy._position()
+        resource_grid.set_cell_value(coordinates=position,
+                                     value=None)
         print(f"{energy} was deleted at {position}")
     
     def create_entity(self, entity_type: str, position: Tuple[int, int], size: int=20,
@@ -320,10 +370,22 @@ class Grid:
               
         match entity_type:
             case EntityType.Animal.value:
-                entity = Animal(position=position, size=size, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, adult_size=adult_size)
+                entity = Animal(position=position,
+                                size=size,
+                                blue_energy=blue_energy,
+                                red_energy=red_energy,
+                                max_age=max_age,
+                                adult_size=adult_size)
+                
             case EntityType.Tree.value:
                 production_type = production_type if production_type else np.random.choice(list(EnergyType))
-                entity = Tree(production_type=production_type, position=position, size=size, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age)
+                entity = Tree(production_type=production_type,
+                              position=position,
+                              size=size,
+                              blue_energy=blue_energy,
+                              red_energy=red_energy,
+                              max_age=max_age)
+                
             case EntityType.Seed.value:
                 entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
         
@@ -338,9 +400,8 @@ class Grid:
             entity (Entity): entity to remove
         """
         entity_grid = self.entity_grid
-        self.entity_group.remove(entity)
-        position = entity._position
-        entity_grid.set_cell_value(cell_coordinates=position, value=None)
+        position = entity._position()
+        entity_grid.set_cell_value(coordinates=position, value=None)
         print(f"{entity} was deleted at {position}")
         
     def get_nearby_colors(self, radius: int = 1) -> np.array:
