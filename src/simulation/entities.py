@@ -1,4 +1,5 @@
 from __future__ import annotations
+from operator import ge
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
@@ -8,6 +9,7 @@ import enum
 import random
 from energies import EnergyType, Energy, Resource
 import numpy as np
+import inspect
 
 
 from simulation import SimulatedObject, Position
@@ -262,12 +264,12 @@ class Entity(SimulatedObject):
     ################################################################################################ 
      
         
-    def _die(self) -> None:
+    def _die(self, grid: Grid) -> None:
         """Private method:
             Action: Death of the entity
         """
-        self.grid.remove_entity(entity=self)
-        self.on_death()
+        grid.remove_entity(entity=self)
+        self.on_death(grid=grid)
 
         print(f"{self} died at age {self._age}")
         
@@ -278,45 +280,44 @@ class Entity(SimulatedObject):
     
     
 
-    def _pick_up_resource(self, coordinates: Tuple[int, int]) -> None:
+    def _pick_up_resource(self, coordinates: Tuple[int, int], grid: Grid) -> None:
         """Private method:
             Action: Pick energy up at coordinates
 
         Args:
             coordinates (Tuple[int, int]): coordinates to pick up energy from
         """
-        resource_grid: SubGrid = self.grid.resource_grid
-        resource: Resource = resource_grid.get_cell_value(
-                    cell_coordinates=coordinates)
+        resource_grid: SubGrid = grid.resource_grid
+        resource: Resource = resource_grid.get_cell_value(coordinates=coordinates)
         if resource:
             if type(resource).__base__ == Energy:
                 self._gain_energy(
                     energy_type=resource.type,
                     quantity=resource.quantity)
             elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
-                self.store_seed(seed=resource)
-            self.grid.remove_energy(energy=resource)
+                self._store_seed(seed=resource)
+            grid.remove_energy(energy=resource)
 
         self._perform_action()
 
-    def _decompose(self, entity: Entity) -> None:
+    def _decompose(self, entity: Entity, grid: Grid) -> None:
         """Private method:
             Action: decompose an entity into its energy components
 
         Args:
             entity (Entity): entity to decompose in energy
         """
-        resource_grid = self.grid.resource_grid
+        resource_grid: SubGrid = grid.resource_grid
         
-        free_cell = self._select_free_cell(subgrid=resource_grid)
-        self.grid.create_energy(energy_type=EnergyType.RED,
-                                quantity=entity.energies[EnergyType.RED.value],
-                                cell_coordinates=free_cell)
+        free_cell = resource_grid.select_free_coordinates(position=self.position())
+        grid.create_energy(energy_type=EnergyType.RED,
+                           quantity=entity.energies[EnergyType.RED.value],
+                           coordinates=free_cell)
         
-        free_cell = self._select_free_cell(subgrid=resource_grid)
-        self.grid.create_energy(energy_type=EnergyType.BLUE,
-                                quantity=entity.energies[EnergyType.BLUE.value],
-                                cell_coordinates=free_cell)
+        free_cell = resource_grid.select_free_coordinates(position=self.position())
+        grid.create_energy(energy_type=EnergyType.BLUE,
+                           quantity=entity.energies[EnergyType.BLUE.value],
+                           coordinates=free_cell)
     
     
 
@@ -345,7 +346,7 @@ class Entity(SimulatedObject):
                 if not include_self and x == 0 and y == 0:
                     continue
                 coordinate = tuple(np.add(position,(x, y)))
-                occupied_cells.append((issubclass(type(subgrid.get_cell_value(cell_coordinates=coordinate)),value)))
+                occupied_cells.append((issubclass(type(subgrid.get_cell_value(coordinates=coordinate)),value)))
 
         return np.array(occupied_cells)         
            
@@ -525,18 +526,49 @@ class Animal(Entity):
                                     quantity=Animal.PLANTING_COST):
             
             # Get a free cell around
-            free_cell = resource_grid.select_free_coordinate(position=self.position())
+            free_cell = resource_grid.select_free_coordinates(position=self.position())
             if free_cell:
                 # If animal possess a seed plant it,
                 # else plant a new tree
                 if self._pocket:
-                    self.replant_seed(position=free_cell)
+                    self._replant_seed(position=free_cell,
+                                       grid=grid)
                     
                 else:
                     grid.create_entity(entity_type="tree",
                                        position=free_cell)
             # Energy cost of action
             self._perform_action()
+            
+    def _store_seed(self, seed: Seed) -> None:
+        """Private method:
+            Action: Pick up a seed and store it"""
+         
+        # Only store a seed if the pocket is empty   
+        if not self._pocket:
+            self._pocket = seed
+
+        # Energy cost of action
+        self._perform_action()
+        
+    def _recycle_seed(self, grid: Grid) -> None:
+        """Private method:
+        Action: Destroy seed stored and drop energy content
+        """
+        
+        # if pocket is empty nothing to recycle
+        if not self._pocket:
+            return
+        
+        tree = self._pocket.germinate()
+        
+        # Drop energy from seed on the ground
+        self._decompose(entity=tree,
+                        grid=grid)
+        # Empty pocket
+        self._pocket = None
+        # Energy cost of action
+        self._perform_action()
         
         ###########################################################################
            
@@ -581,54 +613,42 @@ class Animal(Entity):
 
     
 
-    def replant_seed(self, position: Tuple[int, int]) -> None:
-        """Replant seed store in pockect
+    def _replant_seed(self, position: Tuple[int, int], grid: Grid) -> None:
+        """Private method:
+        Action: Replant seed store in pocket
 
         Args:
             position (Tuple[int, int]): cell coordinates on which to plant seed
         """
+        # Nothing to replant if pocket is empty
         if not self._pocket:
             return
+        
         seed = self._pocket
-        self.grid.create_entity(entity_type="tree",
-                                position=position,
-                                blue_energy=seed.blue_energy(),
-                                red_energy=seed.red_energy(),
-                                max_age=seed._max_age,
-                                production_type=seed.production_type)
+        
+        tree = seed.germinate()
+        tree.position = Position(*position)
+        grid.entity_grid.place_on_grid(element=tree)
+        
+        # Emtpy pocket
         self._pocket = None
 
-    def store_seed(self, seed: Seed) -> None:
-        """Pick up a seed and stor it"""
-        if not self._pocket:
-            self._pocket = seed
+    def _on_death(self, grid: Grid) -> None:
+        """Private method:
+            Event: on animal death, release energy on cells around death position"""
+        self._decompose(entity=self,
+                        grid=grid)
 
-        self._perform_action()
-
-    def recycle_seed(self) -> None:
-        """Destroy seed stored and drop energy content
-        """
-        if not self._pocket:
-            return
-
-        self._decompose(self._pocket)
-        self._pocket = None
-        self._perform_action()
-
-    def on_death(self) -> None:
-        """Action on animal death, release energy on cells around death position"""
-        self._decompose(entity=self)
-
-    def modify_cell_color(self, color: Tuple[int,int,int], cell_coordinates: Tuple[int,int] = None) -> None:
+    def modify_cell_color(self, color: Tuple[int,int,int], coordinates: Tuple[int,int] = None) -> None:
         """Modfify the color of a given cell, usually the cell currently sat on
 
         Args:
             color (Tuple[int,int,int]):                     color to apply
-            cell_coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
+            coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
         """
-        cell_coordinates = cell_coordinates if cell_coordinates else self.position
+        coordinates = coordinates if coordinates else self.position
         self.grid.color_grid.set_cell_value(
-            cell_coordinates=cell_coordinates,
+            coordinates=coordinates,
             value=color)
 
         self._perform_action()
@@ -682,7 +702,7 @@ class Animal(Entity):
 
         if np.random.uniform() < 0.1:
             color = tuple(np.random.choice(range(256), size=3))
-            self.modify_cell_color(cell_coordinates=self.position,
+            self.modify_cell_color(coordinates=self.position,
                                    color=color)
 
         # self.die()
@@ -692,7 +712,7 @@ class Animal(Entity):
 class Tree(Entity):
     def __init__(self,
                  position: Tuple[int, int],
-                 tree_id: int = None,
+                 tree_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -714,7 +734,7 @@ class Tree(Entity):
         
         self._production_type: EnergyType = (production_type or
                                             np.random.choice(list(EnergyType)))
-
+        
     def produce_energy(self) -> None:
         """Produce energy
         """
@@ -730,34 +750,46 @@ class Tree(Entity):
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
 
-    def on_death(self) -> None:
+    def on_death(self, grid: Grid) -> None:
         """Action on tree death, create a seed on dead tree position"""
-        self.grid.create_entity(entity_type="seed",
-                                position=self._position,
-                                blue_energy=self.blue_energy(),
-                                red_energy=self.red_energy(),
-                                max_age=self._max_age)
+        
+        genetic_data = self._code_genetic_data()
+        
+        grid.create_seed(coordinates=self.position(),
+                         genetic_data=genetic_data)
+        
+    def _code_genetic_data(self) -> Dict:
+        original_dict = self.__dict__
+        genetic_data: Dict = {}
+        args = inspect.getfullargspec(Tree)[0]
+        for key, value in original_dict.items(): 
+            final_key = key[1:]
+            if final_key in args:
+                genetic_data[final_key] = value
+            
+        genetic_data['tree_id'] = original_dict['_SimulatedObject__id']
+        genetic_data['position'] = genetic_data['position']()
+        genetic_data['blue_energy'] = original_dict['_energies_stock'][EnergyType.BLUE.value]
+        genetic_data['red_energy'] = original_dict['_energies_stock'][EnergyType.RED.value]
+            
+        return genetic_data
 
     def test_update(self):
         pass
 
-class Seed(Entity):
+class Seed(Resource):
     def __init__(self,
+                 seed_id: int,
                  position: Tuple[int, int],
-                 production_type: EnergyType,
-                 max_age: int = 0,
-                 size: int = 15,
-                 blue_energy: int = 0,
-                 red_energy: int = 0,
-                 ):
+                 genetic_data: Dict):
         
-        super(Seed, self).__init__(size=size,
-                                   position=position,
-                                   blue_energy=blue_energy,
-                                   red_energy=red_energy)
+        super(Seed, self).__init__(resource_id=seed_id,
+                                     position=position,
+                                     size=10,
+                                     appearance="seed.png",
+                                     quantity=-1)
+                
+        self.genetic_data = genetic_data
         
-        self.grid.resource_grid.set_cell_value(
-            cell_coordinates=(self._position), value=self)
-        
-        self._max_age = max_age if max_age else size * 5
-        self.production_type = production_type
+    def germinate(self) -> Tree:
+        return Tree(**self.genetic_data)

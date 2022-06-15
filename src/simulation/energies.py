@@ -49,15 +49,32 @@ class Energy(Resource):
                                      quantity=quantity)
         
         self._type: EnergyType = energy_type
+        
+    @property
+    def type(self):
+        return self._type
 
 class RedEnergy(Energy):
-    def __init__(self, *args, **kwargs):
-        super(RedEnergy, self).__init__(appearance="red_energy.png",
-                                        energy_type=EnergyType.RED ,
-                                        *args, **kwargs)
+    def __init__(self,
+                 energy_id: int,
+                 position: Tuple[int,int],
+                 quantity: int = 10,
+                 ):
+        
+        super(RedEnergy, self).__init__(energy_id=energy_id,
+                                        position=position,
+                                        quantity=quantity,
+                                        appearance="red_energy.png",
+                                        energy_type=EnergyType.RED)
         
 class BlueEnergy(Energy):
-    def __init__(self, *args, **kwargs):
-        super(BlueEnergy, self).__init__(appearance="blue_energy.png",
-                                         energy_type=EnergyType.BLUE ,
-                                         *args, **kwargs)
+    def __init__(self,
+                 energy_id: int,
+                 position: Tuple[int,int],
+                 quantity: int = 10):
+        
+        super(BlueEnergy, self).__init__(energy_id=energy_id,
+                                        position=position,
+                                        quantity=quantity,
+                                        appearance="blue_energy.png",
+                                         energy_type=EnergyType.BLUE)

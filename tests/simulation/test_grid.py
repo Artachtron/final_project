@@ -4,6 +4,7 @@ import numpy as np
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
 from project.src.simulation.grid import Grid, SubGrid
 from project.src.simulation.entities import Animal, Tree, EntityType
+from project.src.simulation.energies import BlueEnergy
 
 class TestGrid:
     def test_create_grid(self):
@@ -35,14 +36,20 @@ class TestGrid:
             
             yield
             
-            self.entity = None
-            
+                       
         def test_place_on_grid(self):
             position = (2,3)
             tree = Tree(position=position)
             assert not self.grid.entity_grid.get_cell_value(coordinates=position)
             self.grid.place_on_entity(element=tree)
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
+            
+            energy = BlueEnergy(energy_id=0,
+                                position=position)
+            
+            assert not self.grid.resource_grid.get_cell_value(coordinates=position)
+            self.grid.place_on_resource(element=energy)
+            assert self.grid.resource_grid.get_cell_value(coordinates=position)
         
 class TestSubGrid:
     def test_create_subgrid(self):
@@ -222,7 +229,7 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinate(position=position,
+                free_cell = self.entity_grid.select_free_coordinates(position=position,
                                                                     radius=radius)
                 assert free_cell in cells
                 
@@ -235,7 +242,7 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinate(position=position,
+                free_cell = self.entity_grid.select_free_coordinates(position=position,
                                                                     radius=radius)
                 assert free_cell 
                 assert free_cell in cells
