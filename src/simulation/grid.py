@@ -17,28 +17,73 @@ class SubGrid:
                  data_type: Any = Any,
                  initial_value: Any = None):
         
-        self.dimensions: Tuple[int,int] = dimensions
-        self._array: np.array = np.full(self.dimensions, fill_value=initial_value, dtype=data_type)
-        self.data_type = data_type
-        self.initial_value = initial_value
-     
+        self.dimensions: Tuple[int,int] = dimensions                # dimensions of the grid
+        self.data_type = data_type                                  # type of data allowed on the grid
+        self.initial_value = initial_value                          # value to fill the emtpy cells with
+        self._array: np.array = np.full(self.dimensions,            # array containing the values
+                                        fill_value=initial_value,
+                                        dtype=data_type)
+        
     @property
     def array(self) -> np.array:
         return self._array
     
-    def place_on_grid(self, element: Any) -> bool:
-        coordinates = element.position()
-        
-        if success:= (self.are_vacant_coordinates(coordinates=coordinates) and
-                      self._is_of_valid_type(element=element)):
+    def _empty_cell(self, coordinates: Tuple[int, int]):
+        """Private method:
+            Emtpy the cell, putting it back to inital state
+
+        Args:
+            coordinates (Tuple[int, int]): coordinates of the cell to emtpy
+        """        
+        self._array[coordinates] = self.initial_value
             
-            self.set_cell_value(coordinates=coordinates,
-                                value=element)
+    def _set_operation_valid(self, coordinates: Tuple[int, int], value: Any) -> bool:
+        """Private method:
+            Check if the set operation is valid, by applying 3 checks:
+            - the coordinates are inside the bounds of the grid
+            - the cell of given coordinates is free
+            - the value is of valid type
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to check for
+            value (Any):                  value to check type of
+
+        Returns:
+            bool: True if all checks passed,
+                  False if at least one check failed
+        """        
+        return (self.are_coordinates_in_bounds(coordinates=coordinates) and
+                self.are_vacant_coordinates(coordinates=coordinates) and
+                self._is_of_valid_type(value=value))
+    
+    def place_on_grid(self, value: Any) -> bool:
+        """Place a given value on the grid, 
+           based on its position
+
+        Args:
+            value (Any): value to place on the grid
+
+        Returns:
+            bool:   True if the value was placed on the grid
+                    False if it couldn't place it
+        """   
+         
+        coordinates: Tuple[int, int] = value.position() # position of the value
+          
+        return self._set_cell_value(coordinates=coordinates,
+                                   value=value)
             
-        return success
-            
-    def _is_of_valid_type(self, element: Any) -> bool:
-        return Grid.is_subclass(element, self.data_type)
+    def _is_of_valid_type(self, value: Any) -> bool:
+        """Verify if the value's type is valid
+
+        Args:
+            value (Any): value of which to check type
+
+        Returns:
+            bool:   True if the value if of a valid type,
+                    False if invalid type
+        """        
+        return Grid.is_subclass(value, self.data_type)
     
     def are_available_coordinates(self, coordinates: Tuple[int, int]) -> bool:
         """Check if the coordinates correspond to valid cell,
@@ -165,37 +210,62 @@ class SubGrid:
         return None
 
     
-    def update_cell(self, new_coordinate: Tuple[int, int], value: Any) -> None:
-                
-        # Reset the old position
-        old_position = value.position.vect
-        self.set_cell_value(coordinates=old_position,
-                            value=None)
+    def update_cell(self, new_coordinate: Tuple[int, int], value: Any) -> bool:
+        """Public method:
+            Move an element from a cell to another,
+            filling the new one and emptying the old one 
+
+        Args:
+            new_coordinate (Tuple[int, int]):   coordinates in which to move the element
+            value (Any):                        value to move at different coordinates
+
+        Returns:
+            bool:   True if the element was moved successfully
+                    False if it couldn't be move and nothing changed
+        """        
         
-        # Insert the new value at the given coordinates
-        self.set_cell_value(coordinates=new_coordinate,
-                            value=value)
+        # try to insert the new value at the given coordinates        
+        if success:= self._set_cell_value(coordinates=new_coordinate,
+                                         value=value):
+
+                            # Reset the old position
+                            old_position = value.position()
+                            self._empty_cell(coordinates=old_position)
+                            
+        return success
+        
+        
             
-    def set_cell_value(self, coordinates: Tuple[int, int], value: Any) -> None:
-        """Update the value of a cell from the grid
+    def _set_cell_value(self, coordinates: Tuple[int, int], value: Any) -> bool:
+        """Private method:
+            Update the value of a cell from the grid
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
             value (int):                The new value to assign
+            
+        Returns:
+            bool:   True if the value was successfully set
+                    False if it couldn't be updated
         """
-        try:
-            self._array[coordinates] = value
-        except IndexError:
-            print("{coordinates} is out of bounds")
+        if success:= self._set_operation_valid(coordinates=coordinates,
+                                               value=value):
+            try:
+                self._array[coordinates] = value
+            except IndexError:
+                print("{coordinates} is out of bounds")
+                
+        return success
             
     def get_cell_value(self, coordinates: Tuple[int, int]) -> Any:
-        """Get the value of a cell
+        """Public method:
+            Get the value of a cell
 
         Args:
             position (Tuple[int, int]): The coordinates of the cell in the grid
 
         Returns:
-            Any: The value of the cell, None is empty
+            Any: value of the cell, None if empty
         """
         try:
             if coordinates[0] < 0 or coordinates[1] < 0:
@@ -206,6 +276,18 @@ class SubGrid:
             return False
         
     def get_sub_region(self, initial_pos: Tuple[int,int], radius:int=1) -> np.array:
+        """Public method:
+            Return an array around a given position of a defined size,
+            even if the inital position is close from borders,
+            pad with -1 values for cells out of boundaries
+
+        Args:
+            initial_pos (Tuple[int,int]):   position from which to search around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            np.array: padded subregion with dimensions depending only on radius
+        """        
         x1, x2, y1, y2 = (initial_pos[0] - radius, initial_pos[0] + radius+1,
                           initial_pos[1] - radius, initial_pos[1] + radius+1)
         
@@ -245,25 +327,22 @@ class SubGrid:
 class Grid:
     def __init__(self,
                  grid_id: int,
-                 dimensions: Tuple[int,int],
-                 block_size: int=20):
+                 dimensions: Tuple[int,int]):
         
-        self.__id = grid_id
-        self.dimensions: Tuple[int,int] = dimensions
+        self.__id = grid_id                                                     # unique identifier
+        self.dimensions: Tuple[int,int] = dimensions                            # dimensions of the grid
         
-        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions,
+        self._entity_grid: SubGrid = SubGrid(dimensions=self.dimensions,        # subgrid containing the entities
                                              data_type=Entity,
                                              initial_value=None)
         
-        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions,
+        self._resource_grid: SubGrid = SubGrid(dimensions=self.dimensions,      # subgrid containing the resources
                                                data_type=Resource,
                                                initial_value=None)
         
-        self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3),
+        self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3),   # subgrid containing the color values
                                             data_type=np.uint8,
-                                            initial_value=255)
-        
-        self.BLOCK_SIZE: Final[int] = block_size
+                                            initial_value=255)       
         
         """ self.energy_group = pg.sprite.Group()
         self.entity_group = pg.sprite.Group() """
@@ -300,18 +379,18 @@ class Grid:
         
         return False
     
-    def place_on_resource(self, element:Any) :
-        self.resource_grid.place_on_grid(element=element)
+    def place_on_resource(self, value:Any):
+        self.resource_grid.place_on_grid(value=value)
         
-    def place_on_entity(self, element:Any) :
-        self.entity_grid.place_on_grid(element=element)
+    def place_on_entity(self, value:Any) :
+        self.entity_grid.place_on_grid(value=value)
         
     def create_seed(self, coordinates: Tuple[int, int], genetic_data: Dict):
         seed = Seed(seed_id=genetic_data['tree_id'],
                     position=coordinates,
                     genetic_data=genetic_data)
         
-        self.resource_grid.set_cell_value(coordinates=coordinates,
+        self.resource_grid._set_cell_value(coordinates=coordinates,
                                           value=seed)
          
         
@@ -335,7 +414,7 @@ class Grid:
                                    position=coordinates,
                                    quantity=quantity)
           
-        self.resource_grid.set_cell_value(coordinates=coordinates,
+        self.resource_grid._set_cell_value(coordinates=coordinates,
                                           value=energy)
                 
     def remove_energy(self, energy: Energy) -> None:
@@ -346,8 +425,7 @@ class Grid:
         """
         resource_grid = self.resource_grid
         position = energy._position()
-        resource_grid.set_cell_value(coordinates=position,
-                                     value=None)
+        resource_grid._empty_cell(coordinates=position)
         print(f"{energy} was deleted at {position}")
     
     def create_entity(self, entity_type: str, position: Tuple[int, int], size: int=20,
@@ -389,7 +467,7 @@ class Grid:
             case EntityType.Seed.value:
                 entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
         
-        self.entity_grid.set_cell_value(coordinates=entity.position(),
+        self.entity_grid._set_cell_value(coordinates=entity.position(),
                                         value=entity)
         return entity
         
@@ -401,7 +479,7 @@ class Grid:
         """
         entity_grid = self.entity_grid
         position = entity._position()
-        entity_grid.set_cell_value(coordinates=position, value=None)
+        entity_grid._empty_cell(coordinates=position)
         print(f"{entity} was deleted at {position}")
         
     def get_nearby_colors(self, radius: int = 1) -> np.array:

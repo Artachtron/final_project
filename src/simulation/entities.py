@@ -1,10 +1,10 @@
 from __future__ import annotations
-from operator import ge
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
     
-from typing import Tuple, Set, Final, Dict
+from typing import Tuple, Set, Final, Dict, Any
 import enum
 import random
 from energies import EnergyType, Energy, Resource
@@ -628,7 +628,7 @@ class Animal(Entity):
         
         tree = seed.germinate()
         tree.position = Position(*position)
-        grid.entity_grid.place_on_grid(element=tree)
+        grid.entity_grid.place_on_grid(value=tree)
         
         # Emtpy pocket
         self._pocket = None
@@ -753,20 +753,33 @@ class Tree(Entity):
     def on_death(self, grid: Grid) -> None:
         """Action on tree death, create a seed on dead tree position"""
         
-        genetic_data = self._code_genetic_data()
+        genetic_data = self._encode_genetic_data()
         
         grid.create_seed(coordinates=self.position(),
                          genetic_data=genetic_data)
         
-    def _code_genetic_data(self) -> Dict:
-        original_dict = self.__dict__
-        genetic_data: Dict = {}
-        args = inspect.getfullargspec(Tree)[0]
+        grid.remove_entity(self)
+        
+    def _encode_genetic_data(self) -> Dict:
+        """Private method:
+            Encode the genetic information necessary
+            to spawn another tree
+
+        Returns:
+            Dict: dictionary containing the genetic information
+        """      
+         
+        original_dict: Dict[str, Any] = self.__dict__   # original dictionary with tree data
+        genetic_data: Dict[str, Any] = {}               # new dictionary with formatted value                      
+        args = inspect.getfullargspec(Tree)[0]          # list of parameters to create a tree
+        # loop through original dictionary and
+        # take desired values after reformatting 
         for key, value in original_dict.items(): 
             final_key = key[1:]
             if final_key in args:
                 genetic_data[final_key] = value
-            
+        
+        # Work on the parameter that need some custom transformation   
         genetic_data['tree_id'] = original_dict['_SimulatedObject__id']
         genetic_data['position'] = genetic_data['position']()
         genetic_data['blue_energy'] = original_dict['_energies_stock'][EnergyType.BLUE.value]
@@ -792,4 +805,11 @@ class Seed(Resource):
         self.genetic_data = genetic_data
         
     def germinate(self) -> Tree:
+        """Public method:
+            Spawn a tree from genetic data
+            contained in this seed
+
+        Returns:
+            Tree: tree spawned
+        """        
         return Tree(**self.genetic_data)

@@ -287,7 +287,7 @@ class TestTree:
                                 production_type=EnergyType.BLUE)
             
             self.grid = Grid(0, (30,30))
-            self.grid.entity_grid.set_cell_value(coordinates=self.tree1.position(),
+            self.grid.entity_grid._set_cell_value(coordinates=self.tree1.position(),
                                                  value=self.tree1)
             
             yield
@@ -405,7 +405,7 @@ class TestAnimal:
             def test_move_occupied_cell(self):
                 animal = Animal(position=(3,3))
                 animal2 = Animal(position=(3,4))
-                self.entity_grid.set_cell_value(coordinates=(3,4),
+                self.entity_grid._set_cell_value(coordinates=(3,4),
                                                 value=animal2)
                 
                 # Move on already occupied cell
@@ -420,7 +420,7 @@ class TestAnimal:
                 
             def test_move_out_of_bounds_cell(self):
                 animal = Animal(position=(0,0))
-                self.entity_grid.set_cell_value(coordinates=(0,0),
+                self.entity_grid._set_cell_value(coordinates=(0,0),
                                                 value=animal)
                 # Left
                 assert animal.position.vect == (0,0)
@@ -438,7 +438,7 @@ class TestAnimal:
                 
                 # Right
                 animal2 = Animal(position=(19,19))
-                self.entity_grid.set_cell_value(coordinates=(19,19),
+                self.entity_grid._set_cell_value(coordinates=(19,19),
                                                 value=animal2)
                 assert animal2.position.vect == (19,19)
                 assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
@@ -479,7 +479,7 @@ class TestAnimal:
                 
                 position = seed.position()
                 
-                self.grid.resource_grid.set_cell_value(coordinates=position,
+                self.grid.resource_grid._set_cell_value(coordinates=position,
                                                       value=seed)
                 
                 animal = self.grid.create_entity(entity_type=EntityType.Animal.value,
@@ -506,7 +506,7 @@ class TestAnimal:
                 
                 position = seed.position()
                 
-                self.grid.resource_grid.set_cell_value(coordinates=position,
+                self.grid.resource_grid._set_cell_value(coordinates=position,
                                                       value=seed)
                 
                 animal = self.grid.create_entity(entity_type=EntityType.Animal.value,

@@ -69,8 +69,7 @@ class World:
     def _init_world(self):
         self.grid = Grid(grid_id=self.id,
                          dimensions=(self.dimensions[0],
-                                     self.dimensions[1]),
-                         block_size=self.block_size)
+                                     self.dimensions[1]))
         
         self.simulation = Simulation(sim_id=self.id)
         

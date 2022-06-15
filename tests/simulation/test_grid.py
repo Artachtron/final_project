@@ -4,7 +4,7 @@ import numpy as np
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
 from project.src.simulation.grid import Grid, SubGrid
 from project.src.simulation.entities import Animal, Tree, EntityType
-from project.src.simulation.energies import BlueEnergy
+from project.src.simulation.energies import BlueEnergy, Energy
 
 class TestGrid:
     def test_create_grid(self):
@@ -15,17 +15,14 @@ class TestGrid:
         
     def test_grid_fields(self):
         grid = Grid(grid_id=0,
-                    dimensions=(20,20),
-                    block_size=20)
+                    dimensions=(20,20))
         
-        assert {'dimensions', 'BLOCK_SIZE',
-                '_resource_grid', '_entity_grid',
-                '_color_grid'}.issubset(vars(grid))
+        assert {'dimensions','_resource_grid',
+                '_entity_grid', '_color_grid'}.issubset(vars(grid))
         
         assert grid.id == 0
         assert grid.dimensions == (20,20)
-        assert grid.BLOCK_SIZE == 20
-        
+         
         
     class TestGridMethods:
         @pytest.fixture(autouse=True)
@@ -41,14 +38,14 @@ class TestGrid:
             position = (2,3)
             tree = Tree(position=position)
             assert not self.grid.entity_grid.get_cell_value(coordinates=position)
-            self.grid.place_on_entity(element=tree)
+            self.grid.place_on_entity(value=tree)
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             
             energy = BlueEnergy(energy_id=0,
                                 position=position)
             
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
-            self.grid.place_on_resource(element=energy)
+            self.grid.place_on_resource(value=energy)
             assert self.grid.resource_grid.get_cell_value(coordinates=position)
         
 class TestSubGrid:
@@ -91,16 +88,21 @@ class TestSubGrid:
             assert self.grid.dimensions == (20,25)
             
         def test_set_cell(self):
+            animal = Animal(animal_id=0,
+                            position=(2,5))
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
-            self.entity_grid.set_cell_value(coordinates=(2,5), value=1)
-            assert self.entity_grid.get_cell_value(coordinates=(2,5)) == 1
-            self.entity_grid.set_cell_value(coordinates=(2,5), value=None)
+            self.entity_grid._set_cell_value(coordinates=(2,5), value=animal)
+            assert self.entity_grid.get_cell_value(coordinates=(2,5)) == animal
+            self.entity_grid._empty_cell(coordinates=(2,5))
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
             
+            energy = BlueEnergy(energy_id=0,
+                                position=(2,5))
+            
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == None
-            self.energy_grid.set_cell_value(coordinates=(2,5), value=1)
-            assert self.energy_grid.get_cell_value(coordinates=(2,5)) == 1
-            self.energy_grid.set_cell_value(coordinates=(2,5), value=None)
+            self.energy_grid._set_cell_value(coordinates=(2,5), value=energy)
+            assert self.energy_grid.get_cell_value(coordinates=(2,5)) == energy
+            self.energy_grid._empty_cell(coordinates=(2,5))
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == None
             
         def test_cell_out_of_bounds_handled(self):
@@ -113,14 +115,14 @@ class TestSubGrid:
             with pytest.raises(IndexError):
                 array[pos_1]
             try:
-                self.entity_grid.set_cell_value(coordinates=pos_1, value=1)
+                self.entity_grid._set_cell_value(coordinates=pos_1, value=1)
             except IndexError:
                 pytest.fail("Unexpected IndexError")
             
             with pytest.raises(IndexError):
                 array[pos_2]
             try:
-                self.entity_grid.set_cell_value(coordinates=pos_2, value=1)
+                self.entity_grid._set_cell_value(coordinates=pos_2, value=1)
             except IndexError:
                 pytest.fail("Unexpected IndexError")
                         
@@ -132,7 +134,7 @@ class TestSubGrid:
         def test_get_cell(self):
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None 
             
-            self.entity_grid.set_cell_value(coordinates=(2,5),
+            self.entity_grid._set_cell_value(coordinates=(2,5),
                                             value=self.animal)
             
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == self.animal
@@ -166,7 +168,7 @@ class TestSubGrid:
             assert free
             
             # Occupied cell
-            self.entity_grid.set_cell_value(coordinates=(12,15),
+            self.entity_grid._set_cell_value(coordinates=(12,15),
                                             value=self.animal)
             
             free = self.entity_grid.are_vacant_coordinates(coordinates=(12,15))
