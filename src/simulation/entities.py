@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
     
-from typing import Tuple, Set, Final
+from typing import Tuple, Set, Final, Dict
 from types import NoneType
 import enum
 import random
@@ -14,33 +14,38 @@ from itertools import combinations
 from simulation import SimulatedObject, Position
 
 class Direction(enum.Enum):
-    RIGHT = (1, 0)
-    LEFT = (-1, 0)
-    DOWN = (0, 1)
-    UP = (0, -1)
+    RIGHT   =   (1, 0)
+    LEFT    =   (-1, 0)
+    DOWN    =   (0, 1)
+    UP      =   (0, -1)
 
 
 class EntityType(enum.Enum):
-    Animal = "animal"
-    Tree = "tree"
-    Seed = "seed"
+    Animal  =   "animal"
+    Tree    =   "tree"
+    Seed    =   "seed"
 
 
 class Entity(SimulatedObject):
-    MAX_AGE_SIZE_COEFFICIENT: Final[int] = 5
+    MAX_AGE_SIZE_COEFF: Final[int] = 5
     GROWTH_ENERGY_REQUIRED: Final[int] = 10
     CHILD_ENERGY_COST_DIVISOR: Final[int] = 2
-    CHILD_GROWTH_ENERGY_REQUIRED: Final[int] = GROWTH_ENERGY_REQUIRED/CHILD_ENERGY_COST_DIVISOR
+    CHILD_GROWTH_ENERGY_REQUIRED: Final[int] = (GROWTH_ENERGY_REQUIRED /
+                                                CHILD_ENERGY_COST_DIVISOR)
+    INITIAL_SIZE: Final[int] = 20
+    INITIAL_BLUE_ENERGY: Final[int] = 100
+    INITIAL_RED_ENERGY: Final[int] = 100
+    INITIAL_ACTION_COST: Final[int] = INITIAL_SIZE/20
     
     def __init__(self,
                  position: Tuple[int, int],
-                 entity_id: int = None,
+                 entity_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
-                 size: int = 20,
-                 action_cost: int = 1,
-                 blue_energy: int = 10,
-                 red_energy: int = 10,
+                 size: int = INITIAL_SIZE,
+                 action_cost: int = INITIAL_ACTION_COST,
+                 blue_energy: int = INITIAL_BLUE_ENERGY,
+                 red_energy: int = INITIAL_RED_ENERGY,
                  appearance: str = "",
                  ):
         
@@ -48,70 +53,109 @@ class Entity(SimulatedObject):
         super(Entity, self).__init__(sim_obj_id=entity_id,
                                      position=position,
                                      size=size,
-                                     appearance=appearance)
-                   
-        self.size: int = size
+                                     appearance=appearance)                 
         
-        self._energies_stock: dict[EnergyType, int] = {EnergyType.BLUE.value: blue_energy,
-                                                       EnergyType.RED.value: red_energy}
-        self._age: int = 0
-        self._max_age: int = max_age or size * Entity.MAX_AGE_SIZE_COEFFICIENT
-        self._adult_size: int = adult_size
-        self.is_adult: bool = False
-        self._reached_adulthood()
+        self._energies_stock: Dict[str, int] = {              # energy currently owned
+            EnergyType.BLUE.value: blue_energy,
+            EnergyType.RED.value: red_energy
+            }
+            
+        self._age: int = 0                                     # age of the entity
+        self._max_age: int = (max_age or                       # maximum longevity before dying
+                              (size * 
+                               Entity.MAX_AGE_SIZE_COEFF))
         
-        self._action_cost: int = action_cost if self.is_adult else action_cost
+        self._adult_size: int = adult_size                     # size to reach before becoming adult
+        self.is_adult: bool = False                            # can reproduce only if adult
+        self._reached_adulthood()                              # check if the adult size was reached                          
+        
+        self._action_cost: int = action_cost                   # blue energy cost of each action
         
     
     @property
-    def energies(self):
+    def energies(self) -> Dict[str, int]:
+        """Public property:
+        
+        Returns:
+            Dict[str, int]:     dictionary summarising owned energies, 
+                                arranged by EnergyType
+        """        
         return self._energies_stock
 
     @property
-    def blue_energy(self):
-        return self._energies_stock["blue energy"]
+    def blue_energy(self) -> int:
+        """Public property:
+        
+        Returns:
+            int: amount of blue energy owned 
+        """
+        return self._energies_stock[EnergyType.BLUE.value]
     
     @property
-    def red_energy(self):
-        return self._energies_stock["red energy"]       
+    def red_energy(self) -> int:
+        """Public property:
+        
+        Returns:
+            int: amount of red energy owned 
+        """
+        return self._energies_stock[EnergyType.RED.value]       
     
     def _increase_age(self, amount: int = 1) -> None:
-        """Increase age of certain amount
+        """Private method:
+            Action: Increase age by a given amount
 
         Args:
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
         self._age += amount
 
+        # if new age above maximum age threshold,
+        # the entity dies
         if self._age > self._max_age:
             self._die()
             
     def _grow(self) -> None:
-        """grow the entity to bigger size, consumming red energy
+        """Private method:
+        Action:     Grow the entity to bigger size,
+                    consumming red energy
         """
+        
+        # Action's blue energy cos
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
+        
+        # Red energy cost depend on adulthood status,
+        # cost less energy for a child
         if self.is_adult:
             energy_required = self.size * Entity.GROWTH_ENERGY_REQUIRED
+            
         else:
             energy_required = self.size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
-            
-        if self._can_perform_action(energy_type=EnergyType.RED, quantity=energy_required):
         
+        # Perfrom action if possible: if enough energy is available   
+        if self._can_perform_action(energy_type=EnergyType.RED, quantity=energy_required):
+            # Increase size,
+            # maximum age,
+            # action cost
             self.size += 1
             self._max_age += 5
             self._action_cost += 1
         
+        # Check if new size
+        # changes adulthood status
         if not self.is_adult:
             self._reached_adulthood()
     
     def _reached_adulthood(self) -> None:
-        """Check if the entity reached maturity size and assign the result in the is_adult instance variable
+        """ Private method:
+            Check if the entity reached maturity size and
+            assign the result in the is_adult instance variable
         """
         self.is_adult = self.size >= self._adult_size
    
     def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
-        """Gain energy from specified type to energies stock
+        """Private method:
+            Gain energy of specified type and adds it to energies stock
 
         Args:
             energy_type (EnergyType):   type of energy to gain
@@ -120,14 +164,17 @@ class Entity(SimulatedObject):
         Raises:
             ValueError: amount should not be negative
         """
+        # quantiy can't be negative
         if quantity < 0 :
             raise ValueError
         
+        # Add the quantity
         self._energies_stock[energy_type.value] += quantity
         
     def _loose_energy(self, energy_type: EnergyType, quantity: int) -> int:
-        """Loose energy of specified type from energies stock,
-           if quantity greater than stock set stock to 0
+        """Private method:
+            Loose energy of specified type from energies stock,
+            if quantity greater than stock set stock to 0
 
         Args:
             energy_type (EnergyType):   type of energy to loose
@@ -137,39 +184,48 @@ class Entity(SimulatedObject):
             ValueError: quantity should not be negative
             
         Returns:
-            int: quantity of energy that was lost
+            int: quantity of energy that was effectively lost
         """
+        # quantiy can't be negative
         if quantity < 0 :
             raise ValueError
         
         energy_amount = self._energies_stock[energy_type.value]
+        # if quantity is more than stock, set stock to 0
         if energy_amount - quantity > 0:
             self._energies_stock[energy_type.value] -= quantity
+        
         else:
             quantity = energy_amount
             self._energies_stock[energy_type.value] = 0
 
+        # dies if the entity run out of blue energy
         if self._energies_stock[EnergyType.BLUE.value] <= 0:
             self._die()
 
+        # effective quantity lost
         return quantity
 
     def _perform_action(self) -> None:
-        """Consume blue energy when performing an action
+        """Private method:
+            Consume blue energy when performing an action
         """        
         self._loose_energy(
             energy_type=EnergyType.BLUE,
             quantity=self._action_cost)
     
     def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
-        """Check if the entity has enough energy to perform an action, use the energy if it's the case
+        """Private method:
+            Check if the entity has enough energy to perform an action,
+            use the energy if it's the case
 
         Args:
             energy_type (EnergyType):   type of energy to loose
             quantity (int):             amount of energy to loose
 
         Returns:
-            bool: if the entity had enough energy
+            bool: True the entity had enough energy
+                  False if the action can't be performed
         """        
         if can_perform:= (self.energies[energy_type.value] >= quantity):
             self._loose_energy(energy_type=energy_type,
@@ -179,33 +235,38 @@ class Entity(SimulatedObject):
         
     def _drop_energy(self, energy_type: EnergyType, quantity: int,
                     coordinates: Tuple[int, int], grid: Grid) -> None:
-        """Drop some energy on a cell
+        """Private method:
+            Action: Drop an amount energy of the specified type at a coordinate
 
         Args:
-            energy_type (EnergyType):       type of energy (blue/red) to drop
+            energy_type (EnergyType):       type of energy to drop
             quantity (int):                 amount of energy to drop
-            coordinates (Tuple[int,int]):   coordinates of the cell on which to drop energy
+            coordinates (Tuple[int,int]):   coordinates on which to drop energy
             grid (Grid):                    grid on which to drop energy         
         """
         
         resource_grid: SubGrid = grid.resource_grid
+        # Check if the coordinates are available to drop on
         if self._is_available_coordinates(coordinates=coordinates,
                                           subgrid=resource_grid):
             
+            # Remove energy amount from stock
             quantity = self._loose_energy(energy_type=energy_type,
                                           quantity=quantity)
 
+            # Create the energy at coordinates
             grid.create_energy(energy_type=energy_type,
                                quantity=quantity,
                                coordinates=coordinates)
-
+        # Energy cost of action
         self._perform_action()
      
     ################################################################################################ 
      
         
     def _die(self) -> None:
-        """Death of the entity
+        """Private method:
+            Action: Death of the entity
         """
         self.grid.remove_entity(entity=self)
         self.on_death()
@@ -219,15 +280,16 @@ class Entity(SimulatedObject):
     
     
 
-    def _pick_up_resource(self, cell_coordinates: Tuple[int, int]) -> None:
-        """Pick energy up from a cell
+    def _pick_up_resource(self, coordinates: Tuple[int, int]) -> None:
+        """Private method:
+            Action: Pick energy up at coordinates
 
         Args:
-            cell_coordinates (Tuple[int, int]): coordinates of the cell from which to pick up energy
+            coordinates (Tuple[int, int]): coordinates to pick up energy from
         """
         resource_grid = self.grid.resource_grid
         resource = resource_grid.get_cell_value(
-            cell_coordinates=cell_coordinates)
+            cell_coordinates=coordinates)
         if resource:
             if type(resource).__base__ == Energy:
                 self._gain_energy(
@@ -240,16 +302,19 @@ class Entity(SimulatedObject):
         self._perform_action()
 
     def _decompose(self, entity: Entity) -> None:
-        """decompose an entity into its energy components
+        """Private method:
+            Action: decompose an entity into its energy components
 
         Args:
-            entity (EntitySprite): entity to decompose in energy
+            entity (Entity): entity to decompose in energy
         """
         resource_grid = self.grid.resource_grid
+        
         free_cell = self._select_free_cell(subgrid=resource_grid)
         self.grid.create_energy(energy_type=EnergyType.RED,
                                 quantity=entity.energies[EnergyType.RED.value],
                                 cell_coordinates=free_cell)
+        
         free_cell = self._select_free_cell(subgrid=resource_grid)
         self.grid.create_energy(energy_type=EnergyType.BLUE,
                                 quantity=entity.energies[EnergyType.BLUE.value],
@@ -257,14 +322,10 @@ class Entity(SimulatedObject):
     
     
 
-    
-    
-    
 
-    
 
     def _find_cells_coordinate_by_value(self, subgrid, value,
-                             radius: int = 1) -> Set[Tuple[int, int]]:
+                                        radius: int = 1) -> Set[Tuple[int, int]]:
         """Find the list of cells in a range with specified value
 
         Args:
@@ -280,7 +341,8 @@ class Entity(SimulatedObject):
         a = list(range(-radius, radius+1))
         b = combinations(a*2, 2)
     
-        positions = [coordinate for x, y in set(b) if issubclass(type(subgrid.get_cell_value(coordinate:=tuple(np.add(pos,(x,y))))), value)]
+        positions = [coordinate for x, y in set(b) 
+                     if issubclass(type(subgrid.get_cell_value(coordinate:=tuple(np.add(pos,(x,y))))), value)]
 
         return positions
     
@@ -474,7 +536,8 @@ class Animal(Entity):
         self._pocket: Seed = None
 
     def _move(self, direction: Direction, grid: Grid) -> None:
-        """Move the animal in the given direction
+        """ Private method: 
+            Move the animal in the given direction
 
         Args:
             direction (Direction):  direction in which to move
@@ -487,7 +550,7 @@ class Animal(Entity):
         if entity_grid.are_available_coordinates(coordinates=next_pos.vect):
             
             entity_grid.update_cell(new_coordinate=next_pos.vect,
-                                value=self)
+                                    value=self)
         
             self.position = next_pos
 
@@ -531,8 +594,9 @@ class Animal(Entity):
                                     adult_size=adult_size)
             return child
 
-    def plant_tree(self) -> None:
-        """Plant a tree nearby, consume red energy
+    def _plant_tree(self) -> None:
+        """Private method:
+           Plant a tree nearby, consume red energy
         """
         PLANTING_COST: Final[int] = 10
         if self._energies_stock[EnergyType.RED.value] >= PLANTING_COST:
@@ -649,7 +713,7 @@ class Animal(Entity):
         if np.random.uniform() < 0.01:
             x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
             coordinates = tuple(np.add(self.position, (x, y)))
-            self._pick_up_resource(cell_coordinates=coordinates)
+            self._pick_up_resource(coordinates=coordinates)
 
         if np.random.uniform() < 0.1:
             color = tuple(np.random.choice(range(256), size=3))
