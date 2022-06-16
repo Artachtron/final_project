@@ -27,7 +27,7 @@ class TestEntity:
                 '_energies_stock'}.issubset(vars(entity))
         
         assert entity.id == 3
-        assert entity._position.vect == (20,10)
+        assert entity.position == (20,10)
         assert entity._adult_size == 15
         assert entity._max_age == 100
         assert entity._age == 0
@@ -253,7 +253,7 @@ class TestTree:
                 '_energies_stock', '_production_type'}.issubset(vars(tree))
         
         assert tree.id == 3
-        assert tree._position.vect == (20,10)
+        assert tree.position == (20,10)
         assert tree._adult_size == 15
         assert tree._max_age == 100
         assert tree._age == 0
@@ -287,7 +287,7 @@ class TestTree:
                                 production_type=EnergyType.BLUE)
             
             self.grid = Grid(0, (30,30))
-            self.grid.entity_grid._set_cell_value(coordinates=self.tree1.position(),
+            self.grid.entity_grid._set_cell_value(coordinates=self.tree1.position,
                                                  value=self.tree1)
             
             yield
@@ -296,7 +296,7 @@ class TestTree:
             
          
         def test_on_death(self):
-            position = self.tree1.position()
+            position = self.tree1.position
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
             self.tree1._die(grid=self.grid) 
@@ -334,7 +334,7 @@ class TestAnimal:
                 '_energies_stock', '_pocket'}.issubset(vars(animal))
         
         assert animal.id == 3
-        assert animal.position.vect == (20,10)
+        assert animal.position == (20,10)
         assert animal._adult_size == 15
         assert animal._max_age == 100
         assert animal._age == 0
@@ -376,32 +376,32 @@ class TestAnimal:
                 animal = self.animal
               
                 # Down
-                assert animal.position() == (3,3)
+                assert animal.position == (3,3)
                 assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
                 animal._move(Direction.DOWN,
                              grid=self.grid)
-                assert animal.position() == (3,4)
+                assert animal.position == (3,4)
                 assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal
                 assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
                 
                 # Up
                 animal._move(Direction.UP,
                              grid=self.grid)
-                assert animal.position() == (3,3)
+                assert animal.position == (3,3)
                 assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
                 assert self.entity_grid.get_cell_value(coordinates=(2,3)) == None
                 
                 # Left
                 animal._move(Direction.LEFT,
                              grid=self.grid)
-                assert animal.position() == (2,3)
+                assert animal.position == (2,3)
                 assert self.entity_grid.get_cell_value(coordinates=(2,3)) == animal
                 assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
                 
                 # Right
                 animal._move(Direction.RIGHT,
                              grid=self.grid)
-                assert animal.position() == (3,3)
+                assert animal.position == (3,3)
                 assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
                 
             def test_move_occupied_cell(self):
@@ -411,48 +411,48 @@ class TestAnimal:
                                                 value=animal2)
                 
                 # Move on already occupied cell
-                assert animal.position.vect == (3,3)
+                assert animal.position == (3,3)
                 assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
-                assert animal2.position.vect == (3,4)
+                assert animal2.position == (3,4)
                 animal._move(Direction.DOWN, 
                              grid=self.grid)
-                assert animal.position.vect == (3,3)
+                assert animal.position == (3,3)
                 assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
-                assert animal2.position.vect == (3,4)
+                assert animal2.position == (3,4)
                 
             def test_move_out_of_bounds_cell(self):
                 animal = Animal(position=(0,0))
                 self.entity_grid._set_cell_value(coordinates=(0,0),
                                                 value=animal)
                 # Left
-                assert animal.position.vect == (0,0)
+                assert animal.position == (0,0)
                 assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
                 animal._move(Direction.LEFT, 
                              grid=self.grid)
-                assert animal.position.vect == (0,0)
+                assert animal.position == (0,0)
                 assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
                 
                 # Up
                 animal._move(Direction.UP, 
                              grid=self.grid)
-                assert animal.position.vect == (0,0)
+                assert animal.position == (0,0)
                 assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
                 
                 # Right
                 animal2 = Animal(position=(19,19))
                 self.entity_grid._set_cell_value(coordinates=(19,19),
                                                 value=animal2)
-                assert animal2.position.vect == (19,19)
+                assert animal2.position == (19,19)
                 assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
                 animal2._move(Direction.RIGHT, 
                              grid=self.grid)
-                assert animal2.position.vect == (19,19)
+                assert animal2.position == (19,19)
                 assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
                 
                 #Down
                 animal2._move(Direction.DOWN, 
                              grid=self.grid)
-                assert animal2.position.vect == (19,19)
+                assert animal2.position == (19,19)
                 assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
                 
                 
@@ -479,7 +479,7 @@ class TestAnimal:
                             position=(3,2),
                             genetic_data={})
                 
-                position = seed.position()
+                position = seed.position
                 
                 self.grid.resource_grid._set_cell_value(coordinates=position,
                                                       value=seed)
@@ -506,7 +506,7 @@ class TestAnimal:
                                           'blue_energy':5,
                                           'red_energy':7})
                 
-                position = seed.position()
+                position = seed.position
                 
                 self.grid.resource_grid._set_cell_value(coordinates=position,
                                                       value=seed)
@@ -526,9 +526,9 @@ class TestAnimal:
                 animal._recycle_seed(grid=self.grid)
                 assert not animal._pocket 
                 energie_cells = (self.grid.resource_grid._find_coordinates_with_class(target_class=BlueEnergy,
-                                                                                position=animal.position()) + 
+                                                                                position=animal.position) + 
                                  self.grid.resource_grid._find_coordinates_with_class(target_class=RedEnergy,
-                                                                                position=animal.position()))
+                                                                                position=animal.position))
                 energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]
                 assert len(energies) == 2
                 
@@ -557,7 +557,7 @@ class TestAnimal:
                                                  blue_energy=10,
                                                  red_energy=20)
                 
-                animal._pick_up_resource(coordinates=tree.position(),
+                animal._pick_up_resource(coordinates=tree.position,
                                          grid=self.grid)
                 animal.red_energy == 10
                 animal.blue_energy == 10
@@ -580,6 +580,11 @@ class TestAnimal:
                 assert not tree._max_age == max_age
                 assert not tree.blue_energy == blue_energy
                 assert not tree.red_energy == red_energy
+                
+            def test_decompose(self):
+                resource_grid = self.grid.resource_grid
+                position = self.animal.position
+                self.animal._die(grid=self.grid)
             
         
             

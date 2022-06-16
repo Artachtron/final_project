@@ -68,7 +68,7 @@ class SubGrid:
                     False if it couldn't place it
         """   
          
-        coordinates: Tuple[int, int] = value.position() # position of the value
+        coordinates: Tuple[int, int] = value.position # position of the value
           
         return self._set_cell_value(coordinates=coordinates,
                                     value=value)
@@ -236,7 +236,7 @@ class SubGrid:
                                          value=value):
 
                             # Reset the old position
-                            old_position = value.position()
+                            old_position = value.position
                             self._empty_cell(coordinates=old_position)
                             
         return success
@@ -506,7 +506,7 @@ class Grid:
             case EntityType.Seed.value:
                 entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
         
-        self.entity_grid._set_cell_value(coordinates=entity.position(),
+        self.entity_grid._set_cell_value(coordinates=entity.position,
                                         value=entity)
         return entity
         

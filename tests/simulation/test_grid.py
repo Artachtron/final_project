@@ -288,7 +288,7 @@ class TestSubGrid:
         
         def test_select_free_coordinates(self):
             cells = []
-            position = self.animal.position()
+            position = self.animal.position
             radius = 1
             for x in range(-radius,radius+1):
                 for y in range(-radius,radius+1):

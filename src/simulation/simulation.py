@@ -22,7 +22,7 @@ class Position:
      
     @staticmethod   
     def add(position: Position, vect: Tuple[int, int]):
-        pos = tuple(position.vect)
+        pos = tuple(position)
 
         return Position(pos[0] + vect[0], 
                         pos[1] + vect[1])
@@ -58,7 +58,7 @@ class SimulatedObject:
     
     @property
     def position(self):
-        return self._position
+        return self._position()
     
     @position.setter
     def position(self, value):

@@ -273,7 +273,7 @@ class Entity(SimulatedObject):
             Action: Death of the entity
         """
         grid.remove_entity(entity=self)
-        self.on_death(grid=grid)
+        self._on_death(grid=grid)
 
         print(f"{self} died at age {self._age}")
         
@@ -316,7 +316,7 @@ class Entity(SimulatedObject):
         
         # Select free cells to place energy on
         free_cells: Tuple[int, int] = resource_grid.select_free_coordinates(
-                                                     position=self.position(),
+                                                     position=self.position,
                                                      num_cells=2)
         
         # Red energy
@@ -539,7 +539,7 @@ class Animal(Entity):
             
             # Get a free cell around
             free_cell: Tuple[int, int] = entity_grid.select_free_coordinates(
-                                            position=self.position())
+                                            position=self.position)
             
             if free_cell:
                 # If animal possess a seed plant it,
@@ -584,6 +584,26 @@ class Animal(Entity):
         # Energy cost of action
         self._perform_action()
         
+    def _replant_seed(self, position: Tuple[int, int], grid: Grid) -> None:
+        """Private method:
+        Action: Replant seed store in pocket
+
+        Args:
+            position (Tuple[int, int]): cell coordinates on which to plant seed
+        """
+        # Nothing to replant if pocket is empty
+        if not self._pocket:
+            return
+               
+        # spawn the tree from seed, 
+        # at given position on the grid 
+        Tree.spawn_tree(seed=self._pocket,
+                        position=position,
+                        grid=grid)
+        
+        # Emtpy pocket
+        self._pocket = None
+        
         ###########################################################################
            
     
@@ -625,27 +645,6 @@ class Animal(Entity):
                                     adult_size=adult_size)
             return child
 
-    
-
-    def _replant_seed(self, position: Tuple[int, int], grid: Grid) -> None:
-        """Private method:
-        Action: Replant seed store in pocket
-
-        Args:
-            position (Tuple[int, int]): cell coordinates on which to plant seed
-        """
-        # Nothing to replant if pocket is empty
-        if not self._pocket:
-            return
-        
-        seed = self._pocket
-        
-        tree = seed.germinate()
-        tree.position = Position(*position)
-        grid.entity_grid.place_on_grid(value=tree)
-        
-        # Emtpy pocket
-        self._pocket = None
 
     def _on_death(self, grid: Grid) -> None:
         """Private method:
@@ -746,7 +745,7 @@ class Tree(Entity):
                                     red_energy=red_energy,
                                     appearance="tree.png")
         
-        self._production_type: EnergyType = (production_type or
+        self._production_type: EnergyType = (production_type or                 # Type of energy produce by the tree
                                             np.random.choice(list(EnergyType)))
         
     def produce_energy(self) -> None:
@@ -764,12 +763,12 @@ class Tree(Entity):
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
 
-    def on_death(self, grid: Grid) -> None:
+    def _on_death(self, grid: Grid) -> None:
         """Action on tree death, create a seed on dead tree position"""
         
         genetic_data = self._encode_genetic_data()
         
-        grid.create_seed(coordinates=self.position(),
+        grid.create_seed(coordinates=self.position,
                          genetic_data=genetic_data)
         
         grid.remove_entity(self)
@@ -800,6 +799,27 @@ class Tree(Entity):
         genetic_data['red_energy'] = original_dict['_energies_stock'][EnergyType.RED.value]
             
         return genetic_data
+    
+    @staticmethod
+    def spawn_tree(seed:Seed, grid:Grid, position:Position) -> Tree:
+        """Static public method:
+            Spawn a tree on a grid at a given position
+
+        Args:
+            seed (Seed):            seed from which to create the tree
+            grid (Grid):            grid on which to create the tree
+            position (Position):    position at which the tree should be created
+
+        Returns:
+            Tree: tree that was spawned
+        """        
+        # Spawn the tree
+        tree = seed.germinate()
+        # Move it to the proper position
+        tree.position = Position(*position)
+        grid.entity_grid.place_on_grid(value=tree)
+        
+        return tree
 
     def test_update(self):
         pass

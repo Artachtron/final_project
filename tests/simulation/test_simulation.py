@@ -20,6 +20,8 @@ class TestSimulatedObject:
                               size=10,
                               position=(20,10),
                               appearance="")
+        
+    
       
         
         
