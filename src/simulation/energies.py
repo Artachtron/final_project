@@ -1,3 +1,4 @@
+from __future__ import annotations
 import enum
 from os.path import dirname, realpath, join
 from pathlib import Path
@@ -5,9 +6,6 @@ from numpy.random import randint
 
 from typing import Tuple
 from simulation import SimulatedObject
-
-assets_path = join(Path(dirname(realpath(__file__))).parent.absolute(), "assets/models/energies")
-
 
 class Resource(SimulatedObject):
     def __init__(self,
@@ -53,11 +51,28 @@ class Energy(Resource):
     @property
     def type(self):
         return self._type
+    
+    @staticmethod
+    def generate(energy_type: EnergyType, position: Tuple[int, int],
+                 quantity: int, grid: Grid = None) -> Energy:
+        
+        match energy_type.value:
+            case EnergyType.BLUE.value:
+                energy = BlueEnergy(position=position,
+                                    quantity=quantity)
+                
+            case EnergyType.RED.value:
+                energy = RedEnergy(position=position,
+                                   quantity=quantity)
+        if grid:       
+            grid.place_on_resource(value=energy)
+                
+        return energy
 
 class RedEnergy(Energy):
     def __init__(self,
-                 energy_id: int,
                  position: Tuple[int,int],
+                 energy_id: int = 0,
                  quantity: int = 10,
                  ):
         
@@ -69,8 +84,8 @@ class RedEnergy(Energy):
         
 class BlueEnergy(Energy):
     def __init__(self,
-                 energy_id: int,
                  position: Tuple[int,int],
+                 energy_id: int = 0,
                  quantity: int = 10):
         
         super(BlueEnergy, self).__init__(energy_id=energy_id,

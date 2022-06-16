@@ -368,6 +368,7 @@ class TestAnimal:
                 yield
                 
                 self.entity = None
+                self.grid = None
                 
                 
             def test_move(self):

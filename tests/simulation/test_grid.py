@@ -245,9 +245,22 @@ class TestSubGrid:
             
             for _ in range(100):
                 free_cell = self.entity_grid.select_free_coordinates(position=position,
-                                                                    radius=radius)
+                                                                     radius=radius)
                 assert free_cell 
                 assert free_cell in cells
+                
+            # Multiple free cells
+            free_cells = self.entity_grid.select_free_coordinates(position=position,
+                                                                  radius=radius,
+                                                                  num_cells=2)
+            
+            assert len(free_cells) == 2
+            
+            free_cells = self.entity_grid.select_free_coordinates(position=position,
+                                                                  radius=radius,
+                                                                  num_cells=3)
+            
+            assert len(free_cells) == 3
                 
         
         

@@ -249,15 +249,19 @@ class Entity(SimulatedObject):
         resource_grid: SubGrid = grid.resource_grid
         # Check if the coordinates are available to drop on
         if resource_grid.are_available_coordinates(coordinates=coordinates):
-            
+                        
             # Remove energy amount from stock
             quantity = self._loose_energy(energy_type=energy_type,
                                           quantity=quantity)
+            
+            # Create the energy
+            energy = Energy.generate(energy_type=energy_type,
+                                     position=coordinates,
+                                     quantity=quantity)
+            
+            # Place energy on the grid
+            grid.place_on_resource(value=energy)
 
-            # Create the energy at coordinates
-            grid.create_energy(energy_type=energy_type,
-                               quantity=quantity,
-                               coordinates=coordinates)
         # Energy cost of action
         self._perform_action()
      
@@ -305,19 +309,28 @@ class Entity(SimulatedObject):
             Action: decompose an entity into its energy components
 
         Args:
-            entity (Entity): entity to decompose in energy
+            entity (Entity):    entity to decompose in energy
+            grid (Grid):        grid on which to deposit energy
         """
         resource_grid: SubGrid = grid.resource_grid
         
-        free_cell = resource_grid.select_free_coordinates(position=self.position())
-        grid.create_energy(energy_type=EnergyType.RED,
-                           quantity=entity.energies[EnergyType.RED.value],
-                           coordinates=free_cell)
+        # Select free cells to place energy on
+        free_cells: Tuple[int, int] = resource_grid.select_free_coordinates(
+                                                     position=self.position(),
+                                                     num_cells=2)
         
-        free_cell = resource_grid.select_free_coordinates(position=self.position())
-        grid.create_energy(energy_type=EnergyType.BLUE,
-                           quantity=entity.energies[EnergyType.BLUE.value],
-                           coordinates=free_cell)
+        # Red energy
+        Energy.generate(energy_type=EnergyType.RED,
+                        quantity=entity.energies[EnergyType.RED.value],
+                        position=free_cells[0],
+                        grid=grid)
+        
+        # Blue energy                            
+        Energy.generate(energy_type=EnergyType.BLUE,
+                        quantity=entity.energies[EnergyType.BLUE.value],
+                        position=free_cells[1],
+                        grid=grid)
+ 
     
     
 
@@ -450,7 +463,9 @@ class Entity(SimulatedObject):
 
     def _distance_to_object(self, distant_object: Entity|Energy) -> float:
         from math import sqrt
-        distance = sqrt((self._position[0] - distant_object._position[0])**2 + (self._position[1] - distant_object._position[1])**2)
+        distance = sqrt((self._position[0] - distant_object._position[0])**2 +
+                        (self._position[1] - distant_object._position[1])**2)
+        
         return round(distance, 2)
     
     def update(self):
@@ -499,14 +514,11 @@ class Animal(Entity):
         entity_grid: SubGrid = grid.entity_grid
         next_pos = Position.add(position=self.position,
                                 vect=direction.value)
-        
-        # Check that coordinates are available to move
-        if entity_grid.are_available_coordinates(coordinates=next_pos()):
-            
-            # Ask the grid to update, changing old position to empty,
-            #and new position to occupied by self
-            entity_grid.update_cell(new_coordinate=next_pos.vect,
-                                    value=self)
+                    
+        # Ask the grid to update, changing old position to empty,
+        #and new position to occupied by self
+        if entity_grid.update_cell(new_coordinate=next_pos.vect,
+                                    value=self):
             
             # update self position
             self.position = next_pos
@@ -526,7 +538,9 @@ class Animal(Entity):
                                     quantity=Animal.PLANTING_COST):
             
             # Get a free cell around
-            free_cell = resource_grid.select_free_coordinates(position=self.position())
+            free_cell: Tuple[int, int] = resource_grid.select_free_coordinates(
+                                            position=self.position())
+            
             if free_cell:
                 # If animal possess a seed plant it,
                 # else plant a new tree

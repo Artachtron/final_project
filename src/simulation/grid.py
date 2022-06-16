@@ -4,7 +4,7 @@ from types import NoneType
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType, Resource
 from entities import Entity, Animal, Tree, Seed, EntityType
 import enum
-from random import choice
+from random import sample
 from itertools import combinations
 
 class SubGridType(enum.Enum):
@@ -71,7 +71,7 @@ class SubGrid:
         coordinates: Tuple[int, int] = value.position() # position of the value
           
         return self._set_cell_value(coordinates=coordinates,
-                                   value=value)
+                                    value=value)
             
     def _is_of_valid_type(self, value: Any) -> bool:
         """Verify if the value's type is valid
@@ -189,23 +189,30 @@ class SubGrid:
         
         return positions
     
-    def select_free_coordinates(self, position: Tuple[int, int],
-                                radius: int = 1) -> Tuple[int, int]:
+    def select_free_coordinates(self, position: Tuple[int, int], radius: int = 1,
+                                num_cells: int = 1) -> Tuple[int, int]:
         """Public method:
             Select randomly from the free cells available
 
         Args:
-            radius (int, optional):     radius of search. Defaults to 1.
             position (Tuple[int,int]):  starting position to look around
+            radius (int, optional):     radius of search. Defaults to 1.
+            num_cells (int):            number of cells to return. Defaults to 1
 
         Returns:
-            Tuple[int,int]: coordinates of the free cell
+            Tuple[int,int]:         coordinates of the free cell, if num_cells = 1
+            List[Tuple[int,int]]:   list of coordinates of free cells, if num_cells > 1
         """
         free_cells: Set[Tuple[int, int]] = self.find_free_coordinates(position=position,
                                                                       radius=radius)
 
         if free_cells:
-            return choice(free_cells)
+            samples = sample(free_cells, num_cells)
+            if num_cells == 1:
+                return samples[0]
+            
+            else:
+                return samples
         
         return None
 
@@ -379,11 +386,11 @@ class Grid:
         
         return False
     
-    def place_on_resource(self, value:Any):
-        self.resource_grid.place_on_grid(value=value)
+    def place_on_resource(self, value: Any) -> bool:
+        return self.resource_grid.place_on_grid(value=value)
         
-    def place_on_entity(self, value:Any) :
-        self.entity_grid.place_on_grid(value=value)
+    def place_on_entity(self, value:Any) -> bool:
+        return self.entity_grid.place_on_grid(value=value)
         
     def create_seed(self, coordinates: Tuple[int, int], genetic_data: Dict):
         seed = Seed(seed_id=genetic_data['tree_id'],
