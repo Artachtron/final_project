@@ -1,19 +1,19 @@
 from __future__ import annotations
+from os import environ
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
-    from environment import Environment
+    from simulation import Environment
     
-from typing import Tuple, Set, Final, Dict, Any
+from typing import Tuple, Final, Dict, Any
 import enum
 import random
-from energies import EnergyType, Energy, Resource
 import numpy as np
 import inspect
 
-
-from simulation import SimulatedObject, Position
+from energies import EnergyType, Energy, Resource
+from extra_classes import SimulatedObject, Position
 
 
 class Direction(enum.Enum):
@@ -41,7 +41,6 @@ class Entity(SimulatedObject):
     
     def __init__(self,
                  position: Tuple[int, int],
-                 environment: Environment,
                  entity_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
@@ -56,7 +55,6 @@ class Entity(SimulatedObject):
         super(Entity, self).__init__(sim_obj_id=entity_id,
                                      position=position,
                                      size=size,
-                                     environment=environment,
                                      appearance=appearance)                 
         
         self._energies_stock: Dict[str, int] = {              # energy currently owned
@@ -175,6 +173,18 @@ class Entity(SimulatedObject):
         # Add the quantity
         self._energies_stock[energy_type.value] += quantity
         
+    def _quantity_from_stock(self, energy_type: EnergyType, quantity: int) -> int:
+        # quantiy can't be negative
+        if quantity < 0 :
+            raise ValueError
+        
+        energy_amount: int = self._energies_stock[energy_type.value]
+        # if quantity is more than stock, set stock to 0
+        if energy_amount - quantity < 0:
+           quantity = energy_amount 
+        
+        return quantity
+            
     def _loose_energy(self, energy_type: EnergyType, quantity: int) -> int:
         """Private method:
             Loose energy of specified type from energies stock,
@@ -190,19 +200,12 @@ class Entity(SimulatedObject):
         Returns:
             int: quantity of energy that was effectively lost
         """
-        # quantiy can't be negative
-        if quantity < 0 :
-            raise ValueError
         
-        energy_amount: int = self._energies_stock[energy_type.value]
-        # if quantity is more than stock, set stock to 0
-        if energy_amount - quantity > 0:
-            self._energies_stock[energy_type.value] -= quantity
-        
-        else:
-            quantity = energy_amount
-            self._energies_stock[energy_type.value] = 0
+        quantity = self._quantity_from_stock(energy_type=energy_type,
+                                             quantity=quantity)
 
+        self._energies_stock[energy_type.value] -= quantity
+        
         # dies if the entity run out of blue energy
         if self._energies_stock[EnergyType.BLUE.value] <= 0:
             self._die()
@@ -238,7 +241,7 @@ class Entity(SimulatedObject):
         return can_perform
         
     def _drop_energy(self, energy_type: EnergyType, quantity: int,
-                    coordinates: Tuple[int, int], grid: Grid) -> None:
+                    coordinates: Tuple[int, int], environment: Environment) -> None:
         """Private method:
             Action: Drop an amount energy of the specified type at a coordinate
 
@@ -247,28 +250,24 @@ class Entity(SimulatedObject):
             quantity (int):                 amount of energy to drop
             coordinates (Tuple[int,int]):   coordinates on which to drop energy
             grid (Grid):                    grid on which to drop energy         
-        """
+        """           
         
-        resource_grid: SubGrid = grid.resource_grid
-        # Check if the coordinates are available to drop on
-        if resource_grid.are_available_coordinates(coordinates=coordinates):
-                        
+        # Calculate the energy capable of being dropped
+        quantity = self._quantity_from_stock(energy_type=energy_type,
+                                                quantity=quantity)
+        # Create the energy
+        if environment.create_energy(energy_type=energy_type,
+                                     coordinates=coordinates,
+                                     quantity=quantity):
+            
             # Remove energy amount from stock
-            quantity = self._loose_energy(energy_type=energy_type,
-                                          quantity=quantity)
-            
-            # Create the energy
-            energy = Energy.generate(energy_type=energy_type,
-                                     position=coordinates,
-                                     quantity=quantity)
-            
-            # Place energy on the grid
-            grid.place_resource(value=energy)
+            self._loose_energy(energy_type=energy_type,
+                               quantity=quantity)
 
         # Energy cost of action
         self._perform_action()
         
-    def _pick_up_resource(self, coordinates: Tuple[int, int], grid: Grid) -> None:
+    def _pick_up_resource(self, coordinates: Tuple[int, int], environment: Environment) -> None:
         """Private method:
             Action: Pick energy up at coordinates
 
@@ -276,8 +275,9 @@ class Entity(SimulatedObject):
             coordinates (Tuple[int, int]):  coordinates to pick up energy from
             grid (Grid):                    grid on which to pick up energy
         """
-        resource_grid: SubGrid = grid.resource_grid
-        resource: Resource = resource_grid.get_cell_value(coordinates=coordinates)
+
+        # Get the resource at coordinates from the environment 
+        resource = environment.get_resource_at(coordinates=coordinates)
         
         if resource:
             # If resource is an energy
@@ -288,20 +288,21 @@ class Entity(SimulatedObject):
             # If resource is a seed   
             elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
                 self._store_seed(seed=resource)
-            self.environment.remove_energy(energy=resource)
+                
+            environment.remove_energy(energy=resource)
 
         self._perform_action()
 
-    def _die(self, grid: Grid) -> None:
+    def _die(self, environment: Environment) -> None:
         """Private method:
             Action: Death of the entity
         """
-        self.environment.remove_entity(entity=self)
-        self._on_death(grid=grid)
+        environment.remove_entity(entity=self)
+        self._on_death(environment=environment)
 
         print(f"{self} died at age {self._age}")
         
-    def _decompose(self, entity: Entity, grid: Grid) -> None:
+    def _decompose(self, entity: Entity, environment: Environment) -> None:
         """Private method:
             Action: decompose an entity into its energy components
 
@@ -309,145 +310,144 @@ class Entity(SimulatedObject):
             entity (Entity):    entity to decompose in energy
             grid (Grid):        grid on which to deposit energy
         """
-        resource_grid: SubGrid = grid.resource_grid
+        resource_grid: SubGrid = environment.grid.resource_grid
         
         # Select free cells to place energy on
         free_cells: Tuple[int, int] = resource_grid.select_free_coordinates(
                                                      position=self.position,
                                                      num_cells=2)
         
-        # Red energy
-        Energy.generate(energy_type=EnergyType.RED,
-                        quantity=entity.energies[EnergyType.RED.value],
-                        position=free_cells[0],
-                        grid=grid)
+        # Red energy        
+        environment.create_energy(energy_type=EnergyType.RED,
+                                  coordinates=free_cells[0],
+                                  quantity=entity.energies[EnergyType.RED.value])
         
         # Blue energy                            
-        Energy.generate(energy_type=EnergyType.BLUE,
-                        quantity=entity.energies[EnergyType.BLUE.value],
-                        position=free_cells[1],
-                        grid=grid)
+
+        environment.create_energy(energy_type=EnergyType.BLUE,
+                                  coordinates=free_cells[1],
+                                  quantity=entity.energies[EnergyType.BLUE.value])
      
     ################################################################################################ 
         
     
-    def _find_occupied_cells_by_value(self, subgrid, value,
-                             radius: int = 1, include_self: bool = False) -> np.array[bool]:
-        """ Find the cells occupied by the given value, return a list of boolean
+    # def _find_occupied_cells_by_value(self, subgrid, value,
+    #                          radius: int = 1, include_self: bool = False) -> np.array[bool]:
+    #     """ Find the cells occupied by the given value, return a list of boolean
 
-        Args:
-            subgrid (SubGrid):              subgrid on which to look for
-            value (Class):                  value to search for
-            radius (int, optional):         radius of search. Defaults to 1.
-            include_self (bool, optional):  include self in the list. Defaults to False.
+    #     Args:
+    #         subgrid (SubGrid):              subgrid on which to look for
+    #         value (Class):                  value to search for
+    #         radius (int, optional):         radius of search. Defaults to 1.
+    #         include_self (bool, optional):  include self in the list. Defaults to False.
 
-        Returns:
-            np.array[bool]: List of occupied (True) and empty cells (False)
-        """        
-        position: Tuple[int, int] = self._position
-        occupied_cells = []
+    #     Returns:
+    #         np.array[bool]: List of occupied (True) and empty cells (False)
+    #     """        
+    #     position: Tuple[int, int] = self._position
+    #     occupied_cells = []
         
-        for x in range(-radius, radius + 1):
-            for y in range(-radius, radius + 1):
-                if not include_self and x == 0 and y == 0:
-                    continue
-                coordinate = tuple(np.add(position,(x, y)))
-                occupied_cells.append((issubclass(type(subgrid.get_cell_value(coordinates=coordinate)),value)))
+    #     for x in range(-radius, radius + 1):
+    #         for y in range(-radius, radius + 1):
+    #             if not include_self and x == 0 and y == 0:
+    #                 continue
+    #             coordinate = tuple(np.add(position,(x, y)))
+    #             occupied_cells.append((issubclass(type(subgrid.get_cell_value(coordinates=coordinate)),value)))
 
-        return np.array(occupied_cells)         
+    #     return np.array(occupied_cells)         
            
-    def _find_occupied_cells_by_entities(self, radius: int = 1) -> np.array[bool]:
-        """ Find the cells occupied by entities, return a list of boolean
+    # def _find_occupied_cells_by_entities(self, radius: int = 1) -> np.array[bool]:
+    #     """ Find the cells occupied by entities, return a list of boolean
 
-        Args:
-            radius (int, optional): radius of search. Defaults to 1.
+    #     Args:
+    #         radius (int, optional): radius of search. Defaults to 1.
 
-        Returns:
-            np.array[bool]: List of occupied (True) and empty cells (False)
-        """               
-        return self._find_occupied_cells_by_value(subgrid=self.entity_grid,
-                                                    value=Entity,
-                                                    radius=radius) 
+    #     Returns:
+    #         np.array[bool]: List of occupied (True) and empty cells (False)
+    #     """               
+    #     return self._find_occupied_cells_by_value(subgrid=self.entity_grid,
+    #                                                 value=Entity,
+    #                                                 radius=radius) 
         
-    def _find_occupied_cells_by_energies(self, radius: int = 1) -> np.array[bool]:
-        """ Find the cells occupied by energies, return a list of boolean
+    # def _find_occupied_cells_by_energies(self, radius: int = 1) -> np.array[bool]:
+    #     """ Find the cells occupied by energies, return a list of boolean
 
-        Args:
-            radius (int, optional): radius of search. Defaults to 1.
+    #     Args:
+    #         radius (int, optional): radius of search. Defaults to 1.
 
-        Returns:
-            np.array[bool]: List of occupied (True) and empty cells (False)
-        """               
-        return self._find_occupied_cells_by_value(subgrid=self.grid.resource_grid,
-                                                    value=Energy,
-                                                    radius=radius,
-                                                    include_self=True)     
+    #     Returns:
+    #         np.array[bool]: List of occupied (True) and empty cells (False)
+    #     """               
+    #     return self._find_occupied_cells_by_value(subgrid=self.grid.resource_grid,
+    #                                                 value=Energy,
+    #                                                 radius=radius,
+    #                                                 include_self=True)     
             
     
-    def _find_tree_cells(self, include_self: bool = False,
-                         radius: int = 1) -> Set[Tuple[int, int]]:
-        """Find the cells at proximity on which trees are located
+    # def _find_tree_cells(self, include_self: bool = False,
+    #                      radius: int = 1) -> Set[Tuple[int, int]]:
+    #     """Find the cells at proximity on which trees are located
 
-        Args:
-            include_self (bool, optional):  include self in the list. Defaults to False.
-            radius (int, optional):         radius of search. Defaults to 1.
+    #     Args:
+    #         include_self (bool, optional):  include self in the list. Defaults to False.
+    #         radius (int, optional):         radius of search. Defaults to 1.
 
-        Returns:
-            Set[Tuple[int,int]]: set of found trees' cells' coordinates
-        """
-        trees: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(subgrid=self.entity_grid,
-                                                                value=Tree,
-                                                                radius=radius)
-        if not include_self and self._position in trees:
-            trees.remove(self._position)
-        return trees
+    #     Returns:
+    #         Set[Tuple[int,int]]: set of found trees' cells' coordinates
+    #     """
+    #     trees: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(subgrid=self.entity_grid,
+    #                                                             value=Tree,
+    #                                                             radius=radius)
+    #     if not include_self and self._position in trees:
+    #         trees.remove(self._position)
+    #     return trees
 
-    def _find_animal_cells(self, include_self: bool = False,
-                           radius: int = 1) -> Set[Tuple[int, int]]:
-        """Find the cells at proximity on which animals are located
+    # def _find_animal_cells(self, include_self: bool = False,
+    #                        radius: int = 1) -> Set[Tuple[int, int]]:
+    #     """Find the cells at proximity on which animals are located
 
-        Args:
-            include_self (bool, optional):  include self in the list. Defaults to False.
-            radius (int, optional):         radius of search. Defaults to 1.
+    #     Args:
+    #         include_self (bool, optional):  include self in the list. Defaults to False.
+    #         radius (int, optional):         radius of search. Defaults to 1.
 
-        Returns:
-            Set[Tuple[int,int]]: set of found animals' cells' coordinates
-        """
-        animals: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
-            subgrid=self.entity_grid, value=Animal, radius=radius)
-        if not include_self and self._position in animals:
-            animals.remove(self._position)
-        return animals
+    #     Returns:
+    #         Set[Tuple[int,int]]: set of found animals' cells' coordinates
+    #     """
+    #     animals: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
+    #         subgrid=self.entity_grid, value=Animal, radius=radius)
+    #     if not include_self and self._position in animals:
+    #         animals.remove(self._position)
+    #     return animals
 
-    def _find_entities_cells(self, include_self: bool = False,
-                           radius: int = 1) -> Set[Tuple[int, int]]:
-        """Find the cells at proximity on which entities are located
+    # def _find_entities_cells(self, include_self: bool = False,
+    #                        radius: int = 1) -> Set[Tuple[int, int]]:
+    #     """Find the cells at proximity on which entities are located
 
-        Args:
-            include_self (bool, optional):  include self in the list. Defaults to False.
-            radius (int, optional):         radius of search. Defaults to 1.
+    #     Args:
+    #         include_self (bool, optional):  include self in the list. Defaults to False.
+    #         radius (int, optional):         radius of search. Defaults to 1.
 
-        Returns:
-            Set[Tuple[int,int]]: set of found entities' cells' coordinates
-        """
-        entities: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
-            subgrid=self.entity_grid, value=Entity, radius=radius)
-        if not include_self and self._position in entities:
-            entities.remove(self._position)
-        return entities
+    #     Returns:
+    #         Set[Tuple[int,int]]: set of found entities' cells' coordinates
+    #     """
+    #     entities: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
+    #         subgrid=self.entity_grid, value=Entity, radius=radius)
+    #     if not include_self and self._position in entities:
+    #         entities.remove(self._position)
+    #     return entities
 
-    def _find_energies_cells(self, radius: int = 1) -> Set[Tuple[int, int]]:
-        """Find cells at proximity on which energies are located
+    # def _find_energies_cells(self, radius: int = 1) -> Set[Tuple[int, int]]:
+    #     """Find cells at proximity on which energies are located
 
-        Args:
-            radius (int, optional): radius of search. Defaults to 1.
+    #     Args:
+    #         radius (int, optional): radius of search. Defaults to 1.
 
-        Returns:
-            Set[Tuple[int,int]]: set of found energies' cells' coordinates
-        """
-        energies: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
-            subgrid=self.grid.resource_grid, value=Energy, radius=radius)
-        return energies
+    #     Returns:
+    #         Set[Tuple[int,int]]: set of found energies' cells' coordinates
+    #     """
+    #     energies: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
+    #         subgrid=self.grid.resource_grid, value=Energy, radius=radius)
+    #     return energies
 
            
     
@@ -465,7 +465,6 @@ class Animal(Entity):
     
     def __init__(self,
                  position: Tuple[int, int],
-                 environment: Environment = None,
                  animal_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
@@ -476,7 +475,6 @@ class Animal(Entity):
                  ):
         
         super(Animal, self).__init__(position=position,
-                                     environment=environment,
                                      entity_id=animal_id,
                                      adult_size=adult_size,
                                      max_age=max_age,
@@ -511,12 +509,12 @@ class Animal(Entity):
         # Energy cost of action
         self._perform_action()
         
-    def _plant_tree(self, grid: Grid) -> None:
+    def _plant_tree(self, environment: Environment) -> None:
         """Private method:
             Action: Plant a tree nearby, consume red energy
         """
         
-        entity_grid: SubGrid = grid.entity_grid
+        entity_grid: SubGrid = environment.grid.entity_grid
         
         # Verifiy that enough enough energy is available
         if self._can_perform_action(energy_type=EnergyType.RED,
@@ -531,10 +529,10 @@ class Animal(Entity):
                 # else plant a new tree
                 if self._pocket:
                     self._replant_seed(position=free_cell,
-                                       grid=grid)
+                                       environment=environment)
                     
                 else:
-                    self.environment.create_tree(coordinates=free_cell)
+                    environment.create_tree(coordinates=free_cell)
                     
             # Energy cost of action
             self._perform_action()
@@ -550,7 +548,7 @@ class Animal(Entity):
         # Energy cost of action
         self._perform_action()
         
-    def _recycle_seed(self, grid: Grid) -> None:
+    def _recycle_seed(self, environment: Environment) -> None:
         """Private method:
         Action: Destroy seed stored and drop energy content
         """
@@ -563,13 +561,13 @@ class Animal(Entity):
         
         # Drop energy from seed on the ground
         self._decompose(entity=tree,
-                        grid=grid)
+                        environment=environment)
         # Empty pocket
         self._pocket = None
         # Energy cost of action
         self._perform_action()
         
-    def _replant_seed(self, position: Tuple[int, int], grid: Grid) -> None:
+    def _replant_seed(self, position: Tuple[int, int], environment: Environment) -> None:
         """Private method:
         Action: Replant seed store in pocket
 
@@ -582,8 +580,8 @@ class Animal(Entity):
                
         # spawn the tree from seed, 
         # at given position on the grid
-        self.environment.spawn_tree(seed=self._pocket,
-                                    position=position)
+        environment.spawn_tree(seed=self._pocket,
+                               position=position)
                
         # Emtpy pocket
         self._pocket = None
@@ -593,50 +591,50 @@ class Animal(Entity):
     
     
     
-    def reproduce(self, mate: Animal) -> Animal:
-        """Create an offspring from 2 mates
+    # def reproduce(self, mate: Animal) -> Animal:
+    #     """Create an offspring from 2 mates
 
-        Args:
-            mate (Animal): Animal to mate with
+    #     Args:
+    #         mate (Animal): Animal to mate with
 
-        Returns:
-            Animal: Generated offsrping
-        """        
-        self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
+    #     Returns:
+    #         Animal: Generated offsrping
+    #     """        
+    #     self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
         
-        if not (self._is_adult and mate._is_adult):
-            return
+    #     if not (self._is_adult and mate._is_adult):
+    #         return
         
-        if self._distance_to_object(distant_object=mate) > 2:
-            return
+    #     if self._distance_to_object(distant_object=mate) > 2:
+    #         return
         
-        self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
-        mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
+    #     self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
+    #     mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
         
-        if (self._can_perform_action(energy_type=EnergyType.RED,
-                                    quantity=self_energy_cost) and
-            mate._can_perform_action(energy_type=EnergyType.RED,
-                                     quantity=mate_energy_cost)):
+    #     if (self._can_perform_action(energy_type=EnergyType.RED,
+    #                                 quantity=self_energy_cost) and
+    #         mate._can_perform_action(energy_type=EnergyType.RED,
+    #                                  quantity=mate_energy_cost)):
         
-            birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
-            adult_size = int((self._size + mate._size)/2)
+    #         birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
+    #         adult_size = int((self._size + mate._size)/2)
             
-            child = self.grid.create_entity(entity_type=EntityType.Animal.value,
-                                    position=birth_position,
-                                    size=1,
-                                    blue_energy=Animal.INITIAL_BLUE_ENERGY,
-                                    red_energy=Animal.INITIAL_RED_ENERGY,
-                                    adult_size=adult_size)
-            return child
+    #         child = self.grid.create_entity(entity_type=EntityType.Animal.value,
+    #                                 position=birth_position,
+    #                                 size=1,
+    #                                 blue_energy=Animal.INITIAL_BLUE_ENERGY,
+    #                                 red_energy=Animal.INITIAL_RED_ENERGY,
+    #                                 adult_size=adult_size)
+    #         return child
 
 
-    def _on_death(self, grid: Grid) -> None:
+    def _on_death(self, environment: Environment) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
         self._decompose(entity=self,
-                        grid=grid)
+                        environment=environment)
 
-    def modify_cell_color(self, color: Tuple[int,int,int], coordinates: Tuple[int,int] = None) -> None:
+    def modify_cell_color(self, color: Tuple[int,int,int], grid: Grid, coordinates: Tuple[int,int] = None) -> None:
         """Modfify the color of a given cell, usually the cell currently sat on
 
         Args:
@@ -644,7 +642,7 @@ class Animal(Entity):
             coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
         """
         coordinates = coordinates if coordinates else self.position
-        self.grid.color_grid.set_cell_value(
+        grid.color_grid.set_cell_value(
             coordinates=coordinates,
             value=color)
 
@@ -661,7 +659,7 @@ class Animal(Entity):
         self._interpret_outputs(outputs=outputs)                                                       
         #Outputs
         
-    def _normalize_inputs(self):
+    def _normalize_inputs(self, grid: Grid):
          #Inputs
         ## Internal properties
         age = self._age/100
@@ -670,7 +668,7 @@ class Animal(Entity):
         ## Perceptions
         see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
         see_energies = [int(x) for x in self._find_occupied_cells_by_energies()]
-        see_colors = self.grid.color_grid.get_sub_region(initial_pos=self.position,
+        see_colors = grid.color_grid.get_sub_region(initial_pos=self.position,
                                                          radius=2).flatten()/255
         see_colors = see_colors.tolist()
         
@@ -687,7 +685,7 @@ class Animal(Entity):
             x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
             coordinates = tuple(np.add(self.position, (x, y)))
             if self._is_available_coordinates(coordinates=coordinates,
-                                       subgrid=self.grid.resource_grid):
+                                       subgrid=grid.resource_grid):
                 self._drop_energy(energy_type=np.random.choice(EnergyType),
                                  coordinates=coordinates,
                                  quantity=1)
@@ -710,7 +708,6 @@ class Tree(Entity):
     def __init__(self,
                  position: Tuple[int, int],
                  tree_id: int = 0,
-                 environment: Environment = None,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -721,7 +718,6 @@ class Tree(Entity):
                  ):
         
         super(Tree, self).__init__( position=position,
-                                    environment=environment,
                                     entity_id=tree_id,
                                     adult_size=adult_size,
                                     max_age=max_age,
@@ -749,13 +745,12 @@ class Tree(Entity):
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
 
-    def _on_death(self, grid: Grid) -> None:
+    def _on_death(self, environment: Environment) -> None:
         """Action on tree death, create a seed on dead tree position"""
         
-        self._create_seed(grid=grid)
+        environment.create_seed_from_tree(tree=self)
         
-        self.environment.remove_entity(self)
-        
+
     def _encode_genetic_data(self) -> Dict:
         """Private method:
             Encode the genetic information necessary
@@ -783,37 +778,15 @@ class Tree(Entity):
             
         return genetic_data
     
-    def _create_seed(self, grid: Grid):
+    def create_seed(self) -> Seed:
         genetic_data = self._encode_genetic_data()
         
         seed = Seed(seed_id=self.id,
                     position=self.position,
                     genetic_data=genetic_data)
         
-        grid.place_resource(value=seed)
+        return seed
        
-        
-    @staticmethod
-    def spawn_tree(seed:Seed, grid:Grid, position:Position) -> Tree:
-        """Static public method:
-            Spawn a tree on a grid at a given position
-
-        Args:
-            seed (Seed):            seed from which to create the tree
-            grid (Grid):            grid on which to create the tree
-            position (Position):    position at which the tree should be created
-
-        Returns:
-            Tree: tree that was spawned
-        """        
-        # Spawn the tree
-        tree = seed.germinate()
-        # Move it to the proper position
-        tree.position = Position(*position)
-        grid.place_entity(value=tree)
-        
-        return tree
-
     def test_update(self):
         pass
 
@@ -821,11 +794,9 @@ class Seed(Resource):
     def __init__(self,
                  seed_id: int,
                  position: Tuple[int, int],
-                 genetic_data: Dict,
-                 environment: Environment = None):
+                 genetic_data: Dict):
         
         super(Seed, self).__init__(resource_id=seed_id,
-                                   environment=environment,
                                    position=position,
                                    size=10,
                                    appearance="seed.png",

@@ -6,7 +6,6 @@ from project.src.simulation.energies import Energy, BlueEnergy, RedEnergy, Energ
 class TestEnergy:
     def test_create_energy(self):
        energy = Energy(energy_id=0,
-                       environment=None,
                        energy_type=EnergyType.BLUE,
                        position=(20,20)) 
        
@@ -14,7 +13,6 @@ class TestEnergy:
        
     def test_energy_fields(self):
         energy = Energy(energy_id=0,
-                        environment=None,
                         energy_type=EnergyType.BLUE,
                         position=(20,20)) 
         

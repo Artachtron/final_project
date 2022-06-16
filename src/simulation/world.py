@@ -1,15 +1,11 @@
 
 from __future__ import annotations
 
-from simulation import Simulation, SimState
-from environment import Environment
+from simulation import Simulation
 from display import Display
 
-import numpy as np
 from typing import Tuple, Final
 
-
-grid = None
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
@@ -37,7 +33,6 @@ class World:
         self.display_active: bool = display_active
     
         self.simulation: Simulation
-        self.environment: Environment
         self.display: Display
         
         self._init_world()
@@ -47,10 +42,7 @@ class World:
         return self.__id
         
     def _init_world(self):   
-        self.environment = Environment(env_id=self.id)
-                   
-        self.simulation = Simulation(sim_id=self.id,
-                                     environment=self.environment)
+        self.simulation = Simulation(sim_id=self.id)
         
         self.display = Display(display_id=self.id,
                               dimensions=self.dimensions,
@@ -59,12 +51,12 @@ class World:
     
             
         
-    def update(self):
+    """ def update(self):
         self.grid.update()
         self.simulation.update()
         
         if self.display_active:
-            self.diplay.update()   
+            self.diplay.update() """   
    
              
 """ def main():
@@ -100,43 +92,43 @@ class World:
     
 
        
-def get_random_coordinates() -> Tuple[int,int]:
-    """Get random coordinates of a point on a grid
+# def get_random_coordinates() -> Tuple[int,int]:
+#     """Get random coordinates of a point on a grid
 
-    Returns:
-        Tuple[int,int]: coordinates generated randomly
-    """      
-    return np.random.randint(0, grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
+#     Returns:
+#         Tuple[int,int]: coordinates generated randomly
+#     """      
+#     return np.random.randint(0, grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
     
-def init_trees(count: int=0) -> None:
-    """Initialize the population of trees
+# def init_trees(count: int=0) -> None:
+#     """Initialize the population of trees
 
-    Args:
-        count (int, optional): number of trees to create. Defaults to 0.
-    """    
+#     Args:
+#         count (int, optional): number of trees to create. Defaults to 0.
+#     """    
     
-    for _ in range(count):
-        create_new_tree()
+#     for _ in range(count):
+#         create_new_tree()
         
-def create_new_tree():
-    """Create a new tree in a vacant cell
-    """    
-    x, y = get_random_coordinates()
+# def create_new_tree():
+#     """Create a new tree in a vacant cell
+#     """    
+#     x, y = get_random_coordinates()
     
-    while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
-       x, y = get_random_coordinates()
+#     while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
+#        x, y = get_random_coordinates()
     
-    grid.create_entity(entity_type="tree", position=(x,y), blue_energy=20, max_age=10)
+#     grid.create_entity(entity_type="tree", position=(x,y), blue_energy=20, max_age=10)
     
-def init_energies() -> None:
-    """Initialize the energies on the grid (only for tests)
-    """
-    pass
+# def init_energies() -> None:
+#     """Initialize the energies on the grid (only for tests)
+#     """
+#     pass
         
-def main():
-    pass
+# def main():
+#     pass
            
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
     
 

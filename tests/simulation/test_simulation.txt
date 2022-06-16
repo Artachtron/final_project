@@ -1,8 +1,9 @@
 import sys, os, pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.simulation import SimulatedObject, Simulation
+from project.src.simulation.simulation import Simulation
 from project.src.simulation.environment import Environment
+from project.src.simulation.extra_classes import SimulatedObject 
 
 
 class TestSimulation:

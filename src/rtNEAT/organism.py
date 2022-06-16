@@ -5,7 +5,6 @@ from typing import Tuple
 from genome import Genome
 from network import Network
 
-from project.src.simulation.config import WorldTable
 
 
 class Organism:
@@ -17,7 +16,7 @@ class Organism:
         super(Organism, self).__init__(sim_body_id=organism_id,
                                        position=position)
         
-        self.__id = organism_id or WorldTable.get_organism_id
+        self.__id = organism_id #or WorldTable.get_organism_id
         self.genotype: Genome # The Organism's genotype 
         self.mind: Network
                 
