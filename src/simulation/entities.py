@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
+    from environment import Environment
     
 from typing import Tuple, Set, Final, Dict, Any
 import enum
@@ -13,6 +14,7 @@ import inspect
 
 
 from simulation import SimulatedObject, Position
+
 
 class Direction(enum.Enum):
     RIGHT   =   (1, 0)
@@ -39,6 +41,7 @@ class Entity(SimulatedObject):
     
     def __init__(self,
                  position: Tuple[int, int],
+                 environment: Environment,
                  entity_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
@@ -53,6 +56,7 @@ class Entity(SimulatedObject):
         super(Entity, self).__init__(sim_obj_id=entity_id,
                                      position=position,
                                      size=size,
+                                     environment=environment,
                                      appearance=appearance)                 
         
         self._energies_stock: Dict[str, int] = {              # energy currently owned
@@ -284,7 +288,7 @@ class Entity(SimulatedObject):
             # If resource is a seed   
             elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
                 self._store_seed(seed=resource)
-            grid.remove_energy(energy=resource)
+            self.environment.remove_energy(energy=resource)
 
         self._perform_action()
 
@@ -292,7 +296,7 @@ class Entity(SimulatedObject):
         """Private method:
             Action: Death of the entity
         """
-        grid.remove_entity(entity=self)
+        self.environment.remove_entity(entity=self)
         self._on_death(grid=grid)
 
         print(f"{self} died at age {self._age}")
@@ -461,6 +465,7 @@ class Animal(Entity):
     
     def __init__(self,
                  position: Tuple[int, int],
+                 environment: Environment = None,
                  animal_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
@@ -471,6 +476,7 @@ class Animal(Entity):
                  ):
         
         super(Animal, self).__init__(position=position,
+                                     environment=environment,
                                      entity_id=animal_id,
                                      adult_size=adult_size,
                                      max_age=max_age,
@@ -492,11 +498,11 @@ class Animal(Entity):
         """        
         entity_grid: SubGrid = grid.entity_grid
         next_pos = Position.add(position=self.position,
-                                vect=direction.value)
+                                vect=direction.value)()
                     
         # Ask the grid to update, changing old position to empty,
         #and new position to occupied by self
-        if entity_grid.update_cell(new_coordinates=next_pos.vect,
+        if entity_grid.update_cell(new_coordinates=next_pos,
                                     value=self):
             
             # update self position
@@ -528,8 +534,8 @@ class Animal(Entity):
                                        grid=grid)
                     
                 else:
-                    grid.create_entity(entity_type="tree",
-                                       position=free_cell)
+                    self.environment.create_tree(coordinates=free_cell)
+                    
             # Energy cost of action
             self._perform_action()
             
@@ -575,11 +581,10 @@ class Animal(Entity):
             return
                
         # spawn the tree from seed, 
-        # at given position on the grid 
-        Tree.spawn_tree(seed=self._pocket,
-                        position=position,
-                        grid=grid)
-        
+        # at given position on the grid
+        self.environment.spawn_tree(seed=self._pocket,
+                                    position=position)
+               
         # Emtpy pocket
         self._pocket = None
         
@@ -705,6 +710,7 @@ class Tree(Entity):
     def __init__(self,
                  position: Tuple[int, int],
                  tree_id: int = 0,
+                 environment: Environment = None,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -715,6 +721,7 @@ class Tree(Entity):
                  ):
         
         super(Tree, self).__init__( position=position,
+                                    environment=environment,
                                     entity_id=tree_id,
                                     adult_size=adult_size,
                                     max_age=max_age,
@@ -747,7 +754,7 @@ class Tree(Entity):
         
         self._create_seed(grid=grid)
         
-        grid.remove_entity(self)
+        self.environment.remove_entity(self)
         
     def _encode_genetic_data(self) -> Dict:
         """Private method:
@@ -814,13 +821,15 @@ class Seed(Resource):
     def __init__(self,
                  seed_id: int,
                  position: Tuple[int, int],
-                 genetic_data: Dict):
+                 genetic_data: Dict,
+                 environment: Environment = None):
         
         super(Seed, self).__init__(resource_id=seed_id,
-                                     position=position,
-                                     size=10,
-                                     appearance="seed.png",
-                                     quantity=-1)
+                                   environment=environment,
+                                   position=position,
+                                   size=10,
+                                   appearance="seed.png",
+                                   quantity=-1)
                 
         self.genetic_data = genetic_data
         

@@ -2,8 +2,8 @@
 from typing import Tuple, Any, Set, Type
 
 # Internals packages
-from energies import BlueEnergy, RedEnergy, Energy, EnergyType, Resource
-from entities import Entity, Animal, Tree, Seed, EntityType
+from energies import Resource
+from entities import Entity
 
 # External libraries
 import enum
@@ -434,93 +434,54 @@ class Grid:
         return self.entity_grid._place_on_grid(value=value)
   
     ################################################################################################
-    def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
-        """Create energy on the grid
-
-        Args:
-            energy_type (EnergyType):   type of energy to be created
-            quantity (int):             amount of energy to be created
-            cell (Tuple[int, int]):     cell of the grid on which the energy should be created
-        """        
-        print(f"{energy_type} was created at {coordinates}")
-        match energy_type.value:
-            case EnergyType.BLUE.value:
-                energy = BlueEnergy(energy_id=0,
-                                    position=coordinates,
-                                    quantity=quantity)
-                
-            case EnergyType.RED.value:
-                energy = RedEnergy(energy_id=0,
-                                   position=coordinates,
-                                   quantity=quantity)
-          
-        self.resource_grid._set_cell_value(coordinates=coordinates,
-                                          value=energy)
-                
-    def remove_energy(self, energy: Energy) -> None:
-        """Remove energy from the grid
-
-        Args:
-            energy (Energy): energy to remove
-        """
-        resource_grid = self.resource_grid
-        position = energy._position()
-        resource_grid._empty_cell(coordinates=position)
-        print(f"{energy} was deleted at {position}")
     
-    def create_entity(self, entity_type: str, position: Tuple[int, int], size: int=20,
-                      blue_energy:int=Animal.INITIAL_BLUE_ENERGY, red_energy:int=Animal.INITIAL_RED_ENERGY,
-                      max_age: int=0, production_type: EnergyType=None, adult_size: int=0) -> Tree|Animal|Seed:
-        """Create an entity and add it to the grid
+                
+ 
+    
+    # def create_entity(self, entity_type: str, position: Tuple[int, int], size: int=20,
+    #                   blue_energy:int=Animal.INITIAL_BLUE_ENERGY, red_energy:int=Animal.INITIAL_RED_ENERGY,
+    #                   max_age: int=0, production_type: EnergyType=None, adult_size: int=0) -> Tree|Animal|Seed:
+    #     """Create an entity and add it to the grid
 
-        Args:
-            entity_type (str):                      type of entity to create (tree/animal)
-            position (Tuple[int, int]):             position of the new entity on the grid
-            size (int, optional): initial           size. Defaults to 1.
-            blue_energy (int, optional):            amount of blue energy. Defaults to 5.
-            red_energy (int, optional):             amout of red energy. Defaults to 10.
-            production_type (EnergyType, optional): type of energy to be created by tree
-            adult_size (int):                       size to reach before reaching adulthood. Defaults to 0
+    #     Args:
+    #         entity_type (str):                      type of entity to create (tree/animal)
+    #         position (Tuple[int, int]):             position of the new entity on the grid
+    #         size (int, optional): initial           size. Defaults to 1.
+    #         blue_energy (int, optional):            amount of blue energy. Defaults to 5.
+    #         red_energy (int, optional):             amout of red energy. Defaults to 10.
+    #         production_type (EnergyType, optional): type of energy to be created by tree
+    #         adult_size (int):                       size to reach before reaching adulthood. Defaults to 0
             
-        Returns:
-            Tree|Animal|Seed: entity newly created
-        """        
+    #     Returns:
+    #         Tree|Animal|Seed: entity newly created
+    #     """        
               
-        match entity_type:
-            case EntityType.Animal.value:
-                entity = Animal(position=position,
-                                size=size,
-                                blue_energy=blue_energy,
-                                red_energy=red_energy,
-                                max_age=max_age,
-                                adult_size=adult_size)
+    #     match entity_type:
+    #         case EntityType.Animal.value:
+    #             entity = Animal(position=position,
+    #                             size=size,
+    #                             blue_energy=blue_energy,
+    #                             red_energy=red_energy,
+    #                             max_age=max_age,
+    #                             adult_size=adult_size)
                 
-            case EntityType.Tree.value:
-                production_type = production_type if production_type else np.random.choice(list(EnergyType))
-                entity = Tree(production_type=production_type,
-                              position=position,
-                              size=size,
-                              blue_energy=blue_energy,
-                              red_energy=red_energy,
-                              max_age=max_age)
+    #         case EntityType.Tree.value:
+    #             production_type = production_type if production_type else np.random.choice(list(EnergyType))
+    #             entity = Tree(production_type=production_type,
+    #                           position=position,
+    #                           size=size,
+    #                           blue_energy=blue_energy,
+    #                           red_energy=red_energy,
+    #                           max_age=max_age)
                 
-            case EntityType.Seed.value:
-                entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
+    #         case EntityType.Seed.value:
+    #             entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
         
-        self.entity_grid._set_cell_value(coordinates=entity.position,
-                                        value=entity)
-        return entity
+    #     self.entity_grid._set_cell_value(coordinates=entity.position,
+    #                                     value=entity)
+    #     return entity
         
-    def remove_entity(self, entity: Entity):
-        """Remove entity from the grid
-
-        Args:
-            entity (Entity): entity to remove
-        """
-        entity_grid = self.entity_grid
-        position = entity._position()
-        entity_grid._empty_cell(coordinates=position)
-        print(f"{entity} was deleted at {position}")
+    
         
     def get_nearby_colors(self, radius: int = 1) -> np.array:
         position: Tuple[int, int] = self.position

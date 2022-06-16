@@ -5,6 +5,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 from project.src.simulation.grid import Grid, SubGrid
 from project.src.simulation.entities import Animal, Tree, EntityType, Entity
 from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource, EnergyType
+from project.src.simulation.environment import Environment
 
 class TestGrid:
     def test_create_grid(self):
@@ -134,8 +135,8 @@ class TestSubGrid:
     class TestSubGridMethods:
         @pytest.fixture(autouse=True)
         def setup(self):
-            self.grid = Grid(grid_id=0,
-                             dimensions=(20,25))
+            self.env = Environment(env_id=0)
+            self.grid =  self.env.grid
             
             self.entity_grid = self.grid.entity_grid
             self.energy_grid = self.grid.resource_grid 
@@ -144,12 +145,12 @@ class TestSubGrid:
             
         def test_creation_grid(self):
             assert self.grid
-            assert type(self.grid) == Grid
+            assert self.grid.__class__.__name__ == 'Grid'
             
         def test_dimensions_grid(self):
             assert self.grid.width == 20
-            assert self.grid.height == 25
-            assert self.grid.dimensions == (20,25)
+            assert self.grid.height == 20
+            assert self.grid.dimensions == (20,20)
             
         def test_empty_cell(self):
             animal = Animal(animal_id=0,
@@ -255,14 +256,12 @@ class TestSubGrid:
                                                          value=self.animal)
             
         def test_find_coordinates_with_class(self):
-            tree1 = self.grid.create_entity(entity_type=EntityType.Tree.value,
-                                            position=(1,1))
+            tree1 = self.env.create_tree(coordinates=(1,1))
             
             assert len(self.entity_grid._find_coordinates_with_class(position=(1,1),
                                                                      target_class=Tree)) == 1
             
-            tree2 = self.grid.create_entity(entity_type=EntityType.Tree.value,
-                                            position=(2,1))
+            tree2 = self.env.create_tree(coordinates=(2,1))
             
             len(self.entity_grid._find_coordinates_with_class(position=(1,1),
                                                               target_class=Tree))  == 2
@@ -270,8 +269,7 @@ class TestSubGrid:
             
             
             # Does not detect animal
-            animal = self.grid.create_entity(entity_type=EntityType.Animal.value,
-                                             position=(1,2))
+            animal = self.env.create_animal(coordinates=(1,2))
             
             len(self.entity_grid._find_coordinates_with_class(position=(1,1),
                                                               target_class=Tree))  == 2
@@ -280,24 +278,20 @@ class TestSubGrid:
         def test_find_free_coordinates(self):
             assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 9
             
-            self.grid.create_entity(entity_type=EntityType.Tree.value,
-                                            position=(1,1))
+            self.env.create_tree(coordinates=(1,1))
             
             assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 8
             
-            self.grid.create_entity(entity_type=EntityType.Tree.value,
-                                            position=(0,1))
+            self.env.create_tree(coordinates=(0,1))
             
             assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 7
             
-            self.grid.create_entity(entity_type=EntityType.Tree.value,
-                                            position=(0,0))
+            self.env.create_tree(coordinates=(0,0))
             
             assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
             
             # Out of search range, no change
-            self.grid.create_entity(entity_type=EntityType.Tree.value,
-                                            position=(3,3))
+            self.env.create_tree(coordinates=(3,3))
             
             assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
         
@@ -360,7 +354,7 @@ class TestSubGrid:
             
             positions = [(1,2), (4,2), (3,7), (0,3)]
             for pos in positions:
-                self.grid.create_energy(energy_type=EnergyType.BLUE,
+                self.env.create_energy(energy_type=EnergyType.BLUE,
                                         quantity=10,
                                         coordinates=pos)
                 
