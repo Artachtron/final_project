@@ -260,7 +260,7 @@ class Entity(SimulatedObject):
                                      quantity=quantity)
             
             # Place energy on the grid
-            grid.place_on_resource(value=energy)
+            grid.place_resource(value=energy)
 
         # Energy cost of action
         self._perform_action()
@@ -497,7 +497,7 @@ class Animal(Entity):
                     
         # Ask the grid to update, changing old position to empty,
         #and new position to occupied by self
-        if entity_grid.update_cell(new_coordinate=next_pos.vect,
+        if entity_grid.update_cell(new_coordinates=next_pos.vect,
                                     value=self):
             
             # update self position
@@ -746,10 +746,7 @@ class Tree(Entity):
     def _on_death(self, grid: Grid) -> None:
         """Action on tree death, create a seed on dead tree position"""
         
-        genetic_data = self._encode_genetic_data()
-        
-        grid.create_seed(coordinates=self.position,
-                         genetic_data=genetic_data)
+        self._create_seed(grid=grid)
         
         grid.remove_entity(self)
         
@@ -780,6 +777,16 @@ class Tree(Entity):
             
         return genetic_data
     
+    def _create_seed(self, grid: Grid):
+        genetic_data = self._encode_genetic_data()
+        
+        seed = Seed(seed_id=self.id,
+                    position=self.position,
+                    genetic_data=genetic_data)
+        
+        grid.place_resource(value=seed)
+       
+        
     @staticmethod
     def spawn_tree(seed:Seed, grid:Grid, position:Position) -> Tree:
         """Static public method:

@@ -216,13 +216,13 @@ class SubGrid:
         
         return None
     
-    def update_cell(self, new_coordinate: Tuple[int, int], value: Any) -> bool:
+    def update_cell(self, new_coordinates: Tuple[int, int], value: Any) -> bool:
         """Public method:
             Move an element from a cell to another,
             filling the new one and emptying the old one 
 
         Args:
-            new_coordinate (Tuple[int, int]):   coordinates in which to move the element
+            new_coordinates (Tuple[int, int]):   coordinates in which to move the element
             value (Any):                        value to move at different coordinates
 
         Returns:
@@ -231,7 +231,7 @@ class SubGrid:
         """        
         
         # try to insert the new value at the given coordinates        
-        if success:= self._set_cell_value(coordinates=new_coordinate,
+        if success:= self._set_cell_value(coordinates=new_coordinates,
                                          value=value):
 
                             # Reset the old position
@@ -395,7 +395,7 @@ class Grid:
         
         return False
     
-    def place_on_resource(self, value: Resource) -> bool:
+    def place_resource(self, value: Resource) -> bool:
         """Public method:
             Place a resource on the appropriate subgrid
 
@@ -408,7 +408,7 @@ class Grid:
         """        
         return self.resource_grid.place_on_grid(value=value)
         
-    def place_on_entity(self, value: Entity) -> bool:
+    def place_entity(self, value: Entity) -> bool:
         """Public method:
             Place an entity on the appropriate subgrid
 
@@ -420,16 +420,8 @@ class Grid:
                     False if the entity couldn't be placed
         """ 
         return self.entity_grid.place_on_grid(value=value)
-        
-    def create_seed(self, coordinates: Tuple[int, int], genetic_data: Dict):
-        seed = Seed(seed_id=genetic_data['tree_id'],
-                    position=coordinates,
-                    genetic_data=genetic_data)
-        
-        self.resource_grid._set_cell_value(coordinates=coordinates,
-                                          value=seed)
-         
-        
+  
+    ################################################################################################
     def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Create energy on the grid
 

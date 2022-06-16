@@ -38,14 +38,14 @@ class TestGrid:
             position = (2,3)
             tree = Tree(position=position)
             assert not self.grid.entity_grid.get_cell_value(coordinates=position)
-            self.grid.place_on_entity(value=tree)
+            self.grid.place_entity(value=tree)
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             
             energy = BlueEnergy(energy_id=0,
                                 position=position)
             
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
-            self.grid.place_on_resource(value=energy)
+            self.grid.place_resource(value=energy)
             assert self.grid.resource_grid.get_cell_value(coordinates=position)
             
         def test_is_subclass(self):
@@ -151,6 +151,14 @@ class TestSubGrid:
             assert self.grid.height == 25
             assert self.grid.dimensions == (20,25)
             
+        def test_empty_cell(self):
+            animal = Animal(animal_id=0,
+                            position=(2,5))
+            self.grid.place_entity(animal)
+            assert self.entity_grid.get_cell_value(coordinates=(2,5)) == animal
+            self.entity_grid._empty_cell(coordinates=(2,5))
+            assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
+        
         def test_set_cell(self):
             animal = Animal(animal_id=0,
                             position=(2,5))
@@ -239,6 +247,13 @@ class TestSubGrid:
             
             assert not free
             
+        def test_is_data_valid(self):       
+            assert not self.grid.resource_grid._set_cell_value(coordinates=(2,5),
+                                                               value=self.animal)
+            
+            assert self.grid.entity_grid._set_cell_value(coordinates=(2,5),
+                                                         value=self.animal)
+            
         def test_find_coordinates_with_class(self):
             tree1 = self.grid.create_entity(entity_type=EntityType.Tree.value,
                                             position=(1,1))
@@ -325,6 +340,18 @@ class TestSubGrid:
                                                                   num_cells=3)
             
             assert len(free_cells) == 3
+            
+        def test_update_cell(self):
+            self.grid.place_entity(value=self.animal)
+            position = self.animal.position
+            assert self.grid.entity_grid.get_cell_value(coordinates=position) == self.animal
+            assert not self.grid.entity_grid.get_cell_value(coordinates=(5,5))
+            
+            new_position = (5,5)
+            self.grid.entity_grid.update_cell(new_coordinates=new_position,
+                                              value=self.animal)
                 
+            assert self.grid.entity_grid.get_cell_value(coordinates=new_position) == self.animal
+            assert not self.grid.entity_grid.get_cell_value(coordinates=(3,5))
         
         

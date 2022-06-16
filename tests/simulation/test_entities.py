@@ -480,7 +480,7 @@ class TestAnimal:
             def test_pick_up_resource(self):
                 position = (1,1)
                 energy = RedEnergy(position=position)
-                self.grid.place_on_resource(energy)
+                self.grid.place_resource(energy)
                 
                 assert self.grid.resource_grid.get_cell_value(position)
                 
@@ -603,7 +603,7 @@ class TestAnimal:
             def test_decompose(self):
                 resource_grid = self.grid.resource_grid
                 position = self.animal.position
-                self.grid.place_on_entity(value=self.animal)
+                self.grid.place_entity(value=self.animal)
                 assert not resource_grid._find_coordinates_with_class(position=position,
                                                                       target_class=BlueEnergy)
                 assert not resource_grid._find_coordinates_with_class(position=position,
@@ -620,7 +620,7 @@ class TestAnimal:
             def test_die(self):
                 resource_grid = self.grid.resource_grid
                 position = self.animal.position
-                self.grid.place_on_entity(value=self.animal)
+                self.grid.place_entity(value=self.animal)
                 assert not resource_grid._find_coordinates_with_class(position=position,
                                                                       target_class=BlueEnergy)
                 assert not resource_grid._find_coordinates_with_class(position=position,

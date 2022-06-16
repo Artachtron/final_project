@@ -67,7 +67,7 @@ class Energy(Resource):
                 energy = RedEnergy(position=position,
                                    quantity=quantity)
         if grid:       
-            grid.place_on_resource(value=energy)
+            grid.place_resource(value=energy)
                 
         return energy
 
