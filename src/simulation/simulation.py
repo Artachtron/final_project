@@ -19,6 +19,8 @@ class SimState:
         
         self.animals: Dict[int, Animal] = {}
         self.trees: Dict[int, Tree] = {}
+        self.energies: Dict[int, Tree] = {}
+        self.seed: Dict[int, Seed] = {}
       
     @property
     def id(self):
@@ -46,10 +48,11 @@ class SimState:
         self.next_entity_id += amount
         
     def add_entity(self, new_entity: Entity) -> None:
-        """ Add an innovation to the history's list of innovations
+        """Public method:
+            Add an entity to the register
 
         Args:
-            new_innovation (Innovation): innovation to add to the list
+            new_entity (Entity): new entity to register
         """        
             
         match new_entity.__class__.__name__:
@@ -57,6 +60,48 @@ class SimState:
                 self.animals[new_entity.id] = new_entity
             case "Tree":
                 self.trees[new_entity.id] = new_entity
+                
+    def remove_entity(self, entity: Resource) -> None:
+        """Public method:
+            Remove a entity from the register
+
+        Args:
+            entity (Entity):entity to remove
+        """  
+            
+        match entity.__class__.__name__:
+            case "Animal":
+                self.animals.pop(entity.id)
+            case "Tree":
+                self.trees.pop(entity.id)
+                
+    def add_resource(self, new_resource: Resource) -> None:
+        """Public method:
+            Add an resource to the register
+
+        Args:
+            new_resource (Resource): new resource to register
+        """  
+            
+        match new_resource.__class__.__name__:
+            case "Energy":
+                self.energies[new_resource.id] = new_resource
+            case "Seed":
+                self.seeds[new_resource.id] = new_resource
+                
+    def remove_resource(self, resource: Resource) -> None:
+        """Public method:
+            Remove a resource from the register
+
+        Args:
+            resource (Resource):resource to remove
+        """  
+            
+        match resource.__class__.__name__:
+            case "Energy":
+                self.energies.pop(resource.id)
+            case "Seed":
+                self.seeds.pop(resource.id)
                 
 
 class Environment:
@@ -80,10 +125,25 @@ class Environment:
     def id(self):
         return self.__id
 
-    def _add_new_entity_to_world(self, new_entity):
-        
-        self.state.add_entity(new_entity)
-        self.grid.place_entity(new_entity)
+    def _add_new_resource_to_world(self, new_resource: Resource):
+        """Private method:
+            Register the resource into the simulation state
+
+        Args:
+            new_resource (Resource): new resource to register
+        """ 
+        self.state.add_resource(new_resource=new_resource)
+        self.grid.place_resource(value=new_resource)
+
+    def _add_new_entity_to_world(self, new_entity: Entity):
+        """Private method:
+            Register the entity into the simulation state
+
+        Args:
+            new_entity (Entity): new entity to register
+        """        
+        self.state.add_entity(new_entity=new_entity)
+        self.grid.place_entity(value=new_entity)
 
     def create_animal(self, coordinates: Tuple[int, int]) -> Animal:
         animal_id = self.state.get_entity_id(increment=True)
@@ -96,6 +156,14 @@ class Environment:
         return animal
     
     def create_tree(self, coordinates: Tuple[int, int]) -> Tree:
+        """Create a tree and add it to the world
+
+        Args:
+            coordinates (Tuple[int, int]): coordinates where the tree should be created
+
+        Returns:
+            Tree: tree that was created
+        """        
         tree_id = self.state.get_entity_id(increment=True)
         tree = Tree(tree_id=tree_id,
                     position=coordinates) 
@@ -104,7 +172,14 @@ class Environment:
         
         return tree
     
-    def create_seed_from_tree(self, tree: Tree):
+    def create_seed_from_tree(self, tree: Tree) -> None:
+        """Public method:
+            Create a seed from a tree, destroy the tree and
+            place the seed on the grid
+
+        Args:
+            tree (Tree): tree from which to create the seed
+        """        
     
         seed = tree.create_seed()
         
@@ -118,7 +193,6 @@ class Environment:
 
         Args:
             seed (Seed):            seed from which to create the tree
-            grid (Grid):            grid on which to create the tree
             position (Position):    position at which the tree should be created
 
         Returns:
@@ -128,12 +202,13 @@ class Environment:
         tree = seed.germinate()
         # Move it to the proper position
         tree.position = position
-        self.grid.place_entity(value=tree)
+        self._add_new_entity_to_world(new_entity=tree) 
         
         return tree
     
     def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]) -> bool:
-        """Create energy on the grid
+        """Public method:
+            Create energy on the grid
 
         Args:
             energy_type (EnergyType):   type of energy to be created
@@ -155,13 +230,14 @@ class Environment:
                 energy = RedEnergy(energy_id=0,
                                    position=coordinates,
                                    quantity=quantity)
-          
-        return self.grid.place_resource(energy)
+                
+        self._add_new_resource_to_world(new_resource=energy)
         
-        
-    
+        return energy
+            
     def remove_energy(self, energy: Energy) -> None:
-        """Remove energy from the grid
+        """Public method:
+            Remove energy from the grid
 
         Args:
             energy (Energy): energy to remove
@@ -169,10 +245,13 @@ class Environment:
         resource_grid = self.grid.resource_grid
         position = energy._position()
         resource_grid._empty_cell(coordinates=position)
+        
+        self.state.remove_resource(resource=energy)
         print(f"{energy} was deleted at {position}")
         
     def remove_entity(self, entity: Entity):
-        """Remove entity from the grid
+        """Public method:
+            Remove entity from the grid
 
         Args:
             entity (Entity): entity to remove
@@ -180,6 +259,8 @@ class Environment:
         entity_grid = self.grid.entity_grid
         position = entity._position()
         entity_grid._empty_cell(coordinates=position)
+        
+        self.state.remove_entity(entity=entity)
         print(f"{entity} was deleted at {position}")
         
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
