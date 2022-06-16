@@ -40,12 +40,10 @@ class DisplayedObject(pg.sprite.Sprite):
 class Display:
     def __init__(self,
                  display_id: int,
-                 sim_speed: int,
                  block_size: int,
                  dimensions: Tuple[int, int]):
         
         self.id = display_id
-        self.sim_speed: int = sim_speed
         self.block_size: int = block_size
         self.dimensions: Tuple[int, int] = dimensions
         

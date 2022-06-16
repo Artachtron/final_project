@@ -24,7 +24,6 @@ class Direction(enum.Enum):
 class EntityType(enum.Enum):
     Animal  =   "animal"
     Tree    =   "tree"
-    Seed    =   "seed"
 
 
 class Entity(SimulatedObject):

@@ -8,37 +8,15 @@ from typing import Tuple, Final
 from display import DisplayedObject
 from simulation import SimulatedObject
 
+from entities import Animal, Tree
+from config import WorldTable
+
 grid = None
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
 
-class PhysicalObject:
-    def __init__(self,
-                 object_id: int,
-                 position: Tuple[int, int],
-                 size: int,
-                 appearance: str):
         
-        self.id = object_id
-        self.position = position
-        self.size = size
-        
-        self.appearance = appearance
-        
-        self.sim_obj: SimulatedObject
-        self.dis_obj: DisplayedObject
-        
-    """ def _init_physical_obj(self):
-        self.sim_obj = SimulatedObject(sim_body_id=self.id,
-                                       position=self.position,
-                                       size=self.size)
-        self.dis_obj = DisplayedObject(dis_body_id=self.id,
-                                       size=self.size,
-                                       position=self.position,
-                                       appearance=self.appearance) """
-        
-
 class World:
     GRID_HEIGHT: Final[int] = 20
     GRID_WIDTH: Final[int] = 20
@@ -54,29 +32,55 @@ class World:
                  sim_speed: int = SIMULATION_SPEED,
                  display_active: bool = False):
         
-        self.id: int = world_id
+        self.__id: int = world_id
         self.dimensions: Tuple[int, int] = dimensions
         self.block_size: int = block_size
         self.sim_speed: int = sim_speed
         self.display_active: bool = display_active
         
+        self.world_table: WorldTable 
         self.grid: Grid
         self.simulation: Simulation
         self.display: Display
         
         self._init_world()
+    
+    @property
+    def id(self):
+        return self.__id
         
     def _init_world(self):
+        self.world_table = WorldTable(world_id=self.id)
+        
         self.grid = Grid(grid_id=self.id,
-                         dimensions=(self.dimensions[0],
-                                     self.dimensions[1]))
+                         dimensions=self.dimensions)
         
         self.simulation = Simulation(sim_id=self.id)
         
         self.display = Display(display_id=self.id,
-                              sim_speed=self.sim_speed,
                               dimensions=self.dimensions,
                               block_size=self.block_size)
+        
+    def add_new_entity_to_world(self, new_entity):
+        
+        self.world_table.add_entity(new_entity)
+        self.grid.place_entity(new_entity)
+    
+    def create_new_animal(self, coordinates: Tuple[int, int]) -> None:
+        animal_id = self.world_table.get_entity_id(increment=True)
+        animal = Animal(animal_id=animal_id,
+                        position=coordinates)
+        
+        self.add_new_entity_to_world(new_entity=animal)
+        
+        
+    def create_new_tree(self, coordinates: Tuple[int, int]) -> None:
+        tree_id = self.world_table.get_entity_id(increment=True)
+        tree = Tree(tree_id=tree_id,
+                    position=coordinates) 
+        
+        self.add_new_entity_to_world(new_entity=tree)
+    
         
     def update(self):
         self.grid.update()
@@ -138,16 +142,7 @@ def init_animals(count: int = 0) -> None:
     for _ in range(count):
         create_new_animal()
     
-def create_new_animal() -> None:
-    """Create a new animal in a vacant cell
-    """
-    x, y = get_random_coordinates()
-    
-    while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
-        x, y = get_random_coordinates()
-    
-    animal = grid.create_entity(entity_type="animal", position=(x,y), blue_energy=100)
-    
+
        
 def get_random_coordinates() -> Tuple[int,int]:
     """Get random coordinates of a point on a grid
