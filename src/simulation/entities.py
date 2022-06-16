@@ -804,7 +804,7 @@ class Tree(Entity):
         tree = seed.germinate()
         # Move it to the proper position
         tree.position = Position(*position)
-        grid.entity_grid.place_on_grid(value=tree)
+        grid.place_entity(value=tree)
         
         return tree
 

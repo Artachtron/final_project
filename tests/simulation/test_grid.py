@@ -4,7 +4,7 @@ import numpy as np
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
 from project.src.simulation.grid import Grid, SubGrid
 from project.src.simulation.entities import Animal, Tree, EntityType, Entity
-from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource
+from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource, EnergyType
 
 class TestGrid:
     def test_create_grid(self):
@@ -218,20 +218,20 @@ class TestSubGrid:
             pos_3 = (-1,0)
             pos_4 = (0,-1)
             
-            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_1)
-            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_2)
-            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_3)
-            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_4)
+            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_1)
+            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_2)
+            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_3)
+            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_4)
             
             pos_5 = (10,0)
             pos_6 = (0,15)
             pos_7 = (3,0)
             pos_8 = (0,4)
             
-            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_5)
-            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_6)
-            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_7)
-            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_8)
+            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_5)
+            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_6)
+            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_7)
+            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_8)
             
         def test_are_vacant_coordinates(self):
             # Free cell
@@ -353,5 +353,24 @@ class TestSubGrid:
                 
             assert self.grid.entity_grid.get_cell_value(coordinates=new_position) == self.animal
             assert not self.grid.entity_grid.get_cell_value(coordinates=(3,5))
+            
+        def test_sub_region(self):
+            grid = Grid(grid_id=0,
+                        dimensions=(5,10))
+            
+            positions = [(1,2), (4,2), (3,7), (0,3)]
+            for pos in positions:
+                self.grid.create_energy(energy_type=EnergyType.BLUE,
+                                        quantity=10,
+                                        coordinates=pos)
+                
+            def not_none(arr):
+                return sum(x is not None for x in arr)
+            
+            for i in range(1,4):
+                subregion = self.grid.resource_grid.get_sub_region(initial_pos=(3,3),
+                                                                    radius=i).flatten()
+                
+                assert not_none(subregion) == i
         
         

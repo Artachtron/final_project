@@ -1,9 +1,13 @@
-import numpy as np
-from typing import Tuple, Final, Any, Set , Dict, Type
-from types import NoneType
+# Typing
+from typing import Tuple, Any, Set, Type
+
+# Internals packages
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType, Resource
 from entities import Entity, Animal, Tree, Seed, EntityType
+
+# External libraries
 import enum
+import numpy as np
 from random import sample
 from itertools import combinations
 
@@ -13,7 +17,8 @@ class SubGridType(enum.Enum):
     COLOR = 2
 
 class SubGrid:
-    def __init__(self, dimensions: Tuple[int,int],
+    def __init__(self,
+                 dimensions: Tuple[int,int],
                  data_type: Any = Any,
                  initial_value: Any = None):
         
@@ -52,13 +57,16 @@ class SubGrid:
             bool: True if all checks passed,
                   False if at least one check failed
         """        
-        return (self.are_coordinates_in_bounds(coordinates=coordinates) and
+        return (self._are_coordinates_in_bounds(coordinates=coordinates) and
                 self.are_vacant_coordinates(coordinates=coordinates) and
                 self._is_of_valid_type(value=value))
     
-    def place_on_grid(self, value: Any) -> bool:
-        """Place a given value on the grid, 
-           based on its position
+    def _place_on_grid(self, value: Any) -> bool:
+        """Private method:
+            (Call place_entity or place_resource
+            from grid instead)
+            Place a given value on the grid, 
+            based on its position
 
         Args:
             value (Any): value to place on the grid
@@ -74,7 +82,8 @@ class SubGrid:
                                     value=value)
             
     def _is_of_valid_type(self, value: Any) -> bool:
-        """Verify if the value's type is valid
+        """Private method:
+            Verify if the value's type is valid
 
         Args:
             value (Any): value of which to check type
@@ -86,8 +95,9 @@ class SubGrid:
         return Grid.is_subclass(value, self.data_type)
     
     def are_available_coordinates(self, coordinates: Tuple[int, int]) -> bool:
-        """Check if the coordinates correspond to valid cell,
-           the cell has to be on the grid and be vacant
+        """Public method:
+            Check if the coordinates correspond to valid cell,
+            the cell has to be on the grid and be vacant
 
         Args:
             coordinates (Tuple[int,int]): Coordinates of the cell to check
@@ -96,11 +106,12 @@ class SubGrid:
             bool:   True if the cell is on the grid and vacant,
                     False if the cell is not on the grid or occupied
         """
-        return (self.are_coordinates_in_bounds(coordinates=coordinates) and
+        return (self._are_coordinates_in_bounds(coordinates=coordinates) and
                 self.are_vacant_coordinates(coordinates=coordinates))
 
     def are_vacant_coordinates(self, coordinates: Tuple[int, int]) -> bool:
-        """Check if a cell is vacant
+        """Public method:
+            Check if a cell is vacant
 
         Args:
             coordinates (Tuple[int,int]): Coordinates of the cell to check
@@ -111,8 +122,9 @@ class SubGrid:
         """
         return not self.get_cell_value(coordinates=coordinates)
 
-    def are_coordinates_in_bounds(self, coordinates: Tuple[int, int]) -> bool:
-        """Check if a cell is in the bounds of the grid
+    def _are_coordinates_in_bounds(self, coordinates: Tuple[int, int]) -> bool:
+        """Private method:
+            Check if a cell is in the bounds of the grid
 
         Args:
             coordinates (Tuple[int,int]): Coordinates of the cell to check
@@ -138,8 +150,8 @@ class SubGrid:
             Set[Tuple[int,int]]: set of found cells' coordinates
         """
         
-        if not (self.are_coordinates_in_bounds(coordinates=np.add(position,-radius)) and
-                self.are_coordinates_in_bounds(coordinates=np.add(position, radius))):
+        if not (self._are_coordinates_in_bounds(coordinates=np.add(position,-radius)) and
+                self._are_coordinates_in_bounds(coordinates=np.add(position, radius))):
             
             a = list(range(radius*2 + 1))  # List from (0, 2*radius)
             b = combinations(a*2, 2)       # ALl the combinations of coordinates
@@ -222,7 +234,7 @@ class SubGrid:
             filling the new one and emptying the old one 
 
         Args:
-            new_coordinates (Tuple[int, int]):   coordinates in which to move the element
+            new_coordinates (Tuple[int, int]):  coordinates in which to move the element
             value (Any):                        value to move at different coordinates
 
         Returns:
@@ -245,8 +257,8 @@ class SubGrid:
             Update the value of a cell from the grid
 
         Args:
-            position (Tuple[int, int]): The coordinates of the cell in the grid
-            value (int):                The new value to assign
+            position (Tuple[int, int]): coordinates of the cell in the grid
+            value (int):                new value to assign
             
         Returns:
             bool:   True if the value was successfully set
@@ -406,7 +418,7 @@ class Grid:
             bool:   True if the operation was successful
                     False if the resource couldn't be placed
         """        
-        return self.resource_grid.place_on_grid(value=value)
+        return self.resource_grid._place_on_grid(value=value)
         
     def place_entity(self, value: Entity) -> bool:
         """Public method:
@@ -419,7 +431,7 @@ class Grid:
             bool:   True if the operation was successful
                     False if the entity couldn't be placed
         """ 
-        return self.entity_grid.place_on_grid(value=value)
+        return self.entity_grid._place_on_grid(value=value)
   
     ################################################################################################
     def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
