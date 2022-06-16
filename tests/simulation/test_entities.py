@@ -267,25 +267,11 @@ class TestTree:
         def setup(self):
             self.env = Environment(env_id=0)
             
-            self.tree1 = Tree(position=(19,10),
-                                tree_id=3,
-                                adult_size=15,
-                                max_age=100,
-                                size=13,
-                                action_cost=1,
-                                blue_energy=1000,
-                                red_energy=2000,
-                                production_type=EnergyType.RED)
+            self.tree1 = self.env.create_tree(coordinates=(19,10))
             
-            self.tree2 = Tree(position=(19,11),
-                                tree_id=3,
-                                adult_size=15,
-                                max_age=100,
-                                size=13,
-                                action_cost=1,
-                                blue_energy=1000,
-                                red_energy=2000,
-                                production_type=EnergyType.BLUE)
+          
+            self.tree2 = self.env.create_tree(coordinates=(19,11))
+           
             
             self.grid = self.env.grid
             self.grid.entity_grid._set_cell_value(coordinates=self.tree1.position,
@@ -356,15 +342,8 @@ class TestAnimal:
                 
                 self.env = Environment(env_id=0)
                 
-                self.animal = Animal(position=(3,3),
-                                    animal_id=3,
-                                    adult_size=15,
-                                    max_age=100,
-                                    size=13,
-                                    action_cost=1,
-                                    blue_energy=12,
-                                    red_energy=27,
-                                    )
+                self.animal = self.env.create_animal(coordinates=(3,3))
+         
                 
                 self.grid: Grid = self.env.grid
                 
@@ -496,9 +475,9 @@ class TestAnimal:
                 assert self.animal.red_energy == red_stock + energy.quantity 
                 
             def test_pick_up_seed(self):
-                seed = Seed(seed_id=0,
-                            position=(3,2),
-                            genetic_data={})
+                tree = self.env.create_tree(coordinates=(3,2))
+                seed = self.env.create_seed_from_tree(tree)
+               
                 
                 position = seed.position
                 
@@ -517,11 +496,10 @@ class TestAnimal:
                 assert not self.grid.resource_grid.get_cell_value(coordinates=position)
                 
             def test_recycle_seed(self):
-                seed = Seed(seed_id=0,
-                            position=(3,2),
-                            genetic_data={'position':(1,2),
-                                          'blue_energy':5,
-                                          'red_energy':7})
+                tree = self.env.create_tree(coordinates=(3,2),
+                                            blue_energy=5,
+                                            red_energy=7)
+                seed = self.env.create_seed_from_tree(tree)
                 
                 position = seed.position
                 
@@ -529,7 +507,7 @@ class TestAnimal:
                                                       value=seed)
                 
                 animal = self.env.create_animal(coordinates=(3,3))
-                
+                # Pocket empty
                 animal._recycle_seed(environment=self.env)
                 assert len(self.grid.resource_grid._find_coordinates_with_class(target_class=BlueEnergy,
                                                                                 position=position)) == 0
@@ -556,11 +534,10 @@ class TestAnimal:
                 assert (blue,red) == (1,1)
                 
             def test_replant_seed(self):
-                tree = Tree(position=(3,2),
-                            blue_energy=12,
-                            red_energy=27,
-                            max_age=30,
-                            size=2)
+                tree = self.env.create_tree(coordinates=(3,2),
+                                            max_age=32,
+                                            blue_energy=12,
+                                            red_energy=57)
                 
                 max_age, blue_energy, red_energy = tree._max_age, tree.blue_energy, tree.red_energy
                 tree._die(environment=self.env)

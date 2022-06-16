@@ -20,32 +20,61 @@ class SimState:
         self.animals: Dict[int, Animal] = {}
         self.trees: Dict[int, Tree] = {}
         self.energies: Dict[int, Tree] = {}
-        self.seed: Dict[int, Seed] = {}
+        self.seeds: Dict[int, Seed] = {}
       
     @property
     def id(self):
         return self.__id
      
     def get_entity_id(self, increment: bool=False) -> int:
-        """ Get the current innovation number
+        """Public method:
+            Get the current entity id
 
+        Args:
+            increment (bool): increment the entity id
+            
         Returns:
-            int: current innovation number
+            int: current entity id
         """
-        number = self.next_entity_id
+        entity_id = self.next_entity_id
         
         if increment:
             self.increment_entity_id()
          
-        return number
+        return entity_id
     
     def increment_entity_id(self, amount: int=1) -> None:
-        """ Increment the current innovation number by a given amount
+        """ Increment the current entity id by a given amount
 
         Args:
-            number (int, optional): innovation number's increment. Defaults to 1.
+            amount (int, optional): entity id's increment. Defaults to 1.
         """        
         self.next_entity_id += amount
+        
+    def get_energy_id(self, increment: bool=False) -> int:
+        """Public method:
+            Get the current energy id
+
+        Args:
+            increment (bool): increment the energy id
+            
+        Returns:
+            int: current energy id
+        """
+        energy_id = self.next_energy_id
+        
+        if increment:
+            self.increment_energy_id()
+         
+        return energy_id
+    
+    def increment_energy_id(self, amount: int=1) -> None:
+        """ Increment the current energy id by a given amount
+
+        Args:
+            amount (int, optional): energy id's increment. Defaults to 1.
+        """        
+        self.next_energy_id += amount
         
     def add_entity(self, new_entity: Entity) -> None:
         """Public method:
@@ -132,8 +161,9 @@ class Environment:
         Args:
             new_resource (Resource): new resource to register
         """ 
-        self.state.add_resource(new_resource=new_resource)
-        self.grid.place_resource(value=new_resource)
+        if self.grid.place_resource(value=new_resource):
+            self.state.add_resource(new_resource=new_resource)
+        
 
     def _add_new_entity_to_world(self, new_entity: Entity):
         """Private method:
@@ -141,21 +171,23 @@ class Environment:
 
         Args:
             new_entity (Entity): new entity to register
-        """        
-        self.state.add_entity(new_entity=new_entity)
-        self.grid.place_entity(value=new_entity)
+        """  
+        if self.grid.place_entity(value=new_entity):     
+            self.state.add_entity(new_entity=new_entity)
+        
 
-    def create_animal(self, coordinates: Tuple[int, int]) -> Animal:
+    def create_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
         animal_id = self.state.get_entity_id(increment=True)
           
         animal = Animal(animal_id=animal_id,
-                        position=coordinates)
+                        position=coordinates,
+                        **kwargs)
         
         self._add_new_entity_to_world(new_entity=animal)  
         
         return animal
     
-    def create_tree(self, coordinates: Tuple[int, int]) -> Tree:
+    def create_tree(self, coordinates: Tuple[int, int], **kwargs) -> Tree:
         """Create a tree and add it to the world
 
         Args:
@@ -166,26 +198,32 @@ class Environment:
         """        
         tree_id = self.state.get_entity_id(increment=True)
         tree = Tree(tree_id=tree_id,
-                    position=coordinates) 
+                    position=coordinates,
+                    **kwargs) 
         
         self._add_new_entity_to_world(new_entity=tree) 
         
         return tree
     
-    def create_seed_from_tree(self, tree: Tree) -> None:
+    def create_seed_from_tree(self, tree: Tree) -> Seed:
         """Public method:
             Create a seed from a tree, destroy the tree and
             place the seed on the grid
 
         Args:
             tree (Tree): tree from which to create the seed
+            
+        Returns:
+            seed (Seed): seed created from the tree
         """        
     
         seed = tree.create_seed()
         
         self.remove_entity(tree)
         
-        self.grid.place_resource(value=seed)
+        self._add_new_resource_to_world(new_resource=seed)
+           
+        return seed
     
     def spawn_tree(self, seed: Seed, position: Tuple[int, int]) -> Tree:
         """public method:
@@ -206,7 +244,8 @@ class Environment:
         
         return tree
     
-    def create_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]) -> bool:
+    def create_energy(self, energy_type: EnergyType, quantity: int,
+                      coordinates: Tuple[int, int]) -> bool:
         """Public method:
             Create energy on the grid
 
@@ -220,14 +259,19 @@ class Environment:
                     False if it couldn't be created
         """        
         print(f"{energy_type} was created at {coordinates}")
+        if not self.grid.resource_grid.are_vacant_coordinates(coordinates=coordinates):
+            return None
+        
+        energy_id = self.state.get_energy_id(increment=True)
+        
         match energy_type.value:
             case EnergyType.BLUE.value:
-                energy = BlueEnergy(energy_id=0,
+                energy = BlueEnergy(energy_id=energy_id,
                                     position=coordinates,
                                     quantity=quantity)
                 
             case EnergyType.RED.value:
-                energy = RedEnergy(energy_id=0,
+                energy = RedEnergy(energy_id=energy_id,
                                    position=coordinates,
                                    quantity=quantity)
                 

@@ -5,7 +5,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 from project.src.simulation.grid import Grid, SubGrid
 from project.src.simulation.entities import Animal, Tree, EntityType, Entity
 from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource, EnergyType
-from project.src.simulation.environment import Environment
+from project.src.simulation.simulation import Environment
 
 class TestGrid:
     def test_create_grid(self):

@@ -297,7 +297,6 @@ class Entity(SimulatedObject):
         """Private method:
             Action: Death of the entity
         """
-        environment.remove_entity(entity=self)
         self._on_death(environment=environment)
 
         print(f"{self} died at age {self._age}")
@@ -633,6 +632,7 @@ class Animal(Entity):
             Event: on animal death, release energy on cells around death position"""
         self._decompose(entity=self,
                         environment=environment)
+        environment.remove_entity(entity=self)
 
     def modify_cell_color(self, color: Tuple[int,int,int], grid: Grid, coordinates: Tuple[int,int] = None) -> None:
         """Modfify the color of a given cell, usually the cell currently sat on
