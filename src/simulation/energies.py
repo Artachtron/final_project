@@ -1,10 +1,12 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from grid import Grid
+from typing import Tuple
+
 import enum
-from os.path import dirname, realpath, join
-from pathlib import Path
 from numpy.random import randint
 
-from typing import Tuple
 from simulation import SimulatedObject
 
 class Resource(SimulatedObject):

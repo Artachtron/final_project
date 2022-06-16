@@ -3,8 +3,8 @@ import numpy as np
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
 from project.src.simulation.grid import Grid, SubGrid
-from project.src.simulation.entities import Animal, Tree, EntityType
-from project.src.simulation.energies import BlueEnergy, Energy
+from project.src.simulation.entities import Animal, Tree, EntityType, Entity
+from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource
 
 class TestGrid:
     def test_create_grid(self):
@@ -47,6 +47,70 @@ class TestGrid:
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
             self.grid.place_on_resource(value=energy)
             assert self.grid.resource_grid.get_cell_value(coordinates=position)
+            
+        def test_is_subclass(self):
+            animal = Animal(position=(1,1))
+            tree = Tree(position=(2,2))
+            blue_energy = BlueEnergy(position=(1,1))
+            red_energy = RedEnergy(position=(2,2))
+            
+            # Animal
+            assert self.grid.is_subclass(derived=animal,
+                                         base=Animal)
+            
+            assert self.grid.is_subclass(derived=animal,
+                                         base=Entity)
+            
+            assert not self.grid.is_subclass(derived=animal,
+                                             base=Tree)
+            
+            assert not self.grid.is_subclass(derived=animal,
+                                             base=Energy)
+            
+            # Tree
+            assert self.grid.is_subclass(derived=tree,
+                                         base=Tree)
+            
+            assert self.grid.is_subclass(derived=tree,
+                                         base=Entity)
+            
+            assert not self.grid.is_subclass(derived=tree,
+                                             base=Animal)
+            
+            assert not self.grid.is_subclass(derived=tree,
+                                             base=Energy)
+            
+            # Blue Energy
+            assert self.grid.is_subclass(derived=blue_energy,
+                                         base=BlueEnergy)
+            
+            assert self.grid.is_subclass(derived=blue_energy,
+                                         base=Energy)
+            
+            assert self.grid.is_subclass(derived=blue_energy,
+                                         base=Resource)
+            
+            assert not self.grid.is_subclass(derived=blue_energy,
+                                             base=Entity)
+            
+            assert not self.grid.is_subclass(derived=blue_energy,
+                                             base=RedEnergy)
+            
+            # Red Energy
+            assert self.grid.is_subclass(derived=red_energy,
+                                         base=RedEnergy)
+            
+            assert self.grid.is_subclass(derived=red_energy,
+                                         base=Energy)
+            
+            assert self.grid.is_subclass(derived=red_energy,
+                                         base=Resource)
+            
+            assert not self.grid.is_subclass(derived=red_energy,
+                                             base=Entity)
+            
+            assert not self.grid.is_subclass(derived=red_energy,
+                                             base=BlueEnergy)
         
 class TestSubGrid:
     def test_create_subgrid(self):

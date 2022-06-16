@@ -531,14 +531,14 @@ class Animal(Entity):
             Action: Plant a tree nearby, consume red energy
         """
         
-        resource_grid: SubGrid = grid.resource_grid
+        entity_grid: SubGrid = grid.entity_grid
         
         # Verifiy that enough enough energy is available
         if self._can_perform_action(energy_type=EnergyType.RED,
                                     quantity=Animal.PLANTING_COST):
             
             # Get a free cell around
-            free_cell: Tuple[int, int] = resource_grid.select_free_coordinates(
+            free_cell: Tuple[int, int] = entity_grid.select_free_coordinates(
                                             position=self.position())
             
             if free_cell:

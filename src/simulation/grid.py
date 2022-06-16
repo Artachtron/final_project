@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple, Final, Any, Set , Dict
+from typing import Tuple, Final, Any, Set , Dict, Type
 from types import NoneType
 from energies import BlueEnergy, RedEnergy, Energy, EnergyType, Resource
 from entities import Entity, Animal, Tree, Seed, EntityType
@@ -185,7 +185,7 @@ class SubGrid:
         b = combinations(a*2, 2)            # ALl the combinations of coordinates
         
         positions = [coordinate for x, y in set(b) 
-                     if self.get_cell_value(coordinate:=tuple(np.add(position,(x,y)))) is None]
+                     if self.get_cell_value(coordinate:=tuple(np.add(position,(x, y)))) is None]
         
         return positions
     
@@ -379,17 +379,49 @@ class Grid:
         return self.dimensions[1]
     
     @staticmethod
-    def is_subclass(derived, base) -> bool:
+    def is_subclass(derived: Any, base: Type) -> bool:
+        """Static public method:
+            Check if an object is an instance
+            of a subclass of a certain base class
+
+        Args:
+            derived (Any): instance to check for base classes
+            base (Type):  reference base class 
+
+        Returns:
+            bool:   True if derived is an instance of a subclass of the base class
+                    False if base class is not in the list of derived base classes
+        """        
         for cls in derived.__class__.__mro__[:-1]:
             if cls.__name__ == base.__name__:
                 return True
         
         return False
     
-    def place_on_resource(self, value: Any) -> bool:
+    def place_on_resource(self, value: Resource) -> bool:
+        """Public method:
+            Place a resource on the appropriate subgrid
+
+        Args:
+            value (Resource): resource to place on the grid
+
+        Returns:
+            bool:   True if the operation was successful
+                    False if the resource couldn't be placed
+        """        
         return self.resource_grid.place_on_grid(value=value)
         
-    def place_on_entity(self, value:Any) -> bool:
+    def place_on_entity(self, value: Entity) -> bool:
+        """Public method:
+            Place an entity on the appropriate subgrid
+
+        Args:
+            value (Entity): entity to place on the grid
+
+        Returns:
+            bool:   True if the operation was successful
+                    False if the entity couldn't be placed
+        """ 
         return self.entity_grid.place_on_grid(value=value)
         
     def create_seed(self, coordinates: Tuple[int, int], genetic_data: Dict):
