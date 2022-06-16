@@ -1,17 +1,16 @@
+
+from __future__ import annotations
 from grid import Grid
 from simulation import Simulation
 from display import Display
 
 import numpy as np
-from typing import Tuple, Final
-
-from display import DisplayedObject
-from simulation import SimulatedObject
+from typing import Tuple, Final, Dict
 
 from entities import Animal, Tree
 from config import WorldTable
 
-grid = None
+
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
@@ -55,7 +54,7 @@ class World:
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
         
-        self.simulation = Simulation(sim_id=self.id)
+        self.simulation = Simulation(sim_id=self.id  )
         
         self.display = Display(display_id=self.id,
                               dimensions=self.dimensions,
@@ -68,8 +67,9 @@ class World:
     
     def create_new_animal(self, coordinates: Tuple[int, int]) -> None:
         animal_id = self.world_table.get_entity_id(increment=True)
-        animal = Animal(animal_id=animal_id,
-                        position=coordinates)
+        
+        animal = self.simulation.create_new_animal(coordinates=coordinates,
+                                                   animal_id=animal_id)
         
         self.add_new_entity_to_world(new_entity=animal)
         
@@ -87,7 +87,67 @@ class World:
         self.simulation.update()
         
         if self.display_active:
-            self.diplay.update()    
+            self.diplay.update()   
+            
+            
+class WorldTable:
+    def __init__(self,
+                 world_id: int):
+        
+        self.__id: int = world_id
+        self.next_entity_id: int  = 1
+        self.next_energy_id: int = 1
+        
+        self.animals: Dict[int, Animal] = {}
+        self.trees: Dict[int, Tree] = {}
+    
+    @property
+    def id(self):
+        return self.__id
+     
+    def get_entity_id(self, increment: bool=False) -> int:
+        """ Get the current innovation number
+
+        Returns:
+            int: current innovation number
+        """
+        number = self.next_entity_id
+        
+        if increment:
+            self.increment_entity_id()
+         
+        return number
+    
+    def increment_entity_id(self, amount: int=1) -> None:
+        """ Increment the current innovation number by a given amount
+
+        Args:
+            number (int, optional): innovation number's increment. Defaults to 1.
+        """        
+        self.next_entity_id += amount
+        
+    def add_entity(self, new_entity: Entity) -> None:
+        """ Add an innovation to the history's list of innovations
+
+        Args:
+            new_innovation (Innovation): innovation to add to the list
+        """        
+            
+        match new_entity.__class__.__name__:
+            case "Animal":
+                self.animals[new_entity.id] = new_entity
+            case "Tree":
+                self.trees[new_entity.id] = new_entity
+        
+    
+    def reset_world_table(self) -> None:
+        """ Reset the values of the world table
+        """       
+         
+        self.animals = {}
+        self.trees = {}
+        self.next_entity_id = 1
+        self.next_energy_id = 1
              
 """ def main():
     configure()

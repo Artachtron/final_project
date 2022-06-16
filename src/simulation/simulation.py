@@ -1,8 +1,11 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from display import DisplayedObject
+
+from entities import Animal
 
 from typing import Tuple, Any
-
-from display import DisplayedObject
 from dataclasses import dataclass
 from math import sqrt
 
@@ -89,5 +92,12 @@ class Simulation:
                  sim_id: int):
     
         self.id = sim_id
+        
+    
+    def create_new_animal(self, coordinates: Tuple[int, int], animal_id: int) -> Animal:
+          animal = Animal(animal_id=animal_id,
+                          position=coordinates)
+          
+          return animal   
         
 
