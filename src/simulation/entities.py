@@ -264,10 +264,31 @@ class Entity(SimulatedObject):
 
         # Energy cost of action
         self._perform_action()
-     
-    ################################################################################################ 
-     
         
+    def _pick_up_resource(self, coordinates: Tuple[int, int], grid: Grid) -> None:
+        """Private method:
+            Action: Pick energy up at coordinates
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to pick up energy from
+            grid (Grid):                    grid on which to pick up energy
+        """
+        resource_grid: SubGrid = grid.resource_grid
+        resource: Resource = resource_grid.get_cell_value(coordinates=coordinates)
+        
+        if resource:
+            # If resource is an energy
+            if type(resource).__base__.__name__ == 'Energy':
+                self._gain_energy(energy_type=resource.type,
+                                  quantity=resource.quantity)
+             
+            # If resource is a seed   
+            elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
+                self._store_seed(seed=resource)
+            grid.remove_energy(energy=resource)
+
+        self._perform_action()
+
     def _die(self, grid: Grid) -> None:
         """Private method:
             Action: Death of the entity
@@ -277,33 +298,6 @@ class Entity(SimulatedObject):
 
         print(f"{self} died at age {self._age}")
         
-        
-        
-    
-    
-    
-    
-
-    def _pick_up_resource(self, coordinates: Tuple[int, int], grid: Grid) -> None:
-        """Private method:
-            Action: Pick energy up at coordinates
-
-        Args:
-            coordinates (Tuple[int, int]): coordinates to pick up energy from
-        """
-        resource_grid: SubGrid = grid.resource_grid
-        resource: Resource = resource_grid.get_cell_value(coordinates=coordinates)
-        if resource:
-            if type(resource).__base__ == Energy:
-                self._gain_energy(
-                    energy_type=resource.type,
-                    quantity=resource.quantity)
-            elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
-                self._store_seed(seed=resource)
-            grid.remove_energy(energy=resource)
-
-        self._perform_action()
-
     def _decompose(self, entity: Entity, grid: Grid) -> None:
         """Private method:
             Action: decompose an entity into its energy components
@@ -330,13 +324,9 @@ class Entity(SimulatedObject):
                         quantity=entity.energies[EnergyType.BLUE.value],
                         position=free_cells[1],
                         grid=grid)
- 
-    
-    
-
-
-
-   
+     
+    ################################################################################################ 
+        
     
     def _find_occupied_cells_by_value(self, subgrid, value,
                              radius: int = 1, include_self: bool = False) -> np.array[bool]:
@@ -456,17 +446,7 @@ class Entity(SimulatedObject):
             subgrid=self.grid.resource_grid, value=Energy, radius=radius)
         return energies
 
-   
-
-   
-  
-
-    def _distance_to_object(self, distant_object: Entity|Energy) -> float:
-        from math import sqrt
-        distance = sqrt((self._position[0] - distant_object._position[0])**2 +
-                        (self._position[1] - distant_object._position[1])**2)
-        
-        return round(distance, 2)
+           
     
     def update(self):
         self._increase_age()

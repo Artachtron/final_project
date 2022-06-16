@@ -1,8 +1,10 @@
 from __future__ import annotations
-import re
-from typing import Tuple
+
+from typing import Tuple, Any
+
 from display import DisplayedObject
 from dataclasses import dataclass
+from math import sqrt
 
 @dataclass
 class Position:
@@ -27,6 +29,12 @@ class Position:
         return Position(pos[0] + vect[0], 
                         pos[1] + vect[1])
         
+    @staticmethod
+    def distance(object1: Any, object2: Any) -> float:
+        distance = sqrt((object1.position[0] - object2.position[0])**2 +
+                        (object1.position[1] - object2.position[1])**2)
+        
+        return round(distance, 2)
 
 class SimulatedObject:
     def __init__(self,

@@ -56,61 +56,61 @@ class TestGrid:
             
             # Animal
             assert self.grid.is_subclass(derived=animal,
-                                         base=Animal)
+                                         base_class=Animal)
             
             assert self.grid.is_subclass(derived=animal,
-                                         base=Entity)
+                                         base_class=Entity)
             
             assert not self.grid.is_subclass(derived=animal,
-                                             base=Tree)
+                                             base_class=Tree)
             
             assert not self.grid.is_subclass(derived=animal,
-                                             base=Energy)
+                                             base_class=Energy)
             
             # Tree
             assert self.grid.is_subclass(derived=tree,
-                                         base=Tree)
+                                         base_class=Tree)
             
             assert self.grid.is_subclass(derived=tree,
-                                         base=Entity)
+                                         base_class=Entity)
             
             assert not self.grid.is_subclass(derived=tree,
-                                             base=Animal)
+                                             base_class=Animal)
             
             assert not self.grid.is_subclass(derived=tree,
-                                             base=Energy)
+                                             base_class=Energy)
             
             # Blue Energy
             assert self.grid.is_subclass(derived=blue_energy,
-                                         base=BlueEnergy)
+                                         base_class=BlueEnergy)
             
             assert self.grid.is_subclass(derived=blue_energy,
-                                         base=Energy)
+                                         base_class=Energy)
             
             assert self.grid.is_subclass(derived=blue_energy,
-                                         base=Resource)
+                                         base_class=Resource)
             
             assert not self.grid.is_subclass(derived=blue_energy,
-                                             base=Entity)
+                                             base_class=Entity)
             
             assert not self.grid.is_subclass(derived=blue_energy,
-                                             base=RedEnergy)
+                                             base_class=RedEnergy)
             
             # Red Energy
             assert self.grid.is_subclass(derived=red_energy,
-                                         base=RedEnergy)
+                                         base_class=RedEnergy)
             
             assert self.grid.is_subclass(derived=red_energy,
-                                         base=Energy)
+                                         base_class=Energy)
             
             assert self.grid.is_subclass(derived=red_energy,
-                                         base=Resource)
+                                         base_class=Resource)
             
             assert not self.grid.is_subclass(derived=red_energy,
-                                             base=Entity)
+                                             base_class=Entity)
             
             assert not self.grid.is_subclass(derived=red_energy,
-                                             base=BlueEnergy)
+                                             base_class=BlueEnergy)
         
 class TestSubGrid:
     def test_create_subgrid(self):

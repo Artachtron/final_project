@@ -1,3 +1,4 @@
+from contextlib import redirect_stderr
 from ctypes.wintypes import tagRECT
 import os, sys, pytest
 import tarfile
@@ -151,6 +152,7 @@ class TestEntity:
                                                     quantity=3000)
             assert can == False
             assert self.entity.red_energy == 1998
+            
          
         class TestEntityGridMethods:
             @pytest.fixture(autouse=True)
@@ -474,6 +476,22 @@ class TestAnimal:
                 animal2._plant_tree(grid=self.grid)
                 assert len(grid2.entity_grid._find_coordinates_with_class(position=(0,0),
                                                                           target_class=Tree)) == 0
+            
+            def test_pick_up_resource(self):
+                position = (1,1)
+                energy = RedEnergy(position=position)
+                self.grid.place_on_resource(energy)
+                
+                assert self.grid.resource_grid.get_cell_value(position)
+                
+                blue_stock = self.animal.blue_energy
+                red_stock = self.animal.red_energy
+                self.animal._pick_up_resource(coordinates=position,
+                                              grid=self.grid)
+                
+                assert not self.grid.resource_grid.get_cell_value(position) 
+                assert self.animal.blue_energy <= blue_stock 
+                assert self.animal.red_energy == red_stock + energy.quantity 
                 
             def test_pick_up_seed(self):
                 seed = Seed(seed_id=0,

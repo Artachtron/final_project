@@ -151,9 +151,9 @@ class SubGrid:
             # that is a subclass of the class given, if yes add it to the list of coordinates.
             # Avoid indexError when out of bounds
             positions = [tuple(np.add(position, coordinate)-1) for x, y in set(b) if
-                        (subregion[coordinate:=tuple((x,y))]).__class__.__name__==
-                                                            target_class.__name__]
-        
+                         Grid.is_subclass(derived=subregion[coordinate:=tuple((x,y))],
+                                          base_class=target_class
+                        )]
         else:
         # Faster when no risk of indexError  
             a = list(range(-radius, radius+1))  # List from (-radius, radius)
@@ -162,10 +162,10 @@ class SubGrid:
             # Optimised code to search if the cell at those coordinates contain an object
             # that is a subclass of the class given, if yes add it to the list of coordinates   
             positions = [coordinate for x, y in set(b) 
-                        if (self.get_cell_value(
-                            coordinate:=tuple(np.add(position,(x,y)))
-                            ).__class__.__name__==
-                            target_class.__name__)]
+                        if (Grid.is_subclass(derived=self.get_cell_value(
+                                                          coordinate:=tuple(np.add(position,
+                                                                                   (x,y))))
+                                            ,base_class=target_class))]
 
         return positions
     
@@ -215,7 +215,6 @@ class SubGrid:
                 return samples
         
         return None
-
     
     def update_cell(self, new_coordinate: Tuple[int, int], value: Any) -> bool:
         """Public method:
@@ -240,9 +239,7 @@ class SubGrid:
                             self._empty_cell(coordinates=old_position)
                             
         return success
-        
-        
-            
+    
     def _set_cell_value(self, coordinates: Tuple[int, int], value: Any) -> bool:
         """Private method:
             Update the value of a cell from the grid
@@ -379,21 +376,21 @@ class Grid:
         return self.dimensions[1]
     
     @staticmethod
-    def is_subclass(derived: Any, base: Type) -> bool:
+    def is_subclass(derived: Any, base_class: Type) -> bool:
         """Static public method:
             Check if an object is an instance
             of a subclass of a certain base class
 
         Args:
-            derived (Any): instance to check for base classes
-            base (Type):  reference base class 
+            derived (Any):      instance to check for base classes
+            base_class (Type):  reference base class 
 
         Returns:
             bool:   True if derived is an instance of a subclass of the base class
                     False if base class is not in the list of derived base classes
         """        
         for cls in derived.__class__.__mro__[:-1]:
-            if cls.__name__ == base.__name__:
+            if cls.__name__ == base_class.__name__:
                 return True
         
         return False
