@@ -359,15 +359,15 @@ class Grid:
         return self.__id
      
     @property
-    def entity_grid(self) -> np.array:
+    def entity_grid(self) -> SubGrid:
         return self._entity_grid
    
     @property
-    def resource_grid(self) -> np.array:
+    def resource_grid(self) -> SubGrid:
         return self._resource_grid
     
     @property
-    def color_grid(self) -> np.array:
+    def color_grid(self) -> SubGrid:
         return self._color_grid
         
     @property

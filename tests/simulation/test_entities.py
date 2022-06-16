@@ -1,3 +1,4 @@
+from ctypes.wintypes import tagRECT
 import os, sys, pytest
 import tarfile
 
@@ -360,8 +361,8 @@ class TestAnimal:
                                        data_type=Entity,
                                        initial_value=None) """
                 
-                self.grid = Grid(grid_id=0,
-                                 dimensions=(20,20))
+                self.grid: Grid = Grid(grid_id=0,
+                                    dimensions=(20,20))
                 
                 self.entity_grid = self.grid.entity_grid
                 
@@ -584,8 +585,35 @@ class TestAnimal:
             def test_decompose(self):
                 resource_grid = self.grid.resource_grid
                 position = self.animal.position
-                self.animal._die(grid=self.grid)
+                self.grid.place_on_entity(value=self.animal)
+                assert not resource_grid._find_coordinates_with_class(position=position,
+                                                                      target_class=BlueEnergy)
+                assert not resource_grid._find_coordinates_with_class(position=position,
+                                                                      target_class=RedEnergy)
+               
+                self.animal._decompose(entity=self.animal,
+                                       grid=self.grid)
+                assert resource_grid._find_coordinates_with_class(position=position,
+                                                                  target_class=BlueEnergy)
+                assert resource_grid._find_coordinates_with_class(position=position,
+                                                                  target_class=RedEnergy)
+       
             
+            def test_die(self):
+                resource_grid = self.grid.resource_grid
+                position = self.animal.position
+                self.grid.place_on_entity(value=self.animal)
+                assert not resource_grid._find_coordinates_with_class(position=position,
+                                                                      target_class=BlueEnergy)
+                assert not resource_grid._find_coordinates_with_class(position=position,
+                                                                      target_class=RedEnergy)
+                assert self.grid.entity_grid.get_cell_value(coordinates=position)
+                self.animal._die(grid=self.grid)
+                assert resource_grid._find_coordinates_with_class(position=position,
+                                                                  target_class=BlueEnergy)
+                assert resource_grid._find_coordinates_with_class(position=position,
+                                                                  target_class=RedEnergy)
+                assert not self.grid.entity_grid.get_cell_value(coordinates=position)
         
             
 
