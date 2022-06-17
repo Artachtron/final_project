@@ -149,7 +149,7 @@ class TestEnvironment:
             assert tree._max_age == tree2._max_age
             
             assert self.grid.resource_grid.get_cell_value(coordinates=position)
-            assert len(self.state.seeds) == 0
+
             
         def test_remove_entity(self):
            # Animal
@@ -165,6 +165,23 @@ class TestEnvironment:
             assert not self.grid.entity_grid.get_cell_value(coordinates=coordinates)
     
             assert len(self.state.animals) == 0
+            
+        def test_remove_resource(self):
+           # Animal
+            coordinates = (1,1)
+            energy = self.env.create_energy(coordinates=coordinates,
+                                            energy_type=EnergyType.BLUE,
+                                            quantity=10)
+            
+            assert self.grid.resource_grid.get_cell_value(coordinates=coordinates) == energy
+    
+            assert self.state.energies[1] == energy
+            assert len(self.state.energies) == 1 
+            
+            self.env.remove_resource(resource=energy)
+            assert not self.grid.resource_grid.get_cell_value(coordinates=coordinates)
+    
+            assert len(self.state.energies) == 0
             
         
         

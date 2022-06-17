@@ -287,10 +287,10 @@ class Entity(SimulatedObject):
              
             # If resource is a seed   
             elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
-                self._store_seed(seed=resource)
-                
-            environment.remove_energy(energy=resource)
+                self._store_seed(seed=resource)       
 
+        environment.remove_resource(resource=resource)
+        
         self._perform_action()
 
     def _die(self, environment: Environment) -> None:
@@ -632,6 +632,7 @@ class Animal(Entity):
             Event: on animal death, release energy on cells around death position"""
         self._decompose(entity=self,
                         environment=environment)
+        
         environment.remove_entity(entity=self)
 
     def modify_cell_color(self, color: Tuple[int,int,int], grid: Grid, coordinates: Tuple[int,int] = None) -> None:

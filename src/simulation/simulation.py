@@ -126,11 +126,10 @@ class SimState:
             resource (Resource):resource to remove
         """  
             
-        match resource.__class__.__name__:
-            case "Energy":
-                self.energies.pop(resource.id)
-            case "Seed":
-                self.seeds.pop(resource.id)
+        if resource.__class__.__base__.__name__ == "Energy":
+            self.energies.pop(resource.id)
+        else:
+            self.seeds.pop(resource.id)
                 
 
 class Environment:
@@ -247,10 +246,7 @@ class Environment:
         """        
         # Spawn the tree
         tree = seed.germinate()
-        
-        # Remove seed from the world
-        self.state.remove_resource(seed)
-        
+                
         # Move tree to proper position
         tree.position = position
         
@@ -294,19 +290,19 @@ class Environment:
         
         return energy
             
-    def remove_energy(self, energy: Energy) -> None:
+    def remove_resource(self, resource: Resource) -> None:
         """Public method:
-            Remove energy from the grid
+            Remove resource from the grid
 
         Args:
-            energy (Energy): energy to remove
+            resource (Resource): resource to remove
         """
         resource_grid = self.grid.resource_grid
-        position = energy._position()
+        position = resource._position()
         resource_grid._empty_cell(coordinates=position)
         
-        self.state.remove_resource(resource=energy)
-        print(f"{energy} was deleted at {position}")
+        self.state.remove_resource(resource=resource)
+        print(f"{resource} was deleted at {position}")
         
     def remove_entity(self, entity: Entity):
         """Public method:
