@@ -216,6 +216,8 @@ class TestEnvironment:
                                    quantity=10,
                                    coordinates=(1,2))
             
+            tree = self.env.create_tree(coordinates=(2,2))
+            
             resources = self.env.find_if_resources_around(coordinates=coordinates,
                                                         include_self=True,
                                                         radius=1)
@@ -225,12 +227,32 @@ class TestEnvironment:
                                    quantity=10,
                                    coordinates=(2,1))
             
-            self.env.create_seed_from_tree(self.env.create_tree(coordinates=(2,2)))
+            self.env.create_seed_from_tree(tree=tree)
             
             resources = self.env.find_if_resources_around(coordinates=coordinates,
                                                         include_self=True,
-                                                        radius=1)
+                                                        radius=4)
             assert sum(list(resources)) == 3
+            
+        def test_get_colors_around(self):
+            coordinates = (2,2)
+            colors = self.env.get_colors_around(coordinates=coordinates,
+                                                radius=2)
+            
+            assert colors.shape == (5,5,3)
+            
+            # Padding working
+            coordinates = (0,2)
+            colors = self.env.get_colors_around(coordinates=coordinates,
+                                                radius=2)
+            
+            assert colors.shape == (5,5,3)
+            
+            coordinates = (2,0)
+            colors = self.env.get_colors_around(coordinates=coordinates,
+                                                radius=2)
+            
+            assert colors.shape == (5,5,3)
 
         
 class TestSimulatedObject:

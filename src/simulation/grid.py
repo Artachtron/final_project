@@ -138,21 +138,32 @@ class SubGrid:
         return not (x < 0 or x >= self.dimensions[0] or
                     y < 0 or y >= self.dimensions[1])
  
-    def find_instance_baseclass_around(self, coordinates: Tuple[int, int], target_class: Type, 
+    def find_instance_baseclass_around(self, coordinates: Tuple[int, int], base_class: Type, 
                                        include_self: bool=False, radius: int=1) -> np.array:
+        """Public method:
+            Find all the instance of a certain base class in a radius around some coordinates,
+            return an boolean array with cells filled by baseclass' instances
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to search around
+            base_class (Type):              base class as reference for the search
+            include_self (bool, optional):  include the coordinates in the search. Defaults to False.
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            np.array[bool]: boolean mask of instance of baseclass in cells
+        """        
     
         subregion = self.get_sub_region(initial_pos=coordinates,
-                                            radius=radius) 
+                                        radius=radius) 
     
         occupied_cells = []
-        for x in range(-radius, radius + 1):
-                for y in range(-radius, radius + 1):
-                    if not include_self and x == 0 and y == 0:
-                        continue
-                    coordinate = tuple(np.add(coordinates,(x, y)))
-                    
-                    occupied_cells.append(Grid.is_subclass(derived=subregion[coordinate],
-                                          base_class=target_class))
+        for x in range(0, 2*radius + 1):
+                for y in range(-0, 2*radius + 1):
+                    if not include_self and x == int(radius/2 + 1) and y == int(radius/2 + 1):
+                        continue                    
+                    occupied_cells.append(Grid.is_subclass(derived=subregion[x,y],
+                                          base_class=base_class))
                     
                        
         return np.array(occupied_cells) 

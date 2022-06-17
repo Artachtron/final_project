@@ -633,9 +633,36 @@ class TestAnimal:
                 
                 
             def test_normalize_inputs(self):
-                self.animal._normalize_inputs(environment=self.env)
+                # Empty grid
+                inputs = self.animal._normalize_inputs(environment=self.env)
                 
+                assert len(inputs) == 96
+                assert inputs[0] == 0.5
+                assert inputs[1] == 37/100
+                assert round(inputs[2],5) == 157/100
+                assert round(inputs[3],5) == 122/100
+                assert sum(inputs[4:12]) == 0    
+                assert sum(inputs[12:21]) == 0
+                assert sum(inputs[21:]) == 75*1        
                 
+                # Non-empty grid
+                self.env.create_tree(coordinates=(5,6))
+                self.env.create_energy(energy_type=EnergyType.BLUE,
+                                       quantity=15,
+                                       coordinates=(6,5))
+                self.env.create_energy(energy_type=EnergyType.BLUE,
+                                       quantity=15,
+                                       coordinates=(4,5))
+                self.env.create_energy(energy_type=EnergyType.BLUE,
+                                       quantity=15,
+                                       coordinates=(5,4))
+                
+                inputs = self.animal._normalize_inputs(environment=self.env)
+                
+    
+                assert sum(inputs[4:12]) == 1    
+                assert sum(inputs[12:21]) == 3
+                assert sum(inputs[21:]) == 75*1       
             
                 
         

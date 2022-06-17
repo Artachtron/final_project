@@ -326,7 +326,7 @@ class Environment:
                                 include_self: bool=False, radius: int=1) -> np.array:
         
         return self.grid.entity_grid.find_instance_baseclass_around(coordinates=coordinates,
-                                                                    target_class=Entity,
+                                                                    base_class=Entity,
                                                                     include_self=include_self,
                                                                     radius=radius)
         
@@ -334,10 +334,14 @@ class Environment:
                                  include_self: bool=False, radius: int=1) -> np.array:
         
         return self.grid.resource_grid.find_instance_baseclass_around(coordinates=coordinates,
-                                                                        target_class=Resource,
+                                                                        base_class=Resource,
                                                                         include_self=include_self,
                                                                         radius=radius)
-                            
+        
+    def get_colors_around(self, coordinates: Tuple[int, int], radius: int=1) -> np.array:
+                                               
+        return self.grid.color_grid.get_sub_region(initial_pos=coordinates,
+                                                   radius=radius)                  
         
                     
         

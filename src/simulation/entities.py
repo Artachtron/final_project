@@ -671,17 +671,19 @@ class Animal(Entity):
         ## Perceptions
         """ see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
         see_energies = [int(x) for x in self._find_occupied_cells_by_energies()] """
-        entities = environment.find_if_entities_around(coordinates=self.position)
+        entities = environment.find_if_entities_around(coordinates=self.position,
+                                                       include_self=False)
         see_entities = list(map(int, entities))
-        energies = environment.find_if_resources_around(coordinates=self.position)
+        energies = environment.find_if_resources_around(coordinates=self.position,
+                                                        include_self=True)
         see_energies = list(map(int, energies))
         
+        colors = environment.get_colors_around(coordinates=self.position,
+                                               radius=2)
         
-        see_colors = grid.color_grid.get_sub_region(initial_pos=self.position,
-                                                         radius=2).flatten()/255
-        see_colors = see_colors.tolist()
-        
-        return np.array([age, size, blue_energy/100, red_energy/100] + see_entities + see_energies + see_colors)
+        see_colors = (colors.flatten()/255).tolist()
+                
+        return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
     
     def _interpret_outputs(self, outputs: np.array):
         pass
