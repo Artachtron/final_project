@@ -751,7 +751,7 @@ class Tree(Entity):
         environment.create_seed_from_tree(tree=self)
         
 
-    def _encode_genetic_data(self) -> Dict:
+    def _encode_genetic_data(self, data: Dict) -> Dict:
         """Private method:
             Encode the genetic information necessary
             to spawn another tree
@@ -775,11 +775,15 @@ class Tree(Entity):
         genetic_data['position'] = genetic_data['position']()
         genetic_data['blue_energy'] = original_dict['_energies_stock'][EnergyType.BLUE.value]
         genetic_data['red_energy'] = original_dict['_energies_stock'][EnergyType.RED.value]
-            
+        
+        # Extra given data from environment
+        for key, value in data.items():
+            genetic_data[key] = value
+                    
         return genetic_data
     
-    def create_seed(self) -> Seed:
-        genetic_data = self._encode_genetic_data()
+    def create_seed(self, data: Dict) -> Seed:
+        genetic_data = self._encode_genetic_data(data=data)
         
         seed = Seed(seed_id=self.id,
                     position=self.position,

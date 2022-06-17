@@ -112,11 +112,11 @@ class SimState:
             new_resource (Resource): new resource to register
         """  
             
-        match new_resource.__class__.__name__:
-            case "Energy":
-                self.energies[new_resource.id] = new_resource
-            case "Seed":
-                self.seeds[new_resource.id] = new_resource
+        if new_resource.__class__.__base__.__name__ == "Energy":
+            self.energies[new_resource.id] = new_resource
+            
+        else:
+            self.seeds[new_resource.id] = new_resource
                 
     def remove_resource(self, resource: Resource) -> None:
         """Public method:
@@ -177,6 +177,9 @@ class Environment:
         
 
     def create_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
+        if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
+            return None
+        
         animal_id = self.state.get_entity_id(increment=True)
           
         animal = Animal(animal_id=animal_id,
@@ -195,7 +198,10 @@ class Environment:
 
         Returns:
             Tree: tree that was created
-        """        
+        """ 
+        if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
+            return None
+               
         tree_id = self.state.get_entity_id(increment=True)
         tree = Tree(tree_id=tree_id,
                     position=coordinates,
@@ -216,11 +222,14 @@ class Environment:
         Returns:
             seed (Seed): seed created from the tree
         """        
-    
-        seed = tree.create_seed()
-        
+
+        # Create a seed from a tree
+        seed = tree.create_seed(data={'size': 5,
+                                      'action_cost': 1})
+        # Remove tree from world
         self.remove_entity(tree)
         
+        # Add the seed to the world
         self._add_new_resource_to_world(new_resource=seed)
            
         return seed
@@ -234,18 +243,24 @@ class Environment:
             position (Position):    position at which the tree should be created
 
         Returns:
-            Tree: tree that was spawned
+            Energy: energy created
         """        
         # Spawn the tree
         tree = seed.germinate()
-        # Move it to the proper position
+        
+        # Remove seed from the world
+        self.state.remove_resource(seed)
+        
+        # Move tree to proper position
         tree.position = position
+        
+        # Add the tree to the world
         self._add_new_entity_to_world(new_entity=tree) 
         
         return tree
     
     def create_energy(self, energy_type: EnergyType, quantity: int,
-                      coordinates: Tuple[int, int]) -> bool:
+                      coordinates: Tuple[int, int]) -> Energy:
         """Public method:
             Create energy on the grid
 
