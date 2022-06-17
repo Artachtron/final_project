@@ -291,7 +291,7 @@ class Entity(SimulatedObject):
             elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
                 self._store_seed(seed=resource)       
 
-        environment.remove_resource(resource=resource)
+            environment.remove_resource(resource=resource)
         
         self._perform_action()
 
@@ -485,9 +485,10 @@ class Animal(Entity):
                                      red_energy=red_energy,
                                      appearance="animal.png")
             
-        self._pocket: Seed = None   # Pocket in which to store seed
+        self._pocket: Seed = None       # Pocket in which to store seed
+        self.want_to_mate: bool = False # Want to mate if possible
 
-    def _move(self, direction: Direction, grid: Grid) -> None:
+    def _move(self, direction: Direction, environment: Environment) -> None:
         """Private method: 
             Action: Move the animal in the given direction
 
@@ -495,7 +496,7 @@ class Animal(Entity):
             direction (Direction):  direction in which to move
             grid (Grid):            grid on which to move 
         """        
-        entity_grid: SubGrid = grid.entity_grid
+        entity_grid: SubGrid = environment.grid.entity_grid
         next_pos = Position.add(position=self.position,
                                 vect=direction.value)()
                     
@@ -592,41 +593,42 @@ class Animal(Entity):
     
     
     
-    # def reproduce(self, mate: Animal) -> Animal:
-    #     """Create an offspring from 2 mates
+    def reproduce(self, mate: Animal, environment: Environment) -> Animal:
+        """Create an offspring from 2 mates
 
-    #     Args:
-    #         mate (Animal): Animal to mate with
+        Args:
+            mate (Animal): Animal to mate with
 
-    #     Returns:
-    #         Animal: Generated offsrping
-    #     """        
-    #     self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
+        Returns:
+            Animal: Generated offsrping
+        """        
+        self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
+        pass
         
-    #     if not (self._is_adult and mate._is_adult):
-    #         return
+        if not (self._is_adult and mate._is_adult):
+            return
         
-    #     if self._distance_to_object(distant_object=mate) > 2:
-    #         return
+        if self._distance_to_object(distant_object=mate) > 2:
+            return
         
-    #     self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
-    #     mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
+        self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
+        mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
         
-    #     if (self._can_perform_action(energy_type=EnergyType.RED,
-    #                                 quantity=self_energy_cost) and
-    #         mate._can_perform_action(energy_type=EnergyType.RED,
-    #                                  quantity=mate_energy_cost)):
+        if (self._can_perform_action(energy_type=EnergyType.RED,
+                                    quantity=self_energy_cost) and
+            mate._can_perform_action(energy_type=EnergyType.RED,
+                                     quantity=mate_energy_cost)):
         
-    #         birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
-    #         adult_size = int((self._size + mate._size)/2)
+            birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
+            adult_size = int((self._size + mate._size)/2)
             
-    #         child = self.grid.create_entity(entity_type=EntityType.Animal.value,
-    #                                 position=birth_position,
-    #                                 size=1,
-    #                                 blue_energy=Animal.INITIAL_BLUE_ENERGY,
-    #                                 red_energy=Animal.INITIAL_RED_ENERGY,
-    #                                 adult_size=adult_size)
-    #         return child
+            child = environment.create_entity(entity_type=EntityType.Animal.value,
+                                                position=birth_position,
+                                                size=1,
+                                                blue_energy=Animal.INITIAL_BLUE_ENERGY,
+                                                red_energy=Animal.INITIAL_RED_ENERGY,
+                                                adult_size=adult_size)
+            return child
 
 
     def _on_death(self, environment: Environment) -> None:
@@ -637,17 +639,18 @@ class Animal(Entity):
         
         environment.remove_entity(entity=self)
 
-    def modify_cell_color(self, color: Tuple[int,int,int], grid: Grid, coordinates: Tuple[int,int] = None) -> None:
+    def modify_cell_color(self, color: Tuple[int,int,int], environment: Environment,
+                          coordinates: Tuple[int,int] = None) -> None:
         """Modfify the color of a given cell, usually the cell currently sat on
 
         Args:
             color (Tuple[int,int,int]):                     color to apply
             coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
         """
+        pass
         coordinates = coordinates if coordinates else self.position
-        grid.color_grid.set_cell_value(
-            coordinates=coordinates,
-            value=color)
+        environment.grid.color_grid._set_cell_value(coordinates=coordinates,
+                                                    value=color)
 
         self._perform_action()
 
@@ -659,18 +662,17 @@ class Animal(Entity):
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
  
-        self._interpret_outputs(outputs=outputs)                                                       
-        #Outputs
+        self._interpret_outputs(outputs=outputs,
+                                environment=environment)                                                       
+       
         
     def _normalize_inputs(self, environment: Environment):
-         #Inputs
+        #Inputs
         ## Internal properties
         age = self._age/self._max_age
         size = self._size/100
         blue_energy, red_energy = (energy/100 for energy in self.energies.values())
         ## Perceptions
-        """ see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
-        see_energies = [int(x) for x in self._find_occupied_cells_by_energies()] """
         entities = environment.find_if_entities_around(coordinates=self.position,
                                                        include_self=False)
         see_entities = list(map(int, entities))
@@ -685,8 +687,83 @@ class Animal(Entity):
                 
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
     
-    def _interpret_outputs(self, outputs: np.array):
-        pass
+    def _interpret_outputs(self, outputs: np.array, environment: Environment):
+        self.want_to_mate = False
+        
+        # Get the most absolute active value of all the outputs
+        most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
+        value = outputs[most_active_output]
+        
+        sorted_output_keys = sorted(outputs.keys())
+        
+        match out:= sorted_output_keys.index(most_active_output):
+            ## Simple actions ##
+            # Move action
+            case key if key in range(0,2):
+                if out == 0:
+                    if value > 0:
+                        direction = Direction.UP
+                    else:
+                        direction = Direction.DOWN 
+                       
+                else:
+                    if value > 0:
+                        direction = Direction.LEFT
+                    else:
+                        direction = Direction.RIGTH 
+                        
+                self._move(direction=direction,
+                           environment=environment)
+            
+            # Modify cell color
+            case key if key in range(2,5):
+                color = (outputs[sorted_output_keys[2]]*255,
+                         outputs[sorted_output_keys[3]]*255,
+                         outputs[sorted_output_keys[4]]*255)
+                
+                self.modify_cell_color(coordinates=self.position,
+                                       color=color,
+                                       environment=environment)
+            
+            # Drop energy   
+            case key if key in range(5,7):
+                if out == 5:
+                    self._drop_energy(energy_type=EnergyType.BLUE,
+                                      coordinates=self.position,
+                                      quantity=10,
+                                      environment=environment)
+                
+                else:
+                    self._drop_energy(energy_type=EnergyType.RED,
+                                      coordinates=self.position,
+                                      quantity=10,
+                                      environment=environment)
+            
+            # Pick up resource       
+            case 7:
+                self._pick_up_resource(coordinates=self.position,
+                                       environment=environment)
+            
+            # Recycle seed    
+            case 8:
+                self._recycle_seed(environment=environment)
+            
+            ## Complex actions ##   
+            # Plant tree
+            case 9:
+                self._plant_tree(environment=environment)
+                
+            #Grow
+            case 10:
+                self._grow()
+                
+            case 11:
+                self.want_to_mate = True
+                self.reproduce()
+                    
+                
+        
+        
     
     # def random_update(self) -> None:
     #     """Test behaviour by doing random actions"""

@@ -6,9 +6,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 from project.src.rtNEAT.network import Network
 from project.src.rtNEAT.genes import NodeGene, LinkGene, NodeType, reset_innovation_table, sigmoid
 from project.src.rtNEAT.genome import Genome
-from project.src.rtNEAT.neat import Config
-from project.src.rtNEAT.organism import Organism
-from project.src.rtNEAT.innovation import InnovTable
+
 from project.src.rtNEAT.phenes import Node, Link
 
 
