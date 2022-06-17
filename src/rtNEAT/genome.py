@@ -1,12 +1,12 @@
 from __future__ import annotations
 import numpy as np
-from neat import Config
 
-from innovation import InnovationType, InnovTable
 from typing import Tuple, Dict, Set
 from numpy.random import choice, random
 
-from genes import LinkGene, NodeGene, BaseGene, NodeType
+from project.src.rtNEAT.genes import LinkGene, NodeGene, BaseGene, NodeType
+from project.src.rtNEAT.innovation import InnovationType, InnovTable
+from project.src.rtNEAT.neat import Config
 
 Config.configure()
 

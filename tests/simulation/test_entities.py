@@ -2,7 +2,7 @@ import os, sys, pytest
 
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.entities import Animal, Entity, Tree, Seed, Direction, EntityType
+from project.src.simulation.entities import Animal, Entity, Tree, Seed, Direction
 from project.src.simulation.energies import BlueEnergy, RedEnergy, EnergyType
 from project.src.simulation.grid import Grid
 from project.src.simulation.simulation import Environment
@@ -316,7 +316,7 @@ class TestAnimal:
                         blue_energy=12,
                         red_energy=27)
         
-        assert {'_position', '_adult_size', '_age',
+        assert {'_position', '_adult_size', '_age', 'organism',
                 '_max_age', '_size', '_action_cost', '_is_adult',
                 '_energies_stock', '_pocket'}.issubset(vars(animal))
         
@@ -330,6 +330,19 @@ class TestAnimal:
         assert animal._energies_stock == {'blue energy': 12, 'red energy': 27}
         assert animal._is_adult == False
         assert animal._pocket == None
+        
+        # Organism
+        org = animal.organism
+        gen = org.genotype
+        net = org.mind
+        
+        assert org.id == animal.id
+        assert net.id == animal.id
+        assert gen.id == animal.id
+        
+        assert org.entity_type == 'animal'
+        assert len(net.inputs) == 96
+        assert len(net.outputs) == 12
         
     class TestAnimalMethods:
             @pytest.fixture(autouse=True)
@@ -606,6 +619,10 @@ class TestAnimal:
                 assert resource_grid._find_coordinates_with_class(position=position,
                                                                   target_class=RedEnergy)
                 assert not self.grid.entity_grid.get_cell_value(coordinates=position)
+                
+                
+            
+                
         
             
 

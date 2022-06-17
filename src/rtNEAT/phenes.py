@@ -1,5 +1,5 @@
 from __future__ import annotations
-from genes import NodeType, ActivationFuncType, AggregationFuncType
+from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFuncType
 from typing import Dict
 
 

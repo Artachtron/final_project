@@ -5,7 +5,7 @@ from typing import Tuple
 import enum
 from numpy.random import randint
 
-from extra_classes import SimulatedObject
+from universal import SimulatedObject
 
 
 class Resource(SimulatedObject):

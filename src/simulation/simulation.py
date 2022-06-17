@@ -332,7 +332,10 @@ class Simulation:
         self._init_simulation()
     
     def _init_simulation(self):
-        self.environment = Environment(env_id=self.id)   
+        self.environment = Environment(env_id=self.id) 
+        
+        
+          
     
    
         

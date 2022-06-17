@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from display import DisplayedObject
+
 from typing import Tuple, Any
 from dataclasses import dataclass
 from math import sqrt
+import enum
+
+class EntityType(enum.Enum):
+    Animal  =   "animal"
+    Tree    =   "tree"
 
 @dataclass
 class Position:
@@ -41,7 +46,8 @@ class SimulatedObject:
                  size: int,
                  position: Tuple[int, int],
                  appearance: str):
-    
+        
+        from display import DisplayedObject
         self.__id = sim_obj_id
         self._size = size
         self._position = Position(*position)

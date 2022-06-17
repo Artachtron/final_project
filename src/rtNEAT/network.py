@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 from typing import Dict, Set
 
 import numpy as np
-from phenes import Node, Link
+from project.src.rtNEAT.phenes import Node, Link
 
 class Network:
     def __init__(self,

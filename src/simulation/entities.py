@@ -1,7 +1,8 @@
 from __future__ import annotations
-from os import environ
 
 from typing import TYPE_CHECKING
+
+from src.simulation.universal import EntityType
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
     from simulation import Environment
@@ -13,7 +14,8 @@ import numpy as np
 import inspect
 
 from energies import EnergyType, Energy, Resource
-from extra_classes import SimulatedObject, Position
+from universal import SimulatedObject, Position, EntityType
+from project.src.rtNEAT.organism import Organism
 
 
 class Direction(enum.Enum):
@@ -21,11 +23,6 @@ class Direction(enum.Enum):
     LEFT    =   (-1, 0)
     DOWN    =   (0, 1)
     UP      =   (0, -1)
-
-
-class EntityType(enum.Enum):
-    Animal  =   "animal"
-    Tree    =   "tree"
 
 
 class Entity(SimulatedObject):
@@ -62,17 +59,25 @@ class Entity(SimulatedObject):
             EnergyType.RED.value: red_energy
             }
             
-        self._age: int = 0                                     # age of the entity
-        self._max_age: int = (max_age or                       # maximum longevity before dying
+        self._age: int = 0                                      # age of the entity
+        self._max_age: int = (max_age or                        # maximum longevity before dying
                               (size * 
                                Entity.MAX_AGE_SIZE_COEFF))
         
-        self._adult_size: int = adult_size                     # size to reach before becoming adult
-        self._is_adult: bool = False                           # can reproduce only if adult
-        self._reached_adulthood()                              # check if the adult size was reached                          
+        self._adult_size: int = adult_size                      # size to reach before becoming adult
+        self._is_adult: bool = False                            # can reproduce only if adult
+        self._reached_adulthood()                               # check if the adult size was reached                          
         
-        self._action_cost: int = action_cost                   # blue energy cost of each action
+        self._action_cost: int = action_cost                    # blue energy cost of each action
         
+        self.organism: Organism                                 # Organism containing genotype and mind
+        
+        self._init_organism()
+        
+    def _init_organism(self):
+        self.organism = Organism(position=self.position,
+                                    organism_id=self.id,
+                                    entity_type=EntityType.Animal.value)
     
     @property
     def energies(self) -> Dict[str, int]:

@@ -1,10 +1,12 @@
 from __future__ import annotations
 import math
 from numpy.random import uniform, random
-from innovation import InnovTable
+
 from functools import partial
 import enum
-from neat import Config
+
+from project.src.rtNEAT.innovation import InnovTable
+from project.src.rtNEAT.neat import Config
 Config.configure()
 
 from typing import Dict
