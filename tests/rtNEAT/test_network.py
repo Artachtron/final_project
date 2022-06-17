@@ -44,6 +44,7 @@ class TestNetwork:
                 self.mind.inputs.clear()
                 self.mind.all_nodes.clear()
                 self.mind.outputs.clear()
+                self.mind.hidden.clear()
             
                             
         def test_syntethize_nodes(self):

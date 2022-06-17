@@ -345,17 +345,17 @@ class Entity(SimulatedObject):
     #     Returns:
     #         np.array[bool]: List of occupied (True) and empty cells (False)
     #     """        
-    #     position: Tuple[int, int] = self._position
-    #     occupied_cells = []
+        # position: Tuple[int, int] = self._position
+        # occupied_cells = []
         
-    #     for x in range(-radius, radius + 1):
-    #         for y in range(-radius, radius + 1):
-    #             if not include_self and x == 0 and y == 0:
-    #                 continue
-    #             coordinate = tuple(np.add(position,(x, y)))
-    #             occupied_cells.append((issubclass(type(subgrid.get_cell_value(coordinates=coordinate)),value)))
+        # for x in range(-radius, radius + 1):
+        #     for y in range(-radius, radius + 1):
+        #         if not include_self and x == 0 and y == 0:
+        #             continue
+        #         coordinate = tuple(np.add(position,(x, y)))
+        #         occupied_cells.append((issubclass(type(subgrid.get_cell_value(coordinates=coordinate)),value)))
 
-    #     return np.array(occupied_cells)         
+        # return np.array(occupied_cells)         
            
     # def _find_occupied_cells_by_entities(self, radius: int = 1) -> np.array[bool]:
     #     """ Find the cells occupied by entities, return a list of boolean
@@ -654,23 +654,29 @@ class Animal(Entity):
     def test_update(self):
         self.activate_mind()
         
-    def activate_mind(self) -> None:
-        inputs = self._normalize_inputs()
+    def activate_mind(self, environment: Environment) -> None:
+        inputs = self._normalize_inputs(environment=environment)
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
  
         self._interpret_outputs(outputs=outputs)                                                       
         #Outputs
         
-    def _normalize_inputs(self, grid: Grid):
+    def _normalize_inputs(self, environment: Environment):
          #Inputs
         ## Internal properties
         age = self._age/self._max_age
         size = self._size/100
         blue_energy, red_energy = (energy/100 for energy in self.energies.values())
         ## Perceptions
-        see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
-        see_energies = [int(x) for x in self._find_occupied_cells_by_energies()]
+        """ see_entities = [int(x) for x in self._find_occupied_cells_by_entities()]
+        see_energies = [int(x) for x in self._find_occupied_cells_by_energies()] """
+        entities = environment.find_if_entities_around(coordinates=self.position)
+        see_entities = list(map(int, entities))
+        energies = environment.find_if_resources_around(coordinates=self.position)
+        see_energies = list(map(int, energies))
+        
+        
         see_colors = grid.color_grid.get_sub_region(initial_pos=self.position,
                                                          radius=2).flatten()/255
         see_colors = see_colors.tolist()

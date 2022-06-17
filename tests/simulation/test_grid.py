@@ -258,12 +258,12 @@ class TestSubGrid:
         def test_find_coordinates_with_class(self):
             tree1 = self.env.create_tree(coordinates=(1,1))
             
-            assert len(self.entity_grid._find_coordinates_with_class(position=(1,1),
+            assert len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
                                                                      target_class=Tree)) == 1
             
             tree2 = self.env.create_tree(coordinates=(2,1))
             
-            len(self.entity_grid._find_coordinates_with_class(position=(1,1),
+            len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
                                                               target_class=Tree))  == 2
             
             
@@ -271,7 +271,7 @@ class TestSubGrid:
             # Does not detect animal
             animal = self.env.create_animal(coordinates=(1,2))
             
-            len(self.entity_grid._find_coordinates_with_class(position=(1,1),
+            len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
                                                               target_class=Tree))  == 2
             
         

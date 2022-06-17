@@ -457,7 +457,7 @@ class TestAnimal:
             assert animal.red_energy == 10
             animal._plant_tree(environment=self.env)
             assert animal.red_energy == 0
-            tree_cell = self.entity_grid._find_coordinates_with_class(position=(5,5),
+            tree_cell = self.entity_grid._find_coordinates_baseclass(position=(5,5),
                                                                         target_class=Tree)[0]
             tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
             assert tree.__class__.__name__ == "Tree"
@@ -522,16 +522,16 @@ class TestAnimal:
             animal = self.env.create_animal(coordinates=(3,2))
             # Pocket empty
             animal._recycle_seed(environment=self.env)
-            assert len(self.grid.resource_grid._find_coordinates_with_class(target_class=BlueEnergy,
+            assert len(self.grid.resource_grid._find_coordinates_baseclass(target_class=BlueEnergy,
                                                                             position=position)) == 0
             animal._pick_up_resource(coordinates=position,
                                         environment=self.env)
             
             animal._recycle_seed(environment=self.env)
             assert not animal._pocket 
-            energie_cells = (self.grid.resource_grid._find_coordinates_with_class(target_class=BlueEnergy,
+            energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(target_class=BlueEnergy,
                                                                             position=animal.position) + 
-                                self.grid.resource_grid._find_coordinates_with_class(target_class=RedEnergy,
+                                self.grid.resource_grid._find_coordinates_baseclass(target_class=RedEnergy,
                                                                             position=animal.position))
             energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]
             assert len(energies) == 2
@@ -565,7 +565,7 @@ class TestAnimal:
             animal.red_energy == 0
             animal.blue_energy == 9
             
-            cell = self.entity_grid._find_coordinates_with_class(position=(2,3),
+            cell = self.entity_grid._find_coordinates_baseclass(position=(2,3),
                                                                     target_class=Tree)[0]
             tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
             assert tree._max_age == max_age
@@ -579,7 +579,7 @@ class TestAnimal:
             animal._gain_energy(energy_type=EnergyType.RED,
                                 quantity=100)
             animal._plant_tree(environment=self.env)
-            cell = self.entity_grid._find_coordinates_with_class(position=(2,3),
+            cell = self.entity_grid._find_coordinates_baseclass(position=(2,3),
                                                                     target_class=Tree)[0]
             tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
             assert not tree._max_age == max_age
@@ -590,16 +590,16 @@ class TestAnimal:
             resource_grid = self.grid.resource_grid
             position = self.animal.position
             self.grid.place_entity(value=self.animal)
-            assert not resource_grid._find_coordinates_with_class(position=position,
+            assert not resource_grid._find_coordinates_baseclass(position=position,
                                                                     target_class=BlueEnergy)
-            assert not resource_grid._find_coordinates_with_class(position=position,
+            assert not resource_grid._find_coordinates_baseclass(position=position,
                                                                     target_class=RedEnergy)
             
             self.animal._decompose(entity=self.animal,
                                     environment=self.env)
-            assert resource_grid._find_coordinates_with_class(position=position,
+            assert resource_grid._find_coordinates_baseclass(position=position,
                                                                 target_class=BlueEnergy)
-            assert resource_grid._find_coordinates_with_class(position=position,
+            assert resource_grid._find_coordinates_baseclass(position=position,
                                                                 target_class=RedEnergy)
     
         
@@ -607,32 +607,33 @@ class TestAnimal:
             resource_grid = self.grid.resource_grid
             position = self.animal.position
             self.grid.place_entity(value=self.animal)
-            assert not resource_grid._find_coordinates_with_class(position=position,
+            assert not resource_grid._find_coordinates_baseclass(position=position,
                                                                     target_class=BlueEnergy)
-            assert not resource_grid._find_coordinates_with_class(position=position,
+            assert not resource_grid._find_coordinates_baseclass(position=position,
                                                                     target_class=RedEnergy)
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             self.animal._die(environment=self.env)
-            assert resource_grid._find_coordinates_with_class(position=position,
+            assert resource_grid._find_coordinates_baseclass(position=position,
                                                                 target_class=BlueEnergy)
-            assert resource_grid._find_coordinates_with_class(position=position,
+            assert resource_grid._find_coordinates_baseclass(position=position,
                                                                 target_class=RedEnergy)
             assert not self.grid.entity_grid.get_cell_value(coordinates=position)
                 
-        # class TestAnimalMind:
-        #     @pytest.fixture(autouse=True)
-        #     def setup(self):
-        #         self.env = Environment(env_id=0)
-        #         self.animal = self.env.create_animal(coordinates=(5,5),
-        #                                              blue_energy=157,
-        #                                              red_energy=122,
-        #                                              age=12,
-        #                                              max_age=24,
-        #                                              size=37)
+        class TestAnimalMind:
+            @pytest.fixture(autouse=True)
+            def setup(self):
+                self.env = Environment(env_id=0)
+                self.animal = self.env.create_animal(coordinates=(5,5),
+                                                     blue_energy=157,
+                                                     red_energy=122,
+                                                     max_age=24,
+                                                     size=37)
+                
+                self.animal._increase_age(amount=12)
                 
                 
-        #     def test_normalize_inputs(self):
-        #         pass
+            def test_normalize_inputs(self):
+                self.animal._normalize_inputs(environment=self.env)
                 
                 
             

@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from entities import Animal, Tree, Entity 
+    import numpy as np
     
 from typing import Dict, Tuple
 
@@ -319,7 +320,26 @@ class Environment:
         print(f"{entity} was deleted at {position}")
         
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
-        return self.grid.resource_grid.get_cell_value(coordinates=coordinates)        
+        return self.grid.resource_grid.get_cell_value(coordinates=coordinates)  
+    
+    def find_if_entities_around(self, coordinates: Tuple[int, int],
+                                include_self: bool=False, radius: int=1) -> np.array:
+        
+        return self.grid.entity_grid.find_instance_baseclass_around(coordinates=coordinates,
+                                                                    target_class=Entity,
+                                                                    include_self=include_self,
+                                                                    radius=radius)
+        
+    def find_if_resources_around(self, coordinates: Tuple[int, int],
+                                 include_self: bool=False, radius: int=1) -> np.array:
+        
+        return self.grid.resource_grid.find_instance_baseclass_around(coordinates=coordinates,
+                                                                        target_class=Resource,
+                                                                        include_self=include_self,
+                                                                        radius=radius)
+                            
+        
+                    
         
 class Simulation:
     def __init__(self,

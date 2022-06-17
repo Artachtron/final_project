@@ -138,7 +138,27 @@ class SubGrid:
         return not (x < 0 or x >= self.dimensions[0] or
                     y < 0 or y >= self.dimensions[1])
  
-    def _find_coordinates_with_class(self, target_class: Any, position: Tuple[int, int],
+    def find_instance_baseclass_around(self, coordinates: Tuple[int, int], target_class: Type, 
+                                       include_self: bool=False, radius: int=1) -> np.array:
+    
+        subregion = self.get_sub_region(initial_pos=coordinates,
+                                            radius=radius) 
+    
+        occupied_cells = []
+        for x in range(-radius, radius + 1):
+                for y in range(-radius, radius + 1):
+                    if not include_self and x == 0 and y == 0:
+                        continue
+                    coordinate = tuple(np.add(coordinates,(x, y)))
+                    
+                    occupied_cells.append(Grid.is_subclass(derived=subregion[coordinate],
+                                          base_class=target_class))
+                    
+                       
+        return np.array(occupied_cells) 
+    
+    
+    def _find_coordinates_baseclass(self, target_class: Any, position: Tuple[int, int],
                                      radius: int = 1) -> Set[Tuple[int, int]]:
         """Private method:
             Find the list of cells at given radius distance from specified class

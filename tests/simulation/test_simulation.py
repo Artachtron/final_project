@@ -183,7 +183,55 @@ class TestEnvironment:
     
             assert len(self.state.energies) == 0
             
-        
+        def test_find_entities_around(self):
+            coordinates = (1,1)
+            animal = self.env.create_animal(coordinates=coordinates)
+            entities = self.env.find_if_entities_around(coordinates=coordinates,
+                                                        include_self=True,
+                                                        radius=1)
+            assert sum(list(entities)) == 1
+            
+            entities = self.env.find_if_entities_around(coordinates=coordinates,
+                                                        include_self=False,
+                                                        radius=1)
+            assert sum(list(entities)) == 0
+
+            self.env.create_animal(coordinates=(2,2))
+            self.env.create_animal(coordinates=(2,1))
+            
+            entities = self.env.find_if_entities_around(coordinates=coordinates,
+                                                        include_self=True,
+                                                        radius=1)
+            assert sum(list(entities)) == 3
+            
+        def test_find_resources_around(self):
+            coordinates = (1,1)
+            animal = self.env.create_animal(coordinates=coordinates)
+            resources = self.env.find_if_resources_around(coordinates=coordinates,
+                                                        include_self=True,
+                                                        radius=1)
+            assert sum(list(resources)) == 0
+            
+            self.env.create_energy(energy_type=EnergyType.BLUE,
+                                   quantity=10,
+                                   coordinates=(1,2))
+            
+            resources = self.env.find_if_resources_around(coordinates=coordinates,
+                                                        include_self=True,
+                                                        radius=1)
+            assert sum(list(resources)) == 1
+            
+            self.env.create_energy(energy_type=EnergyType.RED,
+                                   quantity=10,
+                                   coordinates=(2,1))
+            
+            self.env.create_seed_from_tree(self.env.create_tree(coordinates=(2,2)))
+            
+            resources = self.env.find_if_resources_around(coordinates=coordinates,
+                                                        include_self=True,
+                                                        radius=1)
+            assert sum(list(resources)) == 3
+
         
 class TestSimulatedObject:
     def test_create_simulated_object(self):
