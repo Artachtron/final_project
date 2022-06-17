@@ -26,7 +26,7 @@ class TestNetwork:
         def setup(self):
             reset_innovation_table()
             self.genome = Genome(genome_id=0, node_genes={}, link_genes={})
-            self.network = Network(network_id=self.genome.id,
+            self.mind = Network(network_id=self.genome.id,
                                    inputs={},
                                    outputs={},
                                    all_nodes={})
@@ -36,9 +36,15 @@ class TestNetwork:
             
             self.genome._node_genes = {}
             self.genome._link_genes = {}
-            self.network._links = {}
-            self.genome = None
-            self.network = None
+            self.mind._links = {}
+            if self.genome:
+                self.genome.node_genes.clear()
+                self.genome.link_genes.clear()
+            if self.mind:
+                self.mind.inputs.clear()
+                self.mind.all_nodes.clear()
+                self.mind.outputs.clear()
+            
                             
         def test_syntethize_nodes(self):
             node_genes = {}
@@ -50,21 +56,21 @@ class TestNetwork:
              
             assert len(node_genes) == len(node_types)-1
             
-            self.network._synthetize_nodes(node_genes=node_genes)
+            self.mind._synthetize_nodes(node_genes=node_genes)
             
-            for i, node in self.network._all_nodes.items():
+            for i, node in self.mind._all_nodes.items():
                 assert node.id == i
                 assert node.__class__.__name__ == "Node"
                 assert node.type == node_types[i]
             
             #Sorted                     
-            for node in self.network.get_inputs():
+            for node in self.mind.get_inputs():
                 assert node.type == NodeType.INPUT
                 
-            for node in self.network.get_hidden():
+            for node in self.mind.get_hidden():
                 assert node.type == NodeType.HIDDEN    
             
-            for node in self.network.get_outputs():
+            for node in self.mind.get_outputs():
                 assert node.type == NodeType.OUTPUT
                             
         def test_synthetize_links(self):
@@ -76,19 +82,19 @@ class TestNetwork:
                 self.genome.add_link(LinkGene(in_node=in_node.id,
                                          out_node=out_node.id))
                 
-            self.network._synthetize_nodes(node_genes=self.genome._node_genes)
-            self.network._synthetize_links(link_genes=self.genome._link_genes)
+            self.mind._synthetize_nodes(node_genes=self.genome._node_genes)
+            self.mind._synthetize_links(link_genes=self.genome._link_genes)
             
-            assert len(self.network._links) == 10
-            for link in self.network._links.values():
+            assert len(self.mind._links) == 10
+            for link in self.mind._links.values():
                 assert link.__class__.__name__ == 'Link'
                 
             # ALl link have been attributed to incoming and outgoing links
-            assert sum([len(node.incoming) for node in self.network._all_nodes.values()]) == 10
-            assert sum([len(node.outgoing) for node in self.network._all_nodes.values()]) == 10
+            assert sum([len(node.incoming) for node in self.mind._all_nodes.values()]) == 10
+            assert sum([len(node.outgoing) for node in self.mind._all_nodes.values()]) == 10
             
-            assert self.network.n_links == 10
-            assert self.network.n_nodes == 50
+            assert self.mind.n_links == 10
+            assert self.mind.n_nodes == 50
             
         def test_network_genesis(self):
             for _ in range(100):
@@ -99,13 +105,13 @@ class TestNetwork:
                 self.genome.add_link(LinkGene(in_node=in_node.id,
                                          out_node=out_node.id))
                 
-            self.network = Network.genesis(self.genome)
+            self.mind = Network.genesis(self.genome)
             
-            assert self.network.id == self.genome.id
-            assert self.network.n_links == 1000
-            assert self.network.n_nodes == 100
-            assert self.network.n_inputs > 0
-            assert self.network.n_outputs > 0
+            assert self.mind.id == self.genome.id
+            assert self.mind.n_links == 1000
+            assert self.mind.n_nodes == 100
+            assert self.mind.n_inputs > 0
+            assert self.mind.n_outputs > 0
             
     class TestActivation: 
         @pytest.fixture(autouse=True)
@@ -125,6 +131,7 @@ class TestNetwork:
                 self.mind.inputs.clear()
                 self.mind.all_nodes.clear()
                 self.mind.outputs.clear()
+                self.mind.hidden.clear()
             
         def test_activate_callable_functions(self):
             values = [1,2,3,4,5]
@@ -231,7 +238,7 @@ class TestNetwork:
                                             inputs[1]*weights[1],
                                             hidden.bias]))
                 
-                assert round(first_layer,10) == round(list(self.mind.get_hidden())[0].activation_value,10)
+                assert round(first_layer, 10) == round(list(self.mind.get_hidden())[0].activation_value,10)
                 
                 second_layer = sigmoid(sum([first_layer*weights[2],
                                             output.bias]))

@@ -151,7 +151,7 @@ class Network:
             
             output_value = node.get_activation(activation_phase=self.activation_phase) 
             output_values[node.id]= output_value
-            node.activation_value = output_value
+            # node.activation_value = output_value
         
         return output_values
     
