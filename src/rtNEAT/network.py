@@ -54,6 +54,9 @@ class Network:
     def _synthetize_links(self, link_genes: Dict[int, LinkGene]) -> Dict[int, Link]:
         for key, link_gene in link_genes.items():
             link = Link.synthesis(link_gene.transcript())
+            # Replace id  by the actual Node
+            link.in_node = self._all_nodes[link.in_node]
+            link.out_node = self._all_nodes[link.out_node]
             self._links[key] = link
             if link_gene.enabled: 
                 self._connect_link(link)                
@@ -120,10 +123,12 @@ class Network:
     
         Args:
             values (np.array): values to store in the input nodes
-        """        
- 
-        for node, value in zip(self.inputs, values): 
-            node.output_value = value
+        """ 
+        inputs_dict = self.inputs        
+        inputs = [inputs_dict[key] for key in sorted(inputs_dict.keys(), reverse=False)]
+        
+        for node, value in zip(inputs, values): 
+            node.activation_value = value
             node.activation_phase = self.activation_phase
         
     def activate_outputs(self) -> np.array:
@@ -138,16 +143,17 @@ class Network:
         Returns:
             np.array: list of the output values after calculation 
         """        
-        output_values = []
+        output_values = {}
         
-        for node in self.outputs:
+        for node in self.get_outputs():
             """ if node.type != NodeType.OUTPUT:
                 raise ValueError """
             
             output_value = node.get_activation(activation_phase=self.activation_phase) 
-            output_values.append(output_value)
+            output_values[node.id]= output_value
+            node.activation_value = output_value
         
-        return np.array(output_values)
+        return output_values
     
     @cached_property
     def n_inputs(self) -> int:
@@ -189,7 +195,7 @@ class Network:
         """Return only the Nodes values from the dictionary
 
         Returns:
-            np.array[Node]: Array of inputs Nodes
+            Set[Node]: Array of inputs Nodes
         """        
         return set(self._inputs.values())
     
@@ -197,7 +203,7 @@ class Network:
         """Return only the Nodes values from the dictionary
 
         Returns:
-            np.array[Node]: Array of outputs Nodes
+            Set[Node]: Array of outputs Nodes
         """        
         return set(self._outputs.values())
     
@@ -205,7 +211,7 @@ class Network:
         """Return only the Nodes values from the dictionary
 
         Returns:
-            np.array[Node]: Array of hidden Nodes
+            Set[Node]: Array of hidden Nodes
         """
         return set(self._hidden.values())
     
@@ -213,7 +219,7 @@ class Network:
         """Return only the Nodes values from the dictionary
 
         Returns:
-            np.array[Node]: Array of all Nodes
+            Set[Node]: Array of all Nodes
         """        
         return set(self._all_nodes.values())
     
@@ -221,7 +227,7 @@ class Network:
         """Return only the Nodes values from the dictionary
 
         Returns:
-            np.array[Link]: Array of Links
+            Set[Link]: Array of Links
         """        
         return set(self._links.values())
         

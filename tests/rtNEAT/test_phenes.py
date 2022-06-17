@@ -63,6 +63,7 @@ class TestPhenes:
             node = Node.synthesis(node_gene.transcript())
             assert type(node) == Node
             assert node.id == node_gene.id
+            assert node.type == node_gene.type
             
             node2 = Node.synthesis(NodeGene().transcript())
 
@@ -76,3 +77,4 @@ class TestPhenes:
             link = Link.synthesis(link_gene.transcript())
             assert type(link) == Link
             assert link.id == link_gene.id
+            assert link.weight == link_gene.weight

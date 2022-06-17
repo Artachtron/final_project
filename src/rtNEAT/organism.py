@@ -8,7 +8,6 @@ from project.src.simulation.universal import EntityType
 
 class Organism:
     def __init__(self,
-                 position: Tuple[int, int] = (-1, -1),
                  organism_id: int = 0,
                  generation: int = 0,
                  entity_type: str = EntityType.Animal.value):

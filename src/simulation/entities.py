@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.simulation.universal import EntityType
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
     from simulation import Environment
@@ -75,9 +74,8 @@ class Entity(SimulatedObject):
         self._init_organism()
         
     def _init_organism(self):
-        self.organism = Organism(position=self.position,
-                                    organism_id=self.id,
-                                    entity_type=EntityType.Animal.value)
+        self.organism = Organism(organism_id=self.id,
+                                 entity_type=EntityType.Animal.value)
     
     @property
     def energies(self) -> Dict[str, int]:
@@ -683,31 +681,31 @@ class Animal(Entity):
     def _interpret_outputs(self, outputs: np.array):
         pass
     
-    def random_update(self) -> None:
-        """Test behaviour by doing random actions"""
-        direction = random.choice(list(Direction))
-        # print(direction)
-        if np.random.uniform() < 0.01:
-            x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
-            coordinates = tuple(np.add(self.position, (x, y)))
-            if self._is_available_coordinates(coordinates=coordinates,
-                                       subgrid=grid.resource_grid):
-                self._drop_energy(energy_type=np.random.choice(EnergyType),
-                                 coordinates=coordinates,
-                                 quantity=1)
+    # def random_update(self) -> None:
+    #     """Test behaviour by doing random actions"""
+    #     direction = random.choice(list(Direction))
+    #     # print(direction)
+    #     if np.random.uniform() < 0.01:
+    #         x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
+    #         coordinates = tuple(np.add(self.position, (x, y)))
+    #         if self._is_available_coordinates(coordinates=coordinates,
+    #                                    subgrid=grid.resource_grid):
+    #             self._drop_energy(energy_type=np.random.choice(EnergyType),
+    #                              coordinates=coordinates,
+    #                              quantity=1)
 
-        if np.random.uniform() < 0.01:
-            x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
-            coordinates = tuple(np.add(self.position, (x, y)))
-            self._pick_up_resource(coordinates=coordinates)
+    #     if np.random.uniform() < 0.01:
+    #         x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
+    #         coordinates = tuple(np.add(self.position, (x, y)))
+    #         self._pick_up_resource(coordinates=coordinates)
 
-        if np.random.uniform() < 0.1:
-            color = tuple(np.random.choice(range(256), size=3))
-            self.modify_cell_color(coordinates=self.position,
-                                   color=color)
+    #     if np.random.uniform() < 0.1:
+    #         color = tuple(np.random.choice(range(256), size=3))
+    #         self.modify_cell_color(coordinates=self.position,
+    #                                color=color)
 
-        # self.die()
-        self.move(direction=direction)
+    #     # self.die()
+    #     self.move(direction=direction)
 
 
 class Tree(Entity):

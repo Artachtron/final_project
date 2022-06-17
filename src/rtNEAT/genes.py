@@ -254,7 +254,7 @@ class NodeGene(BaseGene):
         return {'node_id':self.id, 'node_type':self.type,
                 'activation_function':self.activation_function,
                 'aggregation_function':self.aggregation_function,
-                'enabled':self.enabled}
+                'bias': self.bias,'enabled':self.enabled}
         
     def mutate(self) -> None:
         """Mutate the LinkGene

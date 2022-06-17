@@ -1,6 +1,6 @@
 from __future__ import annotations
 from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFuncType
-from typing import Dict
+from typing import Dict, Set
 
 
 class BasePhene:
@@ -51,6 +51,7 @@ class Node(BasePhene):
                   node_type: NodeType = NodeType.HIDDEN,
                   activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
                   aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
+                  bias: float = 1.0,
                   enabled: bool = True,
                   ):
 
@@ -60,6 +61,7 @@ class Node(BasePhene):
         self.activation_phase: int = 0
         self.activation_value: float = 0.0              # The total activation entering the Node
         self.type: NodeType = node_type     # HIDDEN, INPUT, OUTPUT, BIAS
+        self.bias = bias
        
         self.activation_function: ActivationFuncType = activation_function 
         self.aggregation_function: AggregationFuncType = aggregation_function
@@ -67,10 +69,29 @@ class Node(BasePhene):
         self.incoming: Dict[int, Link] = {}                         # A list of pointers to incoming weighted signals from other nodes
         self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
         
+    def get_incoming(self)  ->  Set[Link]:
+        """Public method:
+            Return only the Links values from
+            the incoming dictionary
+
+        Returns:
+            Set[Link]: set of incoming links
+        """        
+        return set(self.incoming.values())
+    
+    def get_outgoing(self)  ->  Set[Link]:
+        """Public method:
+            Return only the Links values from
+            the outgoing dictionary
+
+        Returns:
+            Set[Link]: set of outgoing links
+        """        
+        return set(self.outgoing.values())
         
     @classmethod
     def synthesis(cls, kwargs) -> Node:
-        """ Synthesize a Node from a GeneLink
+        """ Synthesize a Node from a NodeGene
             and return it
 
         Returns:
@@ -104,13 +125,13 @@ class Node(BasePhene):
             values = [self.bias]
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
-            for link in self.incoming:
+            for link in self.get_incoming():
                 # ONly take the value of activated links
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
                     values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
-            
+                   
             self.activation_value = self.activation_function.value(
                                     self.aggregation_function.value(values)) 
             

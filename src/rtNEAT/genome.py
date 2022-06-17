@@ -155,8 +155,8 @@ class Genome:
             for node2 in outputs.values():
                 links = Genome.insert_gene_in_dict(genes_dict=links,
                                                    gene=LinkGene(   link_id=count_link_id, 
-                                                                    in_node=node1,
-                                                                    out_node=node2))
+                                                                    in_node=node1.id,
+                                                                    out_node=node2.id))
                 count_link_id += 1
         
         # Set the innovation tables to the number

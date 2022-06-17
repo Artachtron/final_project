@@ -2,14 +2,15 @@ import pytest, os, sys
 
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
-from project.src.rtNEAT.innovation import Innovation, InnovTable
+from project.src.rtNEAT.innovation import  InnovTable
 
 
 class TestInnovTable:
     @pytest.fixture(autouse=True)
     def setup(self):
-        yield
         InnovTable.reset_innovation_table()
+        yield
+        
             
     def test_increment(self):
         # Link
