@@ -1,7 +1,6 @@
 from __future__ import annotations
     
-from typing import Tuple
-  
+ 
 from project.src.rtNEAT.genome import Genome
 from project.src.rtNEAT.network import Network
 from project.src.simulation.universal import EntityType

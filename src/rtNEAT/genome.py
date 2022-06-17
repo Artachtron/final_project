@@ -1,5 +1,4 @@
 from __future__ import annotations
-import numpy as np
 
 from typing import Tuple, Dict, Set
 from numpy.random import choice, random
@@ -151,12 +150,12 @@ class Genome:
         # Connect each input to each output   
         links: Dict[int, LinkGene] = {}     # dictionary of links
         count_link_id: int = 1              # keep track of number of links created for ids
-        for node1 in list(inputs.values()):
-            for node2 in outputs.values():
+        for node1 in inputs.keys():
+            for node2 in outputs.keys():
                 links = Genome.insert_gene_in_dict(genes_dict=links,
                                                    gene=LinkGene(   link_id=count_link_id, 
-                                                                    in_node=node1.id,
-                                                                    out_node=node2.id))
+                                                                    in_node=node1,
+                                                                    out_node=node2))
                 count_link_id += 1
         
         # Set the innovation tables to the number

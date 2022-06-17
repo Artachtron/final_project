@@ -73,8 +73,8 @@ class TestNetwork:
                 
             for _ in range(10):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
-                self.genome.add_link(LinkGene(in_node=in_node,
-                                         out_node=out_node))
+                self.genome.add_link(LinkGene(in_node=in_node.id,
+                                         out_node=out_node.id))
                 
             self.network._synthetize_nodes(node_genes=self.genome._node_genes)
             self.network._synthetize_links(link_genes=self.genome._link_genes)
@@ -96,8 +96,8 @@ class TestNetwork:
                 
             for _ in range(1000):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
-                self.genome.add_link(LinkGene(in_node=in_node,
-                                         out_node=out_node))
+                self.genome.add_link(LinkGene(in_node=in_node.id,
+                                         out_node=out_node.id))
                 
             self.network = Network.genesis(self.genome)
             
@@ -107,7 +107,24 @@ class TestNetwork:
             assert self.network.n_inputs > 0
             assert self.network.n_outputs > 0
             
-    class TestActivation:   
+    class TestActivation: 
+        @pytest.fixture(autouse=True)
+        def setup(self):
+            self.links = []
+            self.nodes = []
+            self.genome = None
+            self.mind = None
+            
+            yield
+            self.links.clear()
+            self.nodes.clear()
+            if self.genome:
+                self.genome.node_genes.clear()
+                self.genome.link_genes.clear()
+            if self.mind:
+                self.mind.inputs.clear()
+                self.mind.all_nodes.clear()
+                self.mind.outputs.clear()
             
         def test_activate_callable_functions(self):
             values = [1,2,3,4,5]
@@ -117,7 +134,7 @@ class TestNetwork:
             
         def test_activate_complete_no_hidden_nodes(self):
             n_inputs, n_outputs = np.random.randint(3,10,2)
-            genome = Genome.genesis(genome_id=10,
+            self.genome = Genome.genesis(genome_id=10,
                                     n_inputs=n_inputs,
                                     n_outputs=n_outputs)
             dim = (n_inputs+1) * n_outputs
@@ -125,34 +142,36 @@ class TestNetwork:
             l_inputs = np.random.uniform(-1,1,n_inputs)
             new_weights = {}
                         
-            genes = genome.get_link_genes()
+            genes = self.genome.get_link_genes()
             for link_gene in genes:
                 link_gene.weight = weights[link_gene.id-1]
                 new_weights[link_gene.id-1] = weights[link_gene.id-1]
                     
-            mind = Network.genesis(genome=genome)
+            self.mind = Network.genesis(genome=self.genome)
             
-            for node in mind.get_all_nodes():
+            for node in self.mind.get_all_nodes():
                 assert node.activation_phase == 0
             
-            outputs = mind.activate(input_values=l_inputs)
+            outputs = self.mind.activate(input_values=l_inputs)
             
             link_count = 0
-            for value, node in zip(l_inputs, mind.get_inputs()):
+            unsorted_inputs = self.mind.inputs
+            sorted_inputs = [unsorted_inputs[key] for key in sorted(unsorted_inputs.keys(), reverse=False)]
+            for value, node in zip(l_inputs, sorted_inputs):
                 assert node.activation_value == value
                 assert node.activation_phase == 1
                 for link in node.get_outgoing():
                     assert link.weight == weights[link.id-1]
                     link_count += 1
             
-            for i, node in enumerate(mind.get_outputs()):
+            for node in self.mind.get_outputs():
                 assert node.activation_phase == 1
-                for j, link in enumerate(node.get_incoming()):
+                for link in node.get_incoming():
                     assert link.weight == weights[link.id-1]
             
             # inputs = list(l_inputs)
             for key, output_value in outputs.items():
-                output = mind.outputs[key]
+                output = self.mind.outputs[key]
                 """ links_id = [link.id - 1 for link in output.get_incoming()]
                 sorted_id = sorted(links_id)
                 values = [value *  new_weights[sorted_id[i]] for i, value in enumerate(l_inputs)]
@@ -191,39 +210,42 @@ class TestNetwork:
                                 out_node=output.id,
                                 weight=weights[2])
                 
-                nodes =  [input1, input2, hidden, output]
-                nodes_dict = {node.id: node for node in nodes}
-                links = [link1, link2, link3]
-                links_dict = {link.id: link for link in links}
+                nodes_dict = {}
+                links_dict = {}
+                self.nodes =  [input1, input2, hidden, output]
+                nodes_dict = {node.id: node for node in self.nodes}
+                self.links = [link1, link2, link3]
+                links_dict = {link.id: link for link in self.links}
                 
                 
-                genome = Genome(genome_id=i,
+                self.genome = Genome(genome_id=i,
                                 node_genes=nodes_dict,
                                 link_genes=links_dict)
         
-                mind = Network.genesis(genome=genome)
+                self.mind = Network.genesis(genome=self.genome)
                 
                 inputs = np.random.uniform(-1,1,2)
-                outputs = mind.activate(np.array(inputs))
+                outputs = self.mind.activate(np.array(inputs))
                 
                 first_layer = sigmoid(sum([inputs[0]*weights[0],
                                             inputs[1]*weights[1],
                                             hidden.bias]))
                 
-                assert round(first_layer,10) == round(list(mind.get_hidden())[0].activation_value,10)
+                assert round(first_layer,10) == round(list(self.mind.get_hidden())[0].activation_value,10)
                 
                 second_layer = sigmoid(sum([first_layer*weights[2],
                                             output.bias]))
                 
                 assert round(outputs[output.id],10) == round(second_layer,10)
+      
         
         def test_activate_random_networks(self):
             n_links = np.random.randint(12,20)
             n_nodes = np.random.randint(10,20)
             weights = np.random.uniform(-1,1,n_links)
             
-            nodes = []
-            nodes.append(NodeGene(node_type=NodeType.BIAS))
+            self.nodes = []
+            self.nodes.append(NodeGene(node_type=NodeType.BIAS))
             n_inputs = 0
             n_outputs = 0
             for _ in range(n_nodes):
@@ -232,29 +254,29 @@ class TestNetwork:
                     n_inputs += 1
                 elif node_type == NodeType.OUTPUT:
                     n_outputs += 1
-                nodes.append(NodeGene(node_type=node_type))
+                self.nodes.append(NodeGene(node_type=node_type))
             
-            genes = []
+            self.links = []
             
             for i, _ in enumerate(range((n_links))):
                 valid = False
                 while not valid:
-                    in_node, out_node = np.random.choice(nodes, 2)
+                    in_node, out_node = np.random.choice(self.nodes, 2)
                     valid = (in_node.type != NodeType.OUTPUT and
                             out_node.type != NodeType.INPUT)
                     
-                genes.append(LinkGene(in_node=in_node.id,
+                self.links.append(LinkGene(in_node=in_node.id,
                                     out_node=out_node.id,
                                     weight=weights[i])) 
                 
-            nodes_dict = {node.id: node for node in nodes}
-            genes_dict = {link.id: link for link in genes}
-            genome = Genome(genome_id=0,
+            nodes_dict = {node.id: node for node in self.nodes}
+            genes_dict = {link.id: link for link in self.links}
+            genome3 = Genome(genome_id=0,
                             node_genes=nodes_dict,
                             link_genes=genes_dict)
             
-            network = Network.genesis(genome=genome)   
+            network2 = Network.genesis(genome=genome3)   
             inputs = np.random.uniform(-1,1,n_inputs)
-            outputs = network.activate(np.array(inputs))
+            outputs = network2.activate(np.array(inputs))
             assert len(outputs) == n_outputs
             

@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     
 from typing import Tuple, Final, Dict, Any
 import enum
-import random
 import numpy as np
 import inspect
 
@@ -666,7 +665,7 @@ class Animal(Entity):
     def _normalize_inputs(self, grid: Grid):
          #Inputs
         ## Internal properties
-        age = self._age/100
+        age = self._age/self._max_age
         size = self._size/100
         blue_energy, red_energy = (energy/100 for energy in self.energies.values())
         ## Perceptions
