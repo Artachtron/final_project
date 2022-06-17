@@ -223,7 +223,7 @@ class TestNetwork:
             weights = np.random.uniform(-1,1,n_links)
             
             nodes = []
-            nodes.append(Node(node_type=NodeType.BIAS))
+            nodes.append(NodeGene(node_type=NodeType.BIAS))
             n_inputs = 0
             n_outputs = 0
             for _ in range(n_nodes):
@@ -232,7 +232,7 @@ class TestNetwork:
                     n_inputs += 1
                 elif node_type == NodeType.OUTPUT:
                     n_outputs += 1
-                nodes.append(Node(node_type=node_type))
+                nodes.append(NodeGene(node_type=node_type))
             
             genes = []
             
@@ -243,16 +243,17 @@ class TestNetwork:
                     valid = (in_node.type != NodeType.OUTPUT and
                             out_node.type != NodeType.INPUT)
                     
-                genes.append(Link(in_node=in_node,
-                                out_node=out_node,
-                                weight=weights[i])) 
+                genes.append(LinkGene(in_node=in_node.id,
+                                    out_node=out_node.id,
+                                    weight=weights[i])) 
                 
             nodes_dict = {node.id: node for node in nodes}
+            genes_dict = {link.id: link for link in genes}
             genome = Genome(genome_id=0,
-                            nodes=nodes_dict,
-                            genes=genes)
+                            node_genes=nodes_dict,
+                            link_genes=genes_dict)
             
-            network = Network.genesis()   
+            network = Network.genesis(genome=genome)   
             inputs = np.random.uniform(-1,1,n_inputs)
             outputs = network.activate(np.array(inputs))
             assert len(outputs) == n_outputs
