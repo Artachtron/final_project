@@ -38,6 +38,17 @@ class DisplayedObject(pg.sprite.Sprite):
         
         self.update(block_size=block_size)
 
+    @staticmethod
+    def create_display(sim_obj: SimulatedObject, block_size: int, assets_path: str):
+        dis_obj = DisplayedObject(dis_obj_id=sim_obj.id,
+                                  appearance=sim_obj.appearance,
+                                  size=sim_obj.size,
+                                  position=sim_obj.position)
+        
+        dis_obj.init(block_size=block_size,
+                     assets_path=assets_path)
+        
+        return dis_obj
         
     def update(self, block_size, sim_state: SimState=None):
         if sim_state:
@@ -90,10 +101,13 @@ class Display:
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
         
         for entity in sim_state.get_entities():
-            entity.dis_obj.init(block_size=self.block_size,
-                                assets_path=self.assets_path)
+            dis_obj = DisplayedObject.create_display(block_size=self.block_size,
+                                                        assets_path=self.assets_path,
+                                                        sim_obj=entity)
+            """ entity.dis_obj.init(block_size=self.block_size,
+                                assets_path=self.assets_path )"""
             
-            self.entity_group.add(entity.dis_obj)
+            self.entity_group.add(dis_obj)
         
         self.clock = pg.time.Clock() 
         

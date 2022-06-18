@@ -52,7 +52,7 @@ class World:
                               sim_speed=self.sim_speed)
         
         
-        sim_state = self.simulation.init(display=self.display_active)
+        sim_state = self.simulation.init()
         self.display.init(sim_state=sim_state)
         
     

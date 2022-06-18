@@ -158,7 +158,7 @@ class Environment:
         self.init()
         
         
-    def init(self, display: bool=False):
+    def init(self):
         self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
@@ -168,10 +168,7 @@ class Environment:
                                     red_energy=100000,
                                     action_cost=0,
                                     size=15)
-        
-        if display:
-            animal.init_display()
-        
+                
         return self.state
         
     def update(self):
@@ -386,9 +383,9 @@ class Simulation:
         self.environment: Environment
         
             
-    def init(self, display:bool = False):
+    def init(self):
         self.environment = Environment(env_id=self.id) 
-        sim_state = self.environment.init(display=display)
+        sim_state = self.environment.init()
         return sim_state
         
     def update(self):
