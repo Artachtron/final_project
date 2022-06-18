@@ -689,7 +689,7 @@ class TestAnimal:
                 
             def test_activate_mind(self):
                 for _ in range(100):
-                    self.animal.activate_mind(environment=self.env)
+                    self.animal._activate_mind(environment=self.env)
                     
             
             

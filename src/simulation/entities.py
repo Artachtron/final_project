@@ -462,8 +462,7 @@ class Entity(SimulatedObject):
     
     def update(self, environment):
         self._increase_age()
-        # self.random_update(environment=environment)
-        self.mind_update(environment=environment)
+        self._mind_update(environment=environment)
 
 
 class Animal(Entity):
@@ -597,49 +596,6 @@ class Animal(Entity):
         # Emtpy pocket
         self._pocket = None
         
-        ###########################################################################
-           
-    
-    
-    
-    def reproduce(self, mate: Animal, environment: Environment) -> Animal:
-        """Create an offspring from 2 mates
-
-        Args:
-            mate (Animal): Animal to mate with
-
-        Returns:
-            Animal: Generated offsrping
-        """        
-        self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
-        pass
-        
-        if not (self._is_adult and mate._is_adult):
-            return
-        
-        if self._distance_to_object(distant_object=mate) > 2:
-            return
-        
-        self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
-        mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
-        
-        if (self._can_perform_action(energy_type=EnergyType.RED,
-                                    quantity=self_energy_cost) and
-            mate._can_perform_action(energy_type=EnergyType.RED,
-                                     quantity=mate_energy_cost)):
-        
-            birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
-            adult_size = int((self._size + mate._size)/2)
-            
-            child = environment.create_entity(entity_type=EntityType.Animal.value,
-                                                position=birth_position,
-                                                size=1,
-                                                blue_energy=Animal.INITIAL_BLUE_ENERGY,
-                                                red_energy=Animal.INITIAL_RED_ENERGY,
-                                                adult_size=adult_size)
-            return child
-
-
     def _on_death(self, environment: Environment) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
@@ -665,17 +621,16 @@ class Animal(Entity):
 
         self._perform_action()
 
-    def mind_update(self, environment: Environment):
-        self.activate_mind(environment=environment)
+    def _mind_update(self, environment: Environment):
+        self._activate_mind(environment=environment)
         
-    def activate_mind(self, environment: Environment) -> None:
+    def _activate_mind(self, environment: Environment) -> None:
         inputs = self._normalize_inputs(environment=environment)
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
  
         self._interpret_outputs(outputs=outputs,
-                                environment=environment)                                                       
-       
+                                environment=environment)                                                          
         
     def _normalize_inputs(self, environment: Environment):
         #Inputs
@@ -775,38 +730,47 @@ class Animal(Entity):
                     
                 
         
-        
+        ###########################################################################
+           
     
-    def random_update(self, environment) -> None:
-        """Test behaviour by doing random actions"""
-        direction = choice(list(Direction))
-        # print(direction)
-        """ if np.random.uniform() < 0.01:
-            x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
-            coordinates = tuple(np.add(self.position, (x, y)))
-            if self._is_available_coordinates(coordinates=coordinates,
-                                       subgrid=grid.resource_grid):
-                self._drop_energy(energy_type=np.random.choice(EnergyType),
-                                 coordinates=coordinates,
-                                 quantity=1) """
+    
+    
+    def reproduce(self, mate: Animal, environment: Environment) -> Animal:
+        """Create an offspring from 2 mates
 
-        """ if np.random.uniform() < 0.01:
-            x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
-            coordinates = tuple(np.add(self.position, (x, y)))
-            self._pick_up_resource(coordinates=coordinates)
+        Args:
+            mate (Animal): Animal to mate with
 
-        if np.random.uniform() < 0.1:
-            color = tuple(np.random.choice(range(256), size=3))
-            self.modify_cell_color(coordinates=self.position,
-                                   color=color) """
-
-        # self.die()
-        self._move(direction=direction,
-                   environment=environment)
+        Returns:
+            Animal: Generated offsrping
+        """        
+        self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
+        pass
         
+        if not (self._is_adult and mate._is_adult):
+            return
         
-        self._grow()
+        if self._distance_to_object(distant_object=mate) > 2:
+            return
         
+        self_energy_cost = Animal.REPRODUCTION_ENERGY_COST * self._size
+        mate_energy_cost = Animal.REPRODUCTION_ENERGY_COST * mate._size
+        
+        if (self._can_perform_action(energy_type=EnergyType.RED,
+                                    quantity=self_energy_cost) and
+            mate._can_perform_action(energy_type=EnergyType.RED,
+                                     quantity=mate_energy_cost)):
+        
+            birth_position = self._select_free_cell(subgrid=self.grid.entity_grid)
+            adult_size = int((self._size + mate._size)/2)
+            
+            child = environment.create_entity(entity_type=EntityType.Animal.value,
+                                                position=birth_position,
+                                                size=1,
+                                                blue_energy=Animal.INITIAL_BLUE_ENERGY,
+                                                red_energy=Animal.INITIAL_RED_ENERGY,
+                                                adult_size=adult_size)
+            return child
 
 
 class Tree(Entity):
@@ -896,8 +860,11 @@ class Tree(Entity):
         
         return seed
        
-    def test_update(self):
-        pass
+    def _mind_update(self, environment: Environment):
+        self._activate_mind(environment=environment)
+        
+    def _activate_mind(self, environment: Environment):
+        self._activate_mind(environment=environment)
 
 class Seed(Resource):
     def __init__(self,
