@@ -163,9 +163,12 @@ class Genome:
         InnovTable.node_number = count_node_id
         InnovTable.node_number = count_link_id
         
-        return Genome(genome_id=genome_id,
+        genome = Genome(genome_id=genome_id,
                       node_genes=inputs|outputs,
                       link_genes=links)
+        
+        genome.mutate()
+        return genome
     
     @staticmethod
     def genetic_distance(genome1: Genome, genome2: Genome) -> float:
@@ -273,7 +276,7 @@ class Genome:
     def _mutate_nodes(self) -> None:
         """mutate the NodeGenes
         """        
-        for node in self.get_nodes_genes():
+        for node in self.get_node_genes():
             if random() < Config.node_mutate_prob:    
                 node.mutate()      
     
@@ -315,12 +318,12 @@ class Genome:
         new_link1 = LinkGene(link_id=innovation_number1,
                              weight=1.0,
                              in_node=in_node,
-                             out_node=new_node,
+                             out_node=new_node.id,
                              mutation_number=0)
         
         new_link2 = LinkGene(link_id=innovation_number2,
                              weight=old_weight,
-                             in_node=new_node,
+                             in_node=new_node.id,
                              out_node=out_node,
                              mutation_number=0)
         
@@ -499,8 +502,8 @@ class Genome:
                     
         # Continue only if an open link was found
         if node1:
-            new_link = self._new_link_gene(in_node=node1,
-                                           out_node=node2)
+            new_link = self._new_link_gene(in_node=node1.id,
+                                           out_node=node2.id)
             self.add_link(new_link)
             return True
         

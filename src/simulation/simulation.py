@@ -168,6 +168,12 @@ class Environment:
                                     red_energy=100000,
                                     action_cost=0,
                                     size=15)
+        for i in range(15):
+            animal = self.create_animal(coordinates=(12,i),
+                                        blue_energy=100000,
+                                        red_energy=100000,
+                                        action_cost=0,
+                                        size=15)
                 
         return self.state
         

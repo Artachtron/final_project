@@ -114,8 +114,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
             bool: the innovation already exists
         """        
         return (the_innovation.innovation_type == innovation_type and
-                the_innovation.node_in_id == in_node.id and
-                the_innovation.node_out_id == out_node.id)
+                the_innovation.node_in_id == in_node and
+                the_innovation.node_out_id == out_node)
            
     @staticmethod    
     def _create_innovation(in_node: Node, out_node: Node, innovation_type: InnovationType, 
@@ -158,8 +158,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
             current_node = -1
         
         # create the new innovation        
-        new_innovation = Innovation(node_in_id=in_node.id,
-                                    node_out_id=out_node.id,
+        new_innovation = Innovation(node_in_id=in_node,
+                                    node_out_id=out_node,
                                     innovation_type=innovation_type,
                                     innovation_number1=current_innovation,
                                     innovation_number2=innovation_number2,

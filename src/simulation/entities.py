@@ -454,8 +454,9 @@ class Entity(SimulatedObject):
            
     
     def update(self, environment):
-        # self._increase_age()
-        self.random_update(environment=environment)
+        self._increase_age()
+        # self.random_update(environment=environment)
+        self.mind_update(environment=environment)
 
 
 class Animal(Entity):
@@ -655,8 +656,8 @@ class Animal(Entity):
 
         self._perform_action()
 
-    def test_update(self):
-        self.activate_mind()
+    def mind_update(self, environment: Environment):
+        self.activate_mind(environment=environment)
         
     def activate_mind(self, environment: Environment) -> None:
         inputs = self._normalize_inputs(environment=environment)
@@ -760,7 +761,7 @@ class Animal(Entity):
                 
             case 11:
                 self.want_to_mate = True
-                self.reproduce()
+                # self.reproduce()
                     
                 
         
