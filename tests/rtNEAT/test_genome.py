@@ -276,20 +276,20 @@ class TestGenome:
             def test_create_new_node(self):
                 in_node, out_node = list(self.nodes.values())[:2]
                 node, link1, link2 = self.genome1._create_node(node_id=3,
-                                                                in_node=in_node,
-                                                                out_node=out_node,
+                                                                in_node=in_node.id,
+                                                                out_node=out_node.id,
                                                                 innovation_number1=1,
                                                                 innovation_number2=2,
                                                                 old_weight=0.34)
             
                 assert node.id == 3
                 assert node.type.name == NodeType.HIDDEN.name
-                assert link1.in_node == in_node
-                assert link1.out_node == node
+                assert link1.in_node == in_node.id
+                assert link1.out_node == node.id
                 assert link1.weight == 1.0
                 assert link1.id == 1
-                assert link2.in_node == node
-                assert link2.out_node == out_node
+                assert link2.in_node == node.id
+                assert link2.out_node == out_node.id
                 assert link2.weight == 0.34
                 assert link2.id == 2
                 

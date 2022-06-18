@@ -55,9 +55,7 @@ class World:
         sim_state = self.simulation.init()
         self.display.init(sim_state=sim_state)
         
-    
-            
-        
+      
     def update(self):
         grid, sim_state = self.simulation.update()
         

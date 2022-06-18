@@ -10,8 +10,8 @@ class TestDisplay:
         
     def test_display_fields(self):
         display = Display(display_id=0,
-                        block_size=30,
-                        dimensions=(40,32)) 
+                          block_size=30,
+                          dimensions=(40,32)) 
         
         display.init()
         

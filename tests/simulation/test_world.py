@@ -50,7 +50,7 @@ class TestWorld:
             assert world.display.dimensions == world.dimensions
             assert world.display.block_size == world.block_size
             
-    def test_run_world(self):
+    """ def test_run_world(self):
         world = World(world_id=0,
                       dimensions=(20,20),
                       sim_speed=2,
@@ -58,5 +58,5 @@ class TestWorld:
             
         world.init()
         
-        world.run()
+        world.run() """
             

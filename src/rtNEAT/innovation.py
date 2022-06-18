@@ -133,7 +133,7 @@ class InnovTable(object, metaclass=InnovTableProperties):
             Innovation: innovation created
         """         
         
-        current_innovation: int = InnovTable.link_number          # current innovation number
+        current_innovation: int = InnovTable.link_number                # current innovation number
         # NEWNODE parameters
         innovation_number2: int = -1                                    # second innovation number  
         current_node: int = InnovTable.node_number                      # current node number 

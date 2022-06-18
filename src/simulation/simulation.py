@@ -162,7 +162,8 @@ class Environment:
         self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
-        
+              
+    def populate(self):
         animal = self.create_animal(coordinates=(15,15),
                                     blue_energy=100000,
                                     red_energy=100000,
@@ -391,6 +392,7 @@ class Simulation:
             
     def init(self):
         self.environment = Environment(env_id=self.id) 
+        self.environment.populate()
         sim_state = self.environment.init()
         return sim_state
         

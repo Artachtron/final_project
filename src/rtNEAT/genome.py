@@ -400,8 +400,8 @@ class Genome:
                   False if it's novel
         """         
         for link in self.get_link_genes():
-            if (link.in_node == node1 and
-                link.out_node == node2):
+            if (link.in_node == node1.id and
+                link.out_node == node2.id):
                 
                 return True
         

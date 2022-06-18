@@ -95,19 +95,18 @@ class Display:
         self.resource_group = pg.sprite.Group()
      
         
-    def init(self, sim_state: SimState) -> None:
+    def init(self, sim_state: SimState=None) -> None:
         pg.init()
         
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
         
-        for entity in sim_state.get_entities():
-            dis_obj = DisplayedObject.create_display(block_size=self.block_size,
-                                                        assets_path=self.assets_path,
-                                                        sim_obj=entity)
-            """ entity.dis_obj.init(block_size=self.block_size,
-                                assets_path=self.assets_path )"""
-            
-            self.entity_group.add(dis_obj)
+        if sim_state:
+            for entity in sim_state.get_entities():
+                dis_obj = DisplayedObject.create_display(block_size=self.block_size,
+                                                            assets_path=self.assets_path,
+                                                            sim_obj=entity)
+                
+                self.entity_group.add(dis_obj)
         
         self.clock = pg.time.Clock() 
         
