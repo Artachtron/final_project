@@ -158,10 +158,13 @@ class Environment:
         self.init()
         
         
-    def init(self):
+    def init(self, populate: bool=False):
         self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
+        
+        if populate:
+            return self.populate()
               
     def populate(self):
         animal = self.create_animal(coordinates=(15,15),
@@ -393,10 +396,11 @@ class Simulation:
         self.environment: Environment
         
             
-    def init(self):
-        self.environment = Environment(env_id=self.id) 
-        self.environment.populate()
-        sim_state = self.environment.init()
+    def init(self, populate: bool=True):
+        self.environment = Environment(env_id=self.id)
+        
+        sim_state = self.environment.init(populate=populate)
+     
         return sim_state
         
     def update(self):

@@ -45,16 +45,20 @@ class World:
     def init(self):   
         self.simulation = Simulation(sim_id=self.id,
                                      dimensions=self.dimensions)
-        
-        self.display = Display(display_id=self.id,
-                              dimensions=self.dimensions,
-                              block_size=self.block_size,
-                              sim_speed=self.sim_speed)
-        
-        
+           
         sim_state = self.simulation.init()
-        self.display.init(sim_state=sim_state)
         
+        if self.display_active:
+            self.display = Display(display_id=self.id,
+                                dimensions=self.dimensions,
+                                block_size=self.block_size,
+                                sim_speed=self.sim_speed)
+        
+            self.display.init(sim_state=sim_state)
+        
+     
+    def populate(self):
+        self.simulation.populate()   
       
     def update(self):
         grid, sim_state = self.simulation.update()

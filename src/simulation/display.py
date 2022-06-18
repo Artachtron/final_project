@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid
-    from simulation import SimState
+    from simulation import SimState, SimulatedObject
 
 import pygame as pg
 import sys
@@ -10,7 +10,7 @@ import sys
 from typing import Tuple
 from os.path import dirname, realpath, join
 from pathlib import Path
-from random import random
+
 
 
 grid = None
@@ -151,7 +151,6 @@ class Display:
                 
     def draw_entities(self, grid) -> None:
         """Draw the entities"""
-        
         self.entity_group.draw(self.screen)
 
     def draw_energies(self, grid) -> None:
