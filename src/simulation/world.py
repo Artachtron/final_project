@@ -43,7 +43,8 @@ class World:
         return self.__id
         
     def init(self):   
-        self.simulation = Simulation(sim_id=self.id)
+        self.simulation = Simulation(sim_id=self.id,
+                                     dimensions=self.dimensions)
         
         self.display = Display(display_id=self.id,
                               dimensions=self.dimensions,

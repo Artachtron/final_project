@@ -138,12 +138,14 @@ class Environment:
     GRID_HEIGHT: Final[int] = 20
     
     def __init__(self,
-                 env_id: int):
+                 env_id: int,
+                 dimensions: Tuple[int, int] = (20, 20)):
         
         self.__id: int = env_id
         
         self.state: SimState
         self.grid: Grid
+        self.dimensions: Tuple[int, int] = dimensions
         
         self.init()
         
@@ -151,7 +153,7 @@ class Environment:
     def init(self):
         self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
-                         dimensions=(20,20))
+                         dimensions=self.dimensions)
         
         # self.create_animal(coordinates=(1,1))
         
@@ -356,7 +358,8 @@ class Environment:
         
 class Simulation:
     def __init__(self,
-                 sim_id: int):
+                 sim_id: int,
+                 dimensions: Tuple[int, int] = (20, 20)):
     
         self.id = sim_id
         

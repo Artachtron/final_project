@@ -76,7 +76,7 @@ class Display:
                     pg.quit()
                     sys.exit()
         
-        # self.draw_world(grid)
+        self.draw_world(grid)
         pg.display.update()
         self.clock.tick(60)
         self.tick_counter += 1
@@ -86,17 +86,21 @@ class Display:
     def draw_world(self, grid) -> None:
         """Draw the world, grid and entities"""
         self.draw_grid(grid)
-        self.draw_entities(grid)
-        self.draw_energies(grid)
+        # self.draw_entities(grid)
+        # self.draw_energies(grid)
     
     def draw_grid(self, grid) -> None:
         """Draw the grid"""
         #SCREEN.fill(WHITE)
-        color_grid = grid.color_grid.subgrid
+        color_grid = grid.color_grid.array
         for x in range(0, self.window_width, self.block_size):
             for y in range(0, self.window_height,  self.block_size):
                 rect = pg.Rect(x, y,  self.block_size,  self.block_size)
-                pg.draw.rect(self.screen, color_grid[int(x/ self.block_size),int(y/ self.block_size)], rect, 0)
+                pg.draw.rect(self.screen,
+                             color_grid[int(x / self.block_size),
+                                        int(y / self.block_size)],
+                             rect, 0)
+                
                 pg.draw.rect(self.screen, BLACK, rect, 1)
                 
     def draw_entities(self, grid) -> None:

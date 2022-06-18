@@ -52,7 +52,7 @@ class TestWorld:
             
     def test_run_world(self):
         world = World(world_id=0,
-                      dimensions=(35,21),
+                      dimensions=(20,20),
                       block_size=13,
                       sim_speed=100,
                       display_active=True)
