@@ -79,6 +79,10 @@ class SimulatedObject:
     @position.setter
     def position(self, value):
         self._position = Position(*value)
+        
+    @property
+    def pos(self):
+        return self._position
                 
     def init_display(self):
         from display import DisplayedObject

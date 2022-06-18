@@ -160,7 +160,9 @@ class Environment:
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
         
-        animal = self.create_animal(coordinates=(15,15))
+        animal = self.create_animal(coordinates=(15,15),
+                                    blue_energy=1000,
+                                    action_cost=0)
         
         if display:
             animal.init_display()
@@ -168,6 +170,9 @@ class Environment:
         return self.state
         
     def update(self):
+        for entity in self.state.entities:
+            entity.update(environment=self)
+            
         return self.grid
         
 

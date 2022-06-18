@@ -21,7 +21,7 @@ class DisplayedObject(pg.sprite.Sprite):
     def __init__(self,
                  dis_obj_id: int,
                  size: int,
-                 position: int,
+                 position: Tuple[int, int],
                  appearance: str):
         
         self.id = dis_obj_id
@@ -39,6 +39,10 @@ class DisplayedObject(pg.sprite.Sprite):
         self.rect: pg.Rect = self.image.get_rect(
             center=(pos_x *block_size + block_size /2,
                 pos_y * block_size + block_size /2))
+        
+    def update(self):
+        self.rect.x = self.position[0] * 10
+        self.rect.y = self.position[1] * 10
         
         
 
@@ -84,6 +88,9 @@ class Display:
         
         
         self.clock = pg.time.Clock() 
+    
+    def update(self):
+        self.entity_group.update()
     
     def draw(self, grid) -> None:
         

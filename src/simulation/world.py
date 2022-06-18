@@ -62,6 +62,7 @@ class World:
         grid = self.simulation.update()
         
         if self.display_active:
+            self.display.update()
             self.display.draw(grid)   
    
              

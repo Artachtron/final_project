@@ -10,6 +10,7 @@ from typing import Tuple, Final, Dict, Any
 import enum
 import numpy as np
 import inspect
+from numpy.random import choice
 
 from energies import EnergyType, Energy, Resource
 from universal import SimulatedObject, Position, EntityType
@@ -452,9 +453,9 @@ class Entity(SimulatedObject):
 
            
     
-    def update(self):
-        self._increase_age()
-        self.test_update()
+    def update(self, environment):
+        # self._increase_age()
+        self.random_update(environment=environment)
 
 
 class Animal(Entity):
@@ -507,6 +508,7 @@ class Animal(Entity):
             
             # update self position
             self.position = next_pos
+            self.dis_obj.position = self.position
 
         # Energy cost of action
         self._perform_action()
@@ -765,31 +767,33 @@ class Animal(Entity):
         
         
     
-    # def random_update(self) -> None:
-    #     """Test behaviour by doing random actions"""
-    #     direction = random.choice(list(Direction))
-    #     # print(direction)
-    #     if np.random.uniform() < 0.01:
-    #         x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
-    #         coordinates = tuple(np.add(self.position, (x, y)))
-    #         if self._is_available_coordinates(coordinates=coordinates,
-    #                                    subgrid=grid.resource_grid):
-    #             self._drop_energy(energy_type=np.random.choice(EnergyType),
-    #                              coordinates=coordinates,
-    #                              quantity=1)
+    def random_update(self, environment) -> None:
+        """Test behaviour by doing random actions"""
+        direction = choice(list(Direction))
+        # print(direction)
+        """ if np.random.uniform() < 0.01:
+            x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
+            coordinates = tuple(np.add(self.position, (x, y)))
+            if self._is_available_coordinates(coordinates=coordinates,
+                                       subgrid=grid.resource_grid):
+                self._drop_energy(energy_type=np.random.choice(EnergyType),
+                                 coordinates=coordinates,
+                                 quantity=1) """
 
-    #     if np.random.uniform() < 0.01:
-    #         x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
-    #         coordinates = tuple(np.add(self.position, (x, y)))
-    #         self._pick_up_resource(coordinates=coordinates)
+        """ if np.random.uniform() < 0.01:
+            x, y = np.random.randint(-2, 2), np.random.randint(-2, 2)
+            coordinates = tuple(np.add(self.position, (x, y)))
+            self._pick_up_resource(coordinates=coordinates)
 
-    #     if np.random.uniform() < 0.1:
-    #         color = tuple(np.random.choice(range(256), size=3))
-    #         self.modify_cell_color(coordinates=self.position,
-    #                                color=color)
+        if np.random.uniform() < 0.1:
+            color = tuple(np.random.choice(range(256), size=3))
+            self.modify_cell_color(coordinates=self.position,
+                                   color=color) """
 
-    #     # self.die()
-    #     self.move(direction=direction)
+        # self.die()
+        self._move(direction=direction,
+                   environment=environment)
+        
 
 
 class Tree(Entity):
