@@ -463,6 +463,17 @@ class Grid:
                     False if the entity couldn't be placed
         """ 
         return self.entity_grid._place_on_grid(value=value)
+    
+    def modify_cell_color(self, coordinates: Tuple[int, int], color: Tuple[int, int, int]) -> None:
+        """Public method:
+            Modify the color of a cell in the color grid
+
+        Args:
+            coordinates (Tuple[int, int]): coordinates of the cell
+            color (Tuple[int, int, int]):  color to apply to the cell
+        """        
+        if self.color_grid._are_coordinates_in_bounds(coordinates=coordinates):
+            self.color_grid.array[coordinates] = color
   
     ################################################################################################
     

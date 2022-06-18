@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
-    from simulation import Environmen
+    from simulation import Environment
     
 from typing import Tuple, Final, Dict, Any
 import enum
@@ -641,18 +641,20 @@ class Animal(Entity):
         
         environment.remove_entity(entity=self)
 
-    def modify_cell_color(self, color: Tuple[int,int,int], environment: Environment,
+    def _paint(self, color: Tuple[int,int,int], environment: Environment,
                           coordinates: Tuple[int,int] = None) -> None:
-        """Modfify the color of a given cell, usually the cell currently sat on
+        """Private method:
+            Modfify the color of a given cell, usually the cell currently sat on
 
         Args:
             color (Tuple[int,int,int]):                     color to apply
-            coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
+            environment (Environment):    
+            coordinates (Tuple[int, int], optional):        coordinates of the cell to modify. Defaults to None.
         """
-        return
-        coordinates = coordinates if coordinates else self.position
-        environment.grid.color_grid._set_cell_value(coordinates=coordinates,
-                                                    value=color)
+        
+        coordinates = coordinates or self.position
+        environment.modify_cell_color(color=color,
+                                      coordinates=coordinates)
 
         self._perform_action()
 
@@ -723,9 +725,9 @@ class Animal(Entity):
                          outputs[sorted_output_keys[3]]*255,
                          outputs[sorted_output_keys[4]]*255)
                 
-                self.modify_cell_color(coordinates=self.position,
-                                       color=color,
-                                       environment=environment)
+                self._paint(coordinates=self.position,
+                            color=color,
+                            environment=environment)
             
             # Drop energy   
             case key if key in range(5,7):

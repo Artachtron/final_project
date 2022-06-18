@@ -376,9 +376,12 @@ class Environment:
     def get_colors_around(self, coordinates: Tuple[int, int], radius: int=1) -> np.array:
                                                
         return self.grid.color_grid.get_sub_region(initial_pos=coordinates,
-                                                   radius=radius)                  
+                                                   radius=radius) 
         
-                    
+    def modify_cell_color(self, coordinates: Tuple[int, int], color: Tuple[int, int, int]):
+        self.grid.modify_cell_color(coordinates=coordinates,
+                                    color=color) 
+                   
         
 class Simulation:
     def __init__(self,

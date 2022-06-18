@@ -665,9 +665,34 @@ class TestAnimal:
                 assert sum(inputs[21:]) == 75*1       
             
             
+            def test_modify_cell_color(self):
+                cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
+                assert tuple(cell_color) == (255,255,255)
+                
+                
+                new_color = (177,125,234)
+                
+                self.animal._paint(color=new_color,
+                                   environment=self.env)
+                
+                cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
+                assert tuple(cell_color) == new_color
+                
+                new_color = (46,12,57)
+                
+                self.animal._paint(color=new_color,
+                                   environment=self.env)
+                
+                cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
+                assert tuple(cell_color) == new_color
+                
+                
             def test_activate_mind(self):
                 for _ in range(100):
                     self.animal.activate_mind(environment=self.env)
+                    
+            
+            
                 
         
             
