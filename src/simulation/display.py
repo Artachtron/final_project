@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from grid import Grid
+    from simulation import SimState
+
 import pygame as pg
 import sys
 
@@ -5,9 +11,6 @@ from typing import Tuple
 from os.path import dirname, realpath, join
 from pathlib import Path
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from grid import Grid
 
 grid = None
 
@@ -25,21 +28,19 @@ class DisplayedObject(pg.sprite.Sprite):
         self.size = size
         self.position = position
         
-        assets_path = join(
-    Path(
-        dirname(
-            realpath(__file__))).parent.parent.absolute(),
-    "assets/")
+        self.appearance = appearance
         
+    def init(self, block_size: int, assets_path: str):
+        super(DisplayedObject, self).__init__()
         self.image: pg.Surface = pg.image.load(join(assets_path,
-                                            appearance)).convert_alpha()
+                                                    self.appearance)).convert_alpha()    
         
         pos_x, pos_y = self.position
         self.rect: pg.Rect = self.image.get_rect(
-            center=(pos_x *grid.BLOCK_SIZE + grid.BLOCK_SIZE /2,
-                pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE /2))
+            center=(pos_x *block_size + block_size /2,
+                pos_y * block_size + block_size /2))
         
-
+        
 
 class Display:
     def __init__(self,
@@ -61,12 +62,27 @@ class Display:
         self.clock: pg.Clock
         self.screen: pg.Screen
         
+        self.assets_path = join(
+            Path(
+                dirname(
+                    realpath(__file__))).parent.parent.absolute(),
+            "assets/")
+        
+        self.entity_group = pg.sprite.Group()
+        self.resource_group = pg.sprite.Group()
      
         
-    def init(self) -> None:
+    def init(self, sim_state: SimState) -> None:
         pg.init()
-        
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
+        
+        for entity in sim_state.entities:
+            entity.dis_obj.init(block_size=self.block_size,
+                                assets_path=self.assets_path)
+            
+            self.entity_group.add(entity.dis_obj)
+        
+        
         self.clock = pg.time.Clock() 
     
     def draw(self, grid) -> None:
@@ -86,7 +102,7 @@ class Display:
     def draw_world(self, grid) -> None:
         """Draw the world, grid and entities"""
         self.draw_grid(grid)
-        # self.draw_entities(grid)
+        self.draw_entities(grid)
         # self.draw_energies(grid)
     
     def draw_grid(self, grid) -> None:
@@ -106,7 +122,7 @@ class Display:
     def draw_entities(self, grid) -> None:
         """Draw the entities"""
         
-        grid.entity_group.draw(self.screen)
+        self.entity_group.draw(self.screen)
 
     def draw_energies(self, grid) -> None:
         """Draw the energies"""
@@ -125,26 +141,4 @@ class Display:
     def id(self):
         return self.__id
 
-
-class EntitySprite(pg.sprite.Sprite):
-    def __init__(self,
-                image_filename: str,
-                position:Tuple[int,int],
-                size: int):
-        
-        assets_path = join(
-    Path(
-        dirname(
-            realpath(__file__))).parent.absolute(),
-    "assets/models/entities")
-        
-        image: pg.Surface = pg.image.load(join(assets_path,
-                                            image_filename)).convert_alpha()
-        self.size: int = size
-        self.image: pg.Surface = pg.transform.scale(image, (size, size))
-        self.position = position
-        pos_x, pos_y = self.position
-        self.rect: pg.Rect = self.image.get_rect(
-            center=(pos_x *grid.BLOCK_SIZE + grid.BLOCK_SIZE /2,
-                pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE /2))
         

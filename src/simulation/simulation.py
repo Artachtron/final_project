@@ -8,7 +8,8 @@ from typing import Dict, Tuple, Final
 
 from grid import Grid  
 from entities import Animal, Tree, Entity, Seed
-from energies import Energy, EnergyType, BlueEnergy, RedEnergy, Resource   
+from energies import Energy, EnergyType, BlueEnergy, RedEnergy, Resource 
+
 
 class SimState:
     def __init__(self,
@@ -26,6 +27,10 @@ class SimState:
     @property
     def id(self):
         return self.__id
+    
+    @property
+    def entities(self):
+        return (self.animals|self.trees).values()
      
     def get_entity_id(self, increment: bool=False) -> int:
         """Public method:
@@ -150,12 +155,17 @@ class Environment:
         self.init()
         
         
-    def init(self):
+    def init(self, display: bool=False):
         self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
         
-        # self.create_animal(coordinates=(1,1))
+        animal = self.create_animal(coordinates=(15,15))
+        
+        if display:
+            animal.init_display()
+        
+        return self.state
         
     def update(self):
         return self.grid
@@ -366,16 +376,16 @@ class Simulation:
         self.environment: Environment
         
             
-    def init(self):
+    def init(self, display:bool = False):
         self.environment = Environment(env_id=self.id) 
-        self.environment.init()
-        
+        sim_state = self.environment.init(display=display)
+        return sim_state
         
     def update(self):
         grid = self.environment.update()
         return grid
         
-          
+ 
+
     
-   
         

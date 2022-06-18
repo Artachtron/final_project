@@ -51,8 +51,9 @@ class World:
                               block_size=self.block_size,
                               sim_speed=self.sim_speed)
         
-        self.simulation.init()
-        self.display.init()
+        
+        sim_state = self.simulation.init(display=self.display_active)
+        self.display.init(sim_state=sim_state)
         
     
             

@@ -1,5 +1,7 @@
 from __future__ import annotations
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from display import DisplayedObject
 
 from typing import Tuple, Any
 from dataclasses import dataclass
@@ -40,6 +42,8 @@ class Position:
         
         return round(distance, 2)
 
+
+
 class SimulatedObject:
     def __init__(self,
                  sim_obj_id: int,
@@ -47,7 +51,7 @@ class SimulatedObject:
                  position: Tuple[int, int],
                  appearance: str):
         
-        from display import DisplayedObject
+        
         self.__id = sim_obj_id
         self._size = size
         self._position = Position(*position)
@@ -55,8 +59,6 @@ class SimulatedObject:
         self._appearance = appearance
         self.dis_obj: DisplayedObject
         
-        
-        # self._init_displayed_object()
     
     @property
     def id(self):
@@ -77,19 +79,17 @@ class SimulatedObject:
     @position.setter
     def position(self, value):
         self._position = Position(*value)
-        
-    @property
-    def environment(self):
-        return self._environment
-        
-    def _init_displayed_object(self):
+                
+    def init_display(self):
+        from display import DisplayedObject
         try:
             self.dis_obj = DisplayedObject(dis_obj_id=self.id,
-                                        size=self._size,
-                                        position=self._position,
-                                        appearance=self._appearance)
+                                            size=self._size,
+                                            position=self.position,
+                                            appearance=self._appearance)
         except AttributeError:
             pass
         
         except FileNotFoundError:
-            pass
+            pass         
+   
