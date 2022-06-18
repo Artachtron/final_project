@@ -17,7 +17,7 @@ INITIAL_TREE_POPULATION: Final[int] = 2
 class World:
     GRID_HEIGHT: Final[int] = 20
     GRID_WIDTH: Final[int] = 20
-    BLOCK_SIZE: Final[int] = 20
+    BLOCK_SIZE: Final[int] = 50
 
     SIMULATION_SPEED: Final[int] = 20 
     
@@ -25,7 +25,7 @@ class World:
                  world_id: int,
                  dimensions: Tuple[int, int] = (GRID_HEIGHT,
                                                 GRID_WIDTH),
-                 block_size: int= BLOCK_SIZE,
+                 block_size: int = BLOCK_SIZE,
                  sim_speed: int = SIMULATION_SPEED,
                  display_active: bool = False):
         
@@ -59,10 +59,10 @@ class World:
             
         
     def update(self):
-        grid = self.simulation.update()
+        grid, sim_state = self.simulation.update()
         
         if self.display_active:
-            self.display.update()
+            self.display.update(sim_state=sim_state)
             self.display.draw(grid)   
    
              

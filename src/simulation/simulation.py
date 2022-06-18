@@ -28,9 +28,12 @@ class SimState:
     def id(self):
         return self.__id
     
+    def get_entities(self):
+        return (self.animals|self.trees).values()
+    
     @property
     def entities(self):
-        return (self.animals|self.trees).values()
+        return self.animals|self.trees
      
     def get_entity_id(self, increment: bool=False) -> int:
         """Public method:
@@ -161,8 +164,10 @@ class Environment:
                          dimensions=self.dimensions)
         
         animal = self.create_animal(coordinates=(15,15),
-                                    blue_energy=1000,
-                                    action_cost=0)
+                                    blue_energy=100000,
+                                    red_energy=100000,
+                                    action_cost=0,
+                                    size=15)
         
         if display:
             animal.init_display()
@@ -170,10 +175,10 @@ class Environment:
         return self.state
         
     def update(self):
-        for entity in self.state.entities:
+        for entity in self.state.get_entities():
             entity.update(environment=self)
             
-        return self.grid
+        return self.grid, self.state
         
 
     @property

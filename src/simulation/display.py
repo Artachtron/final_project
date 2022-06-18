@@ -10,6 +10,7 @@ import sys
 from typing import Tuple
 from os.path import dirname, realpath, join
 from pathlib import Path
+from random import random
 
 
 grid = None
@@ -32,17 +33,24 @@ class DisplayedObject(pg.sprite.Sprite):
         
     def init(self, block_size: int, assets_path: str):
         super(DisplayedObject, self).__init__()
-        self.image: pg.Surface = pg.image.load(join(assets_path,
-                                                    self.appearance)).convert_alpha()    
+        self.sprite: pg.Surface = pg.image.load(join(assets_path,
+                                               self.appearance)).convert_alpha()    
         
-        pos_x, pos_y = self.position
+        self.update(block_size=block_size)
+
+        
+    def update(self, block_size, sim_state: SimState=None):
+        if sim_state:
+            entity = sim_state.entities[self.id]
+            self.size = entity.size
+            self.position = entity.position
+        
+        self.image: pg.Surface = pg.transform.scale(self.sprite, (self.size, self.size))
+           
+        pos_x, pos_y = self.position    
         self.rect: pg.Rect = self.image.get_rect(
             center=(pos_x *block_size + block_size /2,
                 pos_y * block_size + block_size /2))
-        
-    def update(self):
-        self.rect.x = self.position[0] * 10
-        self.rect.y = self.position[1] * 10
         
         
 
@@ -78,19 +86,21 @@ class Display:
         
     def init(self, sim_state: SimState) -> None:
         pg.init()
+        
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
         
-        for entity in sim_state.entities:
+        for entity in sim_state.get_entities():
             entity.dis_obj.init(block_size=self.block_size,
                                 assets_path=self.assets_path)
             
             self.entity_group.add(entity.dis_obj)
         
-        
         self.clock = pg.time.Clock() 
+        
     
-    def update(self):
-        self.entity_group.update()
+    def update(self, sim_state: SimState):
+        self.entity_group.update(block_size=self.block_size,
+                                 sim_state=sim_state)
     
     def draw(self, grid) -> None:
         
@@ -101,7 +111,7 @@ class Display:
         
         self.draw_world(grid)
         pg.display.update()
-        self.clock.tick(60)
+        self.clock.tick(self.sim_speed)
         self.tick_counter += 1
         if self.tick_counter == self.sim_speed:
             self.tick_counter = 0

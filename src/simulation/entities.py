@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
-    from simulation import Environment
+    from simulation import Environmen
     
 from typing import Tuple, Final, Dict, Any
 import enum
@@ -508,8 +508,7 @@ class Animal(Entity):
             
             # update self position
             self.position = next_pos
-            self.dis_obj.position = self.position
-
+           
         # Energy cost of action
         self._perform_action()
         
@@ -793,6 +792,9 @@ class Animal(Entity):
         # self.die()
         self._move(direction=direction,
                    environment=environment)
+        
+        
+        self._grow()
         
 
 
