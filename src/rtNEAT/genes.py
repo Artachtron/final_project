@@ -239,8 +239,8 @@ class NodeGene(BaseGene):
                 
         self.type: NodeType = node_type                                         # HIDDEN, INPUT, OUTPUT, BIAS
        
-        self.bias: float =((bias and not self.is_sensor()) or                   # bias value to add to the activation value
-                            uniform(-1,1))  
+        self.bias: float = 0 if self.is_sensor() else bias or uniform(-1,1)     # bias value to add to the activation value
+         
         self.activation_function: ActivationFuncType = activation_function      # function to calculate activation
         self.aggregation_function: AggregationFuncType = aggregation_function   # function to aggregates incoming values
             
@@ -254,7 +254,7 @@ class NodeGene(BaseGene):
         return {'node_id':self.id, 'node_type':self.type,
                 'activation_function':self.activation_function,
                 'aggregation_function':self.aggregation_function,
-                'bias': self.bias,'enabled':self.enabled}
+                'bias':self.bias, 'enabled':self.enabled}
         
     def mutate(self) -> None:
         """Mutate the LinkGene

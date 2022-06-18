@@ -115,8 +115,8 @@ class Genome:
         """   
         return set(self._node_genes.values())
     
-    @staticmethod
-    def genesis(genome_id: int, n_inputs: int, n_outputs: int) -> Genome:        
+    @classmethod
+    def genesis(cls, genome_id: int, n_inputs: int, n_outputs: int) -> Genome:        
         """Initialize a genome based on configuration.
            Create the input GeneNodes, output GeneNodes and
            GeneLinks connecting each input to each output 
@@ -163,11 +163,10 @@ class Genome:
         InnovTable.node_number = count_node_id
         InnovTable.node_number = count_link_id
         
-        genome = Genome(genome_id=genome_id,
+        genome = cls(genome_id=genome_id,
                       node_genes=inputs|outputs,
                       link_genes=links)
         
-        genome.mutate()
         return genome
     
     @staticmethod

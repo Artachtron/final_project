@@ -639,11 +639,11 @@ class TestAnimal:
                 assert len(inputs) == 96
                 assert inputs[0] == 0.5
                 assert inputs[1] == 37/100
-                assert round(inputs[2],5) == 157/100
-                assert round(inputs[3],5) == 122/100
+                assert round(inputs[2],5) == 157/100000
+                assert round(inputs[3],5) == 122/100000
                 assert sum(inputs[4:12]) == 0    
                 assert sum(inputs[12:21]) == 0
-                assert sum(inputs[21:]) == 75*1        
+                assert sum(inputs[21:]) == 75*0        
                 
                 # Non-empty grid
                 self.env.create_tree(coordinates=(5,6))
@@ -662,7 +662,7 @@ class TestAnimal:
     
                 assert sum(inputs[4:12]) == 1    
                 assert sum(inputs[12:21]) == 3
-                assert sum(inputs[21:]) == 75*1       
+                assert sum(inputs[21:]) == 75*0       
             
             
             def test_modify_cell_color(self):

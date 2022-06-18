@@ -19,22 +19,28 @@ class Organism:
         self.species: int = 0
         self.genaration: int = generation
         
-        self.genesis()
-                    
-    def genesis(self) -> Organism:
+      
+    @classmethod              
+    def genesis(cls, organism_id: int, entity_type: EntityType, generation: int=0) -> Organism:
         NUM_ANIMAL_INPUTS = 96
         NUM_ANIMAL_OUTPUTS = 12
         
-        match self.entity_type:
+        match entity_type:
             case EntityType.Animal.value:
                 n_inputs = NUM_ANIMAL_INPUTS
                 n_outputs = NUM_ANIMAL_OUTPUTS
         
-        self.genotype = Genome.genesis( genome_id=self.id,
-                                        n_inputs=n_inputs,
-                                        n_outputs=n_outputs)
+        org = cls(organism_id=organism_id,
+                  generation=generation,
+                  entity_type=entity_type)
         
-        self.mind = Network.genesis(self.genotype)
+        org.genotype = Genome.genesis(genome_id=organism_id,
+                                      n_inputs=n_inputs,
+                                      n_outputs=n_outputs)
+        
+        org.mind = Network.genesis(org.genotype)
+        
+        return org
         
     @property
     def id(self):

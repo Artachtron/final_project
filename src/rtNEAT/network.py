@@ -13,20 +13,20 @@ from project.src.rtNEAT.phenes import Node, Link
 class Network:
     def __init__(self,
                  network_id: int = 0,
-                 inputs: Dict[int, Node] = {},
-                 outputs: Dict[int, Node] = {},
-                 all_nodes: Dict[int, Node] = {},
-                 hidden: Dict[int, Node] = {},
+                #  inputs: Dict[int, Node] = dict(),
+                #  outputs: Dict[int, Node] = dict(),
+                #  all_nodes: Dict[int, Node] = dict(),
+                #  hidden: Dict[int, Node] = dict(),
                  frozen: bool = False):
         
         self.__id = network_id
         
-        self._inputs: Dict[int, Node] = inputs # Nodes that input into the network
-        self._outputs: Dict[int, Node] = outputs # Values output by the network
-        self._hidden: Dict[int, Node] = hidden #
-        self._all_nodes: Dict[int, Node] = all_nodes # A list of all the nodes
+        self._inputs: Dict[int, Node] = dict() # Nodes that input into the network
+        self._outputs: Dict[int, Node] = dict() # Values output by the network
+        self._hidden: Dict[int, Node] = dict() #
+        self._all_nodes: Dict[int, Node] = dict() # A list of all the nodes
         
-        self._links: Dict[int, Link] = {}
+        self._links: Dict[int, Link] = dict()
 
         self.activation_phase: int = 0
         self.frozen: bool = frozen
@@ -35,20 +35,20 @@ class Network:
     def id(self):
         return self.__id 
             
-    @staticmethod
-    def genesis(genome: Genome) -> Network:
-        network = Network(network_id=genome.id)
+    @classmethod
+    def genesis(cls, genome: Genome) -> Network:
+        network = cls(network_id=genome.id)
         
-        network._synthetize_nodes(node_genes=genome._node_genes)    
-        network._synthetize_links(link_genes=genome._link_genes)
+        network._synthetize_nodes(node_genes=genome.node_genes)    
+        network._synthetize_links(link_genes=genome.link_genes)
         
         return network
     
     def _synthetize_nodes(self, node_genes: Dict[int, NodeGene]):
-        nodes = {}
+        nodes = dict()
         for key, node_gene in node_genes.items():
             nodes[key] = Node.synthesis(node_gene.transcript())
-
+            
         self._sort_nodes(nodes)
       
     def _synthetize_links(self, link_genes: Dict[int, LinkGene]) -> Dict[int, Link]:
@@ -155,39 +155,39 @@ class Network:
         
         return output_values
     
-    @cached_property
+    @property
     def n_inputs(self) -> int:
         return len(self._inputs)
     
-    @cached_property
+    @property
     def n_outputs(self)-> int:
         return len(self._outputs)
     
-    @cached_property
+    @property
     def n_nodes(self)-> int:
         return len(self._all_nodes)
     
-    @cached_property
+    @property
     def n_links(self)-> int:
         return len(self._links) 
     
-    @cached_property
+    @property
     def inputs(self)  -> np.array[Node]:  
         return self._inputs
     
-    @cached_property
+    @property
     def outputs(self)  -> np.array[Node]:  
         return self._outputs
     
-    @cached_property
+    @property
     def hidden(self)  -> np.array[Node]:  
         return self._hidden
     
-    @cached_property
+    @property
     def all_nodes(self) -> np.array:
         return self._all_nodes
     
-    @cached_property
+    @property
     def links(self) -> np.array:
         return self._links
     

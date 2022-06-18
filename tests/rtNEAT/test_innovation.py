@@ -8,6 +8,7 @@ from project.src.rtNEAT.genes import NodeGene, LinkGene, NodeType
 class TestInnovTable:
     @pytest.fixture(autouse=True)
     def setup(self):
+        InnovTable.reset_innovation_table()
         sensor_node = NodeGene(node_type=NodeType.INPUT)
         
         action_node = NodeGene(node_type=NodeType.OUTPUT)
@@ -22,8 +23,7 @@ class TestInnovTable:
         self.nodes = {node.id: node for node in nodes}
         self.links = {link.id: link for link in links}
                 
-        yield
-        InnovTable.reset_innovation_table() 
+     
         
             
     def test_increment(self):

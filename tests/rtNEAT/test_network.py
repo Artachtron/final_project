@@ -24,10 +24,7 @@ class TestNetwork:
         def setup(self):
             reset_innovation_table()
             self.genome = Genome(genome_id=0, node_genes={}, link_genes={})
-            self.mind = Network(network_id=self.genome.id,
-                                   inputs={},
-                                   outputs={},
-                                   all_nodes={})
+            self.mind = Network(network_id=self.genome.id)
                                    
             
             yield 
@@ -96,13 +93,14 @@ class TestNetwork:
             assert self.mind.n_nodes == 50
             
         def test_network_genesis(self):
+            reset_innovation_table()
             for _ in range(100):
                 self.genome.add_node(NodeGene(node_type=choice(list(NodeType))))
                 
             for _ in range(1000):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
                 self.genome.add_link(LinkGene(in_node=in_node.id,
-                                         out_node=out_node.id))
+                                              out_node=out_node.id))
                 
             self.mind = Network.genesis(self.genome)
             
@@ -111,6 +109,28 @@ class TestNetwork:
             assert self.mind.n_nodes == 100
             assert self.mind.n_inputs > 0
             assert self.mind.n_outputs > 0
+            
+        def test_not_same_instance(self):
+            gen1 = Genome.genesis(genome_id=1,
+                                  n_inputs=10,
+                                  n_outputs=10)
+            gen2 = Genome.genesis(genome_id=2,
+                                  n_inputs=10,
+                                  n_outputs=10)
+            
+            net1 = Network.genesis(genome=gen1)
+            net2 = Network.genesis(genome=gen2)
+             
+            assert gen1 != gen2
+            assert gen1.link_genes != gen2.link_genes 
+                       
+            assert net1 != net2
+            assert net1.id != net2.id
+            assert net1.all_nodes != net2.all_nodes
+            assert net1.inputs != net2.inputs
+            assert net1.outputs != net2.outputs
+            assert net1.links != net2.links
+            
             
     class TestActivation: 
         @pytest.fixture(autouse=True)

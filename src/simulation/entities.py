@@ -69,14 +69,10 @@ class Entity(SimulatedObject):
         
         self._action_cost: int = action_cost                    # blue energy cost of each action
         
-        self.organism: Organism                                 # Organism containing genotype and mind
+        self.organism: Organism = Organism.genesis(organism_id=self.id, # Organism containing genotype and mind
+                                                    entity_type=EntityType.Animal.value)                                
         
-        self._init_organism()
-        
-    def _init_organism(self):
-        self.organism = Organism(organism_id=self.id,
-                                 entity_type=EntityType.Animal.value)
-    
+     
     @property
     def energies(self) -> Dict[str, int]:
         """Public property:
@@ -177,16 +173,27 @@ class Entity(SimulatedObject):
         self._energies_stock[energy_type.value] += quantity
         
     def _quantity_from_stock(self, energy_type: EnergyType, quantity: int) -> int:
+        """Private method:
+            Calculate the quantity that can be taken from the stock for a certain energy type,
+            either the quantity asked or the energy left in the stock
+
+        Args:
+            energy_type (EnergyType):   type of energy to check in stock
+            quantity (int):             initial quantity
+
+        Raises:
+            ValueError: quantity cannot be negative
+
+        Returns:
+            int: calculated quantity that can be taken
+        """        
         # quantiy can't be negative
         if quantity < 0 :
             raise ValueError
         
         energy_amount: int = self._energies_stock[energy_type.value]
-        # if quantity is more than stock, set stock to 0
-        if energy_amount - quantity < 0:
-           quantity = energy_amount 
-        
-        return quantity
+                
+        return min(quantity, energy_amount)
             
     def _loose_energy(self, energy_type: EnergyType, quantity: int) -> int:
         """Private method:
@@ -675,7 +682,7 @@ class Animal(Entity):
         ## Internal properties
         age = self._age/self._max_age
         size = self._size/100
-        blue_energy, red_energy = (energy/100 for energy in self.energies.values())
+        blue_energy, red_energy = (energy/100000 for energy in self.energies.values())
         ## Perceptions
         entities = environment.find_if_entities_around(coordinates=self.position,
                                                        include_self=False)
@@ -687,7 +694,8 @@ class Animal(Entity):
         colors = environment.get_colors_around(coordinates=self.position,
                                                radius=2)
         
-        see_colors = (colors.flatten()/255).tolist()
+        see_colors = (1 - colors.flatten()/255).tolist()
+        # see_colors = np.random.random(75).tolist()
                 
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
     
