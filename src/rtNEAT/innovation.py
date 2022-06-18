@@ -1,8 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from phenes import Node
-    
+
 import enum
 from typing import List
 from numpy.random import choice, random
@@ -29,7 +26,7 @@ class InnovTableProperties(type):
         cls._link_number = max(cls.link_number, value)
 
 class InnovTable(object, metaclass=InnovTableProperties):
-    history: List[Innovation] = []
+    innovations: List[Innovation] = []
 
     _node_number: int = 1
     _link_number: int = 1
@@ -88,27 +85,26 @@ class InnovTable(object, metaclass=InnovTableProperties):
         Args:
             new_innovation (Innovation): innovation to add to the list
         """        
-        InnovTable.history.append(new_innovation)
+        InnovTable.innovations.append(new_innovation)
         
     @staticmethod
     def reset_innovation_table() -> None:
         """ Reset the values of the innovation table
         """        
-        InnovTable.history = []
+        InnovTable.innovations = []
         InnovTable._node_number = 1
         InnovTable._link_number = 1
     
     @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,
-                                         in_node: Node, out_node: Node) -> bool:
+                                         in_node: int, out_node: int) -> bool:
         """ See if an innovation already exists
 
         Args:
             the_innovation (Innovation):        innovation to check for
             innovation_type (InnovationType):   type of innovation
-            in_node (Node):                     incoming node
-            out_node (Node):                    outgoing node
-            recurrence (bool):                  recurrence flag
+            in_node (int):                      incoming node's id
+            out_node (int):                     outgoing node's id
 
         Returns:
             bool: the innovation already exists
@@ -118,15 +114,14 @@ class InnovTable(object, metaclass=InnovTableProperties):
                 the_innovation.node_out_id == out_node)
            
     @staticmethod    
-    def _create_innovation(in_node: Node, out_node: Node, innovation_type: InnovationType, 
+    def _create_innovation(in_node: int, out_node: int, innovation_type: InnovationType, 
                            old_innovation_number: int=-1) -> Innovation:
         """ Create a new innovation
 
         Args:
-            in_node (Node):                         incoming node
-            out_node (Node):                        outgoing node
+            in_node (int):                          incoming node's id
+            out_node (int):                         outgoing node's id 
             innovation_type (InnovationType):       type of innovation
-            recurrence (bool, optional):            recurrence flag. Defaults to False.
             old_innovation_number (int, optional):  innovation number of the disabled gene when creating a new node. Defaults to -1.
 
         Returns:
@@ -173,15 +168,14 @@ class InnovTable(object, metaclass=InnovTableProperties):
         return new_innovation
     
     @staticmethod
-    def get_innovation(in_node: Node, out_node: Node, innovation_type: InnovationType,
+    def get_innovation(in_node: int, out_node: int, innovation_type: InnovationType,
                        old_innovation_number: int=-1) -> Innovation:
         """ Look if the innovation already exists in the table else create a new innovation
 
         Args:
-            in_node (Node):                         incoming node
-            out_node (Node):                        outgoing node
+            in_node (int):                          incoming node's id
+            out_node (int):                         outgoing node's id
             innovation_type (InnovationType):       type of innovation
-            recurrence (bool):                      recurrence flag
             old_innovation_number (int, optional):  innovation number of the disabled gene (when adding node). Defaults to -1.
 
         Returns:
@@ -189,7 +183,7 @@ class InnovTable(object, metaclass=InnovTableProperties):
         """  
         
         # Check in history if an equivalent innovation already exists      
-        for innovation in InnovTable.history:
+        for innovation in InnovTable.innovations:
             if InnovTable._check_innovation_already_exists(the_innovation=innovation,
                                                             innovation_type=innovation_type,
                                                             in_node=in_node,
