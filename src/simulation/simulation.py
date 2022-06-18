@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from entities import Animal, Tree, Entity 
     import numpy as np
     
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Final
 
 from grid import Grid  
 from entities import Animal, Tree, Entity, Seed
@@ -134,6 +134,9 @@ class SimState:
                 
 
 class Environment:
+    GRID_WIDTH: Final[int] = 20
+    GRID_HEIGHT: Final[int] = 20
+    
     def __init__(self,
                  env_id: int):
         
@@ -142,12 +145,18 @@ class Environment:
         self.state: SimState
         self.grid: Grid
         
-        self._init_environment()
+        self.init()
         
-    def _init_environment(self):
+        
+    def init(self):
         self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=(20,20))
+        
+        # self.create_animal(coordinates=(1,1))
+        
+    def update(self):
+        return self.grid
         
 
     @property
@@ -353,11 +362,15 @@ class Simulation:
         
         self.environment: Environment
         
-        self._init_simulation()
-    
-    def _init_simulation(self):
+            
+    def init(self):
         self.environment = Environment(env_id=self.id) 
+        self.environment.init()
         
+        
+    def update(self):
+        grid = self.environment.update()
+        return grid
         
           
     

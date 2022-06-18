@@ -17,6 +17,8 @@ class TestWorld:
                       sim_speed=100,
                       display_active=True)
         
+        world.init()
+        
         assert {'dimensions', 'block_size', 'sim_speed',
                 'display_active', 'simulation',
                 'display'}.issubset(vars(world))
@@ -34,6 +36,7 @@ class TestWorld:
                       sim_speed=100,
                       display_active=True)
             
+            world.init()
             
             # Simulation
             assert world.simulation.__class__.__name__ == 'Simulation'
@@ -46,4 +49,15 @@ class TestWorld:
             assert world.display.id == world.id
             assert world.display.dimensions == world.dimensions
             assert world.display.block_size == world.block_size
+            
+    def test_run_world(self):
+        world = World(world_id=0,
+                      dimensions=(35,21),
+                      block_size=13,
+                      sim_speed=100,
+                      display_active=True)
+            
+        world.init()
+        
+        world.run()
             

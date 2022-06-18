@@ -647,7 +647,7 @@ class Animal(Entity):
             color (Tuple[int,int,int]):                     color to apply
             coordinates (Tuple[int, int], optional):   the coordinates of the cell to modify. Defaults to None.
         """
-        pass
+        return
         coordinates = coordinates if coordinates else self.position
         environment.grid.color_grid._set_cell_value(coordinates=coordinates,
                                                     value=color)

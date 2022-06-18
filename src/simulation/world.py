@@ -1,5 +1,8 @@
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from grid import Grid
 
 from simulation import Simulation
 from display import Display
@@ -34,101 +37,39 @@ class World:
     
         self.simulation: Simulation
         self.display: Display
-        
-        self._init_world()
-    
+            
     @property
     def id(self):
         return self.__id
         
-    def _init_world(self):   
+    def init(self):   
         self.simulation = Simulation(sim_id=self.id)
         
         self.display = Display(display_id=self.id,
                               dimensions=self.dimensions,
-                              block_size=self.block_size)
+                              block_size=self.block_size,
+                              sim_speed=self.sim_speed)
+        
+        self.simulation.init()
+        self.display.init()
         
     
             
         
-    """ def update(self):
-        self.grid.update()
-        self.simulation.update()
+    def update(self):
+        grid = self.simulation.update()
         
         if self.display_active:
-            self.diplay.update() """   
+            self.display.draw(grid)   
    
              
-""" def main():
-    configure()
+    def run(self):
+        #configure()        
+        while True:
+            self.update()
+                   
+          
 
-    init_world()
-      
-    while True:
-        #update_world()
-        display.main() """        
 
-""" def configure():
-    internal_properties = 4
-    see_entities = 8
-    see_energies = 9
-    see_cells = 25 * 3
-    n_inputs = internal_properties + see_entities + see_energies + see_cells
-    
-    move = 2
-    modify_cell_color = 3
-    drop_energy = 2
-    other_actions = 5
-    n_outputs = move + modify_cell_color + drop_energy + other_actions
-    
-    Config.configure(num_inputs=n_inputs,
-                              num_outputs=n_outputs)
-    Config.num_inputs = n_inputs
-    Config.num_outputs = n_outputs 
-    print(Config.num_inputs, Config.num_outputs) """
-            
-
-    
-    
-
-       
-# def get_random_coordinates() -> Tuple[int,int]:
-#     """Get random coordinates of a point on a grid
-
-#     Returns:
-#         Tuple[int,int]: coordinates generated randomly
-#     """      
-#     return np.random.randint(0, grid.dimensions[0]), np.random.randint(0,grid.dimensions[1])
-    
-# def init_trees(count: int=0) -> None:
-#     """Initialize the population of trees
-
-#     Args:
-#         count (int, optional): number of trees to create. Defaults to 0.
-#     """    
-    
-#     for _ in range(count):
-#         create_new_tree()
-        
-# def create_new_tree():
-#     """Create a new tree in a vacant cell
-#     """    
-#     x, y = get_random_coordinates()
-    
-#     while grid.entity_grid.get_cell_value(cell_coordinates=(x,y)):
-#        x, y = get_random_coordinates()
-    
-#     grid.create_entity(entity_type="tree", position=(x,y), blue_energy=20, max_age=10)
-    
-# def init_energies() -> None:
-#     """Initialize the energies on the grid (only for tests)
-#     """
-#     pass
-        
-# def main():
-#     pass
-           
-# if __name__ == "__main__":
-#     main()
     
 

@@ -375,28 +375,28 @@ class TestAnimal:
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
             animal._move(Direction.DOWN,
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (3,4)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
             
             # Up
             animal._move(Direction.UP,
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
             assert self.entity_grid.get_cell_value(coordinates=(2,3)) == None
             
             # Left
             animal._move(Direction.LEFT,
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (2,3)
             assert self.entity_grid.get_cell_value(coordinates=(2,3)) == animal
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
             
             # Right
             animal._move(Direction.RIGHT,
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
             
@@ -411,7 +411,7 @@ class TestAnimal:
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
             assert animal2.position == (3,4)
             animal._move(Direction.DOWN, 
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
             assert animal2.position == (3,4)
@@ -424,13 +424,13 @@ class TestAnimal:
             assert animal.position == (0,0)
             assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
             animal._move(Direction.LEFT, 
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (0,0)
             assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
             
             # Up
             animal._move(Direction.UP, 
-                            grid=self.grid)
+                            environment=self.env)
             assert animal.position == (0,0)
             assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
             
@@ -441,13 +441,13 @@ class TestAnimal:
             assert animal2.position == (19,19)
             assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
             animal2._move(Direction.RIGHT, 
-                            grid=self.grid)
+                            environment=self.env)
             assert animal2.position == (19,19)
             assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
             
             #Down
             animal2._move(Direction.DOWN, 
-                            grid=self.grid)
+                            environment=self.env)
             assert animal2.position == (19,19)
             assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
             

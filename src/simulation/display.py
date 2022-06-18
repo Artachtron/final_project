@@ -5,6 +5,10 @@ from typing import Tuple
 from os.path import dirname, realpath, join
 from pathlib import Path
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from grid import Grid
+
 grid = None
 
 BLACK = (0, 0, 0)
@@ -41,9 +45,10 @@ class Display:
     def __init__(self,
                  display_id: int,
                  block_size: int,
-                 dimensions: Tuple[int, int]):
+                 dimensions: Tuple[int, int],
+                 sim_speed: int=1):
         
-        self.id = display_id
+        self.__id = display_id
         self.block_size: int = block_size
         self.dimensions: Tuple[int, int] = dimensions
         
@@ -52,38 +57,39 @@ class Display:
         
         
         self.tick_counter = 0
+        self.sim_speed: int = sim_speed
         self.clock: pg.Clock
         self.screen: pg.Screen
         
-        self._init_pygame()
+     
         
-    def _init_pygame(self) -> None:
+    def init(self) -> None:
         pg.init()
         
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
         self.clock = pg.time.Clock() 
     
-    def run(self) -> None:
+    def draw(self, grid) -> None:
         
         for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
         
-        self.draw_world()
+        # self.draw_world(grid)
         pg.display.update()
         self.clock.tick(60)
         self.tick_counter += 1
         if self.tick_counter == self.sim_speed:
             self.tick_counter = 0
 
-    def draw_world(self) -> None:
+    def draw_world(self, grid) -> None:
         """Draw the world, grid and entities"""
-        self.draw_grid()
-        self.draw_entities()
-        self.draw_energies()
+        self.draw_grid(grid)
+        self.draw_entities(grid)
+        self.draw_energies(grid)
     
-    def draw_grid(self) -> None:
+    def draw_grid(self, grid) -> None:
         """Draw the grid"""
         #SCREEN.fill(WHITE)
         color_grid = grid.color_grid.subgrid
@@ -93,12 +99,12 @@ class Display:
                 pg.draw.rect(self.screen, color_grid[int(x/ self.block_size),int(y/ self.block_size)], rect, 0)
                 pg.draw.rect(self.screen, BLACK, rect, 1)
                 
-    def draw_entities(self) -> None:
+    def draw_entities(self, grid) -> None:
         """Draw the entities"""
         
         grid.entity_group.draw(self.screen)
 
-    def draw_energies(self) -> None:
+    def draw_energies(self, grid) -> None:
         """Draw the energies"""
         grid.energy_group.draw(self.screen)
         
@@ -110,6 +116,10 @@ class Display:
     def update_entities(self) -> None:
         """Update the entities"""
         grid.entity_group.update()
+        
+    @property
+    def id(self):
+        return self.__id
 
 
 class EntitySprite(pg.sprite.Sprite):
@@ -134,30 +144,3 @@ class EntitySprite(pg.sprite.Sprite):
             center=(pos_x *grid.BLOCK_SIZE + grid.BLOCK_SIZE /2,
                 pos_y * grid.BLOCK_SIZE + grid.BLOCK_SIZE /2))
         
-class SeedSprite(EntitySprite):
-    def __init__(self,
-                 position:Tuple[int,int],
-                 size: int,
-                 ):
-        
-        super(SeedSprite, self).__init__(image_filename="Seed.png",
-                                        size=size,
-                                        position=position)
-        
-class AnimalSprite(EntitySprite):
-    def __init__(self,
-                 position:Tuple[int,int],
-                 size: int,):
-        
-        super(AnimalSprite,self).__init__(image_filename='Animal.png',
-                                          size=size,
-                                          position=position)
-        
-class TreeSprite(EntitySprite):
-    def __init__(self,
-                 position:Tuple[int,int],
-                 size: int,):
-        
-        super(TreeSprite, self).__init__(image_filename='Plant.png',
-                                         size=size,
-                                         position=position)

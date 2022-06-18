@@ -13,7 +13,9 @@ class TestDisplay:
                         block_size=30,
                         dimensions=(40,32)) 
         
-        assert {'id', 'dimensions', 'block_size',
+        display.init()
+        
+        assert {'dimensions', 'block_size',
                 'window_width', 'window_height', 'clock',
                 'tick_counter','screen'}.issubset(vars(display))
         
