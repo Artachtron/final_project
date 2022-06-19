@@ -196,7 +196,7 @@ class Environment:
                                 blue_energy=100000,
                                 red_energy=100000,
                                 action_cost=0,
-                                size=15)
+                                size=10)
             
             for i in range(50):
                 self.create_tree(coordinates=(32,i),

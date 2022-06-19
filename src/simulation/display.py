@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from grid import Grid
     from simulation import SimState, SimulatedObject
     from entities import Entity
+    from energies import Resource
 
 import pygame as pg
 import sys
@@ -132,15 +133,38 @@ class Display:
         dis_entity = self.entities.pop(entity.id)
         self.entity_group.remove(dis_entity)
         
+    def add_resource(self, resource: Resource):
+        dis_resource = DisplayedObject.create_display(block_size=self.block_size,
+                                                      assets_path=self.assets_path,
+                                                      sim_obj=resource,
+                                                      assets=self.assets)    
+            
+        self.resources[resource.id] = dis_resource
+        self.resource_group.add(dis_resource)
+        
+    def remove_resource(self, resource: Resource):
+        dis_resource = self.resources.pop(resource.id)
+        self.resource_group.remove(dis_resource)    
+    
+        
     def update(self, sim_state: SimState):
         for entity in sim_state.added_entities.values():
             self.add_entity(entity)
             
         for entity in sim_state.removed_entities.values():
             self.remove_entity(entity)
+            
+        for resource in sim_state.added_resources.values():
+            self.add_resource(resource)
+            
+        for resource in sim_state.removed_resources.values():
+            self.remove_resource(resource)
         
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
+        
+        self.resource_group.update(block_size=self.block_size,
+                                   sim_state=sim_state)
     
     def draw(self, grid) -> None:
         
@@ -159,8 +183,8 @@ class Display:
     def draw_world(self, grid) -> None:
         """Draw the world, grid and entities"""
         self.draw_grid(grid)
-        self.draw_entities(grid)
-        # self.draw_energies(grid)
+        self.draw_entities()
+        self.draw_resources()
     
     def draw_grid(self, grid) -> None:
         """Draw the grid"""
@@ -176,13 +200,13 @@ class Display:
                 
                 pg.draw.rect(self.screen, BLACK, rect, 1)
                 
-    def draw_entities(self, grid) -> None:
+    def draw_entities(self) -> None:
         """Draw the entities"""
         self.entity_group.draw(self.screen)
 
-    def draw_energies(self, grid) -> None:
+    def draw_resources(self) -> None:
         """Draw the energies"""
-        grid.energy_group.draw(self.screen)
+        self.resource_group.draw(self.screen)
         
     def update_world(self) -> None:
         """Update the world"""
