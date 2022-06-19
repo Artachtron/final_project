@@ -251,7 +251,7 @@ class Environment:
         
         match entity.status:
             case Status.DEAD:
-                self.entity_died(entity=entity)    
+                self._entity_died(entity=entity)    
         
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
@@ -421,10 +421,22 @@ class Environment:
         self.state.remove_entity(entity=entity)
         print(f"{entity} was deleted at {position}")
         
-    def entity_died(self, entity: Entity):
+    def _entity_died(self, entity: Entity) -> None:
+        """Private method:
+            Event: an entity died
+
+        Args:
+            entity (Entity): entity that died
+        """        
         entity.on_death(environment=self)
         
-    def decompose_entity(self, entity: Entity):
+    def decompose_entity(self, entity: Entity) -> None:
+        """Public method
+            Decompose an entity into its energy components
+
+        Args:
+            entity (Entity): entity to decompose
+        """        
         # Select free cells to place energy on
         free_cells: Tuple[int, int] = self.grid.resource_grid.select_free_coordinates(
                                                                 position=entity.position,
@@ -446,10 +458,31 @@ class Environment:
         
         
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
+        """Public method:
+            Get the resource at the given coordinates and return it
+
+        Args:
+            coordinates (Tuple[int, int]): coordinates of the resource
+
+        Returns:
+            Resource: resource found
+        """        
         return self.grid.resource_grid.get_cell_value(coordinates=coordinates)  
     
     def find_if_entities_around(self, coordinates: Tuple[int, int],
                                 include_self: bool=False, radius: int=1) -> np.array:
+        """Public method:
+            Look for entities in a radius around certain coordinates and
+            return a boolean array of cells occupied by entities
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to search around
+            include_self (bool, optional):  central coordinates included. Defaults to False.
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            np.array: boolean array of cells occupied by entities
+        """        
         
         return self.grid.entity_grid.find_instance_baseclass_around(coordinates=coordinates,
                                                                     base_class=Entity,
@@ -458,6 +491,18 @@ class Environment:
         
     def find_if_resources_around(self, coordinates: Tuple[int, int],
                                  include_self: bool=False, radius: int=1) -> np.array:
+        """Public method:
+            Look for resources in a radius around certain coordinates and
+            return a boolean array of cells occupied by resources
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to search around
+            include_self (bool, optional):  central coordinates included. Defaults to False.
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            np.array: boolean array of cells occupied by resources
+        """       
         
         return self.grid.resource_grid.find_instance_baseclass_around(coordinates=coordinates,
                                                                         base_class=Resource,
@@ -465,11 +510,28 @@ class Environment:
                                                                         radius=radius)
         
     def get_colors_around(self, coordinates: Tuple[int, int], radius: int=1) -> np.array:
+        """Public method:
+            Get the colors in a radis around certain coordinates
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to search around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            np.array: array of colors around
+        """        
                                                
         return self.grid.color_grid.get_sub_region(initial_pos=coordinates,
                                                    radius=radius) 
         
     def modify_cell_color(self, coordinates: Tuple[int, int], color: Tuple[int, int, int]):
+        """Public method:
+            Change the color of a cell
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates of the cell to change color
+            color (Tuple[int, int, int]):   color to put
+        """        
         self.grid.modify_cell_color(coordinates=coordinates,
                                     color=color) 
                    
