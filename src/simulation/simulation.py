@@ -367,8 +367,12 @@ class Environment:
         Returns:
             bool:   True if the energy was created successfully,
                     False if it couldn't be created
-        """        
-        print(f"{energy_type} was created at {coordinates}")
+        """  
+        
+        if quantity < 1:
+            return None
+              
+        print(f"{energy_type}:{quantity} was created at {coordinates}")
         if not self.grid.resource_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
         
@@ -429,8 +433,7 @@ class Environment:
         if not free_cells:
             return
         
-        # Red energy   
-            
+        # Red energy       
         self.create_energy(energy_type=EnergyType.RED,
                             coordinates=free_cells[0],
                             quantity=entity.energies[EnergyType.RED.value])

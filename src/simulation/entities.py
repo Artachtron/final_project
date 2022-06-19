@@ -890,7 +890,7 @@ class Seed(Resource):
                                    position=position,
                                    size=10,
                                    appearance="seed.png",
-                                   quantity=-1)
+                                   quantity=1)
                 
         self.genetic_data = genetic_data
         

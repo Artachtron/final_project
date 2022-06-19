@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from energies import Resource
 
 import pygame as pg
+import pygame.gfxdraw
 import sys
 
 from typing import Tuple
@@ -82,12 +83,12 @@ class Display:
                  display_id: int,
                  block_size: int,
                  dimensions: Tuple[int, int],
-                 sim_speed: int=1):
+                 sim_speed: int=1,
+                 show_grid: bool=False):
         
         self.__id = display_id
         self.block_size: int = block_size
         self.dimensions: Tuple[int, int] = dimensions
-        
         self.window_width: int = block_size * dimensions[0]
         self.window_height: int = block_size * dimensions[1]
         
@@ -95,6 +96,7 @@ class Display:
         self.sim_speed: int = sim_speed
         self.clock: pg.Clock
         self.screen: pg.Screen
+        self.show_grid = show_grid
         
         self.assets: Dict[str, pg.Image] = {}
         self.entities: Dict[int, DisplayedObject] = {}
@@ -197,8 +199,8 @@ class Display:
                              color_grid[int(x / self.block_size),
                                         int(y / self.block_size)],
                              rect, 0)
-                
-                # pg.draw.rect(self.screen, BLACK, rect, 1)
+                if self.show_grid:
+                    pg.draw.rect(self.screen, BLACK, rect, 1)
                 
     def draw_entities(self) -> None:
         """Draw the entities"""

@@ -15,7 +15,7 @@ def main():
                       sim_speed=SIMUMLATION_SPEED,
                       display_active=True)
             
-    world.init()
+    world.init(show_grid=True)
     world.run()
 
 

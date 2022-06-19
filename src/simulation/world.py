@@ -45,7 +45,7 @@ class World:
     def id(self):
         return self.__id
         
-    def init(self):   
+    def init(self, show_grid :bool=False):   
         self.simulation = Simulation(sim_id=self.id,
                                      dimensions=self.dimensions)
            
@@ -53,10 +53,11 @@ class World:
         
         if self.display_active:
             self.display = Display(display_id=self.id,
-                                dimensions=self.dimensions,
-                                block_size=self.block_size,
-                                sim_speed=self.sim_speed)
-        
+                                   dimensions=self.dimensions,
+                                   block_size=self.block_size,
+                                   sim_speed=self.sim_speed,
+                                   show_grid=show_grid)
+            
             self.display.init(sim_state=sim_state)
         
      

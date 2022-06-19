@@ -4,6 +4,7 @@ from typing import Tuple
 
 import enum
 from numpy.random import randint
+from math import log
 
 from universal import SimulatedObject
 
@@ -14,11 +15,13 @@ class Resource(SimulatedObject):
                  position: Tuple[int, int],
                  size: int = 10,
                  appearance: str = "",
-                 quantity: int = 0
+                 quantity: int = None
                  ):
         
         self.quantity = quantity or randint(10,100)
-        size: int = max(10, quantity)
+        print(quantity)
+        size: int = 5 + log(quantity, 2)
+        # size = size/50 if size > 50 else size
         
         appearance = "models/resources/" + appearance
         super(Resource, self).__init__(sim_obj_id=resource_id,
