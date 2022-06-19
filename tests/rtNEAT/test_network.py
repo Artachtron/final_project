@@ -71,12 +71,12 @@ class TestNetwork:
                             
         def test_synthetize_links(self):
             for _ in range(50):
-                self.genome.add_node(NodeGene(node_type=choice(list(NodeType))))
+                self.genome.add_node(NodeGene()) #node_type=choice(list(NodeType))
                 
             for _ in range(10):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
                 self.genome.add_link(LinkGene(in_node=in_node.id,
-                                         out_node=out_node.id))
+                                                out_node=out_node.id))
                 
             self.mind._synthetize_nodes(node_genes=self.genome._node_genes)
             self.mind._synthetize_links(link_genes=self.genome._link_genes)
@@ -94,11 +94,19 @@ class TestNetwork:
             
         def test_network_genesis(self):
             reset_innovation_table()
-            for _ in range(100):
+            for _ in range(99):
                 self.genome.add_node(NodeGene(node_type=choice(list(NodeType))))
+                
+            hidden_node = NodeGene()
+            self.genome.add_node(hidden_node)
                 
             for _ in range(1000):
                 in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
+                if in_node.type == NodeType.OUTPUT:
+                    in_node = hidden_node
+                if out_node.type == NodeType.INPUT or NodeType.BIAS:
+                    out_node = hidden_node
+                
                 self.genome.add_link(LinkGene(in_node=in_node.id,
                                               out_node=out_node.id))
                 
@@ -288,6 +296,8 @@ class TestNetwork:
             
             self.nodes = []
             self.nodes.append(NodeGene(node_type=NodeType.BIAS))
+            hidden_node = NodeGene()
+            self.nodes.append(hidden_node)
             n_inputs = 0
             n_outputs = 0
             for _ in range(n_nodes):
@@ -304,6 +314,12 @@ class TestNetwork:
                 valid = False
                 while not valid:
                     in_node, out_node = np.random.choice(self.nodes, 2)
+                    
+                    if in_node.type == NodeType.OUTPUT:
+                        in_node = hidden_node
+                    if out_node.type == NodeType.INPUT or NodeType.BIAS:
+                        out_node = hidden_node
+                        
                     valid = (in_node.type != NodeType.OUTPUT and
                             out_node.type != NodeType.INPUT)
                     
