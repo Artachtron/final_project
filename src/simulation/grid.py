@@ -4,7 +4,7 @@ from typing import Tuple, Any, Set, Type
 
 # Internals packages
 from energies import Resource
-from entities import Entity, Animal
+from entities import Entity, Animal, Tree
 
 # External libraries
 import enum
@@ -516,10 +516,18 @@ class Grid:
         if self.color_grid._are_coordinates_in_bounds(coordinates=coordinates):
             self.color_grid.array[coordinates] = color
             
-    def _find_occupied_cells_by_animals(self, coordinates: Tuple[int, int], radius: int = 1) -> np.array[bool]:
+    def _find_occupied_cells_by_animals(self, coordinates: Tuple[int, int],
+                                        radius: int = 1) -> np.array[bool]:
         return self.entity_grid._find_instances_baseclass_around(coordinates=coordinates,
                                                                  radius=radius,
                                                                  base_class=Animal)
+        
+    def _find_occupied_cells_by_trees(self, coordinates: Tuple[int, int],
+                                      radius: int = 1) -> np.array[bool]:
+        
+        return self.entity_grid._find_instances_baseclass_around(coordinates=coordinates,
+                                                                 radius=radius,
+                                                                 base_class=Tree)
 
         
     def get_nearby_colors(self, radius: int = 1) -> np.array:

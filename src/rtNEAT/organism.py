@@ -16,9 +16,6 @@ class Organism:
         self.genotype: Genome 
         self.mind: Network
                 
-        self.species: int = 0
-        self.genaration: int = generation
-        
       
     @classmethod              
     def genesis(cls, organism_id: int, entity_type: EntityType, generation: int=0) -> Organism:

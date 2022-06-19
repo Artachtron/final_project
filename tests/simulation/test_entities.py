@@ -152,6 +152,21 @@ class TestEntity:
             assert can == False
             assert self.entity.red_energy == 1998
             
+        def test_change_status(self):
+            assert self.entity.status == Status.ALIVE
+            # change to fertile
+            self.entity._change_status(new_status=Status.FERTILE)
+            assert self.entity.status == Status.FERTILE
+            # can't change because of extra condition
+            self.entity._change_status(Status.ALIVE,
+                                       Status.FERTILE)
+            assert self.entity.status == Status.FERTILE
+            # dead
+            self.entity._change_status(new_status=Status.DEAD)
+            assert self.entity.status == Status.DEAD
+            # stay dead
+            self.entity._change_status(new_status=Status.ALIVE)
+            assert self.entity.status == Status.DEAD
          
         class TestEntityGridMethods:
             @pytest.fixture(autouse=True)
@@ -296,8 +311,62 @@ class TestTree:
             
        
         
-        def test_produce_energy(self):
-           pass 
+        def test_energy_production(self):
+            # Red energy
+            tree = self.env.create_tree(production_type=EnergyType.RED,
+                                        coordinates=(0,0),
+                                        size=1,
+                                        red_energy=5,
+                                        blue_energy=5)
+                      
+            assert tree.red_energy == 5
+            assert tree.blue_energy == 5
+            tree.produce_energy(environment=self.env)
+            assert tree.red_energy == 10
+            assert tree.blue_energy == 4
+            tree.size = 2
+            tree.produce_energy(environment=self.env)
+            assert tree.red_energy == 20
+            assert tree.blue_energy == 3
+            
+            # Blue energy
+            tree2 = self.env.create_tree(production_type=EnergyType.BLUE, 
+                                        coordinates=(2,2),
+                                        size=1,
+                                        blue_energy=5,
+                                        red_energy=5,
+                                        action_cost=0)
+            
+            assert tree2.blue_energy == 5
+            assert tree2.red_energy == 5
+            tree2.produce_energy(environment=self.env)
+            assert tree2.blue_energy == 10
+            assert tree2.red_energy == 5
+            tree2.size = 2
+            tree2.produce_energy(environment=self.env)
+            assert tree2.blue_energy == 20
+            assert tree2.red_energy == 5
+            
+            # trees around
+            tree3 = self.env.create_tree(production_type=EnergyType.BLUE,
+                                        coordinates=(2,1),
+                                        size=1,
+                                        blue_energy=5,
+                                        action_cost=0)
+            
+            tree2.produce_energy(environment=self.env)
+            assert tree2.blue_energy == 25
+            assert tree2.red_energy == 5
+            
+            tree4 = self.env.create_tree(production_type=EnergyType.BLUE,
+                                        coordinates=(1,2),
+                                        size=1,
+                                        blue_energy=5, 
+                                        action_cost=0)
+                            
+            tree2.produce_energy(environment=self.env)
+            assert tree2.blue_energy == 27
+            assert tree2.red_energy == 5
        
        
 
@@ -646,6 +715,11 @@ class TestAnimal:
                 
                 cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
                 assert tuple(cell_color) == new_color
+                
+        def test_want_to_reproduce(self):
+            assert self.animal.status.name == Status.ALIVE.name
+            self.animal._want_to_reproduce()
+            assert self.animal.status.name == Status.FERTILE.name
         
                 
         class TestAnimalMind:

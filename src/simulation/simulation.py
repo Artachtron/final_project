@@ -299,11 +299,17 @@ class Environment:
             
             if birth_position:
                 adult_size = int((parent1.size + parent2.size)/2)
+                ancestors = ({parent1.id: parent1, parent2.id: parent2}|
+                             parent1.ancestors|
+                             parent2.ancestors)
+                
                 child = self.create_animal(coordinates=birth_position,
                                             size=1,
                                             blue_energy=Animal.INITIAL_BLUE_ENERGY,
                                             red_energy=Animal.INITIAL_RED_ENERGY,
-                                            adult_size=adult_size)
+                                            adult_size=adult_size,
+                                            generation=self.state.cycle,
+                                            ancestors=ancestors)
                 
                 DIE_GIVING_BIRTH_PROB = 0.02
                 if random() < DIE_GIVING_BIRTH_PROB:
@@ -577,6 +583,9 @@ class Environment:
         """        
         self.grid.modify_cell_color(coordinates=coordinates,
                                     color=color) 
+        
+    def find_trees_around(self, coordinates: Tuple[int, int], radius: int=1):
+        return self.grid._find_occupied_cells_by_trees(coordinates=coordinates)
                    
         
 class Simulation:

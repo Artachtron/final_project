@@ -43,6 +43,7 @@ class Entity(SimulatedObject):
     def __init__(self,
                  position: Tuple[int, int],
                  entity_id: int = 0,
+                 generation: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = INITIAL_SIZE,
@@ -58,13 +59,15 @@ class Entity(SimulatedObject):
                                      size=size,
                                      appearance=appearance)                 
         
-        self.status = Status.ALIVE                              # Current status
+        self.status: Status = Status.ALIVE                      # Current status
         
         self._energies_stock: Dict[str, int] = {                # energy currently owned
             EnergyType.BLUE.value: blue_energy,
             EnergyType.RED.value: red_energy
             }
-            
+
+        self.generation: int = generation                       # generation the entity was born in 
+        self.specie: int = 0                                    # Species the entity is part of
         self._age: int = 0                                      # age of the entity
         self._max_age: int = (max_age or                        # maximum longevity before dying
                               (size * 
@@ -78,8 +81,9 @@ class Entity(SimulatedObject):
         
         self.organism: Organism                                 # Organism containing genotype and mind
         self.mind: Network     
-                                           
-        self._create_mind()
+        
+        if self.generation == 0:                             
+            self._create_mind()
         
     def _create_mind(self):
         self.organism = Organism.genesis(organism_id=self.id,
@@ -360,16 +364,19 @@ class Animal(Entity):
     def __init__(self,
                  position: Tuple[int, int],
                  animal_id: int = 0,
+                 generation: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
                  action_cost: int = 1,
                  blue_energy: int = 10,
                  red_energy: int = 10,
+                 ancestors = dict(),
                  ):
         
         super(Animal, self).__init__(position=position,
                                      entity_id=animal_id,
+                                     generation=generation,
                                      adult_size=adult_size,
                                      max_age=max_age,
                                      size=size,
@@ -379,6 +386,7 @@ class Animal(Entity):
                                      appearance="animal.png")
             
         self._pocket: Seed = None       # Pocket in which to store seed
+        self.ancestors: Dict[int, Animal] = ancestors
         
     def __repr__(self):
         return f'Animal {self.id}'
@@ -669,6 +677,7 @@ class Tree(Entity):
     def __init__(self,
                  position: Tuple[int, int],
                  tree_id: int = 0,
+                 generation: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 10,
@@ -680,6 +689,7 @@ class Tree(Entity):
         
         super(Tree, self).__init__( position=position,
                                     entity_id=tree_id,
+                                    generation=generation,
                                     adult_size=adult_size,
                                     max_age=max_age,
                                     size=size,
@@ -689,19 +699,21 @@ class Tree(Entity):
                                     appearance="plant.png")
         
         self._production_type: EnergyType = (production_type or                 # Type of energy produce by the tree
-                                            np.random.choice(list(EnergyType)))
+                                             np.random.choice(list(EnergyType)))
      
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'
         
-    def produce_energy(self) -> None:
+    def produce_energy(self, environment: Environment) -> None:
         """Produce energy
         """
         MINUMUM_AGE: Final[int] = 20
         if self._age < MINUMUM_AGE:
             pass
 
-        count_trees_around = len(self._find_tree_cells())
+        trees_around = environment.find_trees_around(coordinates=self.position) or []
+        
+        count_trees_around = len(trees_around) 
 
         self._gain_energy(energy_type=self._production_type,
                          quantity=int((5 * self._size) / 2**count_trees_around))
