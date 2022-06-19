@@ -55,8 +55,17 @@ class Network:
         for key, link_gene in link_genes.items():
             link = Link.synthesis(link_gene.transcript())
             # Replace id  by the actual Node
-            link.in_node = self._all_nodes[link.in_node]
-            link.out_node = self._all_nodes[link.out_node]
+            in_node = self._all_nodes[link.in_node]
+            out_node =  self._all_nodes[link.out_node]
+            
+            if in_node.is_output():
+               raise ValueError(f"{in_node} is an output it can not be an in node")
+           
+            if out_node.is_sensor():
+                raise ValueError(f"{out_node} is a sensor it can not be an out node")
+            
+            link.in_node = in_node
+            link.out_node = out_node
             self._links[key] = link
             if link_gene.enabled: 
                 self._connect_link(link)                
@@ -90,7 +99,31 @@ class Network:
                     
             # Keep track of all nodes    
             self._all_nodes[key] = node
+    
+    def verify_post_genesis(self):
+        # Complete
+        for node in self.get_outputs():
+            if len(node.incoming) != len(self.inputs):
+               raise ValueError(f"{node} is connected to {len(node.incoming)}/{len(self.inputs)}")
+            
+            if {n.in_node.id for n in node.get_incoming()} != set(self.inputs.keys()):
+                raise ValueError(f"{node} is not connected to all inputs ")
+            
+            if node.outgoing:
+                raise ValueError(f"{node} has some outgoing connections")
+            
+        for node in self.get_inputs():
+            if len(node.outgoing) != len(self.outputs):
+               raise ValueError(f"{node} is connected to {len(node.outgoing)}/{len(self.outputs)}")
+            
+            if {n.out_node.id for n in node.get_outgoing()} != set(self.outputs.keys()):
+                raise ValueError(f"{node} is not connected to all outputs")
+            
+            if node.incoming:
+                raise ValueError(f"{node} has some incoming connections")
+            
         
+    
     def activate(self, input_values: np.array) -> np.array:
         """ Activate the whole network after recieving input values
 

@@ -108,6 +108,14 @@ class Node(BasePhene):
         return (self.type == NodeType.INPUT or 
                 self.type == NodeType.BIAS)
         
+    def is_output(self) -> bool:
+        """ determine if the node is an OUTPUT
+
+        Returns:
+            bool: node is an output
+        """        
+        return self.type == NodeType.OUTPUT
+        
         
     def get_activation(self, activation_phase: int) -> float:
         """ Browse the list of incoming links and calculate the output value
@@ -119,8 +127,8 @@ class Node(BasePhene):
             float: the output value of the node after activation
         """  
         # If the output was already calculated during the current phase, 
-        # then just return the value      
-        if self.activation_phase != activation_phase:
+        # or the node is an input: then just return the value      
+        if self.activation_phase != activation_phase and not self.is_sensor():
             
             values = [self.bias]
             # Loop through the list of incoming links and
@@ -137,7 +145,8 @@ class Node(BasePhene):
             
             # set the activation phase to the current one,
             # since the value is now already calculated
-            self.activation_phase = activation_phase            
+            self.activation_phase = activation_phase 
+                       
         return self.activation_value
     
     

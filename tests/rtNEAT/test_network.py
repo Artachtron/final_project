@@ -131,6 +131,22 @@ class TestNetwork:
             assert net1.outputs != net2.outputs
             assert net1.links != net2.links
             
+        def test_brain_structure(self):
+            reset_innovation_table()
+            gen = Genome.genesis(genome_id=1,
+                                n_inputs=96,
+                                n_outputs=12)
+            
+            net = Network.genesis(genome=gen)
+            # Complete
+            for node in net.get_outputs():
+                assert {n.in_node.id for n in node.get_incoming()} == set(net.inputs.keys())
+                assert not node.outgoing
+                
+            for node in net.get_inputs():
+                assert {n.out_node.id for n in node.get_outgoing()} == set(net.outputs.keys())
+                assert not node.incoming
+            
             
     class TestActivation: 
         @pytest.fixture(autouse=True)

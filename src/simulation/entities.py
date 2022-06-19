@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
     from simulation import Environment
+    from project.src.rtNEAT.network import Network
     
 from typing import Tuple, Final, Dict, Any
 import enum
 import numpy as np
 import inspect
-from numpy.random import choice
 
 from energies import EnergyType, Energy, Resource
 from universal import SimulatedObject, Position, EntityType
@@ -69,8 +69,17 @@ class Entity(SimulatedObject):
         
         self._action_cost: int = action_cost                    # blue energy cost of each action
         
-        self.organism: Organism = Organism.genesis(organism_id=self.id, # Organism containing genotype and mind
-                                                    entity_type=EntityType.Animal.value)                                
+        self.organism: Organism                                 # Organism containing genotype and mind
+        self.mind: Network     
+                                           
+        self._create_mind()
+        
+    def _create_mind(self):
+        self.organism = Organism.genesis(organism_id=self.id,
+                                            entity_type=EntityType.Animal.value)   
+        
+        self.mind = self.organism.mind
+        self.mind.verify_post_genesis()                          
         
      
     @property

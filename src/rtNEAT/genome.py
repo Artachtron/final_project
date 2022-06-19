@@ -153,10 +153,16 @@ class Genome:
         for node1 in inputs.keys():
             for node2 in outputs.keys():
                 links = Genome.insert_gene_in_dict(genes_dict=links,
-                                                   gene=LinkGene(   link_id=count_link_id, 
-                                                                    in_node=node1,
-                                                                    out_node=node2))
+                                                   gene=LinkGene(link_id=count_link_id,
+                                                                 in_node=node1,
+                                                                 out_node=node2))
                 count_link_id += 1
+        
+        Genome.verify_post_genesis(n_inputs=n_inputs,
+                                   n_outputs=n_outputs,
+                                   inputs=inputs,
+                                   outputs=outputs,
+                                   links=links)
         
         # Set the innovation tables to the number
         # of links and nodes craeted             
@@ -164,10 +170,31 @@ class Genome:
         InnovTable.node_number = count_link_id
         
         genome = cls(genome_id=genome_id,
-                      node_genes=inputs|outputs,
-                      link_genes=links)
+                     node_genes=inputs|outputs,
+                     link_genes=links)
         
         return genome
+    
+    def verify_post_genesis(n_inputs: int, n_outputs: int, links: Dict[int, LinkGene],
+                            inputs: Dict[int, NodeGene], outputs: Dict[int, NodeGene]):
+        # Complete
+        if (size:= len(inputs)) != n_inputs:
+            raise ValueError(f"Number of inputs {size} instead of {n_inputs}")
+        
+        if (size:= len(outputs)) != n_outputs:
+            raise ValueError(f"Number of inputs {size} instead of {n_outputs}")
+        
+        if n_links:= len(links) != n_inputs*n_outputs:
+           raise ValueError(f"Number of links {n_links} instead of {n_inputs*n_outputs}")
+       
+        for link in links.values():
+            if link.in_node not in range(0, n_inputs):
+                ValueError(f"{link} has an output as in_node")
+                
+            if link.out_node not in range(n_inputs, len(links)):
+                ValueError(f"{link} has an input as out_node")
+        
+        
     
     @staticmethod
     def genetic_distance(genome1: Genome, genome2: Genome) -> float:
