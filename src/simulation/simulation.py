@@ -6,6 +6,9 @@ if TYPE_CHECKING:
     
 from typing import Dict, Tuple, Final
 
+from random import randint, sample
+from itertools import product
+
 from grid import Grid  
 from entities import Animal, Tree, Entity, Seed, Status
 from energies import Energy, EnergyType, BlueEnergy, RedEnergy, Resource 
@@ -186,24 +189,53 @@ class Environment:
             return self.populate()
               
     def populate(self):
-        self.create_animal(coordinates=(15,15),
-                                    blue_energy=10,
-                                    red_energy=10,
-                                    action_cost=1,
-                                    size=15)
-        for i in range(50):
-            self.create_animal(coordinates=(12,i),
-                                blue_energy=10,
-                                red_energy=10,
-                                action_cost=1,
-                                size=10)
-            
-            for i in range(1):
-                self.create_tree(coordinates=(32,i),
-                                blue_energy=100000,
-                                red_energy=100000,
-                                action_cost=0,
-                                size=15)
+        width, height = self.dimensions
+        MIN_HORIZONTAL_SIZE_SECTION = 5
+        MAX_HORIZONTAL_SIZE_SECTION = 10
+        
+        MIN_VERTICAL_SIZE_SECTION = 5
+        MAX_VERTICAL_SIZE_SECTION = 10
+        
+        # How much time the grid can be divided by sections
+        num_min_section_horizontal = int(width/MIN_HORIZONTAL_SIZE_SECTION)
+        num_min_section_vertical = int(height/MIN_VERTICAL_SIZE_SECTION)
+        
+        num_max_section_horizontal = int(width/MAX_HORIZONTAL_SIZE_SECTION)
+        num_max_section_vertical = int(height/MAX_VERTICAL_SIZE_SECTION)
+        
+        # Choose the number of divisions into section h * v 
+        horizontal_divisor = randint(num_max_section_horizontal,
+                                     num_min_section_horizontal+1)
+        
+        vertical_divisor = randint(num_max_section_vertical,
+                                   num_min_section_vertical+1)
+        
+        section_horizontal_size = int(width/horizontal_divisor)
+        section_vertical_size = int(height/vertical_divisor)
+        
+        possible_coordinates = set(product(range(section_horizontal_size),
+                                           range(section_vertical_size)))
+   
+        section_dimension = len(possible_coordinates)
+        
+        SPARSITY = 15
+        DENSITY = int(section_dimension/SPARSITY)
+        
+        for h in range(horizontal_divisor+1):
+            x_offset = h * section_horizontal_size
+            for v in range(vertical_divisor+1):
+                y_offset = v * section_vertical_size
+                
+                num_animal_section = randint(0, DENSITY)
+                coordinates = sample(possible_coordinates,
+                                     num_animal_section)
+                
+                for x, y in coordinates:
+                    self.create_animal(coordinates=(x + x_offset,
+                                                    y + y_offset),
+                                       blue_energy=1000,
+                                       red_energy=1000,
+                                       size=15)
                 
         return self.state
    
