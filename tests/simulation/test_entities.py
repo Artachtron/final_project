@@ -597,8 +597,8 @@ class TestAnimal:
             assert not resource_grid._find_coordinates_baseclass(coordinates=position,
                                                                     base_class=RedEnergy)
             
-            self.animal._decompose(entity=self.animal,
-                                    environment=self.env)
+    
+            self.env.decompose_entity(entity=self.animal)
             assert resource_grid._find_coordinates_baseclass(coordinates=position,
                                                                 base_class=BlueEnergy)
             assert resource_grid._find_coordinates_baseclass(coordinates=position,

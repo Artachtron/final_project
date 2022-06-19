@@ -248,7 +248,7 @@ class SubGrid:
                     
         return instances
     
-    def find_free_coordinates(self, position: Tuple[int, int],
+    def find_free_coordinates(self, coordinates: Tuple[int, int],
                               radius: int = 1) -> Set[Tuple[int, int]]:
         """Public method:
             Find a free cell in range
@@ -264,25 +264,25 @@ class SubGrid:
         b = combinations(a*2, 2)            # ALl the combinations of coordinates
         
         positions = [coordinate for x, y in set(b) 
-                     if self.get_cell_value(coordinate:=tuple(np.add(position,(x, y)))) is None]
+                     if self.get_cell_value(coordinate:=tuple(np.add(coordinates,(x, y)))) is None]
         
         return positions
     
-    def select_free_coordinates(self, position: Tuple[int, int], radius: int = 1,
+    def select_free_coordinates(self, coordinates: Tuple[int, int], radius: int = 1,
                                 num_cells: int = 1) -> Tuple[int, int]:
         """Public method:
             Select randomly from the free cells available
 
         Args:
-            position (Tuple[int,int]):  starting position to look around
-            radius (int, optional):     radius of search. Defaults to 1.
-            num_cells (int):            number of cells to return. Defaults to 1
+            coordinates (Tuple[int,int]):   starting position to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+            num_cells (int):                number of cells to return. Defaults to 1
 
         Returns:
             Tuple[int,int]:         coordinates of the free cell, if num_cells = 1
             List[Tuple[int,int]]:   list of coordinates of free cells, if num_cells > 1
         """
-        free_cells: Set[Tuple[int, int]] = self.find_free_coordinates(position=position,
+        free_cells: Set[Tuple[int, int]] = self.find_free_coordinates(coordinates=coordinates,
                                                                       radius=radius)
 
         if free_cells:

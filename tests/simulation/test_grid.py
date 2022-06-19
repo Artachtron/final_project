@@ -297,24 +297,24 @@ class TestSubGrid:
             
         
         def test_find_free_coordinates(self):
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 9
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 9
             
             self.env.create_tree(coordinates=(1,1))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 8
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 8
             
             self.env.create_tree(coordinates=(0,1))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 7
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 7
             
             self.env.create_tree(coordinates=(0,0))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 6
             
             # Out of search range, no change
             self.env.create_tree(coordinates=(3,3))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 6
         
         def test_select_free_coordinates(self):
             cells = []
@@ -325,7 +325,7 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinates(position=position,
+                free_cell = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                     radius=radius)
                 assert free_cell in cells
                 
@@ -338,19 +338,19 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinates(position=position,
+                free_cell = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                      radius=radius)
                 assert free_cell 
                 assert free_cell in cells
                 
             # Multiple free cells
-            free_cells = self.entity_grid.select_free_coordinates(position=position,
+            free_cells = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                   radius=radius,
                                                                   num_cells=2)
             
             assert len(free_cells) == 2
             
-            free_cells = self.entity_grid.select_free_coordinates(position=position,
+            free_cells = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                   radius=radius,
                                                                   num_cells=3)
             

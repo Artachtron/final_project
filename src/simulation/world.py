@@ -1,5 +1,6 @@
 
 from __future__ import annotations
+from html import entities
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid
@@ -71,7 +72,9 @@ class World:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid)  
         
-        if sim_state.cycle == World.MAX_CYCLE:
+        if (sim_state.cycle == World.MAX_CYCLE or
+            len(sim_state.entities) == 0):
+            
             print("SHUTDOWN")
             self.shutdown()
             

@@ -478,8 +478,9 @@ class Animal(Entity):
         """Private method:
             Set this animal's status to fertile
         """
-                
-        self.status = Status.FERTILE
+        if self.status != Status.DEAD:      
+            self.status = Status.FERTILE
+            
         self._perform_action()
 
     def _paint(self, color: Tuple[int,int,int], environment: Environment,
@@ -674,6 +675,9 @@ class Tree(Entity):
         
         self._production_type: EnergyType = (production_type or                 # Type of energy produce by the tree
                                             np.random.choice(list(EnergyType)))
+     
+    def __repr__(self) -> str:
+        return f'Tree {self.id}: {self._production_type}'
         
     def produce_energy(self) -> None:
         """Produce energy

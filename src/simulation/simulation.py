@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     
 from typing import Dict, Tuple, Final
 
-from random import randint, sample
+from random import randint, sample, random
 from itertools import product
 
 from grid import Grid  
@@ -117,15 +117,16 @@ class SimState:
 
         Args:
             entity (Entity):entity to remove
-        """  
+        """ 
+         
+        self.removed_entities[entity.id] = entity
             
         match entity.__class__.__name__:
             case "Animal":
                 self.animals.pop(entity.id)
             case "Tree":
                 self.trees.pop(entity.id)
-                
-        self.removed_entities[entity.id] = entity
+               
                 
     def add_resource(self, new_resource: Resource) -> None:
         """Public method:
@@ -237,8 +238,8 @@ class Environment:
                 for x, y in coordinates:
                     self.create_animal(coordinates=(x + x_offset,
                                                     y + y_offset),
-                                       blue_energy=1000,
-                                       red_energy=1000,
+                                       blue_energy=100,
+                                       red_energy=5000,
                                        size=15)
                 
         return self.state
@@ -257,8 +258,8 @@ class Environment:
                 entities_around = self.grid._find_occupied_cells_by_animals(coordinates=entity.position)  
                 for other_entity in entities_around:
                     if other_entity.status == Status.FERTILE:
-                        self.reproduce_entities(parent1=entity,
-                                                parent2=other_entity)  
+                        self._reproduce_entities(parent1=entity,
+                                                 parent2=other_entity)  
         
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
@@ -280,6 +281,41 @@ class Environment:
         """  
         if self.grid.place_entity(value=new_entity):     
             self.state.add_entity(new_entity=new_entity)
+            
+    def _reproduce_entities(self, parent1: Entity, parent2: Entity):
+     
+        if not (parent1._is_adult and parent2._is_adult):
+            return
+                
+        parent1_energy_cost = Animal.REPRODUCTION_ENERGY_COST * parent1._size
+        parent2_energy_cost = Animal.REPRODUCTION_ENERGY_COST * parent2._size
+        
+        if (parent1._can_perform_action(energy_type=EnergyType.RED,
+                                        quantity=parent1_energy_cost) and
+            parent2._can_perform_action(energy_type=EnergyType.RED,
+                                        quantity=parent2_energy_cost)):
+        
+            birth_position = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
+            
+            if birth_position:
+                adult_size = int((parent1.size + parent2.size)/2)
+                child = self.create_animal(coordinates=birth_position,
+                                            size=1,
+                                            blue_energy=Animal.INITIAL_BLUE_ENERGY,
+                                            red_energy=Animal.INITIAL_RED_ENERGY,
+                                            adult_size=adult_size)
+                
+                DIE_GIVING_BIRTH_PROB = 0.02
+                if random() < DIE_GIVING_BIRTH_PROB:
+                    parent1.status = (Status.DEAD 
+                                      if random() < DIE_GIVING_BIRTH_PROB
+                                      else Status.ALIVE)
+                    
+                    parent2.status = (Status.DEAD 
+                                      if random() < DIE_GIVING_BIRTH_PROB
+                                      else Status.ALIVE)
+            
+                return child
             
     def create_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
         if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
@@ -446,7 +482,7 @@ class Environment:
         """        
         # Select free cells to place energy on
         free_cells: Tuple[int, int] = self.grid.resource_grid.select_free_coordinates(
-                                                                position=entity.position,
+                                                                coordinates=entity.position,
                                                                 num_cells=2)
         
         if not free_cells:
