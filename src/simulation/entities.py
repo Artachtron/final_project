@@ -234,7 +234,7 @@ class Entity(SimulatedObject):
         
         # dies if the entity run out of blue energy
         if self._energies_stock[EnergyType.BLUE.value] <= 0:
-            self._die()
+             self._die()
 
         # effective quantity lost
         return quantity
@@ -243,9 +243,8 @@ class Entity(SimulatedObject):
         """Private method:
             Consume blue energy when performing an action
         """        
-        self._loose_energy(
-            energy_type=EnergyType.BLUE,
-            quantity=self._action_cost)
+        self._loose_energy(energy_type=EnergyType.BLUE,
+                           quantity=self._action_cost)
     
     def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
         """Private method:
@@ -327,157 +326,7 @@ class Entity(SimulatedObject):
         print(f"{self} died at age {self._age}")
         self.status = Status.DEAD
         
-        
-        
-    def _decompose(self, entity: Entity, environment: Environment) -> None:
-        """Private method:
-            Action: decompose an entity into its energy components
 
-        Args:
-            entity (Entity):    entity to decompose in energy
-            grid (Grid):        grid on which to deposit energy
-        """
-        resource_grid: SubGrid = environment.grid.resource_grid
-        
-        # Select free cells to place energy on
-        free_cells: Tuple[int, int] = resource_grid.select_free_coordinates(
-                                                     position=self.position,
-                                                     num_cells=2)
-        
-        # Red energy        
-        environment.create_energy(energy_type=EnergyType.RED,
-                                  coordinates=free_cells[0],
-                                  quantity=entity.energies[EnergyType.RED.value])
-        
-        # Blue energy                            
-
-        environment.create_energy(energy_type=EnergyType.BLUE,
-                                  coordinates=free_cells[1],
-                                  quantity=entity.energies[EnergyType.BLUE.value])
-     
-    ################################################################################################ 
-        
-    
-    # def _find_occupied_cells_by_value(self, subgrid, value,
-    #                          radius: int = 1, include_self: bool = False) -> np.array[bool]:
-    #     """ Find the cells occupied by the given value, return a list of boolean
-
-    #     Args:
-    #         subgrid (SubGrid):              subgrid on which to look for
-    #         value (Class):                  value to search for
-    #         radius (int, optional):         radius of search. Defaults to 1.
-    #         include_self (bool, optional):  include self in the list. Defaults to False.
-
-    #     Returns:
-    #         np.array[bool]: List of occupied (True) and empty cells (False)
-    #     """        
-        # position: Tuple[int, int] = self._position
-        # occupied_cells = []
-        
-        # for x in range(-radius, radius + 1):
-        #     for y in range(-radius, radius + 1):
-        #         if not include_self and x == 0 and y == 0:
-        #             continue
-        #         coordinate = tuple(np.add(position,(x, y)))
-        #         occupied_cells.append((issubclass(type(subgrid.get_cell_value(coordinates=coordinate)),value)))
-
-        # return np.array(occupied_cells)         
-           
-    # def _find_occupied_cells_by_entities(self, radius: int = 1) -> np.array[bool]:
-    #     """ Find the cells occupied by entities, return a list of boolean
-
-    #     Args:
-    #         radius (int, optional): radius of search. Defaults to 1.
-
-    #     Returns:
-    #         np.array[bool]: List of occupied (True) and empty cells (False)
-    #     """               
-    #     return self._find_occupied_cells_by_value(subgrid=self.entity_grid,
-    #                                                 value=Entity,
-    #                                                 radius=radius) 
-        
-    # def _find_occupied_cells_by_energies(self, radius: int = 1) -> np.array[bool]:
-    #     """ Find the cells occupied by energies, return a list of boolean
-
-    #     Args:
-    #         radius (int, optional): radius of search. Defaults to 1.
-
-    #     Returns:
-    #         np.array[bool]: List of occupied (True) and empty cells (False)
-    #     """               
-    #     return self._find_occupied_cells_by_value(subgrid=self.grid.resource_grid,
-    #                                                 value=Energy,
-    #                                                 radius=radius,
-    #                                                 include_self=True)     
-            
-    
-    # def _find_tree_cells(self, include_self: bool = False,
-    #                      radius: int = 1) -> Set[Tuple[int, int]]:
-    #     """Find the cells at proximity on which trees are located
-
-    #     Args:
-    #         include_self (bool, optional):  include self in the list. Defaults to False.
-    #         radius (int, optional):         radius of search. Defaults to 1.
-
-    #     Returns:
-    #         Set[Tuple[int,int]]: set of found trees' cells' coordinates
-    #     """
-    #     trees: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(subgrid=self.entity_grid,
-    #                                                             value=Tree,
-    #                                                             radius=radius)
-    #     if not include_self and self._position in trees:
-    #         trees.remove(self._position)
-    #     return trees
-
-    # def _find_animal_cells(self, include_self: bool = False,
-    #                        radius: int = 1) -> Set[Tuple[int, int]]:
-    #     """Find the cells at proximity on which animals are located
-
-    #     Args:
-    #         include_self (bool, optional):  include self in the list. Defaults to False.
-    #         radius (int, optional):         radius of search. Defaults to 1.
-
-    #     Returns:
-    #         Set[Tuple[int,int]]: set of found animals' cells' coordinates
-    #     """
-    #     animals: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
-    #         subgrid=self.entity_grid, value=Animal, radius=radius)
-    #     if not include_self and self._position in animals:
-    #         animals.remove(self._position)
-    #     return animals
-
-    # def _find_entities_cells(self, include_self: bool = False,
-    #                        radius: int = 1) -> Set[Tuple[int, int]]:
-    #     """Find the cells at proximity on which entities are located
-
-    #     Args:
-    #         include_self (bool, optional):  include self in the list. Defaults to False.
-    #         radius (int, optional):         radius of search. Defaults to 1.
-
-    #     Returns:
-    #         Set[Tuple[int,int]]: set of found entities' cells' coordinates
-    #     """
-    #     entities: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
-    #         subgrid=self.entity_grid, value=Entity, radius=radius)
-    #     if not include_self and self._position in entities:
-    #         entities.remove(self._position)
-    #     return entities
-
-    # def _find_energies_cells(self, radius: int = 1) -> Set[Tuple[int, int]]:
-    #     """Find cells at proximity on which energies are located
-
-    #     Args:
-    #         radius (int, optional): radius of search. Defaults to 1.
-
-    #     Returns:
-    #         Set[Tuple[int,int]]: set of found energies' cells' coordinates
-    #     """
-    #     energies: Set[Tuple[int, int]] = self._find_cells_coordinate_by_value(
-    #         subgrid=self.grid.resource_grid, value=Energy, radius=radius)
-    #     return energies
-
-           
-    
     def update(self, environment):
         self._increase_age()
         return self._activate_mind(environment=environment)
@@ -512,8 +361,10 @@ class Animal(Entity):
                                      appearance="animal.png")
             
         self._pocket: Seed = None       # Pocket in which to store seed
-        self.want_to_mate: bool = False # Want to mate if possible
-
+        
+    def __repr__(self):
+        return f'Animal {self.id}'
+        
     def _move(self, direction: Direction, environment: Environment) -> None:
         """Private method: 
             Action: Move the animal in the given direction
@@ -550,7 +401,7 @@ class Animal(Entity):
             
             # Get a free cell around
             free_cell: Tuple[int, int] = entity_grid.select_free_coordinates(
-                                            position=self.position)
+                                            coordinates=self.position)
             
             if free_cell:
                 # If animal possess a seed plant it,
@@ -590,8 +441,8 @@ class Animal(Entity):
         tree = self._pocket.germinate()
         
         # Drop energy from seed on the ground
-        self._decompose(entity=tree,
-                        environment=environment)
+        environment.decompose_entity(entity=tree)
+
         # Empty pocket
         self._pocket = None
         # Energy cost of action
@@ -622,6 +473,14 @@ class Animal(Entity):
         environment.decompose_entity(entity=self)
         
         environment.remove_entity(entity=self)
+        
+    def _want_to_reproduce(self):
+        """Private method:
+            Set this animal's status to fertile
+        """
+                
+        self.status = Status.FERTILE
+        self._perform_action()
 
     def _paint(self, color: Tuple[int,int,int], environment: Environment,
                           coordinates: Tuple[int,int] = None) -> None:
@@ -670,8 +529,9 @@ class Animal(Entity):
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
     
     def _interpret_outputs(self, outputs: np.array, environment: Environment):
-        self.want_to_mate = False
         request = ''
+        if self.status == Status.ALIVE:
+            self.status = Status.ALIVE
         
         # Get the most absolute active value of all the outputs
         most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
@@ -741,9 +601,8 @@ class Animal(Entity):
                 request = self._grow()
                 
             case 11:
-                self.want_to_mate = True
-                # self.reproduce()
-                
+                request = self._want_to_reproduce()
+     
         return request
                     
 
