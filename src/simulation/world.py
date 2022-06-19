@@ -1,6 +1,5 @@
 
 from __future__ import annotations
-from html import entities
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid

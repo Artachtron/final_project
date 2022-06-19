@@ -83,12 +83,12 @@ class Entity(SimulatedObject):
         
     def _create_mind(self):
         self.organism = Organism.genesis(organism_id=self.id,
-                                            entity_type=EntityType.Animal.value)   
+                                         entity_type=EntityType.Animal.value)   
         
         self.mind = self.organism.mind
         self.mind.verify_post_genesis()                          
-        
-     
+                  
+            
     @property
     def energies(self) -> Dict[str, int]:
         """Public property:
@@ -115,7 +115,20 @@ class Entity(SimulatedObject):
         Returns:
             int: amount of red energy owned 
         """
-        return self._energies_stock[EnergyType.RED.value]       
+        return self._energies_stock[EnergyType.RED.value]    
+    
+    def _change_status(self, new_status: Status, *statuses: Status):
+        """Private method:
+            change the status of the entity 
+            if not dead
+
+        Args:
+            new_status (Status):    new status to apply
+            *statuses (Status):     extra statuses to check for before applying new one
+           """    
+                  
+        if (self.status not in [Status.DEAD, *statuses]):
+            self.status = new_status   
     
     def _increase_age(self, amount: int = 1) -> None:
         """Private method:
@@ -328,7 +341,12 @@ class Entity(SimulatedObject):
         
 
     def update(self, environment):
+        # Reset status
+        self._change_status(new_status=Status.ALIVE)
+        # Increase age by 1
         self._increase_age()
+        
+        # Activate mind and return the result
         return self._activate_mind(environment=environment)
 
 
@@ -478,8 +496,7 @@ class Animal(Entity):
         """Private method:
             Set this animal's status to fertile
         """
-        if self.status != Status.DEAD:      
-            self.status = Status.FERTILE
+        self._change_status(new_status=Status.FERTILE) 
             
         self._perform_action()
 
@@ -531,9 +548,7 @@ class Animal(Entity):
     
     def _interpret_outputs(self, outputs: np.array, environment: Environment):
         request = ''
-        if self.status == Status.ALIVE:
-            self.status = Status.ALIVE
-        
+                
         # Get the most absolute active value of all the outputs
         most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
         value = outputs[most_active_output]
