@@ -286,7 +286,7 @@ class TestTree:
             position = self.tree1.position
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
-            self.tree1._die(environment=self.env,) 
+            self.tree1._die() 
             assert not self.grid.entity_grid.get_cell_value(coordinates=position)
             seed = self.grid.resource_grid.get_cell_value(coordinates=position)
             assert seed
@@ -554,7 +554,7 @@ class TestAnimal:
             
             # Replant seed
             max_age, blue_energy, red_energy = tree._max_age, tree.blue_energy, tree.red_energy
-            tree._die(environment=self.env)
+            tree._die()
             animal = self.env.create_animal(coordinates=(2,3))
             
             animal._pick_up_resource(coordinates=tree.position,
@@ -572,7 +572,7 @@ class TestAnimal:
             assert tree.blue_energy == blue_energy
             assert tree.red_energy == red_energy
             
-            tree._die(environment=self.env)
+            tree._die()
             
             
             # New tree

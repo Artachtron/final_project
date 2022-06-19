@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from typing import Dict, Tuple, Final
 
 from grid import Grid  
-from entities import Animal, Tree, Entity, Seed
+from entities import Animal, Tree, Entity, Seed, Status
 from energies import Energy, EnergyType, BlueEnergy, RedEnergy, Resource 
 
 
@@ -187,18 +187,18 @@ class Environment:
               
     def populate(self):
         self.create_animal(coordinates=(15,15),
-                                    blue_energy=100000,
-                                    red_energy=100000,
-                                    action_cost=0,
+                                    blue_energy=10,
+                                    red_energy=10,
+                                    action_cost=1,
                                     size=15)
         for i in range(50):
             self.create_animal(coordinates=(12,i),
-                                blue_energy=100000,
-                                red_energy=100000,
-                                action_cost=0,
+                                blue_energy=10,
+                                red_energy=10,
+                                action_cost=1,
                                 size=10)
             
-            for i in range(50):
+            for i in range(1):
                 self.create_tree(coordinates=(32,i),
                                 blue_energy=100000,
                                 red_energy=100000,
@@ -206,12 +206,17 @@ class Environment:
                                 size=15)
                 
         return self.state
-              
-
+   
     @property
     def id(self):
         return self.__id
-
+              
+    def interpret_request(self, request, entity):
+        
+        match entity.status:
+            case Status.DEAD:
+                self.entity_died(entity=entity)    
+        
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
             Register the resource into the simulation state
@@ -233,8 +238,6 @@ class Environment:
         if self.grid.place_entity(value=new_entity):     
             self.state.add_entity(new_entity=new_entity)
             
-        
-
     def create_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
         if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
@@ -272,8 +275,8 @@ class Environment:
     
     def create_seed_from_tree(self, tree: Tree) -> Seed:
         """Public method:
-            Create a seed from a tree, destroy the tree and
-            place the seed on the grid
+            Create a seed from a tree remove the tree from the world 
+            and place the seed instead
 
         Args:
             tree (Tree): tree from which to create the seed
@@ -378,6 +381,26 @@ class Environment:
         self.state.remove_entity(entity=entity)
         print(f"{entity} was deleted at {position}")
         
+    def entity_died(self, entity: Entity):
+        entity.on_death(environment=self)
+        
+    def decompose_entity(self, entity: Entity):
+        # Select free cells to place energy on
+        free_cells: Tuple[int, int] = self.grid.resource_grid.select_free_coordinates(
+                                                                position=entity.position,
+                                                                num_cells=2)
+        
+        # Red energy        
+        self.create_energy(energy_type=EnergyType.RED,
+                           coordinates=free_cells[0],
+                           quantity=entity.energies[EnergyType.RED.value])
+        
+        # Blue energy                            
+        self.create_energy(energy_type=EnergyType.BLUE,
+                           coordinates=free_cells[1],
+                           quantity=entity.energies[EnergyType.BLUE.value])
+        
+        
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
         return self.grid.resource_grid.get_cell_value(coordinates=coordinates)  
     
@@ -433,7 +456,9 @@ class Simulation:
         self.state.new_cycle()
         
         for entity in self.state.get_entities():
-            entity.update(environment=self.environment)
+            request = entity.update(environment=self.environment)
+            self.environment.interpret_request(request=request,
+                                               entity=entity)
             
         return self.environment.grid, self.state
       

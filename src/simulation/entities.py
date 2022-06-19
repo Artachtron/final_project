@@ -22,6 +22,10 @@ class Direction(enum.Enum):
     LEFT    =   (-1, 0)
     DOWN    =   (0, 1)
     UP      =   (0, -1)
+    
+class Status(enum.Enum):
+    ALIVE = 0
+    DEAD = 1
 
 
 class Entity(SimulatedObject):
@@ -53,7 +57,9 @@ class Entity(SimulatedObject):
                                      size=size,
                                      appearance=appearance)                 
         
-        self._energies_stock: Dict[str, int] = {              # energy currently owned
+        self.status = Status.ALIVE                              # Current status
+        
+        self._energies_stock: Dict[str, int] = {                # energy currently owned
             EnergyType.BLUE.value: blue_energy,
             EnergyType.RED.value: red_energy
             }
@@ -312,13 +318,15 @@ class Entity(SimulatedObject):
         
         self._perform_action()
 
-    def _die(self, environment: Environment) -> None:
+    def _die(self) -> None:
         """Private method:
             Action: Death of the entity
         """
-        self._on_death(environment=environment)
-
+       
         print(f"{self} died at age {self._age}")
+        self.status = Status.DEAD
+        
+        
         
     def _decompose(self, entity: Entity, environment: Environment) -> None:
         """Private method:
@@ -471,7 +479,7 @@ class Entity(SimulatedObject):
     
     def update(self, environment):
         self._increase_age()
-        self._mind_update(environment=environment)
+        return self._activate_mind(environment=environment)
 
 
 class Animal(Entity):
@@ -607,11 +615,10 @@ class Animal(Entity):
         # Emtpy pocket
         self._pocket = None
         
-    def _on_death(self, environment: Environment) -> None:
+    def on_death(self, environment: Environment) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
-        self._decompose(entity=self,
-                        environment=environment)
+        environment.decompose_entity(entity=self)
         
         environment.remove_entity(entity=self)
 
@@ -631,16 +638,13 @@ class Animal(Entity):
                                       coordinates=coordinates)
 
         self._perform_action()
-
-    def _mind_update(self, environment: Environment):
-        self._activate_mind(environment=environment)
         
     def _activate_mind(self, environment: Environment) -> None:
         inputs = self._normalize_inputs(environment=environment)
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
-        self._interpret_outputs(outputs=outputs,
-                                environment=environment)                                                          
+        return self._interpret_outputs(outputs=outputs,
+                                       environment=environment)                                                          
         
     def _normalize_inputs(self, environment: Environment):
         #Inputs
@@ -666,14 +670,14 @@ class Animal(Entity):
     
     def _interpret_outputs(self, outputs: np.array, environment: Environment):
         self.want_to_mate = False
+        request = ''
         
         # Get the most absolute active value of all the outputs
         most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
         value = outputs[most_active_output]
         
         sorted_output_keys = sorted(outputs.keys())
-        
-        print(f"Action: {sorted_output_keys.index(most_active_output)}")
+
         match out:= sorted_output_keys.index(most_active_output):
             ## Simple actions ##
             # Move action
@@ -690,8 +694,8 @@ class Animal(Entity):
                     else:
                         direction = Direction.RIGTH 
                         
-                self._move(direction=direction,
-                           environment=environment)
+                request = self._move(direction=direction,
+                                     environment=environment)
             
             # Modify cell color
             case key if key in range(2,5):
@@ -699,47 +703,49 @@ class Animal(Entity):
                          outputs[sorted_output_keys[3]]*255,
                          outputs[sorted_output_keys[4]]*255)
                 
-                self._paint(coordinates=self.position,
-                            color=color,
-                            environment=environment)
+                request = self._paint(coordinates=self.position,
+                                      color=color,
+                                      environment=environment)
             
             # Drop energy   
             case key if key in range(5,7):
                 if out == 5:
-                    self._drop_energy(energy_type=EnergyType.BLUE,
-                                      coordinates=self.position,
-                                      quantity=10,
-                                      environment=environment)
+                    request = self._drop_energy(energy_type=EnergyType.BLUE,
+                                                coordinates=self.position,
+                                                quantity=10,
+                                                environment=environment)
                 
                 else:
-                    self._drop_energy(energy_type=EnergyType.RED,
-                                      coordinates=self.position,
-                                      quantity=10,
-                                      environment=environment)
-            
+                    request = self._drop_energy(energy_type=EnergyType.RED,
+                                                coordinates=self.position,
+                                                quantity=10,
+                                                environment=environment)
+                
             # Pick up resource       
             case 7:
-                self._pick_up_resource(coordinates=self.position,
-                                       environment=environment)
-            
+                request = self._pick_up_resource(coordinates=self.position,
+                                                 environment=environment)
+                    
             # Recycle seed    
             case 8:
-                self._recycle_seed(environment=environment)
+                request = self._recycle_seed(environment=environment)
             
             ## Complex actions ##   
             # Plant tree
             case 9:
-                self._plant_tree(environment=environment)
+                request = self._plant_tree(environment=environment)
                 
             #Grow
             case 10:
-                self._grow()
+                request = self._grow()
                 
             case 11:
                 self.want_to_mate = True
                 # self.reproduce()
+                
+        return request
                     
-    
+
         
         ###########################################################################
            
@@ -825,7 +831,7 @@ class Tree(Entity):
         self._loose_energy(energy_type=EnergyType.BLUE,
                           quantity=self._action_cost)
 
-    def _on_death(self, environment: Environment) -> None:
+    def on_death(self, environment: Environment) -> None:
         """Action on tree death, create a seed on dead tree position"""
         
         environment.create_seed_from_tree(tree=self)
@@ -871,12 +877,9 @@ class Tree(Entity):
         
         return seed
        
-    def _mind_update(self, environment: Environment):
-        self._activate_mind(environment=environment)
-        
     def _activate_mind(self, environment: Environment):
         pass
-
+        
 class Seed(Resource):
     def __init__(self,
                  seed_id: int,

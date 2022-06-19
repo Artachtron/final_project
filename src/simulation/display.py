@@ -163,8 +163,8 @@ class Display:
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
         
-        self.resource_group.update(block_size=self.block_size,
-                                   sim_state=sim_state)
+        # self.resource_group.update(block_size=self.block_size,
+        #                            sim_state=sim_state)
     
     def draw(self, grid) -> None:
         
