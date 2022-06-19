@@ -13,10 +13,6 @@ from project.src.rtNEAT.phenes import Node, Link
 class Network:
     def __init__(self,
                  network_id: int = 0,
-                #  inputs: Dict[int, Node] = dict(),
-                #  outputs: Dict[int, Node] = dict(),
-                #  all_nodes: Dict[int, Node] = dict(),
-                #  hidden: Dict[int, Node] = dict(),
                  frozen: bool = False):
         
         self.__id = network_id

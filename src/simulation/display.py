@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 if TYPE_CHECKING:
     from grid import Grid
     from simulation import SimState, SimulatedObject
+    from entities import Entity
 
 import pygame as pg
 import sys
@@ -31,22 +32,32 @@ class DisplayedObject(pg.sprite.Sprite):
         
         self.appearance = appearance
         
-    def init(self, block_size: int, assets_path: str):
+    def init(self, block_size: int, assets_path: str, assets: Dict[str, pg.Image]):
         super(DisplayedObject, self).__init__()
-        self.sprite: pg.Surface = pg.image.load(join(assets_path,
-                                               self.appearance)).convert_alpha()    
-        
+      
+        if assets.get(self.appearance, None):
+            self.sprite = assets[self.appearance]
+            
+        else:
+            self.sprite = pg.image.load(join(assets_path,
+                                        self.appearance)).convert_alpha()  
+            
+            assets[self.appearance] = self.sprite  
+
         self.update(block_size=block_size)
 
     @staticmethod
-    def create_display(sim_obj: SimulatedObject, block_size: int, assets_path: str):
+    def create_display(sim_obj: SimulatedObject, block_size: int, assets_path: str,
+                       assets: Dict[str, pg.Image]) -> DisplayedObject:
+        
         dis_obj = DisplayedObject(dis_obj_id=sim_obj.id,
                                   appearance=sim_obj.appearance,
                                   size=sim_obj.size,
                                   position=sim_obj.position)
         
         dis_obj.init(block_size=block_size,
-                     assets_path=assets_path)
+                     assets_path=assets_path,
+                     assets=assets)
         
         return dis_obj
         
@@ -84,6 +95,10 @@ class Display:
         self.clock: pg.Clock
         self.screen: pg.Screen
         
+        self.assets: Dict[str, pg.Image] = {}
+        self.entities: Dict[int, DisplayedObject] = {}
+        self.resources: Dict[int, DisplayedObject] = {}
+        
         self.assets_path = join(
             Path(
                 dirname(
@@ -100,15 +115,30 @@ class Display:
         
         if sim_state:
             for entity in sim_state.get_entities():
-                dis_obj = DisplayedObject.create_display(block_size=self.block_size,
-                                                            assets_path=self.assets_path,
-                                                            sim_obj=entity)
-                
-                self.entity_group.add(dis_obj)
+                self.add_entity(entity)
         
         self.clock = pg.time.Clock() 
         
+    def add_entity(self, entity: Entity):
+        dis_entity = DisplayedObject.create_display(block_size=self.block_size,
+                                                    assets_path=self.assets_path,
+                                                    sim_obj=entity,
+                                                    assets=self.assets)    
+            
+        self.entities[entity.id] = dis_entity
+        self.entity_group.add(dis_entity)
+        
+    def remove_entity(self, entity: Entity):
+        dis_entity = self.entities.pop(entity.id)
+        self.entity_group.remove(dis_entity)
+        
     def update(self, sim_state: SimState):
+        for entity in sim_state.added_entities.values():
+            self.add_entity(entity)
+            
+        for entity in sim_state.removed_entities.values():
+            self.remove_entity(entity)
+        
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
     

@@ -23,6 +23,11 @@ class SimState:
         self.trees: Dict[int, Tree] = {}
         self.energies: Dict[int, Tree] = {}
         self.seeds: Dict[int, Seed] = {}
+        
+        self.added_entities: Dict[int, Entity] = {}
+        self.removed_entities: Dict[int, Entity] = {}
+        self.added_resources: Dict[int, Resource] = {}
+        self.removed_resources: Dict[int, Resource] = {}
       
     @property
     def id(self):
@@ -98,6 +103,8 @@ class SimState:
                 self.animals[new_entity.id] = new_entity
             case "Tree":
                 self.trees[new_entity.id] = new_entity
+        
+        self.added_entities[new_entity.id] = new_entity
                 
     def remove_entity(self, entity: Resource) -> None:
         """Public method:
@@ -113,6 +120,8 @@ class SimState:
             case "Tree":
                 self.trees.pop(entity.id)
                 
+        self.removed_entities[entity.id] = entity
+                
     def add_resource(self, new_resource: Resource) -> None:
         """Public method:
             Add an resource to the register
@@ -126,6 +135,8 @@ class SimState:
             
         else:
             self.seeds[new_resource.id] = new_resource
+            
+        self.added_resources[new_resource.id] = new_resource
                 
     def remove_resource(self, resource: Resource) -> None:
         """Public method:
@@ -139,7 +150,14 @@ class SimState:
             self.energies.pop(resource.id)
         else:
             self.seeds.pop(resource.id)
-                
+            
+        self.removed_resources[resource.id] = resource
+        
+    def new_cycle(self):
+        self.added_entities: Dict[int, Entity] = {}
+        self.removed_entities: Dict[int, Entity] = {}
+        self.added_resources: Dict[int, Resource] = {}
+        self.removed_resources: Dict[int, Resource] = {}                
 
 class Environment:
     GRID_WIDTH: Final[int] = 20
@@ -412,6 +430,8 @@ class Simulation:
         return self.state
         
     def update(self):
+        self.state.new_cycle()
+        
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
             
