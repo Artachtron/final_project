@@ -250,7 +250,12 @@ class SubGrid:
                                                                       radius=radius)
 
         if free_cells:
-            samples = sample(free_cells, num_cells)
+            # Make sure no more than free cells
+            # are being requested
+            num_choice = min(len(free_cells), num_cells)
+            
+            samples = sample(free_cells, num_choice)
+            
             if num_cells == 1:
                 return samples[0]
             

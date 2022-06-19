@@ -796,7 +796,7 @@ class Tree(Entity):
                  tree_id: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
-                 size: int = 20,
+                 size: int = 10,
                  action_cost: int = 1,
                  blue_energy: int = 10,
                  red_energy: int = 10,

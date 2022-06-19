@@ -31,6 +31,8 @@ class SimState:
         self.removed_entities: Dict[int, Entity] = {}
         self.added_resources: Dict[int, Resource] = {}
         self.removed_resources: Dict[int, Resource] = {}
+        
+        self.cycle: int = 1
       
     @property
     def id(self):
@@ -160,7 +162,9 @@ class SimState:
         self.added_entities: Dict[int, Entity] = {}
         self.removed_entities: Dict[int, Entity] = {}
         self.added_resources: Dict[int, Resource] = {}
-        self.removed_resources: Dict[int, Resource] = {}                
+        self.removed_resources: Dict[int, Resource] = {} 
+        
+        self.cycle += 1               
 
 class Environment:
     GRID_WIDTH: Final[int] = 20
@@ -218,12 +222,12 @@ class Environment:
    
         section_dimension = len(possible_coordinates)
         
-        SPARSITY = 15
+        SPARSITY = 5
         DENSITY = int(section_dimension/SPARSITY)
         
-        for h in range(horizontal_divisor+1):
+        for h in range(horizontal_divisor):
             x_offset = h * section_horizontal_size
-            for v in range(vertical_divisor+1):
+            for v in range(vertical_divisor):
                 y_offset = v * section_vertical_size
                 
                 num_animal_section = randint(0, DENSITY)
@@ -422,15 +426,20 @@ class Environment:
                                                                 position=entity.position,
                                                                 num_cells=2)
         
-        # Red energy        
-        self.create_energy(energy_type=EnergyType.RED,
-                           coordinates=free_cells[0],
-                           quantity=entity.energies[EnergyType.RED.value])
+        if not free_cells:
+            return
         
-        # Blue energy                            
-        self.create_energy(energy_type=EnergyType.BLUE,
-                           coordinates=free_cells[1],
-                           quantity=entity.energies[EnergyType.BLUE.value])
+        # Red energy   
+            
+        self.create_energy(energy_type=EnergyType.RED,
+                            coordinates=free_cells[0],
+                            quantity=entity.energies[EnergyType.RED.value])
+    
+        # Blue energy  
+        if len(free_cells) == 2:                           
+            self.create_energy(energy_type=EnergyType.BLUE,
+                               coordinates=free_cells[1],
+                               quantity=entity.energies[EnergyType.BLUE.value])
         
         
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:

@@ -198,7 +198,7 @@ class Display:
                                         int(y / self.block_size)],
                              rect, 0)
                 
-                pg.draw.rect(self.screen, BLACK, rect, 1)
+                # pg.draw.rect(self.screen, BLACK, rect, 1)
                 
     def draw_entities(self) -> None:
         """Draw the entities"""

@@ -18,6 +18,7 @@ class World:
     GRID_HEIGHT: Final[int] = 20
     GRID_WIDTH: Final[int] = 20
     BLOCK_SIZE: Final[int] = 50
+    MAX_CYCLE = 1000
 
     SIMULATION_SPEED: Final[int] = 20 
     
@@ -68,6 +69,10 @@ class World:
         if self.display_active:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid)  
+        
+        if sim_state.cycle == World.MAX_CYCLE:
+            print("SHUTDOWN")
+            self.shutdown()
             
     def shutdown(self):
         self.running = False         
