@@ -459,8 +459,8 @@ class TestAnimal:
             assert animal.red_energy == 10
             animal._plant_tree(environment=self.env)
             assert animal.red_energy == 0
-            tree_cell = self.entity_grid._find_coordinates_baseclass(position=(5,5),
-                                                                        target_class=Tree)[0]
+            tree_cell = self.entity_grid._find_coordinates_baseclass(coordinates=(5,5),
+                                                                        base_class=Tree)[0]
             tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
             assert tree.__class__.__name__ == "Tree"
             
@@ -524,17 +524,17 @@ class TestAnimal:
             animal = self.env.create_animal(coordinates=(3,2))
             # Pocket empty
             animal._recycle_seed(environment=self.env)
-            assert len(self.grid.resource_grid._find_coordinates_baseclass(target_class=BlueEnergy,
-                                                                            position=position)) == 0
+            assert len(self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
+                                                                            coordinates=position)) == 0
             animal._pick_up_resource(coordinates=position,
                                         environment=self.env)
             
             animal._recycle_seed(environment=self.env)
             assert not animal._pocket 
-            energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(target_class=BlueEnergy,
-                                                                            position=animal.position) + 
-                                self.grid.resource_grid._find_coordinates_baseclass(target_class=RedEnergy,
-                                                                            position=animal.position))
+            energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
+                                                                            coordinates=animal.position) + 
+                                self.grid.resource_grid._find_coordinates_baseclass(base_class=RedEnergy,
+                                                                            coordinates=animal.position))
             energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]
             assert len(energies) == 2
             
@@ -567,8 +567,8 @@ class TestAnimal:
             animal.red_energy == 0
             animal.blue_energy == 9
             
-            cell = self.entity_grid._find_coordinates_baseclass(position=(2,3),
-                                                                    target_class=Tree)[0]
+            cell = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
+                                                                    base_class=Tree)[0]
             tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
             assert tree._max_age == max_age
             assert tree.blue_energy == blue_energy
@@ -581,8 +581,8 @@ class TestAnimal:
             animal._gain_energy(energy_type=EnergyType.RED,
                                 quantity=100)
             animal._plant_tree(environment=self.env)
-            cell = self.entity_grid._find_coordinates_baseclass(position=(2,3),
-                                                                    target_class=Tree)[0]
+            cell = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
+                                                                    base_class=Tree)[0]
             tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
             assert not tree._max_age == max_age
             assert not tree.blue_energy == blue_energy
@@ -592,17 +592,17 @@ class TestAnimal:
             resource_grid = self.grid.resource_grid
             position = self.animal.position
             self.grid.place_entity(value=self.animal)
-            assert not resource_grid._find_coordinates_baseclass(position=position,
-                                                                    target_class=BlueEnergy)
-            assert not resource_grid._find_coordinates_baseclass(position=position,
-                                                                    target_class=RedEnergy)
+            assert not resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                    base_class=BlueEnergy)
+            assert not resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                    base_class=RedEnergy)
             
             self.animal._decompose(entity=self.animal,
                                     environment=self.env)
-            assert resource_grid._find_coordinates_baseclass(position=position,
-                                                                target_class=BlueEnergy)
-            assert resource_grid._find_coordinates_baseclass(position=position,
-                                                                target_class=RedEnergy)
+            assert resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                base_class=BlueEnergy)
+            assert resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                base_class=RedEnergy)
     
         
         def test_die(self):
@@ -614,16 +614,16 @@ class TestAnimal:
             self.animal._die()
             assert self.animal.status.name == Status.DEAD.name
             
-            assert not resource_grid._find_coordinates_baseclass(position=position,
-                                                                    target_class=BlueEnergy)
-            assert not resource_grid._find_coordinates_baseclass(position=position,
-                                                                    target_class=RedEnergy)
+            assert not resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                    base_class=BlueEnergy)
+            assert not resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                    base_class=RedEnergy)
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             self.animal.on_death(environment=self.env)
-            assert resource_grid._find_coordinates_baseclass(position=position,
-                                                                target_class=BlueEnergy)
-            assert resource_grid._find_coordinates_baseclass(position=position,
-                                                                target_class=RedEnergy)
+            assert resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                base_class=BlueEnergy)
+            assert resource_grid._find_coordinates_baseclass(coordinates=position,
+                                                                base_class=RedEnergy)
             assert not self.grid.entity_grid.get_cell_value(coordinates=position)
         
         def test_modify_cell_color(self):

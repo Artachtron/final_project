@@ -1,9 +1,10 @@
 # Typing
+from __future__ import annotations
 from typing import Tuple, Any, Set, Type
 
 # Internals packages
 from energies import Resource
-from entities import Entity
+from entities import Entity, Animal
 
 # External libraries
 import enum
@@ -138,7 +139,7 @@ class SubGrid:
         return not (x < 0 or x >= self.dimensions[0] or
                     y < 0 or y >= self.dimensions[1])
  
-    def find_instance_baseclass_around(self, coordinates: Tuple[int, int], base_class: Type, 
+    def are_instance_baseclass_around(self, coordinates: Tuple[int, int], base_class: Type, 
                                        include_self: bool=False, radius: int=1) -> np.array:
         """Public method:
             Find all the instance of a certain base class in a radius around some coordinates,
@@ -169,33 +170,35 @@ class SubGrid:
         return np.array(occupied_cells) 
     
     
-    def _find_coordinates_baseclass(self, target_class: Any, position: Tuple[int, int],
+    def _find_coordinates_baseclass(self, base_class: Any, coordinates: Tuple[int, int],
                                      radius: int = 1) -> Set[Tuple[int, int]]:
         """Private method:
             Find the list of cells at given radius distance from specified class
+            
         Args:
-            target_class (Any):         class to search for
-            position (Tuple[int,int]):  starting position to look around
-            radius (int, optional):     radius of search. Defaults to 1.
+            base_class (Any):               class to search for
+            coordinates (Tuple[int,int]):   starting position to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+            
         Returns:
             Set[Tuple[int,int]]: set of found cells' coordinates
         """
         
-        if not (self._are_coordinates_in_bounds(coordinates=np.add(position,-radius)) and
-                self._are_coordinates_in_bounds(coordinates=np.add(position, radius))):
+        if not (self._are_coordinates_in_bounds(coordinates=np.add(coordinates,-radius)) and
+                self._are_coordinates_in_bounds(coordinates=np.add(coordinates, radius))):
             
             a = list(range(radius*2 + 1))  # List from (0, 2*radius)
             b = combinations(a*2, 2)       # ALl the combinations of coordinates
         
-            subregion = self.get_sub_region(initial_pos=position,
+            subregion = self.get_sub_region(initial_pos=coordinates,
                                             radius=radius) 
         
             # Optimised code to search if the cell at those coordinates contain an object
             # that is a subclass of the class given, if yes add it to the list of coordinates.
             # Avoid indexError when out of bounds
-            positions = [tuple(np.add(position, coordinate)-1) for x, y in set(b) if
+            positions = [tuple(np.add(coordinates, coordinate)-1) for x, y in set(b) if
                          Grid.is_subclass(derived=subregion[coordinate:=tuple((x,y))],
-                                          base_class=target_class
+                                          base_class=base_class
                         )]
         else:
         # Faster when no risk of indexError  
@@ -206,11 +209,44 @@ class SubGrid:
             # that is a subclass of the class given, if yes add it to the list of coordinates   
             positions = [coordinate for x, y in set(b) 
                         if (Grid.is_subclass(derived=self.get_cell_value(
-                                                          coordinate:=tuple(np.add(position,
+                                                          coordinate:=tuple(np.add(coordinates,
                                                                                    (x,y))))
-                                            ,base_class=target_class))]
+                                            ,base_class=base_class))]
 
         return positions
+    
+    def _find_instances_baseclass_around(self, base_class: Any, coordinates: Tuple[int, int],
+                                         include_self: bool=False, radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the instances of a certain base class around and
+            return a set containing them
+
+            Args:
+                coordinates (Tuple[int, int]):  coordinates to search around
+                base_class (Type):              base class as reference for the search
+                include_self (bool, optional):  include the coordinates in the search. Defaults to False.
+                radius (int, optional):         radius of search. Defaults to 1.
+            
+        Returns:
+            Set[Any]: set of instances of the base class around
+        """
+                
+        instances = set()
+        a = list(range(-radius, radius + 1))  # List from (-radius, radius)
+        for x in a:
+            for y in a:
+                if not include_self and x == 0 and y == 0:
+                        continue
+                     
+                position = tuple(np.add(coordinates, (x, y)))
+                obj = self.get_cell_value(coordinates=position)
+                if obj:
+                    if Grid.is_subclass(derived=obj,
+                                        base_class=base_class):
+                    
+                        instances.add(obj)
+                    
+        return instances
     
     def find_free_coordinates(self, position: Tuple[int, int],
                               radius: int = 1) -> Set[Tuple[int, int]]:
@@ -479,56 +515,12 @@ class Grid:
         """        
         if self.color_grid._are_coordinates_in_bounds(coordinates=coordinates):
             self.color_grid.array[coordinates] = color
-  
-    ################################################################################################
-    
-                
- 
-    
-    # def create_entity(self, entity_type: str, position: Tuple[int, int], size: int=20,
-    #                   blue_energy:int=Animal.INITIAL_BLUE_ENERGY, red_energy:int=Animal.INITIAL_RED_ENERGY,
-    #                   max_age: int=0, production_type: EnergyType=None, adult_size: int=0) -> Tree|Animal|Seed:
-    #     """Create an entity and add it to the grid
-
-    #     Args:
-    #         entity_type (str):                      type of entity to create (tree/animal)
-    #         position (Tuple[int, int]):             position of the new entity on the grid
-    #         size (int, optional): initial           size. Defaults to 1.
-    #         blue_energy (int, optional):            amount of blue energy. Defaults to 5.
-    #         red_energy (int, optional):             amout of red energy. Defaults to 10.
-    #         production_type (EnergyType, optional): type of energy to be created by tree
-    #         adult_size (int):                       size to reach before reaching adulthood. Defaults to 0
             
-    #     Returns:
-    #         Tree|Animal|Seed: entity newly created
-    #     """        
-              
-    #     match entity_type:
-    #         case EntityType.Animal.value:
-    #             entity = Animal(position=position,
-    #                             size=size,
-    #                             blue_energy=blue_energy,
-    #                             red_energy=red_energy,
-    #                             max_age=max_age,
-    #                             adult_size=adult_size)
-                
-    #         case EntityType.Tree.value:
-    #             production_type = production_type if production_type else np.random.choice(list(EnergyType))
-    #             entity = Tree(production_type=production_type,
-    #                           position=position,
-    #                           size=size,
-    #                           blue_energy=blue_energy,
-    #                           red_energy=red_energy,
-    #                           max_age=max_age)
-                
-    #         case EntityType.Seed.value:
-    #             entity = Seed(position=position, blue_energy=blue_energy, red_energy=red_energy, max_age=max_age, production_type=production_type)
-        
-    #     self.entity_grid._set_cell_value(coordinates=entity.position,
-    #                                     value=entity)
-    #     return entity
-        
-    
+    def _find_occupied_cells_by_animals(self, coordinates: Tuple[int, int], radius: int = 1) -> np.array[bool]:
+        return self.entity_grid._find_instances_baseclass_around(coordinates=coordinates,
+                                                                 radius=radius,
+                                                                 base_class=Animal)
+
         
     def get_nearby_colors(self, radius: int = 1) -> np.array:
         position: Tuple[int, int] = self.position

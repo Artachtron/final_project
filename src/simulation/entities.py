@@ -26,6 +26,7 @@ class Direction(enum.Enum):
 class Status(enum.Enum):
     ALIVE = 0
     DEAD = 1
+    FERTILE = 2
 
 
 class Entity(SimulatedObject):
@@ -762,7 +763,6 @@ class Animal(Entity):
             Animal: Generated offsrping
         """        
         self._loose_energy(energy_type=EnergyType.BLUE, quantity=self._action_cost)
-        pass
         
         if not (self._is_adult and mate._is_adult):
             return

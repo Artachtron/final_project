@@ -30,7 +30,7 @@ class TestGrid:
         def setup(self):
  
             self.grid = Grid(grid_id=0,
-                                dimensions=(20,20))
+                             dimensions=(20,20))
             
             yield
             
@@ -112,6 +112,27 @@ class TestGrid:
             
             assert not self.grid.is_subclass(derived=red_energy,
                                              base_class=BlueEnergy)
+            
+        def test_find_occupied_cells_by_animals(self):
+            coordinates = (1,1)
+            # Empty grid
+            assert not self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            # Only the animal searching
+            self.grid.place_entity(value=Animal(position=coordinates))
+            assert not self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            # Animals around
+            self.grid.place_entity(value=Animal(position=(2,1)))
+            entities_around = self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            assert entities_around
+            assert len(entities_around) == 1
+            
+            self.grid.place_entity(value=Animal(position=(0,1)))
+            self.grid.place_entity(value=Animal(position=(1,0)))
+            self.grid.place_entity(value=Animal(position=(2,2)))
+            entities_around = self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            assert len(entities_around) == 4
+            
+            
         
 class TestSubGrid:
     def test_create_subgrid(self):
@@ -258,21 +279,21 @@ class TestSubGrid:
         def test_find_coordinates_with_class(self):
             tree1 = self.env.create_tree(coordinates=(1,1))
             
-            assert len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
-                                                                     target_class=Tree)) == 1
+            assert len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
+                                                                     base_class=Tree)) == 1
             
             tree2 = self.env.create_tree(coordinates=(2,1))
             
-            len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
-                                                              target_class=Tree))  == 2
+            len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
+                                                              base_class=Tree))  == 2
             
             
             
             # Does not detect animal
             animal = self.env.create_animal(coordinates=(1,2))
             
-            len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
-                                                              target_class=Tree))  == 2
+            len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
+                                                              base_class=Tree))  == 2
             
         
         def test_find_free_coordinates(self):

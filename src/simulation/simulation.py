@@ -251,7 +251,14 @@ class Environment:
         
         match entity.status:
             case Status.DEAD:
-                self._entity_died(entity=entity)    
+                self._entity_died(entity=entity)
+                
+            case Status.FERTILE:
+                entities_around = self.grid._find_occupied_cells_by_animals(coordinates=entity.position)  
+                for other_entity in entities_around:
+                    if other_entity.status == Status.FERTILE:
+                        self.reproduce_entities(parent1=entity,
+                                                parent2=other_entity)  
         
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
@@ -484,7 +491,7 @@ class Environment:
             np.array: boolean array of cells occupied by entities
         """        
         
-        return self.grid.entity_grid.find_instance_baseclass_around(coordinates=coordinates,
+        return self.grid.entity_grid.are_instance_baseclass_around(coordinates=coordinates,
                                                                     base_class=Entity,
                                                                     include_self=include_self,
                                                                     radius=radius)
@@ -504,7 +511,7 @@ class Environment:
             np.array: boolean array of cells occupied by resources
         """       
         
-        return self.grid.resource_grid.find_instance_baseclass_around(coordinates=coordinates,
+        return self.grid.resource_grid.are_instance_baseclass_around(coordinates=coordinates,
                                                                         base_class=Resource,
                                                                         include_self=include_self,
                                                                         radius=radius)

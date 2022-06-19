@@ -4,6 +4,7 @@ from typing import Tuple, Any
 from dataclasses import dataclass
 from math import sqrt
 import enum
+import  numpy as np
 
 class EntityType(enum.Enum):
     Animal  =   "animal"
