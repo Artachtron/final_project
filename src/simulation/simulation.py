@@ -147,11 +147,12 @@ class Environment:
     
     def __init__(self,
                  env_id: int,
+                 sim_state: SimState = None,
                  dimensions: Tuple[int, int] = (20, 20)):
         
         self.__id: int = env_id
         
-        self.state: SimState
+        self.state: SimState = sim_state or SimState(sim_id=env_id)
         self.grid: Grid
         self.dimensions: Tuple[int, int] = dimensions
         
@@ -159,7 +160,7 @@ class Environment:
         
         
     def init(self, populate: bool=False):
-        self.state = SimState(sim_id=self.id)
+        # self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
         
@@ -180,13 +181,7 @@ class Environment:
                                         size=15)
                 
         return self.state
-        
-    def update(self):
-        for entity in self.state.get_entities():
-            entity.update(environment=self)
-            
-        return self.grid, self.state
-        
+              
 
     @property
     def id(self):
@@ -393,19 +388,25 @@ class Simulation:
     
         self.id = sim_id
         
+        self.state: SimState
         self.environment: Environment
         
             
     def init(self, populate: bool=True):
-        self.environment = Environment(env_id=self.id)
+        self.state = SimState(sim_id=self.id)
+        self.environment = Environment(env_id=self.id,
+                                       sim_state=self.state)
         
-        sim_state = self.environment.init(populate=populate)
+        self.environment.init(populate=populate)
      
-        return sim_state
+        return self.state
         
     def update(self):
-        grid = self.environment.update()
-        return grid
+        for entity in self.state.get_entities():
+            entity.update(environment=self.environment)
+            
+        return self.environment.grid, self.state
+      
         
  
 
