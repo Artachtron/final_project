@@ -168,17 +168,24 @@ class Environment:
             return self.populate()
               
     def populate(self):
-        animal = self.create_animal(coordinates=(15,15),
+        self.create_animal(coordinates=(15,15),
                                     blue_energy=100000,
                                     red_energy=100000,
                                     action_cost=0,
                                     size=15)
-        for i in range(5):
-            animal = self.create_animal(coordinates=(12,i),
-                                        blue_energy=100000,
-                                        red_energy=100000,
-                                        action_cost=0,
-                                        size=15)
+        for i in range(50):
+            self.create_animal(coordinates=(12,i),
+                                blue_energy=100000,
+                                red_energy=100000,
+                                action_cost=0,
+                                size=15)
+            
+            for i in range(50):
+                self.create_tree(coordinates=(32,i),
+                                blue_energy=100000,
+                                red_energy=100000,
+                                action_cost=0,
+                                size=15)
                 
         return self.state
               
@@ -207,6 +214,7 @@ class Environment:
         """  
         if self.grid.place_entity(value=new_entity):     
             self.state.add_entity(new_entity=new_entity)
+            
         
 
     def create_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
@@ -390,11 +398,13 @@ class Simulation:
         
         self.state: SimState
         self.environment: Environment
+        self.dimensions = dimensions
         
             
     def init(self, populate: bool=True):
         self.state = SimState(sim_id=self.id)
         self.environment = Environment(env_id=self.id,
+                                       dimensions=self.dimensions,
                                        sim_state=self.state)
         
         self.environment.init(populate=populate)

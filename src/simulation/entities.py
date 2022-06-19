@@ -739,7 +739,7 @@ class Animal(Entity):
                 self.want_to_mate = True
                 # self.reproduce()
                     
-                
+    
         
         ###########################################################################
            
@@ -875,7 +875,7 @@ class Tree(Entity):
         self._activate_mind(environment=environment)
         
     def _activate_mind(self, environment: Environment):
-        self._activate_mind(environment=environment)
+        pass
 
 class Seed(Resource):
     def __init__(self,
