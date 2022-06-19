@@ -194,8 +194,6 @@ class Genome:
             if link.out_node not in range(n_inputs, len(links)):
                 ValueError(f"{link} has an input as out_node")
         
-        
-    
     @staticmethod
     def genetic_distance(genome1: Genome, genome2: Genome) -> float:
         """Calculate the genetic distance between two genomes

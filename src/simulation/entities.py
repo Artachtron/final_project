@@ -552,6 +552,8 @@ class Animal(Entity):
                     
                 else:
                     environment.create_tree(coordinates=free_cell)
+                 
+                print(f"Tree was created at {free_cell}") 
                     
             # Energy cost of action
             self._perform_action()
@@ -637,7 +639,6 @@ class Animal(Entity):
         inputs = self._normalize_inputs(environment=environment)
         mind = self.organism.mind
         outputs = mind.activate(input_values=inputs)
- 
         self._interpret_outputs(outputs=outputs,
                                 environment=environment)                                                          
         
@@ -672,6 +673,7 @@ class Animal(Entity):
         
         sorted_output_keys = sorted(outputs.keys())
         
+        print(f"Action: {sorted_output_keys.index(most_active_output)}")
         match out:= sorted_output_keys.index(most_active_output):
             ## Simple actions ##
             # Move action
@@ -803,7 +805,7 @@ class Tree(Entity):
                                     action_cost=action_cost,
                                     blue_energy=blue_energy,
                                     red_energy=red_energy,
-                                    appearance="tree.png")
+                                    appearance="plant.png")
         
         self._production_type: EnergyType = (production_type or                 # Type of energy produce by the tree
                                             np.random.choice(list(EnergyType)))

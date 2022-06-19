@@ -79,7 +79,6 @@ class Display:
         self.window_width: int = block_size * dimensions[0]
         self.window_height: int = block_size * dimensions[1]
         
-        
         self.tick_counter = 0
         self.sim_speed: int = sim_speed
         self.clock: pg.Clock
@@ -93,8 +92,7 @@ class Display:
         
         self.entity_group = pg.sprite.Group()
         self.resource_group = pg.sprite.Group()
-     
-        
+           
     def init(self, sim_state: SimState=None) -> None:
         pg.init()
         
@@ -110,7 +108,6 @@ class Display:
         
         self.clock = pg.time.Clock() 
         
-    
     def update(self, sim_state: SimState):
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
