@@ -34,9 +34,11 @@ class World:
         self.block_size: int = block_size
         self.sim_speed: int = sim_speed
         self.display_active: bool = display_active
+        self.running: bool = False
     
         self.simulation: Simulation
         self.display: Display
+        
             
     @property
     def id(self):
@@ -65,12 +67,14 @@ class World:
         
         if self.display_active:
             self.display.update(sim_state=sim_state)
-            self.display.draw(grid)   
-   
+            self.display.draw(grid)  
+            
+    def shutdown(self):
+        self.running = False         
              
     def run(self):
-        #configure()        
-        while True:
+        self.running = True       
+        while self.running:
             self.update()
                    
           

@@ -37,6 +37,7 @@ class TestWorld:
                       display_active=True)
             
             world.init()
+            world.shutdown()
             
             # Simulation
             assert world.simulation.__class__.__name__ == 'Simulation'

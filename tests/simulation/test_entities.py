@@ -2,7 +2,7 @@ import os, sys, pytest
 
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.entities import Animal, Entity, Tree, Seed, Direction
+from project.src.simulation.entities import Animal, Entity, Tree, Seed, Direction, Status
 from project.src.simulation.energies import BlueEnergy, RedEnergy, EnergyType
 from project.src.simulation.grid import Grid
 from project.src.simulation.simulation import Environment
@@ -286,8 +286,10 @@ class TestTree:
             position = self.tree1.position
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
+            assert self.tree1.status.name == Status.ALIVE.name
             self.tree1._die() 
-            assert not self.grid.entity_grid.get_cell_value(coordinates=position)
+            assert self.tree1.status.name == Status.DEAD.name
+            self.tree1.on_death(environment=self.env)
             seed = self.grid.resource_grid.get_cell_value(coordinates=position)
             assert seed
             assert seed.__class__.__name__ == 'Seed'
@@ -554,7 +556,7 @@ class TestAnimal:
             
             # Replant seed
             max_age, blue_energy, red_energy = tree._max_age, tree.blue_energy, tree.red_energy
-            tree._die()
+            tree.on_death(environment=self.env)
             animal = self.env.create_animal(coordinates=(2,3))
             
             animal._pick_up_resource(coordinates=tree.position,
@@ -572,7 +574,7 @@ class TestAnimal:
             assert tree.blue_energy == blue_energy
             assert tree.red_energy == red_energy
             
-            tree._die()
+            tree.on_death(environment=self.env)
             
             
             # New tree
@@ -607,12 +609,17 @@ class TestAnimal:
             resource_grid = self.grid.resource_grid
             position = self.animal.position
             self.grid.place_entity(value=self.animal)
+            
+            assert self.animal.status.name == Status.ALIVE.name
+            self.animal._die()
+            assert self.animal.status.name == Status.DEAD.name
+            
             assert not resource_grid._find_coordinates_baseclass(position=position,
                                                                     target_class=BlueEnergy)
             assert not resource_grid._find_coordinates_baseclass(position=position,
                                                                     target_class=RedEnergy)
             assert self.grid.entity_grid.get_cell_value(coordinates=position)
-            self.animal._die(environment=self.env)
+            self.animal.on_death(environment=self.env)
             assert resource_grid._find_coordinates_baseclass(position=position,
                                                                 target_class=BlueEnergy)
             assert resource_grid._find_coordinates_baseclass(position=position,
