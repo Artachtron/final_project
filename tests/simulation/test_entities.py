@@ -522,7 +522,67 @@ class TestAnimal:
             assert animal2.position == (19,19)
             assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
             
+        def test_grow(self):
+            self.animal = Animal(size=1,
+                                position=(0,0),
+                                blue_energy=5,
+                                red_energy=10,)
+
+            assert self.animal.energies == {"blue energy": 5, "red energy": 10}
+            assert self.animal.red_energy == 10
+            assert self.animal.size == 1
+            assert self.animal._max_age == self.animal.size*5
+            assert self.animal._action_cost == 1
             
+            # Grow
+            self.animal._grow()
+            assert self.animal.red_energy == 0
+            assert self.animal.size == 2
+            assert self.animal._max_age == 10
+            assert self.animal._action_cost == 2
+            
+        def test_age(self):
+            self.animal._max_age = 5
+            assert self.animal._age == 0
+            self.animal._increase_age()
+            
+            # +1
+            assert self.animal._age == 1
+            
+            # +5
+            self.animal._increase_age(amount=4)
+            assert self.animal._age == 5
+            
+            # Above max age
+            assert self.animal.status.name != Status.DEAD.name
+            self.animal._increase_age()
+            assert self.animal.status.name == Status.DEAD.name
+            
+        def test_run_out_of_energy(self):
+            assert self.animal.status.name != Status.DEAD.name
+            self.animal._loose_energy(energy_type=EnergyType.BLUE,
+                                      quantity=500)
+            assert self.animal.status.name == Status.DEAD.name
+            
+        def test_reached_adulthood(self):
+            self.animal = Animal(position=(1,1),
+                                 size=1,
+                                 adult_size=2,
+                                 red_energy=100)
+            assert not self.animal._is_adult 
+            assert self.animal.size == 1
+            assert self.animal.red_energy == 100
+            self.animal._grow()
+            red_energy = 100 - (self.animal.size-1) * Entity.CHILD_GROWTH_ENERGY_REQUIRED
+            assert self.animal.red_energy == red_energy
+            assert self.animal.size == 2
+            assert self.animal._is_adult
+            self.animal._grow()
+            assert self.animal.red_energy == red_energy - (self.animal.size-1) * Entity.GROWTH_ENERGY_REQUIRED
+            assert self.animal.size == 3
+            assert self.animal._is_adult   
+        
+        
         def test_plant_tree(self):
             animal = self.env.create_animal(coordinates=(5,5))
             assert animal.red_energy == 10
