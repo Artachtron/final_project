@@ -311,6 +311,9 @@ class Environment:
                                             generation=self.state.cycle,
                                             ancestors=ancestors)
                 
+                organism = child.born(parent1=parent1,
+                                      parent2=parent2)
+                
                 DIE_GIVING_BIRTH_PROB = 0.02
                 if random() < DIE_GIVING_BIRTH_PROB:
                     parent1.status = (Status.DEAD 

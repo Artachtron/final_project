@@ -83,10 +83,27 @@ class Entity(SimulatedObject):
         self.mind: Network     
         
         if self.generation == 0:                             
-            self._create_mind()
+            self._create_brain()
                               
-    def _create_mind(self):
-        pass              
+    def _create_brain(self):
+        pass
+    
+    def born(self, parent1: Entity, parent2: Entity) -> None:
+        organism = Organism.reproduce(parent1=parent1.organism,
+                                      parent2=parent2.organism)
+        
+        self.transplant_brain(organism=organism)
+    
+    def transplant_brain(self, organism: Organism) -> None:
+        """Private method:
+            Action: Replace the entity's brain with a new one,
+            or simply give a new one
+
+        Args:
+            organism (Organism): _description_
+        """        
+        self.organism = organism
+        self.mind = organism.mind              
             
     @property
     def energies(self) -> Dict[str, int]:
@@ -386,12 +403,13 @@ class Animal(Entity):
     def __repr__(self):
         return f'Animal {self.id}'
     
-    def _create_mind(self):
+    def _create_brain(self):
         self.organism = Organism.genesis(organism_id=self.id,
                                          entity_type=EntityType.Animal.value)   
         
         self.mind = self.organism.mind
-        self.mind.verify_post_genesis()   
+        self.mind.verify_post_genesis()  
+               
         
     def _move(self, direction: Direction, environment: Environment) -> None:
         """Private method: 
@@ -706,7 +724,7 @@ class Tree(Entity):
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'
     
-    def _create_mind(self):
+    def _create_brain(self):
         pass
         
     def produce_energy(self, environment: Environment) -> None:
