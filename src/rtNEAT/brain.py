@@ -42,10 +42,11 @@ class Brain:
         brain = cls(brain_id=brain_id,
                     entity_type=parent1.entity_type)
         
-        brain.genotype = Genome.reproduce(parent1=parent1.genotype,
+        brain.genotype = Genome.reproduce(genome_id=brain_id,
+                                          parent1=parent1.genotype,
                                           parent2=parent2.genotype)
         
-        brain.phenotype = Network.genesis(genome=brain.phenotype)
+        brain.phenotype = Network.genesis(genome=brain.genotype)
         
         return brain
         

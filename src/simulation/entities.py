@@ -14,7 +14,7 @@ import inspect
 
 from energies import EnergyType, Energy, Resource
 from universal import SimulatedObject, Position, EntityType
-from src.rtNEAT.brain import Brain
+from project.src.rtNEAT.brain import Brain
 
 
 class Direction(enum.Enum):
@@ -89,12 +89,13 @@ class Entity(SimulatedObject):
         pass
     
     def born(self, parent1: Entity, parent2: Entity) -> None:
-        brain = Brain.reproduce(parent1=parent1.brain,
-                                      parent2=parent2.brain)
+        brain = Brain.reproduce(brain_id=self.id,
+                                parent1=parent1.brain,
+                                parent2=parent2.brain)
         
-        self.transplant_brain(brain=brain)
+        self._transplant_brain(brain=brain)
     
-    def transplant_brain(self, brain: Brain) -> None:
+    def _transplant_brain(self, brain: Brain) -> None:
         """Private method:
             Action: Replace the entity's brain with a new one,
             or simply give a new one
