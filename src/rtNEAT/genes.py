@@ -1,4 +1,5 @@
 from __future__ import annotations
+from abc import abstractmethod
 import math
 from numpy.random import uniform, random
 
@@ -56,7 +57,7 @@ class BaseGene:
                  enabled: bool,
                  frozen: bool,):
     
-        self.__id: int = gene_id                          # unique (per genome) identifier corresponding to innovation number
+        self.__id: int = gene_id                        # unique (per genome) identifier corresponding to innovation number
         self.frozen: bool = frozen                      # if the gene can be mutated
         self.enabled: bool = enabled                    # if the phene will participate in the activation calculation
         self.mutation_number: int = mutation_number     # allow to calculate distance between two genes with the same innovation number
@@ -76,6 +77,7 @@ class BaseGene:
         """        
         return self.id < other.id
        
+    @abstractmethod
     def transcript(self) -> Dict:
         """Send information about gene
 
@@ -87,6 +89,7 @@ class BaseGene:
         """        
         raise NotImplementedError("Please implement the transcription method")
     
+    @abstractmethod
     def mutate(self) -> None:
         """Mutate the gene
 
@@ -95,6 +98,7 @@ class BaseGene:
         """        
         raise NotImplementedError("Please implement the mutate method")
     
+    @abstractmethod
     def duplicate(self) -> BaseGene:
         """Create a copy of the gene
 
@@ -106,6 +110,7 @@ class BaseGene:
         """        
         raise NotImplementedError("Please implement the duplicate method")
     
+    @abstractmethod
     def is_allele(self, other_gene: BaseGene) -> bool:
         """Check if two genes are different versions of the same allele
 
@@ -119,7 +124,8 @@ class BaseGene:
             bool: True if the two genes are the same allele
         """              
         raise NotImplementedError("Please implement the is allele method")
-        
+    
+    @abstractmethod 
     def mutation_distance(self, other_gene: BaseGene) -> float:
         """Calculate the mutation distance between two genes
 

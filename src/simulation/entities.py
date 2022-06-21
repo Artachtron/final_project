@@ -364,7 +364,7 @@ class Entity(SimulatedObject):
         self._increase_age()
         
         # Activate mind and return the result
-        return self._activate_mind(environment=environment)
+        self._activate_mind(environment=environment)
 
 
 class Animal(Entity):

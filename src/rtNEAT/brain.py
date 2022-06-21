@@ -48,7 +48,7 @@ class Brain:
         
         genome.mutate()
         
-        brain.genotype
+        brain.genotype = genome
         
         brain.phenotype = Network.genesis(genome=brain.genotype)
         
