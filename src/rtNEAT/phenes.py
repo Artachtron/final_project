@@ -67,7 +67,7 @@ class Node(BasePhene):
         self.aggregation_function: AggregationFuncType = aggregation_function
             
         self.incoming: Dict[int, Link] = {}                         # A list of pointers to incoming weighted signals from other nodes
-        self.outgoing: Dict[int, Link] = {}                         #  A list of pointers to links carrying this node's signal
+        self.outgoing: Dict[int, Link] = {}                         # A list of pointers to links carrying this node's signal
         
     def get_incoming(self)  ->  Set[Link]:
         """Public method:

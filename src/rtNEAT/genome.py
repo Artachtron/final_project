@@ -85,8 +85,8 @@ class Genome:
         self._node_genes[node.id] = node
     
     @staticmethod   
-    def insert_gene_in_dict(genes_dict: Dict[int, BaseGene],
-                            gene: BaseGene) -> Dict[int, BaseGene]:
+    def insert_gene(genes_dict: Dict[int, BaseGene],
+                    gene: BaseGene) -> Dict[int, BaseGene]:
         """ Insert a gene into a dictionary of genes
 
         Args:
@@ -133,18 +133,18 @@ class Genome:
         count_node_id: int = 1            # keep track of number of nodes created for ids
         inputs: Dict[int, NodeGene] = {}  # dictionary of inputs
         for _ in range(n_inputs):
-            inputs = Genome.insert_gene_in_dict(genes_dict=inputs,
-                                                gene=NodeGene(node_id=count_node_id,
-                                                              node_type=NodeType.INPUT,
-                                                              bias=0.0))
+            inputs = Genome.insert_gene(genes_dict=inputs,
+                                        gene=NodeGene(node_id=count_node_id,
+                                                      node_type=NodeType.INPUT,
+                                                      bias=0.0))
             count_node_id += 1
      
         # Initialize outputs    
         outputs: Dict[int, NodeGene] = {}  # dictionary of outputs
         for _ in range(n_outputs):
-            outputs = Genome.insert_gene_in_dict(genes_dict=outputs,
-                                                 gene=NodeGene(node_id=count_node_id,
-                                                               node_type=NodeType.OUTPUT)) 
+            outputs = Genome.insert_gene(genes_dict=outputs,
+                                         gene=NodeGene(node_id=count_node_id,
+                                                       node_type=NodeType.OUTPUT)) 
             count_node_id += 1
             
         # Connect each input to each output   
@@ -152,10 +152,10 @@ class Genome:
         count_link_id: int = 1              # keep track of number of links created for ids
         for node1 in inputs.keys():
             for node2 in outputs.keys():
-                links = Genome.insert_gene_in_dict(genes_dict=links,
-                                                   gene=LinkGene(link_id=count_link_id,
-                                                                 in_node=node1,
-                                                                 out_node=node2))
+                links = Genome.insert_gene(genes_dict=links,
+                                           gene=LinkGene(link_id=count_link_id,
+                                                         in_node=node1,
+                                                         out_node=node2))
                 count_link_id += 1
         
         Genome.verify_post_genesis(n_inputs=n_inputs,
@@ -605,7 +605,7 @@ class Genome:
         if not Genome._check_gene_conflict(chosen_gene=gene,
                                            chosen_genes=genes_dict):
                 
-                genes_dict = Genome.insert_gene_in_dict(genes_dict=genes_dict,
+                genes_dict = Genome.insert_gene(genes_dict=genes_dict,
                                                         gene=gene.duplicate())
                 
         return genes_dict
@@ -704,7 +704,7 @@ class Genome:
                 new_node: NodeGene = node.duplicate()
                 
                 # Add the new node
-                Genome.insert_gene_in_dict(genes_dict=new_nodes,
+                Genome.insert_gene(genes_dict=new_nodes,
                                            gene=new_node)
                 
         # Choose the links to transmit to offspring   

@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from energies import Resource
 
 import pygame as pg
-import pygame.gfxdraw
 import sys
 
 from typing import Tuple
@@ -73,8 +72,8 @@ class DisplayedObject(pg.sprite.Sprite):
            
         pos_x, pos_y = self.position    
         self.rect: pg.Rect = self.image.get_rect(
-            center=(pos_x *block_size + block_size /2,
-                pos_y * block_size + block_size /2))
+            center=(pos_x * block_size + block_size /2,
+                    pos_y * block_size + block_size /2))
         
         
 

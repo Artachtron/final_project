@@ -1,5 +1,4 @@
 from __future__ import annotations
-from functools import cached_property
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from genome import Genome
@@ -153,8 +152,9 @@ class Network:
         Args:
             values (np.array): values to store in the input nodes
         """ 
-        inputs_dict = self.inputs        
-        inputs = [inputs_dict[key] for key in sorted(inputs_dict.keys(), reverse=False)]
+        # inputs_dict = self.inputs        
+        # inputs = [inputs_dict[key] for key in sorted(inputs_dict.keys(), reverse=False)]
+        inputs = list(self.inputs.values())
         
         for node, value in zip(inputs, values): 
             node.activation_value = value
@@ -201,23 +201,23 @@ class Network:
         return len(self._links) 
     
     @property
-    def inputs(self)  -> np.array[Node]:  
+    def inputs(self)  -> Dict[int, Node]:  
         return self._inputs
     
     @property
-    def outputs(self)  -> np.array[Node]:  
+    def outputs(self)  -> Dict[int, Node]:  
         return self._outputs
     
     @property
-    def hidden(self)  -> np.array[Node]:  
+    def hidden(self)  -> Dict[int, Node]:  
         return self._hidden
     
     @property
-    def all_nodes(self) -> np.array:
+    def all_nodes(self) -> Dict[int, Node]:
         return self._all_nodes
     
     @property
-    def links(self) -> np.array:
+    def links(self) -> Dict[int, Node]:
         return self._links
     
     def get_inputs(self) ->  Set[Node]:

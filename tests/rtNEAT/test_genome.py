@@ -128,7 +128,7 @@ class TestGenome:
 
             def test_insert_gene_in_dict(self):
                 node = NodeGene(node_id=1)
-                nodes_dict = Genome.insert_gene_in_dict(genes_dict={},
+                nodes_dict = Genome.insert_gene(genes_dict={},
                                                         gene=node)
                 genome = Genome(genome_id=0,
                                     node_genes={},
@@ -468,10 +468,10 @@ class TestGenome:
             def test_check_genes_conflict(self):
                 # Nodes
                 nodes = {}
-                Genome.insert_gene_in_dict(genes_dict=nodes,
+                Genome.insert_gene(genes_dict=nodes,
                                            gene=NodeGene())
                 
-                Genome.insert_gene_in_dict(genes_dict=nodes,
+                Genome.insert_gene(genes_dict=nodes,
                                             gene=NodeGene())
             
                 ## conflict
@@ -486,7 +486,7 @@ class TestGenome:
                 
                 # Links
                 links = {}
-                Genome.insert_gene_in_dict(genes_dict=links,
+                Genome.insert_gene(genes_dict=links,
                                            gene=LinkGene(in_node=1,
                                                          out_node=2))
                 ## conflict
@@ -509,10 +509,10 @@ class TestGenome:
             def test_insert_non_conflict_gene(self):
                  # Nodes
                 nodes = {}
-                Genome.insert_gene_in_dict(genes_dict=nodes,
+                Genome.insert_gene(genes_dict=nodes,
                                            gene=NodeGene())
                 
-                Genome.insert_gene_in_dict(genes_dict=nodes,
+                Genome.insert_gene(genes_dict=nodes,
                                             gene=NodeGene())
             
                 assert len(nodes) == 2
@@ -528,7 +528,7 @@ class TestGenome:
                 
                 # Links
                 links = {}
-                Genome.insert_gene_in_dict(genes_dict=links,
+                Genome.insert_gene(genes_dict=links,
                                            gene=LinkGene(in_node=1,
                                                          out_node=2))
                 assert len(links) == 1
@@ -555,10 +555,10 @@ class TestGenome:
                 links = {}
                 
                 for _ in range(1,100):
-                    Genome.insert_gene_in_dict(genes_dict=nodes,
+                    Genome.insert_gene(genes_dict=nodes,
                                                gene=NodeGene())
                 for i in range(1,50):
-                    Genome.insert_gene_in_dict(genes_dict=links,
+                    Genome.insert_gene(genes_dict=links,
                                                gene=LinkGene(in_node=i,
                                                              out_node=2*i))
                 
@@ -599,18 +599,18 @@ class TestGenome:
                 main_nodes = {}
                 for _ in range(10):
                     node = NodeGene()
-                    Genome.insert_gene_in_dict(genes_dict=new_nodes,
+                    Genome.insert_gene(genes_dict=new_nodes,
                                                gene=node)
-                    Genome.insert_gene_in_dict(genes_dict=main_nodes,
+                    Genome.insert_gene(genes_dict=main_nodes,
                                                gene=node)
                     
                 for _ in range(20):
                    node = NodeGene() 
-                   Genome.insert_gene_in_dict( genes_dict=main_nodes,
+                   Genome.insert_gene( genes_dict=main_nodes,
                                                gene=node)
                 # No missing node
                 chosen_links = {}
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=2,
                                                          out_node=5))
                 
@@ -622,7 +622,7 @@ class TestGenome:
                 assert len(new_nodes) == 10
                 
                 # one missing node
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=12,
                                                          out_node=5))
                 
@@ -633,7 +633,7 @@ class TestGenome:
                 assert len(new_nodes) == 11
                 
                 # two missing nodes
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=13,
                                                          out_node=14))
                 
@@ -644,19 +644,19 @@ class TestGenome:
                 assert len(new_nodes) == 13
                 
                 # Three missing nodes
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=23,
                                                          out_node=24))
                 
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=25,
                                                          out_node=23))
                 
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=25,
                                                          out_node=23))
                 
-                Genome.insert_gene_in_dict(genes_dict=chosen_links,
+                Genome.insert_gene(genes_dict=chosen_links,
                                            gene=LinkGene(in_node=14,
                                                          out_node=13))
                 
@@ -671,12 +671,12 @@ class TestGenome:
                 links = {}
                 
                 for _ in range(1,101):
-                    Genome.insert_gene_in_dict(genes_dict=nodes,
+                    Genome.insert_gene(genes_dict=nodes,
                                                gene=NodeGene(node_type=choice([NodeType.HIDDEN,
                                                                                 NodeType.INPUT,
                                                                                 NodeType.OUTPUT])))
                 for i in range(1,51):
-                    Genome.insert_gene_in_dict(genes_dict=links,
+                    Genome.insert_gene(genes_dict=links,
                                                gene=LinkGene(in_node=i,
                                                              out_node=2*i))
                 
@@ -729,7 +729,7 @@ class TestGenome:
                                  link_genes=links)
                 
                 for _ in range(200):
-                    Genome.insert_gene_in_dict(genes_dict=nodes2,
+                    Genome.insert_gene(genes_dict=nodes2,
                                                gene=NodeGene(node_type=choice([NodeType.HIDDEN,
                                                                                 NodeType.INPUT,
                                                                                 NodeType.OUTPUT])))

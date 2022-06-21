@@ -84,14 +84,9 @@ class Entity(SimulatedObject):
         
         if self.generation == 0:                             
             self._create_mind()
-        
+                              
     def _create_mind(self):
-        self.organism = Organism.genesis(organism_id=self.id,
-                                         entity_type=EntityType.Animal.value)   
-        
-        self.mind = self.organism.mind
-        self.mind.verify_post_genesis()                          
-                  
+        pass              
             
     @property
     def energies(self) -> Dict[str, int]:
@@ -390,6 +385,13 @@ class Animal(Entity):
         
     def __repr__(self):
         return f'Animal {self.id}'
+    
+    def _create_mind(self):
+        self.organism = Organism.genesis(organism_id=self.id,
+                                         entity_type=EntityType.Animal.value)   
+        
+        self.mind = self.organism.mind
+        self.mind.verify_post_genesis()   
         
     def _move(self, direction: Direction, environment: Environment) -> None:
         """Private method: 
@@ -703,6 +705,9 @@ class Tree(Entity):
      
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'
+    
+    def _create_mind(self):
+        pass
         
     def produce_energy(self, environment: Environment) -> None:
         """Produce energy
