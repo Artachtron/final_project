@@ -296,12 +296,12 @@ class TestSubGrid:
                                                          value=self.animal)
             
         def test_find_coordinates_with_class(self):
-            tree1 = self.env.create_tree(coordinates=(1,1))
+            tree1 = self.env.spawn_tree(coordinates=(1,1))
             
             assert len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
                                                                      base_class=Tree)) == 1
             
-            tree2 = self.env.create_tree(coordinates=(2,1))
+            tree2 = self.env.spawn_tree(coordinates=(2,1))
             
             len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
                                                               base_class=Tree))  == 2
@@ -309,7 +309,7 @@ class TestSubGrid:
             
             
             # Does not detect animal
-            animal = self.env.create_animal(coordinates=(1,2))
+            animal = self.env.spawn_animal(coordinates=(1,2))
             
             len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
                                                               base_class=Tree))  == 2
@@ -318,20 +318,20 @@ class TestSubGrid:
         def test_find_free_coordinates(self):
             assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 9
             
-            self.env.create_tree(coordinates=(1,1))
+            self.env.spawn_tree(coordinates=(1,1))
             
             assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 8
             
-            self.env.create_tree(coordinates=(0,1))
+            self.env.spawn_tree(coordinates=(0,1))
             
             assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 7
             
-            self.env.create_tree(coordinates=(0,0))
+            self.env.spawn_tree(coordinates=(0,0))
             
             assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 6
             
             # Out of search range, no change
-            self.env.create_tree(coordinates=(3,3))
+            self.env.spawn_tree(coordinates=(3,3))
             
             assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 6
         

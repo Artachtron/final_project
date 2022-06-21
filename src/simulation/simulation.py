@@ -236,7 +236,7 @@ class Environment:
                                      num_animal_section)
                 
                 for x, y in coordinates:
-                    self.create_animal(coordinates=(x + x_offset,
+                    self.spawn_animal(coordinates=(x + x_offset,
                                                     y + y_offset),
                                        blue_energy=100,
                                        red_energy=5000,
@@ -303,7 +303,7 @@ class Environment:
                              parent1.ancestors|
                              parent2.ancestors)
                 
-                child = self.create_animal(coordinates=birth_position,
+                child = self.spawn_animal(coordinates=birth_position,
                                             size=1,
                                             blue_energy=Animal.INITIAL_BLUE_ENERGY,
                                             red_energy=Animal.INITIAL_RED_ENERGY,
@@ -326,7 +326,7 @@ class Environment:
             
                 return child
             
-    def create_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
+    def spawn_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
         if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
         
@@ -340,8 +340,9 @@ class Environment:
         
         return animal
     
-    def create_tree(self, coordinates: Tuple[int, int], **kwargs) -> Tree:
-        """Create a tree and add it to the world
+    def spawn_tree(self, coordinates: Tuple[int, int], **kwargs) -> Tree:
+        """Public  method:
+            Create a tree and add it to the world
 
         Args:
             coordinates (Tuple[int, int]): coordinates where the tree should be created
@@ -384,9 +385,9 @@ class Environment:
            
         return seed
     
-    def spawn_tree(self, seed: Seed, position: Tuple[int, int]) -> Tree:
+    def sprout_tree(self, seed: Seed, position: Tuple[int, int]) -> Tree:
         """public method:
-            Spawn a tree on a grid at a given position
+            Spawn a tree from a seed at a given position on the grid
 
         Args:
             seed (Seed):            seed from which to create the tree

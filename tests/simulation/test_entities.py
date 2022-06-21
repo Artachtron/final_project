@@ -178,7 +178,7 @@ class TestEntity:
                 self.grid = self.env.grid
                 self.entity_grid = self.grid.entity_grid
                 
-                self.entity = self.env.create_animal(coordinates=(0,0))
+                self.entity = self.env.spawn_animal(coordinates=(0,0))
                 yield
             
             def test_drop_energy(self):
@@ -285,10 +285,10 @@ class TestTree:
         def setup(self):
             self.env = Environment(env_id=0)
             
-            self.tree1 = self.env.create_tree(coordinates=(19,10))
+            self.tree1 = self.env.spawn_tree(coordinates=(19,10))
             
           
-            self.tree2 = self.env.create_tree(coordinates=(19,11))
+            self.tree2 = self.env.spawn_tree(coordinates=(19,11))
            
             
             self.grid = self.env.grid
@@ -316,7 +316,7 @@ class TestTree:
         
         def test_energy_production(self):
             # Red energy
-            tree = self.env.create_tree(production_type=EnergyType.RED,
+            tree = self.env.spawn_tree(production_type=EnergyType.RED,
                                         coordinates=(0,0),
                                         size=1,
                                         red_energy=5,
@@ -333,7 +333,7 @@ class TestTree:
             assert tree.blue_energy == 3
             
             # Blue energy
-            tree2 = self.env.create_tree(production_type=EnergyType.BLUE, 
+            tree2 = self.env.spawn_tree(production_type=EnergyType.BLUE, 
                                         coordinates=(2,2),
                                         size=1,
                                         blue_energy=5,
@@ -351,7 +351,7 @@ class TestTree:
             assert tree2.red_energy == 5
             
             # trees around
-            tree3 = self.env.create_tree(production_type=EnergyType.BLUE,
+            tree3 = self.env.spawn_tree(production_type=EnergyType.BLUE,
                                         coordinates=(2,1),
                                         size=1,
                                         blue_energy=5,
@@ -361,7 +361,7 @@ class TestTree:
             assert tree2.blue_energy == 25
             assert tree2.red_energy == 5
             
-            tree4 = self.env.create_tree(production_type=EnergyType.BLUE,
+            tree4 = self.env.spawn_tree(production_type=EnergyType.BLUE,
                                         coordinates=(1,2),
                                         size=1,
                                         blue_energy=5, 
@@ -428,7 +428,7 @@ class TestAnimal:
             
             self.env = Environment(env_id=0)
             
-            self.animal = self.env.create_animal(coordinates=(3,3))
+            self.animal = self.env.spawn_animal(coordinates=(3,3))
         
             
             self.grid: Grid = self.env.grid
@@ -587,7 +587,7 @@ class TestAnimal:
         
         
         def test_plant_tree(self):
-            animal = self.env.create_animal(coordinates=(5,5))
+            animal = self.env.spawn_animal(coordinates=(5,5))
             assert animal.red_energy == 10
             animal._plant_tree(environment=self.env)
             assert animal.red_energy == 0
@@ -622,7 +622,7 @@ class TestAnimal:
             assert self.animal.red_energy == red_stock + energy.quantity 
             
         def test_pick_up_seed(self):
-            tree = self.env.create_tree(coordinates=(3,2))
+            tree = self.env.spawn_tree(coordinates=(3,2))
             seed = self.env.create_seed_from_tree(tree)
             
             
@@ -631,7 +631,7 @@ class TestAnimal:
             self.grid.resource_grid._set_cell_value(coordinates=position,
                                                     value=seed)
             
-            animal = self.env.create_animal(coordinates=(4,2))
+            animal = self.env.spawn_animal(coordinates=(4,2))
             
             assert not animal._pocket
             assert self.grid.resource_grid.get_cell_value(coordinates=position) == seed
@@ -643,7 +643,7 @@ class TestAnimal:
             assert not self.grid.resource_grid.get_cell_value(coordinates=position)
             
         def test_recycle_seed(self):
-            tree = self.env.create_tree(coordinates=(3,2),
+            tree = self.env.spawn_tree(coordinates=(3,2),
                                         blue_energy=5,
                                         red_energy=7)
             seed = self.env.create_seed_from_tree(tree)
@@ -653,7 +653,7 @@ class TestAnimal:
             self.grid.resource_grid._set_cell_value(coordinates=position,
                                                     value=seed)
             
-            animal = self.env.create_animal(coordinates=(3,2))
+            animal = self.env.spawn_animal(coordinates=(3,2))
             # Pocket empty
             animal._recycle_seed(environment=self.env)
             assert len(self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
@@ -681,7 +681,7 @@ class TestAnimal:
             assert (blue,red) == (1,1)
             
         def test_replant_seed(self):
-            tree = self.env.create_tree(coordinates=(3,2),
+            tree = self.env.spawn_tree(coordinates=(3,2),
                                         max_age=32,
                                         blue_energy=12,
                                         red_energy=57)
@@ -689,7 +689,7 @@ class TestAnimal:
             # Replant seed
             max_age, blue_energy, red_energy = tree._max_age, tree.blue_energy, tree.red_energy
             tree.on_death(environment=self.env)
-            animal = self.env.create_animal(coordinates=(2,3))
+            animal = self.env.spawn_animal(coordinates=(2,3))
             
             animal._pick_up_resource(coordinates=tree.position,
                                         environment=self.env)
@@ -789,7 +789,7 @@ class TestAnimal:
             @pytest.fixture(autouse=True)
             def setup(self):
                 self.env = Environment(env_id=0)
-                self.animal = self.env.create_animal(coordinates=(5,5),
+                self.animal = self.env.spawn_animal(coordinates=(5,5),
                                                      blue_energy=157,
                                                      red_energy=122,
                                                      max_age=24,
@@ -812,7 +812,7 @@ class TestAnimal:
                 assert sum(inputs[21:]) == 75*0        
                 
                 # Non-empty grid
-                self.env.create_tree(coordinates=(5,6))
+                self.env.spawn_tree(coordinates=(5,6))
                 self.env.create_energy(energy_type=EnergyType.BLUE,
                                        quantity=15,
                                        coordinates=(6,5))
@@ -845,8 +845,8 @@ class TestAnimal:
                 assert self.animal.brain == brain
                 
             def test_born(self):
-                anim1 = self.env.create_animal(coordinates=(5,7))
-                anim2 = self.env.create_animal(coordinates=(5,6))
+                anim1 = self.env.spawn_animal(coordinates=(5,7))
+                anim2 = self.env.spawn_animal(coordinates=(5,6))
                 
                 self.animal.brain = None
                 self.animal.born(parent1=anim1,

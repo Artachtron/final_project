@@ -42,7 +42,7 @@ class TestEnvironment:
         def test_create_entity(self):
             # Animal
             coordinates = (1,1)
-            self.env.create_animal(coordinates=coordinates)
+            self.env.spawn_animal(coordinates=coordinates)
             
             animal = self.grid.entity_grid.get_cell_value(coordinates=coordinates)
             assert animal
@@ -56,7 +56,7 @@ class TestEnvironment:
             
             # Tree
             coordinates = (2, 4)
-            self.env.create_tree(coordinates=coordinates)
+            self.env.spawn_tree(coordinates=coordinates)
             
             tree = self.grid.entity_grid.get_cell_value(coordinates=coordinates)
             assert tree
@@ -69,7 +69,7 @@ class TestEnvironment:
             assert len(self.state.trees) == 1
             
             # Already used
-            animal = self.env.create_animal(coordinates=coordinates)
+            animal = self.env.spawn_animal(coordinates=coordinates)
             assert not animal
             
             tree2 = self.grid.entity_grid.get_cell_value(coordinates=coordinates)
@@ -116,7 +116,7 @@ class TestEnvironment:
             
         def test_create_seed_from_tree(self):
             position = (1,1)
-            tree = self.env.create_tree(coordinates=position,
+            tree = self.env.spawn_tree(coordinates=position,
                                         blue_energy=32,
                                         red_energy=13,
                                         size=27,
@@ -136,10 +136,10 @@ class TestEnvironment:
             
         def test_spawn_tree(self):
             position = (1,1)
-            tree = self.env.create_tree(coordinates=position)
+            tree = self.env.spawn_tree(coordinates=position)
             seed = self.env.create_seed_from_tree(tree=tree)
             assert len(self.state.seeds) == 1
-            tree2 = self.env.spawn_tree(seed=seed,
+            tree2 = self.env.sprout_tree(seed=seed,
                                         position=position)
             
             assert tree.id == tree2.id
@@ -154,7 +154,7 @@ class TestEnvironment:
         def test_remove_entity(self):
            # Animal
             coordinates = (1,1)
-            animal = self.env.create_animal(coordinates=coordinates)
+            animal = self.env.spawn_animal(coordinates=coordinates)
             
             assert self.grid.entity_grid.get_cell_value(coordinates=coordinates) == animal
     
@@ -185,7 +185,7 @@ class TestEnvironment:
             
         def test_find_entities_around(self):
             coordinates = (1,1)
-            animal = self.env.create_animal(coordinates=coordinates)
+            animal = self.env.spawn_animal(coordinates=coordinates)
             entities = self.env.find_if_entities_around(coordinates=coordinates,
                                                         include_self=True,
                                                         radius=1)
@@ -196,8 +196,8 @@ class TestEnvironment:
                                                         radius=1)
             assert sum(list(entities)) == 0
 
-            self.env.create_animal(coordinates=(2,2))
-            self.env.create_animal(coordinates=(2,1))
+            self.env.spawn_animal(coordinates=(2,2))
+            self.env.spawn_animal(coordinates=(2,1))
             
             entities = self.env.find_if_entities_around(coordinates=coordinates,
                                                         include_self=True,
@@ -206,7 +206,7 @@ class TestEnvironment:
             
         def test_find_resources_around(self):
             coordinates = (1,1)
-            animal = self.env.create_animal(coordinates=coordinates)
+            animal = self.env.spawn_animal(coordinates=coordinates)
             resources = self.env.find_if_resources_around(coordinates=coordinates,
                                                         include_self=True,
                                                         radius=1)
@@ -216,7 +216,7 @@ class TestEnvironment:
                                    quantity=10,
                                    coordinates=(1,2))
             
-            tree = self.env.create_tree(coordinates=(2,2))
+            tree = self.env.spawn_tree(coordinates=(2,2))
             
             resources = self.env.find_if_resources_around(coordinates=coordinates,
                                                         include_self=True,

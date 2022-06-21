@@ -458,7 +458,7 @@ class Animal(Entity):
                                        environment=environment)
                     
                 else:
-                    environment.create_tree(coordinates=free_cell)
+                    environment.spawn_tree(coordinates=free_cell)
                  
                 print(f"Tree was created at {free_cell}") 
                     
@@ -508,7 +508,7 @@ class Animal(Entity):
                
         # spawn the tree from seed, 
         # at given position on the grid
-        environment.spawn_tree(seed=self._pocket,
+        environment.sprout_tree(seed=self._pocket,
                                position=position)
                
         # Emtpy pocket
