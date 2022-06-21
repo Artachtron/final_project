@@ -575,9 +575,7 @@ class Animal(Entity):
                 
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
     
-    def _interpret_outputs(self, outputs: np.array, environment: Environment):
-        request = ''
-                
+    def _interpret_outputs(self, outputs: np.array, environment: Environment):               
         # Get the most absolute active value of all the outputs
         most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
         value = outputs[most_active_output]
@@ -600,8 +598,8 @@ class Animal(Entity):
                     else:
                         direction = Direction.RIGTH 
                         
-                request = self._move(direction=direction,
-                                     environment=environment)
+                self._move(direction=direction,
+                           environment=environment)
             
             # Modify cell color
             case key if key in range(2,5):
@@ -609,47 +607,45 @@ class Animal(Entity):
                          outputs[sorted_output_keys[3]]*255,
                          outputs[sorted_output_keys[4]]*255)
                 
-                request = self._paint(coordinates=self.position,
-                                      color=color,
-                                      environment=environment)
+                self._paint(coordinates=self.position,
+                            color=color,
+                            environment=environment)
             
             # Drop energy   
             case key if key in range(5,7):
                 if out == 5:
-                    request = self._drop_energy(energy_type=EnergyType.BLUE,
-                                                coordinates=self.position,
-                                                quantity=10,
-                                                environment=environment)
+                    self._drop_energy(energy_type=EnergyType.BLUE,
+                                      coordinates=self.position,
+                                      quantity=10,
+                                      environment=environment)
                 
                 else:
-                    request = self._drop_energy(energy_type=EnergyType.RED,
-                                                coordinates=self.position,
-                                                quantity=10,
-                                                environment=environment)
+                    self._drop_energy(energy_type=EnergyType.RED,
+                                      coordinates=self.position,
+                                      quantity=10,
+                                      environment=environment)
                 
             # Pick up resource       
             case 7:
-                request = self._pick_up_resource(coordinates=self.position,
-                                                 environment=environment)
+                self._pick_up_resource(coordinates=self.position,
+                                       environment=environment)
                     
             # Recycle seed    
             case 8:
-                request = self._recycle_seed(environment=environment)
+                self._recycle_seed(environment=environment)
             
             ## Complex actions ##   
             # Plant tree
             case 9:
-                request = self._plant_tree(environment=environment)
+                self._plant_tree(environment=environment)
                 
             #Grow
             case 10:
-                request = self._grow()
+                self._grow()
                 
             case 11:
-                request = self._want_to_reproduce()
-     
-        return request
-                    
+                self._want_to_reproduce()
+                       
 
         
         ###########################################################################

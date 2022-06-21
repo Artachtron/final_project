@@ -1,4 +1,5 @@
 import os, sys, pytest
+import iniconfig
 
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
@@ -6,6 +7,8 @@ from project.src.simulation.entities import Animal, Entity, Tree, Seed, Directio
 from project.src.simulation.energies import BlueEnergy, RedEnergy, EnergyType
 from project.src.simulation.grid import Grid
 from project.src.simulation.simulation import Environment
+from project.src.rtNEAT.brain import Brain
+from project.src.simulation.universal import EntityType
 
 class TestEntity:
     def test_create_entity(self):
@@ -831,6 +834,32 @@ class TestAnimal:
             def test_activate_mind(self):
                 for _ in range(100):
                     self.animal._activate_mind(environment=self.env)
+                    
+                    
+            def test_transplant_brain(self):
+                brain = Brain.genesis(brain_id=0,
+                                      entity_type=EntityType.Animal.value)
+                
+                self.animal._transplant_brain(brain=brain)
+                
+                assert self.animal.brain == brain
+                
+            def test_born(self):
+                anim1 = self.env.create_animal(coordinates=(5,7))
+                anim2 = self.env.create_animal(coordinates=(5,6))
+                
+                self.animal.brain = None
+                self.animal.born(parent1=anim1,
+                                 parent2=anim2)
+                
+                assert self.animal.brain
+                assert self.animal.brain.id == self.animal.id
+                
+                
+            
+                
+                    
+                    
                     
             
             

@@ -248,7 +248,7 @@ class Environment:
     def id(self):
         return self.__id
               
-    def interpret_request(self, request, entity):
+    def event_on_action(self, entity):
         
         match entity.status:
             case Status.DEAD:
@@ -617,9 +617,8 @@ class Simulation:
         self.state.new_cycle()
         
         for entity in self.state.get_entities():
-            request = entity.update(environment=self.environment)
-            self.environment.interpret_request(request=request,
-                                               entity=entity)
+            entity.update(environment=self.environment)
+            self.environment.event_on_action(entity=entity)
             
         return self.environment.grid, self.state
       
