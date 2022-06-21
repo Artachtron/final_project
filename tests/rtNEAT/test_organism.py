@@ -1,7 +1,7 @@
 import pytest, os, sys
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
-from project.src.rtNEAT.organism import Organism
+from src.rtNEAT.brain import Brain
 
 """ class TestOrganism:
     def test_create_organism(self):

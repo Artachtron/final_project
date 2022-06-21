@@ -387,7 +387,7 @@ class TestAnimal:
                         blue_energy=12,
                         red_energy=27)
         
-        assert {'_position', '_adult_size', '_age', 'organism',
+        assert {'_position', '_adult_size', '_age', 'brain', 'mind',
                 '_max_age', '_size', '_action_cost', '_is_adult',
                 '_energies_stock', '_pocket'}.issubset(vars(animal))
         
@@ -402,16 +402,16 @@ class TestAnimal:
         assert animal._is_adult == False
         assert animal._pocket == None
         
-        # Organism
-        org = animal.organism
-        gen = org.genotype
-        net = org.mind
+        # brain
+        brain = animal.brain
+        gen = brain.genotype
+        net = brain.phenotype
         
-        assert org.id == animal.id
+        assert brain.id == animal.id
         assert net.id == animal.id
         assert gen.id == animal.id
         
-        assert org.entity_type == 'animal'
+        assert brain.entity_type == 'animal'
         assert len(net.inputs) == 96
         assert len(net.outputs) == 12
         

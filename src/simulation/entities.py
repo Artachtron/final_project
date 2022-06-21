@@ -14,7 +14,7 @@ import inspect
 
 from energies import EnergyType, Energy, Resource
 from universal import SimulatedObject, Position, EntityType
-from project.src.rtNEAT.organism import Organism
+from src.rtNEAT.brain import Brain
 
 
 class Direction(enum.Enum):
@@ -79,7 +79,7 @@ class Entity(SimulatedObject):
         
         self._action_cost: int = action_cost                    # blue energy cost of each action
         
-        self.organism: Organism                                 # Organism containing genotype and mind
+        self.brain: Brain                                       # Brain containing genotype and mind
         self.mind: Network     
         
         if self.generation == 0:                             
@@ -89,21 +89,21 @@ class Entity(SimulatedObject):
         pass
     
     def born(self, parent1: Entity, parent2: Entity) -> None:
-        organism = Organism.reproduce(parent1=parent1.organism,
-                                      parent2=parent2.organism)
+        brain = Brain.reproduce(parent1=parent1.brain,
+                                      parent2=parent2.brain)
         
-        self.transplant_brain(organism=organism)
+        self.transplant_brain(brain=brain)
     
-    def transplant_brain(self, organism: Organism) -> None:
+    def transplant_brain(self, brain: Brain) -> None:
         """Private method:
             Action: Replace the entity's brain with a new one,
             or simply give a new one
 
         Args:
-            organism (Organism): _description_
+            brain (Brain): brain to transplant
         """        
-        self.organism = organism
-        self.mind = organism.mind              
+        self.brain = brain
+        self.mind = brain.phenotype              
             
     @property
     def energies(self) -> Dict[str, int]:
@@ -404,10 +404,10 @@ class Animal(Entity):
         return f'Animal {self.id}'
     
     def _create_brain(self):
-        self.organism = Organism.genesis(organism_id=self.id,
+        self.brain = Brain.genesis(brain_id=self.id,
                                          entity_type=EntityType.Animal.value)   
         
-        self.mind = self.organism.mind
+        self.mind = self.brain.phenotype
         self.mind.verify_post_genesis()  
                
         
@@ -547,7 +547,7 @@ class Animal(Entity):
         
     def _activate_mind(self, environment: Environment) -> None:
         inputs = self._normalize_inputs(environment=environment)
-        mind = self.organism.mind
+        mind = self.brain.phenotype
         outputs = mind.activate(input_values=inputs)
         return self._interpret_outputs(outputs=outputs,
                                        environment=environment)                                                          

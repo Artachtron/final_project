@@ -4,11 +4,11 @@ import numpy as np
 # Might not be necessary
 class Population:
     def __init__(self,
-                 organisms: np.array,
+                 brain: np.array,
                  species: np.array):
-        self.organisms = organisms
+        self.brain = brain
         self.species = species
-        self.size = len(organisms)
+        self.size = len(brain)
     
     """ def speciate(self):
         comparison_organism = 0
