@@ -695,7 +695,7 @@ class TestGenome:
                                  node_genes=nodes,
                                  link_genes=links2) 
                 
-                baby = Genome.reproduce(genome_id=4,
+                baby = Genome.crossover(genome_id=4,
                                         parent1=genome1,
                                         parent2=genome2)  
                 
@@ -704,7 +704,7 @@ class TestGenome:
                 assert baby.n_node_genes == 100
                 
                 #genome dominant
-                baby = Genome.reproduce(genome_id=5,
+                baby = Genome.crossover(genome_id=5,
                                         parent1=genome1,
                                         parent2=genome)  
                 
@@ -713,7 +713,7 @@ class TestGenome:
                 assert baby.n_node_genes == 100
                 
                 #genome1 dominant
-                baby = Genome.reproduce(genome_id=6,
+                baby = Genome.crossover(genome_id=6,
                                         parent1=genome,
                                         parent2=genome1)  
                 
@@ -734,7 +734,7 @@ class TestGenome:
                                                                                 NodeType.INPUT,
                                                                                 NodeType.OUTPUT])))
                 # genome dominant    
-                baby = Genome.reproduce(genome_id=7,
+                baby = Genome.crossover(genome_id=7,
                                         parent1=genome,
                                         parent2=genome3)  
                 
@@ -743,7 +743,7 @@ class TestGenome:
                 assert baby.n_node_genes == 100
                 
                 # genome4 dominant
-                baby = Genome.reproduce(genome_id=8,
+                baby = Genome.crossover(genome_id=8,
                                         parent1=genome,
                                         parent2=genome3)  
                 

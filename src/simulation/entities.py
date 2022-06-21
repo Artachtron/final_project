@@ -89,7 +89,7 @@ class Entity(SimulatedObject):
         pass
     
     def born(self, parent1: Entity, parent2: Entity) -> None:
-        brain = Brain.reproduce(brain_id=self.id,
+        brain = Brain.crossover(brain_id=self.id,
                                 parent1=parent1.brain,
                                 parent2=parent2.brain)
         

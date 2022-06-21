@@ -34,7 +34,7 @@ class TestBrain:
             brain2 = Brain.genesis(brain_id=1,
                                    entity_type='animal')
             
-            brain3 = Brain.reproduce(brain_id=2,
+            brain3 = Brain.crossover(brain_id=2,
                                      parent1=brain1,
                                      parent2=brain2)
             

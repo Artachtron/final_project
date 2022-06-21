@@ -678,7 +678,7 @@ class Genome:
                 
         return new_nodes
     
-    def reproduce(genome_id:int, parent1: Genome, parent2: Genome) -> Genome:
+    def crossover(genome_id:int, parent1: Genome, parent2: Genome) -> Genome:
         """Create new Genome from 2 parents, selecting which genes to transmit
 
         Args:
