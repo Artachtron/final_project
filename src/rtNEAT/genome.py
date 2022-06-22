@@ -718,6 +718,9 @@ class Genome:
         sub_nodes: Dict[int, NodeGene] = sub_genome._node_genes
         chosen_nodes = Genome._genes_to_transmit(main_genome=main_nodes,
                                                  sub_genome=sub_nodes)
+        
+        # Uniting the two dictionary
+        # of nodes into a entire one
         new_nodes |= chosen_nodes
         # Make sure all the nodes in the links chosen
         # are present in offspring's genome
@@ -725,6 +728,7 @@ class Genome:
                                   new_nodes=new_nodes,
                                   main_nodes=main_nodes)
         
+        # The baby genome resulting from the crossover
         baby_genome = Genome(genome_id=genome_id,
                              node_genes=new_nodes,
                              link_genes=new_links)

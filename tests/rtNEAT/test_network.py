@@ -187,6 +187,7 @@ class TestNetwork:
             self.genome = Genome.genesis(genome_id=10,
                                     n_inputs=n_inputs,
                                     n_outputs=n_outputs)
+            
             dim = (n_inputs+1) * n_outputs
             weights = np.random.uniform(-1,1,dim)
             l_inputs = np.random.uniform(-1,1,n_inputs)

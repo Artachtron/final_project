@@ -282,7 +282,17 @@ class Environment:
         if self.grid.place_entity(value=new_entity):     
             self.state.add_entity(new_entity=new_entity)
             
-    def _reproduce_entities(self, parent1: Entity, parent2: Entity):
+    def _reproduce_entities(self, parent1: Entity, parent2: Entity) -> Entity:
+        """Private method:
+            reproduce two entities together to create a child
+
+        Args:
+            parent1 (Entity): first entity parent
+            parent2 (Entity): second entity parent
+
+        Returns:
+            Entity: born child
+        """        
      
         if not (parent1._is_adult and parent2._is_adult):
             return
@@ -327,6 +337,15 @@ class Environment:
                 return child
             
     def spawn_animal(self, coordinates: Tuple[int, int], **kwargs) -> Animal:
+        """Public method:
+            Create an animal at given coordinates and add it to the world
+
+        Args:
+            coordinates (Tuple[int, int]): coordinates where the animal should be created
+
+        Returns:
+            Animal: animal that was created
+        """        
         if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
         
@@ -342,7 +361,7 @@ class Environment:
     
     def spawn_tree(self, coordinates: Tuple[int, int], **kwargs) -> Tree:
         """Public  method:
-            Create a tree and add it to the world
+            Create a tree at given coordinates and add it to the world
 
         Args:
             coordinates (Tuple[int, int]): coordinates where the tree should be created

@@ -449,28 +449,32 @@ class TestAnimal:
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
             animal._move(Direction.DOWN,
-                            environment=self.env)
+                         environment=self.env)
+            
             assert animal.position == (3,4)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
             
             # Up
             animal._move(Direction.UP,
-                            environment=self.env)
+                         environment=self.env)
+            
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
             assert self.entity_grid.get_cell_value(coordinates=(2,3)) == None
             
             # Left
             animal._move(Direction.LEFT,
-                            environment=self.env)
+                         environment=self.env)
+            
             assert animal.position == (2,3)
             assert self.entity_grid.get_cell_value(coordinates=(2,3)) == animal
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
             
             # Right
             animal._move(Direction.RIGHT,
-                            environment=self.env)
+                         environment=self.env)
+            
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
             
@@ -485,7 +489,8 @@ class TestAnimal:
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
             assert animal2.position == (3,4)
             animal._move(Direction.DOWN, 
-                            environment=self.env)
+                         environment=self.env)
+            
             assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
             assert animal2.position == (3,4)
@@ -527,9 +532,9 @@ class TestAnimal:
             
         def test_grow(self):
             self.animal = Animal(size=1,
-                                position=(0,0),
-                                blue_energy=5,
-                                red_energy=10,)
+                                 position=(0,0),
+                                 blue_energy=5,
+                                 red_energy=10,)
 
             assert self.animal.energies == {"blue energy": 5, "red energy": 10}
             assert self.animal.red_energy == 10

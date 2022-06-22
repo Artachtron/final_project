@@ -20,11 +20,17 @@ class Brain:
     def genesis(cls, brain_id: int, entity_type: EntityType) -> Brain:
         NUM_ANIMAL_INPUTS = 96
         NUM_ANIMAL_OUTPUTS = 12
+        NUM_TREE_INPUTS = 88
+        NUM_TREE_OUTPUTS = 5
         
         match entity_type:
             case EntityType.Animal.value:
                 n_inputs = NUM_ANIMAL_INPUTS
                 n_outputs = NUM_ANIMAL_OUTPUTS
+                
+            case EntityType.Tree.value:
+                n_inputs = NUM_TREE_INPUTS
+                n_outputs = NUM_TREE_OUTPUTS
         
         brain = cls(brain_id=brain_id,
                     entity_type=entity_type)

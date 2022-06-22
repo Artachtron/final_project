@@ -140,7 +140,7 @@ class TestGenome:
                 genome.add_node(node=node)
                 assert genome._node_genes == nodes_dict
                 
-            def test_genetical_gene_distance(self):
+            def test_genetic_gene_distance(self):
                 # Node distance
                 ## Excess nodes
                 dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1._node_genes,
@@ -173,7 +173,7 @@ class TestGenome:
                                                       gene_dict2 = self.genome2_extended._link_genes)
                 assert dist == 0.5/2
                 
-            def test_genetical_distance(self):
+            def test_genetic_distance(self):
                 # Full distance
                 ## Excess nodes
                 dist = Genome.genetic_distance( genome1 = self.genome1,
@@ -666,19 +666,19 @@ class TestGenome:
                 
                 assert len(new_nodes) == 16
                 
-            def test_reproduce(self):
+            def test_crossover(self):
                 nodes = {}
                 links = {}
                 
                 for _ in range(1,101):
                     Genome.insert_gene(genes_dict=nodes,
-                                               gene=NodeGene(node_type=choice([NodeType.HIDDEN,
-                                                                                NodeType.INPUT,
-                                                                                NodeType.OUTPUT])))
+                                       gene=NodeGene(node_type=choice([NodeType.HIDDEN,
+                                                                       NodeType.INPUT,
+                                                                       NodeType.OUTPUT])))
                 for i in range(1,51):
                     Genome.insert_gene(genes_dict=links,
-                                               gene=LinkGene(in_node=i,
-                                                             out_node=2*i))
+                                       gene=LinkGene(in_node=i,
+                                                     out_node=2*i))
                 
                 links1 = {link.id: link for link in links.values() if link.id%2 == 0}
                 links2 = {link.id: link for link in links.values() if link.id%2 == 1} 
@@ -730,7 +730,7 @@ class TestGenome:
                 
                 for _ in range(200):
                     Genome.insert_gene(genes_dict=nodes2,
-                                               gene=NodeGene(node_type=choice([NodeType.HIDDEN,
+                                       gene=NodeGene(node_type=choice([NodeType.HIDDEN,
                                                                                 NodeType.INPUT,
                                                                                 NodeType.OUTPUT])))
                 # genome dominant    
