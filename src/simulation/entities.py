@@ -365,6 +365,20 @@ class Entity(SimulatedObject):
         
         # Activate mind and return the result
         self._activate_mind(environment=environment)
+        
+         
+    def _activate_mind(self, environment: Environment) -> None:
+        """Private method:
+            Activate entity's brain
+
+        Args:
+            environment (Environment): environment of the entity
+        """        
+        inputs = self._normalize_inputs(environment=environment)
+        mind = self.brain.phenotype
+        outputs = mind.activate(input_values=inputs)
+        self._interpret_outputs(outputs=outputs,
+                                environment=environment) 
 
 
 class Animal(Entity):
@@ -406,7 +420,7 @@ class Animal(Entity):
     
     def _create_brain(self):
         self.brain = Brain.genesis(brain_id=self.id,
-                                         entity_type=EntityType.Animal.value)   
+                                   entity_type=EntityType.Animal.value)   
         
         self.mind = self.brain.phenotype
         self.mind.verify_post_genesis()  
@@ -521,7 +535,7 @@ class Animal(Entity):
         
         environment.remove_entity(entity=self)
         
-    def _want_to_reproduce(self):
+    def _want_to_reproduce(self) -> None:
         """Private method:
             Set this animal's status to fertile
         """
@@ -545,15 +559,18 @@ class Animal(Entity):
                                       coordinates=coordinates)
 
         self._perform_action()
+                                                            
         
-    def _activate_mind(self, environment: Environment) -> None:
-        inputs = self._normalize_inputs(environment=environment)
-        mind = self.brain.phenotype
-        outputs = mind.activate(input_values=inputs)
-        return self._interpret_outputs(outputs=outputs,
-                                       environment=environment)                                                          
-        
-    def _normalize_inputs(self, environment: Environment):
+    def _normalize_inputs(self, environment: Environment) -> np.array:
+        """Private method:
+            Normalize input values for brain activation
+
+        Args:
+            environment (Environment): environment of the animal
+
+        Returns:
+            np.array: array containing the normalized input values
+        """        
         #Inputs
         ## Internal properties
         age = self._age/self._max_age
@@ -571,11 +588,17 @@ class Animal(Entity):
                                                radius=2)
         
         see_colors = (1 - colors.flatten()/255).tolist()
-        # see_colors = np.random.random(75).tolist()
                 
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
     
-    def _interpret_outputs(self, outputs: np.array, environment: Environment):               
+    def _interpret_outputs(self, outputs: np.array, environment: Environment) -> None:
+        """Private method:
+            Use the output values from brain activation to decide which action to perform.
+
+        Args:
+            outputs (np.array):         array or outputs values from brain activation
+            environment (Environment):  environment of the animal
+        """                       
         # Get the most absolute active value of all the outputs
         most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
         value = outputs[most_active_output]
@@ -644,14 +667,7 @@ class Animal(Entity):
                 self._grow()
                 
             case 11:
-                self._want_to_reproduce()
-                       
-
-        
-        ###########################################################################
-           
-    
-    
+                self._want_to_reproduce()    
     
     def reproduce(self, mate: Animal, environment: Environment) -> Animal:
         """Create an offspring from 2 mates
@@ -722,10 +738,15 @@ class Tree(Entity):
         return f'Tree {self.id}: {self._production_type}'
     
     def _create_brain(self):
-        pass
+        self.brain = Brain.genesis(brain_id=self.id,
+                                   entity_type=EntityType.Tree.value)   
         
-    def produce_energy(self, environment: Environment) -> None:
-        """Produce energy
+        self.mind = self.brain.phenotype
+        self.mind.verify_post_genesis()  
+        
+    def _produce_energy(self, environment: Environment) -> None:
+        """Private method:
+            Produce energy
         """
         MINUMUM_AGE: Final[int] = 20
         if self._age < MINUMUM_AGE:
@@ -785,10 +806,75 @@ class Tree(Entity):
                     position=self.position,
                     genetic_data=genetic_data)
         
-        return seed
-       
-    def _activate_mind(self, environment: Environment):
-        pass
+        return seed                                                        
+        
+    def _normalize_inputs(self, environment: Environment) -> np.array:
+        """Private method:
+            Normalize input values for brain activation
+
+        Args:
+            environment (Environment): environment of the tree
+
+        Returns:
+            np.array: array containing the normalized input values
+        """        
+        #Inputs
+        ## Internal properties
+        age = self._age/self._max_age
+        size = self._size/100
+        blue_energy, red_energy = (energy/100000 for energy in self.energies.values())
+        ## Perceptions
+        energies = environment.find_if_resources_around(coordinates=self.position,
+                                                        include_self=True)
+        see_energies = list(map(int, energies))
+        
+        colors = environment.get_colors_around(coordinates=self.position,
+                                               radius=2)
+        
+        see_colors = (1 - colors.flatten()/255).tolist()
+                
+        return np.array([age, size, blue_energy, red_energy] + see_energies + see_colors)
+    
+    def _interpret_outputs(self, outputs: np.array, environment: Environment) -> None:
+        """Private method:
+            Use the output values from brain activation to decide which action to perform.
+
+        Args:
+            outputs (np.array):         array or outputs values from brain activation
+            environment (Environment):  environment of the tree
+        """                       
+        # Get the most absolute active value of all the outputs
+        most_active_output = max(outputs, key = lambda k : abs(outputs.get(k)))
+        value = outputs[most_active_output]
+        
+        sorted_output_keys = sorted(outputs.keys())
+
+        match out:= sorted_output_keys.index(most_active_output):
+            ## Simple actions ##
+            # Produce energy
+            case 0:
+                self._produce_energy(environment=environment)            
+            # Drop energy   
+            case key if key in range(1,3):
+                if out == 1:
+                    self._drop_energy(energy_type=EnergyType.BLUE,
+                                      coordinates=self.position,
+                                      quantity=10,
+                                      environment=environment)
+                
+                else:
+                    self._drop_energy(energy_type=EnergyType.RED,
+                                      coordinates=self.position,
+                                      quantity=10,
+                                      environment=environment)
+                
+            # Pick up resource       
+            case 3:
+                self._pick_up_resource(coordinates=self.position,
+                                       environment=environment)                
+            #Grow
+            case 4:
+                self._grow()                
         
 class Seed(Resource):
     def __init__(self,

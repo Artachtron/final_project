@@ -69,7 +69,7 @@ class World:
         
         if self.display_active:
             self.display.update(sim_state=sim_state)
-            self.display.draw(grid)  
+            self.display.draw(grid=grid)  
         
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):

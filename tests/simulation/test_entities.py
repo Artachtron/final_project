@@ -324,11 +324,11 @@ class TestTree:
                       
             assert tree.red_energy == 5
             assert tree.blue_energy == 5
-            tree.produce_energy(environment=self.env)
+            tree._produce_energy(environment=self.env)
             assert tree.red_energy == 10
             assert tree.blue_energy == 4
             tree.size = 2
-            tree.produce_energy(environment=self.env)
+            tree._produce_energy(environment=self.env)
             assert tree.red_energy == 20
             assert tree.blue_energy == 3
             
@@ -342,11 +342,11 @@ class TestTree:
             
             assert tree2.blue_energy == 5
             assert tree2.red_energy == 5
-            tree2.produce_energy(environment=self.env)
+            tree2._produce_energy(environment=self.env)
             assert tree2.blue_energy == 10
             assert tree2.red_energy == 5
             tree2.size = 2
-            tree2.produce_energy(environment=self.env)
+            tree2._produce_energy(environment=self.env)
             assert tree2.blue_energy == 20
             assert tree2.red_energy == 5
             
@@ -357,7 +357,7 @@ class TestTree:
                                         blue_energy=5,
                                         action_cost=0)
             
-            tree2.produce_energy(environment=self.env)
+            tree2._produce_energy(environment=self.env)
             assert tree2.blue_energy == 25
             assert tree2.red_energy == 5
             
@@ -367,7 +367,7 @@ class TestTree:
                                         blue_energy=5, 
                                         action_cost=0)
                             
-            tree2.produce_energy(environment=self.env)
+            tree2._produce_energy(environment=self.env)
             assert tree2.blue_energy == 27
             assert tree2.red_energy == 5
        

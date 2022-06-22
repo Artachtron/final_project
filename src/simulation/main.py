@@ -9,11 +9,11 @@ SIMUMLATION_SPEED = 20
 
 def main():
     world = World(world_id=0,
-                      dimensions=(GRID_WIDTH
-                                  ,GRID_HEIGHT),
-                      block_size= BLOCK_SIZE,
-                      sim_speed=SIMUMLATION_SPEED,
-                      display_active=True)
+                  dimensions=(GRID_WIDTH,
+                              GRID_HEIGHT),
+                  block_size=BLOCK_SIZE,
+                  sim_speed=SIMUMLATION_SPEED,
+                  display_active=True)
             
     world.init(show_grid=True)
     world.run()
