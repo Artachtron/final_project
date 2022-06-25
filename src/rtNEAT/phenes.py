@@ -1,9 +1,10 @@
 from __future__ import annotations
 from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFuncType
 from typing import Dict, Set
+from abc import ABC, abstractmethod, abstractclassmethod
 
 
-class BasePhene:
+class BasePhene(ABC):
     def __init__(self,
                  phene_id: int,
                  enabled: bool = True):
@@ -15,7 +16,7 @@ class BasePhene:
     def id(self):
         return self.__id 
         
-    @classmethod    
+    @abstractclassmethod  
     def synthesis(cls, kwargs):
         raise NotImplementedError("Please Implement the synthesis method")
         

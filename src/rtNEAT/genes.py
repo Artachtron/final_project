@@ -1,10 +1,10 @@
 from __future__ import annotations
-from abc import abstractmethod
 import math
 from numpy.random import uniform, random
 
 from functools import partial
 import enum
+from abc import ABC, abstractmethod
 
 from project.src.rtNEAT.innovation import InnovTable
 from project.src.rtNEAT.neat import Config
@@ -50,7 +50,7 @@ class ActivationFuncType(enum.Enum):
 class AggregationFuncType(enum.Enum):
     SUM = sum
 
-class BaseGene:
+class BaseGene(ABC):
     def __init__(self,
                  gene_id: int,
                  mutation_number: int,
@@ -87,7 +87,6 @@ class BaseGene:
         Returns: 
             Dict: dictionary with the information about the gene
         """        
-        raise NotImplementedError("Please implement the transcription method")
     
     @abstractmethod
     def mutate(self) -> None:
@@ -96,7 +95,6 @@ class BaseGene:
         Raises:
             NotImplementedError: the method need to be implemented for each type of gene
         """        
-        raise NotImplementedError("Please implement the mutate method")
     
     @abstractmethod
     def duplicate(self) -> BaseGene:
@@ -108,7 +106,6 @@ class BaseGene:
         Returns:
             BaseGene: Copy of the gene
         """        
-        raise NotImplementedError("Please implement the duplicate method")
     
     @abstractmethod
     def is_allele(self, other_gene: BaseGene) -> bool:
@@ -123,7 +120,6 @@ class BaseGene:
         Returns:
             bool: True if the two genes are the same allele
         """              
-        raise NotImplementedError("Please implement the is allele method")
     
     @abstractmethod 
     def mutation_distance(self, other_gene: BaseGene) -> float:
@@ -135,9 +131,7 @@ class BaseGene:
         Returns:
             float: calculated distance
         """        
-        return abs(self.mutation_number -
-                    other_gene.mutation_number)
-        
+                
      
 class LinkGene(BaseGene):
     def __init__(self,
@@ -223,6 +217,18 @@ class LinkGene(BaseGene):
                 (self.out_node == other_gene.in_node and
                 self.in_node == other_gene.out_node) or
                 self.id == other_gene.id)
+        
+    def mutation_distance(self, other_gene: LinkGene) -> int:
+        """Calculate the mutation distance between two genes
+
+        Args:
+            other_gene (BaseGene): other gene to compare with
+
+        Returns:
+            float: calculated distance
+        """  
+        return abs(self.mutation_number -
+                   other_gene.mutation_number)
 
         
 class NodeGene(BaseGene):
@@ -280,6 +286,19 @@ class NodeGene(BaseGene):
         elif random() < Config.enable_prob:
             self.enabled = True
         
+    def mutation_distance(self, other_gene: NodeGene) -> int:
+        """Calculate the mutation distance between two genes
+
+        Args:
+            other_gene (BaseGene): other gene to compare with
+
+        Returns:
+            float: calculated distance
+        """  
+        return abs(self.mutation_number -
+                   other_gene.mutation_number)
+        
+        
     def distance(self, other_node: NodeGene) -> float:
         """Calculate the distance between two NodeGenes based on their properties
 
@@ -329,7 +348,7 @@ class NodeGene(BaseGene):
         """        
         return (self.type == NodeType.INPUT or 
                 self.type == NodeType.BIAS)   
-       
+        
 def reset_innovation_table():
     InnovTable.reset_innovation_table()
 
