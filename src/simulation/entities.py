@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tkinter import N
 
 from typing import TYPE_CHECKING
 
@@ -419,8 +420,12 @@ class Animal(Entity):
         return f'Animal {self.id}'
     
     def _create_brain(self):
+        NUM_ANIMAL_INPUTS = 96
+        NUM_ANIMAL_OUTPUTS = 12
+        
         self.brain = Brain.genesis(brain_id=self.id,
-                                   entity_type=EntityType.Animal.value)   
+                                   n_inputs=NUM_ANIMAL_INPUTS,
+                                   n_outputs=NUM_ANIMAL_OUTPUTS)   
         
         self.mind = self.brain.phenotype
         self.mind.verify_post_genesis()  
@@ -738,8 +743,12 @@ class Tree(Entity):
         return f'Tree {self.id}: {self._production_type}'
     
     def _create_brain(self):
+        NUM_TREE_INPUTS = 88
+        NUM_TREE_OUTPUTS = 5
+        
         self.brain = Brain.genesis(brain_id=self.id,
-                                   entity_type=EntityType.Tree.value)   
+                                   n_inputs=NUM_TREE_INPUTS,
+                                   n_outputs=NUM_TREE_OUTPUTS)   
         
         self.mind = self.brain.phenotype
         self.mind.verify_post_genesis()  

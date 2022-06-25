@@ -414,7 +414,6 @@ class TestAnimal:
         assert net.id == animal.id
         assert gen.id == animal.id
         
-        assert brain.entity_type == 'animal'
         assert len(net.inputs) == 96
         assert len(net.outputs) == 12
         
@@ -843,7 +842,8 @@ class TestAnimal:
                     
             def test_transplant_brain(self):
                 brain = Brain.genesis(brain_id=0,
-                                      entity_type=EntityType.Animal.value)
+                                      n_inputs=96,
+                                      n_outputs=12)
                 
                 self.animal._transplant_brain(brain=brain)
                 
