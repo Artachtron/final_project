@@ -428,7 +428,7 @@ class Animal(Entity):
                                    n_outputs=NUM_ANIMAL_OUTPUTS)   
         
         self.mind = self.brain.phenotype
-        self.mind.verify_post_genesis()  
+        self.mind.verify_complete_post_genesis()  
                
         
     def _move(self, direction: Direction, environment: Environment) -> None:
@@ -751,7 +751,7 @@ class Tree(Entity):
                                    n_outputs=NUM_TREE_OUTPUTS)   
         
         self.mind = self.brain.phenotype
-        self.mind.verify_post_genesis()  
+        self.mind.verify_complete_post_genesis()  
         
     def _produce_energy(self, environment: Environment) -> None:
         """Private method:

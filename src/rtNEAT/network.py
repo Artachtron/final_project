@@ -32,6 +32,15 @@ class Network:
             
     @classmethod
     def genesis(cls, genome: Genome) -> Network:
+        """Class method:
+            Create a new network corresponding to the given genome
+
+        Args:
+            genome (Genome): genome containing the encoding for this network
+
+        Returns:
+            Network: created network
+        """        
         network = cls(network_id=genome.id)
         
         network._synthetize_nodes(node_genes=genome.node_genes)    
@@ -40,13 +49,34 @@ class Network:
         return network
     
     def _synthetize_nodes(self, node_genes: Dict[int, NodeGene]):
+        """Private method:
+            Decode the NodeGenes to synthesize Nodes, and
+            sort the Nodes based on their positions in the network
+
+        Args:
+            node_genes (Dict[int, NodeGene]): dictionary containing the NodeGenes
+        """        
         nodes = dict()
         for key, node_gene in node_genes.items():
             nodes[key] = Node.synthesis(node_gene.transcript())
             
         self._sort_nodes(nodes)
       
-    def _synthetize_links(self, link_genes: Dict[int, LinkGene]) -> Dict[int, Link]:
+    def _synthetize_links(self, link_genes: Dict[int, LinkGene]):
+        """Private method:
+            Decode the LinkGenes to synthesize Links,
+            add them to the network, and
+            connect the incoming Node to the outgoing Node.
+            
+
+        Args:
+            link_genes (Dict[int, LinkGene]): dictionary containing the LinkGenes
+
+        Raises:
+            ValueError: Thrown if an output is an incoming Node in a Link
+            ValueError: Thrown if a sensor is an outgoing Node in a Link
+
+        """        
         for key, link_gene in link_genes.items():
             link = Link.synthesis(link_gene.transcript())
             # Replace id  by the actual Node
@@ -66,7 +96,8 @@ class Network:
                 self._connect_link(link)                
         
     def _connect_link(self, link: Link) -> None:
-        """ Add the link to the list of incoming links of 
+        """ Private method:
+            Add the link to the list of incoming links of 
             the out node and outgoing link of the in node
 
         Args:
@@ -79,6 +110,14 @@ class Network:
         in_node.outgoing[link.id] = link
     
     def _sort_nodes(self, nodes: Dict[int, Node]) -> None:
+        """Private method:
+            Sort the Nodes by positions in the network,
+            add them to their respective dictionary, and
+            add themm all to the all_nodes dictionary
+
+        Args:
+            nodes (Dict[int, Node]): Dictionary of Nodes to sort
+        """        
               
         for key, node in nodes.items():         
             # Check for nodes' type 
@@ -95,7 +134,18 @@ class Network:
             # Keep track of all nodes    
             self._all_nodes[key] = node
     
-    def verify_post_genesis(self):
+    def verify_complete_post_genesis(self):
+        """Public method:
+            Verify if the complete network's structure is correct
+
+        Raises:
+            ValueError: Outputs must be connected to all inputs
+            ValueError: Outputs incoming connections must be equal to set of inputs
+            ValueError: Outputs must not have any outgoing connections
+            ValueError: Inputs must be connected to all outputs
+            ValueError: Inputs outgoing connections must be equal to set of outputs
+            ValueError: Inputs must not have any incoming connections
+        """        
         # Complete
         for node in self.get_outputs():
             if len(node.incoming) != len(self.inputs):
@@ -120,7 +170,8 @@ class Network:
         
     
     def activate(self, input_values: np.array) -> np.array:
-        """ Activate the whole network after recieving input values
+        """Public method:
+            Activate the whole network after recieving input values
 
         Args:
             input_values (np.array): input values
@@ -140,28 +191,31 @@ class Network:
         self.activation_phase += 1 
 
         # store the input values in the input nodes
-        self.activate_inputs(values=input_values)
+        self._activate_inputs(values=input_values)
         # travel through the network to calculate the output values
-        output_values = self.activate_outputs()
+        output_values = self._activate_outputs()
                                  
         return output_values
     
-    def activate_inputs(self, values: np.array):
-        """ Store the input values in the input nodes
+    def _activate_inputs(self, values: np.array):
+        """ Private method:
+            Store the input values in the input nodes
     
         Args:
             values (np.array): values to store in the input nodes
         """ 
-        # inputs_dict = self.inputs        
-        # inputs = [inputs_dict[key] for key in sorted(inputs_dict.keys(), reverse=False)]
+        # Make sure inputs are in the right order
         inputs = list(self.inputs.values())
         
         for node, value in zip(inputs, values): 
+            if not node.is_sensor():
+                raise ValueError("The node must be a sensor")
             node.activation_value = value
             node.activation_phase = self.activation_phase
         
-    def activate_outputs(self) -> np.array:
-        """ Travel through the network calculating the
+    def _activate_outputs(self) -> np.array:
+        """Private method:
+            Travel through the network calculating the
             activation values necessary for each output
         
 
@@ -175,12 +229,12 @@ class Network:
         output_values = {}
         
         for node in self.get_outputs():
-            """ if node.type != NodeType.OUTPUT:
-                raise ValueError """
+            if not node.is_output():
+                raise ValueError("The node must be an output")
             
             output_value = node.get_activation(activation_phase=self.activation_phase) 
-            output_values[node.id]= output_value
-            # node.activation_value = output_value
+            output_values[node.id] = output_value
+            node.activation_value = output_value
         
         return output_values
     
