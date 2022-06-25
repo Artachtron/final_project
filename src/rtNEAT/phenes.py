@@ -8,8 +8,8 @@ class BasePhene:
                  phene_id: int,
                  enabled: bool = True):
         
-        self.__id: int = phene_id
-        self.enabled: bool = enabled
+        self.__id: int = phene_id       # unique identifier
+        self.enabled: bool = enabled    # does not output any value if false
      
     @property
     def id(self):
@@ -31,9 +31,9 @@ class Link(BasePhene):
         super(Link, self).__init__(phene_id=link_id,
                                     enabled=enabled)
         
-        self.weight: float = weight # Weight of connection
-        self.in_node: Node = in_node # Node inputting into the link
-        self.out_node: Node = out_node # Node that the link affects
+        self.weight: float = weight     # Weight of the connection
+        self.in_node: Node = in_node    # Node inputting into the link
+        self.out_node: Node = out_node  # Node that the link affects
 
     @classmethod
     def synthesis(cls, kwargs) -> Link:
@@ -58,16 +58,16 @@ class Node(BasePhene):
         super(Node, self).__init__( phene_id=node_id,
                                     enabled=enabled)
         
-        self.activation_phase: int = 0
-        self.activation_value: float = 0.0              # The total activation entering the Node
-        self.type: NodeType = node_type     # HIDDEN, INPUT, OUTPUT, BIAS
-        self.bias = bias
+        self.activation_phase: int = 0              # Current activation phase
+        self.activation_value: float = 0.0          # The total output value
+        self.type: NodeType = node_type             # HIDDEN, INPUT, OUTPUT
+        self.bias = bias                            # Bias value
        
         self.activation_function: ActivationFuncType = activation_function 
         self.aggregation_function: AggregationFuncType = aggregation_function
             
-        self.incoming: Dict[int, Link] = {}                         # A list of pointers to incoming weighted signals from other nodes
-        self.outgoing: Dict[int, Link] = {}                         # A list of pointers to links carrying this node's signal
+        self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links
+        self.outgoing: Dict[int, Link] = {}          # Dictionary of outgoing links
         
     def get_incoming(self)  ->  Set[Link]:
         """Public method:

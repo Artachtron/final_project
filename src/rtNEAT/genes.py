@@ -263,7 +263,7 @@ class NodeGene(BaseGene):
                 'bias':self.bias, 'enabled':self.enabled}
         
     def mutate(self) -> None:
-        """Mutate the LinkGene
+        """Mutate the NodeGene
         """       
         # if frozen can't be mutated 
         if self.frozen: return
@@ -273,10 +273,10 @@ class NodeGene(BaseGene):
             not self.is_sensor()):
             self.bias = uniform(-1,1)
             
-        # disable the link
+        # disable the node
         if random() < Config.disable_prob:
             self.disabled = True
-        # enable the link
+        # enable the node
         elif random() < Config.enable_prob:
             self.enabled = True
         

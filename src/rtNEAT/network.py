@@ -16,15 +16,15 @@ class Network:
         
         self.__id = network_id
         
-        self._inputs: Dict[int, Node] = dict() # Nodes that input into the network
-        self._outputs: Dict[int, Node] = dict() # Values output by the network
-        self._hidden: Dict[int, Node] = dict() #
-        self._all_nodes: Dict[int, Node] = dict() # A list of all the nodes
+        self._inputs: Dict[int, Node] = dict()      # Dictionary of input nodes
+        self._outputs: Dict[int, Node] = dict()     # Dictionary of output nodes
+        self._hidden: Dict[int, Node] = dict()      # Dictionary of hidden nodes
+        self._all_nodes: Dict[int, Node] = dict()   # Dictionary of all nodes
         
-        self._links: Dict[int, Link] = dict()
+        self._links: Dict[int, Link] = dict()       # Dictionary of all links
 
-        self.activation_phase: int = 0
-        self.frozen: bool = frozen
+        self.activation_phase: int = 0              # Current activation phase
+        self.frozen: bool = frozen                  # Frozen state (can't modify weights)
 
     @property
     def id(self):
