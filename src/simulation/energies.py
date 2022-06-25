@@ -1,6 +1,6 @@
 from __future__ import annotations
     
-from typing import Tuple
+from typing import Tuple, Optional
 
 import enum
 from numpy.random import randint
@@ -41,6 +41,7 @@ class Energy(Resource):
                  position: Tuple[int,int],
                  quantity: int = 10,
                  appearance: str = "",
+                 owner_id: Optional[int] = 0,
                  ):
         
         appearance = "energies/" + appearance
@@ -51,6 +52,7 @@ class Energy(Resource):
                                      quantity=quantity)
         
         self._type: EnergyType = energy_type
+        self.owner = owner_id
         
     @property
     def type(self):
@@ -61,22 +63,27 @@ class RedEnergy(Energy):
                  position: Tuple[int,int],
                  energy_id: int = 0,
                  quantity: int = 10,
+                 owner_id: Optional[int] = 0,
                  ):
         
         super(RedEnergy, self).__init__(energy_id=energy_id,
                                         position=position,
                                         quantity=quantity,
                                         appearance="red_energy.png",
-                                        energy_type=EnergyType.RED)
+                                        energy_type=EnergyType.RED,
+                                        owner_id=owner_id)
         
 class BlueEnergy(Energy):
     def __init__(self,
                  position: Tuple[int,int],
                  energy_id: int = 0,
-                 quantity: int = 10):
+                 quantity: int = 10,
+                 owner_id: Optional[int] = 0,
+                 ):
         
         super(BlueEnergy, self).__init__(energy_id=energy_id,
                                          position=position,
                                          quantity=quantity,
                                          appearance="blue_energy.png",
-                                         energy_type=EnergyType.BLUE)
+                                         energy_type=EnergyType.BLUE,
+                                         owner_id=owner_id)
