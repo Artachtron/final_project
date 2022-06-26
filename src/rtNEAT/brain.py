@@ -14,16 +14,7 @@ class Brain:
                 
       
     @classmethod              
-    def genesis(cls, brain_id: int, n_inputs: int, n_outputs: int) -> Brain:
-        """_summary_
-
-        Args:
-            brain_id (int): _description_
-
-
-        Returns:
-            Brain: _description_
-        """        
+    def genesis(cls, brain_id: int, n_inputs: int, n_outputs: int) -> Brain:  
         """Class method:
             Create a brain with genotype and phenotype for the given entity type
 

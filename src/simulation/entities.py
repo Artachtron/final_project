@@ -899,6 +899,9 @@ class Seed(Resource):
                 
         self.genetic_data = genetic_data
         
+    def __repr__(self):
+        return f"Seed {self.id}"
+        
     def germinate(self) -> Tree:
         """Public method:
             Spawn a tree from genetic data

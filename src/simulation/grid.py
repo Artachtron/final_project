@@ -431,10 +431,7 @@ class Grid:
         self._color_grid: SubGrid = SubGrid(dimensions=(*self.dimensions, 3),   # subgrid containing the color values
                                             data_type=np.uint8,
                                             initial_value=255)       
-        
-        """ self.energy_group = pg.sprite.Group()
-        self.entity_group = pg.sprite.Group() """
-    
+            
     @property
     def id(self):
         return self.__id

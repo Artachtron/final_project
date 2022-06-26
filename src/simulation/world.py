@@ -59,10 +59,7 @@ class World:
                                    show_grid=show_grid)
             
             self.display.init(sim_state=sim_state)
-        
-     
-    def populate(self):
-        self.simulation.populate()   
+         
       
     def update(self):
         grid, sim_state = self.simulation.update()

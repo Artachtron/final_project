@@ -14,9 +14,6 @@ from os.path import dirname, realpath, join
 from pathlib import Path
 
 
-
-grid = None
-
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
@@ -209,14 +206,6 @@ class Display:
         """Draw the energies"""
         self.resource_group.draw(self.screen)
         
-    def update_world(self) -> None:
-        """Update the world"""
-        """ if  self.tick_counter == 0:
-            update_entities() """
-
-    def update_entities(self) -> None:
-        """Update the entities"""
-        grid.entity_group.update()
         
     @property
     def id(self):
