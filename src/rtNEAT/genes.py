@@ -186,7 +186,7 @@ class LinkGene(BaseGene):
             out_node (int): id of the outgoing NodeGene
             weight (float): weight of the connection
 
-        Abstract methods:
+        Methods:
             transcript:         Send information about gene as a dictionary
             mutate:             Mutate the gene
             duplicate:          Create a copy of the gene
@@ -313,7 +313,7 @@ class NodeGene(BaseGene):
             activation_function (ActivationFuncType, optional):     calculate activation from incoming signals
             aggregation_function (AggregationFuncType, optional):   aggregate input signals' value
 
-        Abstract methods:
+        Methods:
             transcript:         Send information about gene as a dictionary
             mutate:             Mutate the gene
             duplicate:          Create a copy of the gene
