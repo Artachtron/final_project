@@ -259,20 +259,20 @@ class TestSubGrid:
             pos_3 = (-1,0)
             pos_4 = (0,-1)
             
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_1)
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_2)
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_3)
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_4)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_1)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_2)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_3)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_4)
             
             pos_5 = (10,0)
             pos_6 = (0,15)
             pos_7 = (3,0)
             pos_8 = (0,4)
             
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_5)
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_6)
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_7)
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_8)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_5)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_6)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_7)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_8)
             
         def test_are_vacant_coordinates(self):
             # Free cell
