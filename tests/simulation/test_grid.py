@@ -1,11 +1,16 @@
-import os, sys, pytest
+import os
+import sys
+
 import numpy as np
+import pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
+from project.src.simulation.energies import (BlueEnergy, Energy, EnergyType,
+                                             RedEnergy, Resource)
+from project.src.simulation.entities import Animal, Entity, Tree
 from project.src.simulation.grid import Grid, SubGrid
-from project.src.simulation.entities import Animal, Tree, Entity
-from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource, EnergyType
 from project.src.simulation.simulation import Environment
+
 
 class TestGrid:
     def test_create_grid(self):
@@ -344,7 +349,7 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinates(coordinates=position,
+                free_cell, = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                     radius=radius)
                 assert free_cell in cells
                 
@@ -357,7 +362,7 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinates(coordinates=position,
+                free_cell, = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                      radius=radius)
                 assert free_cell 
                 assert free_cell in cells

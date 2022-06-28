@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 
 import numpy as np
@@ -70,23 +71,23 @@ class TestGenome:
                 
                 action_node3 = NodeGene(node_type=NodeType.OUTPUT)
                 
-                gene0 = LinkGene(in_node=sensor_node,
-                                out_node=action_node,
+                gene0 = LinkGene(in_node=sensor_node.id,
+                                out_node=action_node.id,
                                 weight=1.0,
                                 mutation_number=0)
                 
-                gene1 = LinkGene(in_node=sensor_node2,
-                                out_node=action_node2,
+                gene1 = LinkGene(in_node=sensor_node2.id,
+                                out_node=action_node2.id,
                                 weight=1.0,
                                 mutation_number=0)
                 
-                gene2 = LinkGene(in_node=sensor_node3,
-                                out_node=action_node3,
+                gene2 = LinkGene(in_node=sensor_node3.id,
+                                out_node=action_node3.id,
                                 weight=1.0,
                                 mutation_number=0)
                         
-                gene3 = LinkGene(in_node=sensor_node3,
-                                out_node=action_node3,
+                gene3 = LinkGene(in_node=sensor_node3.id,
+                                out_node=action_node3.id,
                                 weight=1.0,
                                 mutation_number=1)
     
@@ -111,8 +112,8 @@ class TestGenome:
                                                         mutation_number=1))
                 
                 self.genome2_extended.add_link(LinkGene(link_id=1,
-                                                        in_node=sensor_node,
-                                                        out_node=action_node,
+                                                        in_node=sensor_node.id,
+                                                        out_node=action_node.id,
                                                         weight=1.0,
                                                         mutation_number=1))
                     
@@ -124,7 +125,7 @@ class TestGenome:
                                     node_genes={node.id: node for node in self.nodes.values() if node.id in list(range(1,7))},
                                     link_genes={link.id: link for link in self.links.values() if link.id in list(range(2,5))})
                             
-                np.random.seed(1)
+                random.seed(1)
 
                 yield
                 
@@ -209,23 +210,23 @@ class TestGenome:
                 
                 action_node3 = NodeGene(node_type=NodeType.OUTPUT)
                 
-                gene0 = LinkGene(in_node=sensor_node,
-                                out_node=action_node,
+                gene0 = LinkGene(in_node=sensor_node.id,
+                                out_node=action_node.id,
                                 weight=1.0,
                                 mutation_number=0)
                 
-                gene1 = LinkGene(in_node=sensor_node2,
-                                out_node=action_node2,
+                gene1 = LinkGene(in_node=sensor_node2.id,
+                                out_node=action_node2.id,
                                 weight=1.0,
                                 mutation_number=0)
                 
-                gene2 = LinkGene(in_node=sensor_node3,
-                                out_node=action_node3,
+                gene2 = LinkGene(in_node=sensor_node3.id,
+                                out_node=action_node3.id,
                                 weight=1.0,
                                 mutation_number=0)
                         
-                gene3 = LinkGene(in_node=sensor_node3,
-                                out_node=action_node3,
+                gene3 = LinkGene(in_node=sensor_node3.id,
+                                out_node=action_node3.id,
                                 weight=1.0,
                                 mutation_number=1)
     
@@ -257,7 +258,7 @@ class TestGenome:
                 self.genome1._mutate_links()
                 new_weights = [gene.weight for gene in self.genome1.get_link_genes()]
                 
-                assert new_weights[2] != weights[2] 
+                assert new_weights != weights 
             
             def test_find_random_link(self):
                 # Random link in link genes' list
@@ -453,7 +454,7 @@ class TestGenome:
             @pytest.fixture(autouse=True)
             def setup(self):
                 reset_innovation_table()
-                np.random.seed(1)
+                random.seed(1)
                 yield
                 
                 
@@ -713,16 +714,16 @@ class TestGenome:
                                         parent2=genome)  
                 
                 assert baby.id == 5
-                assert baby.n_link_genes == 50
+                assert baby.n_link_genes == 25
                 assert baby.n_node_genes == 100
                 
                 #genome1 dominant
                 baby = Genome.crossover(genome_id=6,
-                                        parent1=genome,
-                                        parent2=genome1)  
+                                        parent1=genome1,
+                                        parent2=genome)  
                 
                 assert baby.id == 6
-                assert baby.n_link_genes == 25
+                assert baby.n_link_genes == 50
                 assert baby.n_node_genes == 100
                 
                 
@@ -735,24 +736,27 @@ class TestGenome:
                 for _ in range(200):
                     Genome.insert_gene(genes_dict=nodes2,
                                        gene=NodeGene(node_type=choice([NodeType.HIDDEN,
-                                                                                NodeType.INPUT,
-                                                                                NodeType.OUTPUT])))
-                # genome dominant    
+                                                                       NodeType.INPUT,
+                                                                       NodeType.OUTPUT])))
+                # genome3 dominant    
                 baby = Genome.crossover(genome_id=7,
                                         parent1=genome,
                                         parent2=genome3)  
                 
                 assert baby.id == 7
                 assert baby.n_link_genes == 50
-                assert baby.n_node_genes == 100
+                assert baby.n_node_genes == 300
                 
-                # genome4 dominant
+               
+                
+                # genome dominant
+                
                 baby = Genome.crossover(genome_id=8,
-                                        parent1=genome,
-                                        parent2=genome3)  
+                                        parent1=genome3,
+                                        parent2=genome)                 
                 
                 assert baby.id == 8
                 assert baby.n_link_genes == 50
-                assert baby.n_node_genes == 300
+                assert baby.n_node_genes == 100
                 
                 
