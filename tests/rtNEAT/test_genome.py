@@ -459,11 +459,11 @@ class TestGenome:
                 output_node = NodeGene(node_type=NodeType.OUTPUT)
                 
                 #Hidden
-                assert not Genome._is_IO_node(node=hidden_node)
+                assert not Genome._is_edge_node(node=hidden_node)
                 #Input
-                assert Genome._is_IO_node(node=input_node)
+                assert Genome._is_edge_node(node=input_node)
                 #Output
-                assert Genome._is_IO_node(node=output_node)
+                assert Genome._is_edge_node(node=output_node)
             
             def test_check_genes_conflict(self):
                 # Nodes

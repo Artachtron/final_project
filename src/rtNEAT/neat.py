@@ -4,7 +4,8 @@ class Config:
     def set_inputs_outputs(num_inputs, num_outputs):
         Config.num_inputs = num_inputs
         Config.num_outputs = num_outputs
-    
+        
+    @staticmethod
     def configure(
         # Network structures
         num_inputs: int = 96,
