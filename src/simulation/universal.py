@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Tuple, Any
+import enum
 from dataclasses import dataclass
 from math import sqrt
-import enum
-import  numpy as np
+from typing import Any, Tuple
+
 
 class EntityType(enum.Enum):
     Animal  =   "animal"
@@ -22,13 +22,13 @@ class Position:
     def vect(self):
         return self.x, self.y
         
-    def add(self, vect: Tuple[int, int]):
-        self._x += vect[0]
-        self._y += vect[1]
+    def move(self, vect: Tuple[int, int]):
+        self.x += vect[0]
+        self.y += vect[1]
      
     @staticmethod   
     def add(position: Position, vect: Tuple[int, int]):
-        pos = tuple(position)
+        pos = position()
 
         return Position(pos[0] + vect[0], 
                         pos[1] + vect[1])

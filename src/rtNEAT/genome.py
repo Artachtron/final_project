@@ -29,7 +29,7 @@ class Genome:
 
         Returns:
             int: genome's id
-        """        
+        """
         return self.__id
 
     @property
@@ -441,7 +441,7 @@ class Genome:
 
                 return True
 
-        
+
         return False
 
 
@@ -551,7 +551,7 @@ class Genome:
         Returns:
             int: max NodeGene's id
         """
-        return max(set(self._node_genes.keys()))
+        return max(set(self.node_genes.keys()))
 
     def get_last_link_id(self) -> int:
         """ Return highest id of LinkGene in Genome
@@ -559,7 +559,7 @@ class Genome:
         Returns:
             int: max LinkGene's id
         """
-        return max(set(self._link_genes.keys()))
+        return max(set(self.link_genes.keys()))
 
     @staticmethod
     def _is_edge_node(node: NodeGene) -> bool:

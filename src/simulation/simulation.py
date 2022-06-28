@@ -295,23 +295,10 @@ class Environment:
         Returns:
             Entity: born child
         """
+        if parent1.can_reproduce() and parent2.can_reproduce():
 
-        if not (parent1._is_adult and parent2._is_adult):
-            return
-
-        parent1_energy_cost = Animal.REPRODUCTION_ENERGY_COST * parent1._size
-        parent2_energy_cost = Animal.REPRODUCTION_ENERGY_COST * parent2._size
-
-        if (parent1.has_enough_energy(energy_type=EnergyType.RED,
-                                      quantity=parent1_energy_cost) and
-            parent2.has_enough_energy(energy_type=EnergyType.RED,
-                                      quantity=parent2_energy_cost)):
-            
-            parent1._loose_energy(energy_type=EnergyType.RED,
-                                  quantity=parent1_energy_cost)
-            
-            parent2._loose_energy(energy_type=EnergyType.RED,
-                                  quantity=parent2_energy_cost)
+            parent1.reproduce()
+            parent2.reproduce()
 
             birth_position,  = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
 
@@ -330,15 +317,6 @@ class Environment:
                     child.born(parent1=parent1,
                                parent2=parent2)
 
-                DIE_GIVING_BIRTH_PROB = 0.02
-                if random() < DIE_GIVING_BIRTH_PROB:
-                    parent1.status = (Status.DEAD
-                                      if random() < DIE_GIVING_BIRTH_PROB
-                                      else Status.ALIVE)
-
-                    parent2.status = (Status.DEAD
-                                      if random() < DIE_GIVING_BIRTH_PROB
-                                      else Status.ALIVE)
 
                 return child
 

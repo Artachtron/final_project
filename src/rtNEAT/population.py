@@ -1,11 +1,11 @@
-import numpy as np
+import numpy.typing as npt
 
 
 # Might not be necessary
 class Population:
     def __init__(self,
-                 brain: np.array,
-                 species: np.array):
+                 brain: npt.NDArray,
+                 species: npt.NDArray):
         self.brain = brain
         self.species = species
         self.size = len(brain)

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 import enum
 import inspect
-from random import choice
+from random import choice, random
 from typing import Any, Dict, Final, Optional, Tuple
 
 import numpy as np
@@ -450,6 +450,21 @@ class Animal(Entity):
 
     def __repr__(self):
         return f'Animal {self.id}'
+
+    def can_reproduce(self) -> bool:
+        return (self._is_adult and
+                self.has_enough_energy(energy_type=EnergyType.RED, 
+                                       quantity=Animal.REPRODUCTION_ENERGY_COST * self._size))
+        
+    def reproduce(self) -> None:
+        DIE_GIVING_BIRTH_PROB = 0.02
+        if random() < DIE_GIVING_BIRTH_PROB:
+            parent1.status = (Status.DEAD
+                            if random() < DIE_GIVING_BIRTH_PROB
+                            else Status.ALIVE)
+            
+        self._loose_energy(energy_type=EnergyType.RED,
+                           quantity=Animal.REPRODUCTION_ENERGY_COST * self._size)
 
     def _create_brain(self):
         NUM_ANIMAL_INPUTS = 96

@@ -15,7 +15,7 @@ from energies import Resource
 from entities import Animal, Entity, Tree
 
 
-class SubGridType(enum.Enum):    
+class SubGridType(enum.Enum):
     ENTITY = 0
     RESOURCE = 1
     COLOR = 2
@@ -71,7 +71,7 @@ class SubGrid:
             and self._is_of_valid_type(value=value)
         )
 
-    def _place_on_grid(self, value: Any) -> bool:
+    def place_on_grid(self, value: Any) -> bool:
         """Private method:
             (Call place_entity or place_resource
             from grid instead)
@@ -158,7 +158,7 @@ class SubGrid:
         include_self: bool = False,
         radius: int = 1
         ) -> npt.NDArray[Any]:
-        
+
         """Public method:
             Find all the instance of a certain base class in a radius around some coordinates,
             return an boolean array with cells filled by baseclass' instances
@@ -182,9 +182,9 @@ class SubGrid:
                 if (not include_self and
                     x == int(radius / 2 + 1) and
                     y == int(radius / 2 + 1)):
-                    
+
                     continue
-                
+
                 occupied_cells.append(Grid.is_subclass(derived=subregion[x, y],
                                                        base_class=base_class))
 
@@ -196,7 +196,7 @@ class SubGrid:
         coordinates: Tuple[int, int],
         radius: int = 1
         ) -> Set[Tuple[int, int]]:
-        
+
         """Private method:
             Find the list of cells at given radius distance from specified class
 
@@ -258,7 +258,7 @@ class SubGrid:
         include_self: bool = False,
         radius: int = 1,
     ) -> Set[Any]:
-        
+
         """Private method:
             Find all the instances of a certain base class around and
             return a set containing them
@@ -293,7 +293,7 @@ class SubGrid:
     def find_free_coordinates(
         self, coordinates: Tuple[int, int], radius: int = 1
     ) -> Set[Tuple[int, int]]:
-                
+
         """Public method:
             Find a free cell in range
 
@@ -319,7 +319,7 @@ class SubGrid:
     def select_free_coordinates(
         self, coordinates: Tuple[int, int], radius: int = 1, num_cells: int = 1
     ) -> Set[Tuple[int, int]]:
-        
+
         """Public method:
             Select randomly from the free cells available
 
@@ -335,7 +335,7 @@ class SubGrid:
         free_cells: Set[Tuple[int, int]] = self.find_free_coordinates(
                                                     coordinates=coordinates,
                                                     radius=radius
-                                                )   
+                                                )
 
         if free_cells:
             # Make sure no more than free cells
@@ -410,9 +410,9 @@ class SubGrid:
         try:
             if coordinates[0] < 0 or coordinates[1] < 0:
                 raise IndexError
-            
+
             return self._array[tuple(coordinates)]
-        
+
         except IndexError:
             print(f"{coordinates} is out of bounds")
             return False
@@ -439,7 +439,7 @@ class SubGrid:
 
         ndim = self._array.ndim
         width = height = 0
-        
+
         if ndim == 3:
             width, height, depth = self.dimensions
             padded_subregion = np.full(fill_value=-255, shape=(x2 - x1, y2 - y1, depth))
@@ -448,7 +448,7 @@ class SubGrid:
             padded_subregion = np.full(fill_value=None, shape=(x2 - x1, y2 - y1))
 
         left_pad = right_pad = up_pad = down_pad = 0
-        
+
         if x1 < 0:
             left_pad = -x1
             x1 = 0
@@ -467,7 +467,7 @@ class SubGrid:
         x_shape, y_shape = subregion.shape[:2]
 
         padded_subregion: npt.NDArray[Any] = subregion
-        
+
         for x in range(x_shape):
             for y in range(y_shape):
                 padded_subregion[x + left_pad, y + up_pad] = subregion[
@@ -508,7 +508,7 @@ class Grid:
 
         Returns:
             int: grid's id
-        """        
+        """
         return self.__id
 
     @property
@@ -518,7 +518,7 @@ class Grid:
 
         Returns:
             SubGrid: entity subgrid
-        """      
+        """
         return self._entity_grid
 
     @property
@@ -528,7 +528,7 @@ class Grid:
 
         Returns:
             SubGrid: resource subgrid
-        """ 
+        """
         return self._resource_grid
 
     @property
@@ -548,7 +548,7 @@ class Grid:
 
         Returns:
             int: width of the grid
-        """      
+        """
         return self.dimensions[0]
 
     @property
@@ -592,7 +592,7 @@ class Grid:
             bool:   True if the operation was successful
                     False if the resource couldn't be placed
         """
-        return self.resource_grid._place_on_grid(value=value)
+        return self.resource_grid.place_on_grid(value=value)
 
     def place_entity(self, value: Entity) -> bool:
         """Public method:
@@ -605,7 +605,7 @@ class Grid:
             bool:   True if the operation was successful
                     False if the entity couldn't be placed
         """
-        return self.entity_grid._place_on_grid(value=value)
+        return self.entity_grid.place_on_grid(value=value)
 
     def modify_cell_color(
         self, coordinates: Tuple[int, int], color: Tuple[int, int, int]
@@ -633,7 +633,7 @@ class Grid:
 
         Returns:
             Set[Any]: set containing all the cells found
-        """      
+        """
         return self.entity_grid.find_instances_baseclass_around(
                 coordinates=coordinates,
                 radius=radius,
@@ -653,7 +653,7 @@ class Grid:
 
         Returns:
             Set[Any]: set containing all the cells found
-        """     
+        """
         return self.entity_grid.find_instances_baseclass_around(
                 coordinates=coordinates,
                 radius=radius,
