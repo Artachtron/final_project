@@ -22,6 +22,15 @@ class Genome:
         self._link_genes: Dict[int, LinkGene] = link_genes   # list of link's genes
         #self.ancestors: Set = {}                            # set of ancestors
 
+    @property
+    def id(self) -> int:
+        """property:
+            return genome's id
+
+        Returns:
+            int: genome's id
+        """        
+        return self.__id
 
     @property
     def node_genes(self) -> Dict[int, NodeGene]:

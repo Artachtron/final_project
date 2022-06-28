@@ -1,16 +1,18 @@
 from __future__ import annotations
-import math
-from numpy.random import uniform, random
 
-from functools import partial
 import enum
+import math
 from abc import ABC, abstractmethod
+from functools import partial
 
+from numpy.random import random, uniform
 from project.src.rtNEAT.innovation import InnovTable
 from project.src.rtNEAT.neat import Config
+
 Config.configure()
 
 from typing import Dict
+
 
 class NodeType(enum.Enum):
     BIAS = 0
@@ -60,7 +62,7 @@ class BaseGene(ABC):
         self.__id: int = gene_id                        # unique (per genome) identifier corresponding to innovation number
         self.frozen: bool = frozen                      # if the gene can be mutated
         self.enabled: bool = enabled                    # if the phene will participate in the activation calculation
-        self.mutation_number: int = mutation_number     # allow to calculate distance between two genes with the same innovation number
+        self.mutation_number: float = mutation_number     # allow to calculate distance between two genes with the same innovation number
         
     @property
     def id(self):
@@ -218,7 +220,7 @@ class LinkGene(BaseGene):
                 self.in_node == other_gene.out_node) or
                 self.id == other_gene.id)
         
-    def mutation_distance(self, other_gene: LinkGene) -> int:
+    def mutation_distance(self, other_gene: LinkGene) -> float:
         """Calculate the mutation distance between two genes
 
         Args:
@@ -242,9 +244,9 @@ class NodeGene(BaseGene):
                  enabled: bool = True,
                  frozen: bool = False,):
         
-        node_id: int = node_id or InnovTable.get_node_number(increment=True)
+        _id: int = node_id or InnovTable.get_node_number(increment=True)
         
-        super(NodeGene, self).__init__(gene_id=node_id,
+        super(NodeGene, self).__init__(gene_id=_id,
                                        mutation_number=mutation_number,
                                        enabled=enabled,
                                        frozen=frozen)
@@ -286,7 +288,7 @@ class NodeGene(BaseGene):
         elif random() < Config.enable_prob:
             self.enabled = True
         
-    def mutation_distance(self, other_gene: NodeGene) -> int:
+    def mutation_distance(self, other_gene: NodeGene) -> float:
         """Calculate the mutation distance between two genes
 
         Args:
