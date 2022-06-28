@@ -1,10 +1,10 @@
 from __future__ import annotations
-    
-from typing import Tuple, Optional
 
 import enum
-from numpy.random import randint
 from math import log
+from typing import Optional, Tuple
+
+from numpy.random import randint
 
 from universal import SimulatedObject
 
@@ -13,14 +13,13 @@ class Resource(SimulatedObject):
     def __init__(self,
                  resource_id: int,
                  position: Tuple[int, int],
-                 size: int = 10,
                  appearance: str = "",
-                 quantity: int = None
+                 quantity: int = 0
                  ):
         
         self.quantity = quantity or randint(10,100)
         print(quantity)
-        size: int = 5 + log(quantity, 2)
+        size: int = int(5 + log(quantity, 2))
         # size = size/50 if size > 50 else size
         
         appearance = "models/resources/" + appearance
@@ -47,7 +46,6 @@ class Energy(Resource):
         appearance = "energies/" + appearance
         super(Energy, self).__init__(resource_id=energy_id,
                                      position=position,
-                                     size=10,
                                      appearance=appearance,
                                      quantity=quantity)
         
