@@ -15,7 +15,7 @@ from energies import Resource
 from entities import Animal, Entity, Tree
 
 
-class SubGridType(enum.Enum):
+class SubGridType(enum.Enum):    
     ENTITY = 0
     RESOURCE = 1
     COLOR = 2
@@ -274,9 +274,9 @@ class SubGrid:
         """
 
         instances = set()
-        a = list(range(-radius, radius + 1))  # List from (-radius, radius)
-        for x in a:
-            for y in a:
+        search_interval = list(range(-radius, radius + 1))  # List from (-radius, radius)
+        for x in search_interval:
+            for y in search_interval:
                 if not include_self and x == 0 and y == 0:
                     continue
 
@@ -304,12 +304,12 @@ class SubGrid:
         Returns:
             Set[Tuple[int,int]]: set of free cells' coordinates
         """
-        a = list(range(-radius, radius + 1))  # List from (-radius, radius)
-        b = combinations(a * 2, 2)  # ALl the combinations of coordinates
+        search_interval = list(range(-radius, radius + 1))  # List from (-radius, radius)
+        search_area = combinations(search_interval * 2, 2)  # ALl the combinations of coordinates
 
         positions = {
             coordinate
-            for x, y in set(b)
+            for x, y in set(search_area)
             if self.get_cell_value(coordinate:= tuple(np.add(coordinates, (x, y))))
             is None
         }
@@ -502,27 +502,63 @@ class Grid:
         )
 
     @property
-    def id(self):
+    def id(self) -> int:
+        """property:
+            get the id of this grid
+
+        Returns:
+            int: grid's id
+        """        
         return self.__id
 
     @property
     def entity_grid(self) -> SubGrid:
+        """property:
+            get the entity subgrid of this grid
+
+        Returns:
+            SubGrid: entity subgrid
+        """      
         return self._entity_grid
 
     @property
     def resource_grid(self) -> SubGrid:
+        """property:
+            get the resource subgrid of this grid
+
+        Returns:
+            SubGrid: resource subgrid
+        """ 
         return self._resource_grid
 
     @property
     def color_grid(self) -> SubGrid:
+        """property:
+            get the color subgrid of this grid
+
+        Returns:
+            SubGrid: color subgrid
+        """
         return self._color_grid
 
     @property
     def width(self) -> int:
+        """property:
+            get the width of the grid
+
+        Returns:
+            int: width of the grid
+        """      
         return self.dimensions[0]
 
     @property
     def height(self) -> int:
+        """property:
+            get the heigth of the grid
+
+        Returns:
+            int: heigth of the grid
+        """
         return self.dimensions[1]
 
     @staticmethod
@@ -597,7 +633,7 @@ class Grid:
 
         Returns:
             Set[Any]: set containing all the cells found
-        """        
+        """      
         return self.entity_grid.find_instances_baseclass_around(
                 coordinates=coordinates,
                 radius=radius,
@@ -617,7 +653,7 @@ class Grid:
 
         Returns:
             Set[Any]: set containing all the cells found
-        """      
+        """     
         return self.entity_grid.find_instances_baseclass_around(
                 coordinates=coordinates,
                 radius=radius,
