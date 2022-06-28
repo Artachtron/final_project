@@ -14,13 +14,13 @@ Gene = TypeVar('Gene', bound=BaseGene)
 class Genome:
     def __init__(self,
                  genome_id: int,
-                 node_genes: Dict[int, NodeGene] = {},
-                 link_genes: Dict[int, LinkGene] = {}):
+                 node_genes: Dict[int, NodeGene] | None = None,
+                 link_genes: Dict[int, LinkGene] | None = None):
 
-        self.__id: int = genome_id                           # unique identifier
-        self._node_genes: Dict[int, NodeGene] = node_genes   # list of network's nodes
-        self._link_genes: Dict[int, LinkGene] = link_genes   # list of link's genes
-        #self.ancestors: Set = {}                            # set of ancestors
+        self.__id: int = genome_id                                  # unique identifier
+        self._node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
+        self._link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
+        #self.ancestors: Set = {}                                   # set of ancestors
 
     @property
     def id(self) -> int:

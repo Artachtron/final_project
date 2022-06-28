@@ -1,17 +1,18 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from entities import Animal, Tree, Entity 
     import numpy as np
-    
-from typing import Dict, Tuple, Final
 
-from random import randint, sample, random
 from itertools import product
+from random import randint, random, sample
+from typing import Dict, Final, Set, Tuple
 
-from grid import Grid  
-from entities import Animal, Tree, Entity, Seed, Status
-from energies import Energy, EnergyType, BlueEnergy, RedEnergy, Resource 
+from energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
+from entities import Animal, Entity, Seed, Status, Tree
+from grid import Grid
 
 
 class SimState:
@@ -510,22 +511,31 @@ class Environment:
             entity (Entity): entity to decompose
         """        
         # Select free cells to place energy on
-        free_cells: Tuple[int, int] = self.grid.resource_grid.select_free_coordinates(
-                                                                coordinates=entity.position,
-                                                                num_cells=2)
+        free_cells = self.grid.resource_grid.select_free_coordinates(
+                        coordinates=entity.position,
+                        num_cells=2)
+        
+        red_cell = blue_cell = None
         
         if not free_cells:
             return
         
-        # Red energy       
-        self.create_energy(energy_type=EnergyType.RED,
-                            coordinates=free_cells[0],
-                            quantity=entity.energies[EnergyType.RED.value])
+        elif len(free_cells) == 2:
+            red_cell, blue_cell = free_cells
+        
+        elif len(free_cells) == 1:
+            red_cell, = free_cells
+        
+        # Red energy    
+        if red_cell: 
+            self.create_energy(energy_type=EnergyType.RED,
+                                coordinates=red_cell,
+                                quantity=entity.energies[EnergyType.RED.value])
     
         # Blue energy  
-        if len(free_cells) == 2:                           
+        if blue_cell:                           
             self.create_energy(energy_type=EnergyType.BLUE,
-                               coordinates=free_cells[1],
+                               coordinates=blue_cell,
                                quantity=entity.energies[EnergyType.BLUE.value])
         
         

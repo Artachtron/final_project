@@ -1,21 +1,22 @@
 from __future__ import annotations
-from tkinter import N
 
+from tkinter import N
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from grid import Grid, SubGrid
     from simulation import Environment
     from project.src.rtNEAT.network import Network
-    
-from typing import Tuple, Final, Dict, Any
-import enum
-import numpy as np
-import inspect
 
-from energies import EnergyType, Energy, Resource
-from universal import SimulatedObject, Position, EntityType
+import enum
+import inspect
+from typing import Any, Dict, Final, Tuple
+
+import numpy as np
 from project.src.rtNEAT.brain import Brain
+
+from energies import Energy, EnergyType, Resource
+from universal import EntityType, Position, SimulatedObject
 
 
 class Direction(enum.Enum):
@@ -466,7 +467,7 @@ class Animal(Entity):
                                     quantity=Animal.PLANTING_COST):
             
             # Get a free cell around
-            free_cell: Tuple[int, int] = entity_grid.select_free_coordinates(
+            free_cell,  = entity_grid.select_free_coordinates(
                                             coordinates=self.position)
             
             if free_cell:

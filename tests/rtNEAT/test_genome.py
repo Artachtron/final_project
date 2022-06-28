@@ -1,10 +1,14 @@
-import pytest, os, sys
+import os
+import sys
+
 import numpy as np
+import pytest
 from numpy.random import choice
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
+from project.src.rtNEAT.genes import (LinkGene, NodeGene, NodeType,
+                                      reset_innovation_table)
 from project.src.rtNEAT.genome import Genome
-from project.src.rtNEAT.genes import NodeGene, LinkGene, reset_innovation_table, NodeType
 from project.src.rtNEAT.neat import Config
 
 Config.configure()
@@ -25,7 +29,7 @@ class TestGenome:
                         node_genes=nodes,
                         link_genes=genes)
         
-        assert {'id','_node_genes','_link_genes'}.issubset(vars(genome))
+        assert {'_node_genes','_link_genes'}.issubset(vars(genome))
         
         assert genome.id == 0
         assert genome._node_genes == nodes

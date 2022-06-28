@@ -318,7 +318,7 @@ class SubGrid:
 
     def select_free_coordinates(
         self, coordinates: Tuple[int, int], radius: int = 1, num_cells: int = 1
-    ) -> Tuple[int, int] | Set[Tuple[int, int]]:
+    ) -> Set[Tuple[int, int]]:
         
         """Public method:
             Select randomly from the free cells available
@@ -345,7 +345,7 @@ class SubGrid:
             samples = sample(free_cells, num_choice)
 
             if num_cells == 1:
-                return samples[0]
+                return set(samples)
 
             else:
                 free_cells = set(samples)

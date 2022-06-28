@@ -1,14 +1,18 @@
-import os, sys, pytest
-import iniconfig
+import os
+import sys
 
+import iniconfig
+import pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.entities import Animal, Entity, Tree, Seed, Direction, Status
-from project.src.simulation.energies import BlueEnergy, RedEnergy, EnergyType
+from project.src.rtNEAT.brain import Brain
+from project.src.simulation.energies import BlueEnergy, EnergyType, RedEnergy
+from project.src.simulation.entities import (Animal, Direction, Entity, Seed,
+                                             Status, Tree)
 from project.src.simulation.grid import Grid
 from project.src.simulation.simulation import Environment
-from project.src.rtNEAT.brain import Brain
 from project.src.simulation.universal import EntityType
+
 
 class TestEntity:
     def test_create_entity(self):
@@ -595,8 +599,8 @@ class TestAnimal:
             assert animal.red_energy == 10
             animal._plant_tree(environment=self.env)
             assert animal.red_energy == 0
-            tree_cell = self.entity_grid._find_coordinates_baseclass(coordinates=(5,5),
-                                                                        base_class=Tree)[0]
+            tree_cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(5,5),
+                                                                      base_class=Tree)
             tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
             assert tree.__class__.__name__ == "Tree"
             
@@ -668,9 +672,9 @@ class TestAnimal:
             animal._recycle_seed(environment=self.env)
             assert not animal._pocket 
             energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
-                                                                            coordinates=animal.position) + 
-                                self.grid.resource_grid._find_coordinates_baseclass(base_class=RedEnergy,
-                                                                            coordinates=animal.position))
+                                                                                 coordinates=animal.position) | 
+                             self.grid.resource_grid._find_coordinates_baseclass(base_class=RedEnergy,
+                                                                                 coordinates=animal.position))
             energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]
             assert len(energies) == 2
             
@@ -696,15 +700,15 @@ class TestAnimal:
             animal = self.env.spawn_animal(coordinates=(2,3))
             
             animal._pick_up_resource(coordinates=tree.position,
-                                        environment=self.env)
+                                     environment=self.env)
             animal.red_energy == 10
             animal.blue_energy == 10
             animal._plant_tree(environment=self.env)
             animal.red_energy == 0
             animal.blue_energy == 9
             
-            cell = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
-                                                                    base_class=Tree)[0]
+            cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
+                                                                 base_class=Tree)
             tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
             assert tree._max_age == max_age
             assert tree.blue_energy == blue_energy
@@ -717,8 +721,8 @@ class TestAnimal:
             animal._gain_energy(energy_type=EnergyType.RED,
                                 quantity=100)
             animal._plant_tree(environment=self.env)
-            cell = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
-                                                                    base_class=Tree)[0]
+            cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
+                                                                 base_class=Tree)
             tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
             assert not tree._max_age == max_age
             assert not tree.blue_energy == blue_energy
