@@ -7,27 +7,76 @@ from numpy.random import choice, random
 
 
 class InnovationType(enum.Enum):
+    """Enum:
+        Type of genome's innovation
+    """
     NEW_NODE = 0
     NEW_LINK = 1
 
 class InnovTableProperties(type):
+    """Meta class:
+        Containt the information properties of InnovTable
+    """
     @property
     def node_number(cls) -> int:
+        """Poperty:
+            return the number of nodes already existing
+
+        Returns:
+            int: number of nodes already existing
+        """
         return cls._node_number
 
     @node_number.setter
     def node_number(cls, value: int) -> None:
+        """Setter:
+            Set the node number to the given value
+            if it's not below the current number
+
+        Args:
+            value (int): new node number
+        """
         cls._node_number = max(cls.node_number, value)
 
     @property
     def link_number(cls) -> int:
+        """Poperty:
+            return the number of links already existing
+
+        Returns:
+            int: number of links already existing
+        """
         return cls._link_number
 
     @link_number.setter
     def link_number(cls, value: int) -> None:
+        """Setter:
+            Set the link number to the given value
+            if it's not below the current number
+
+        Args:
+            value (int): new link number
+        """
         cls._link_number = max(cls.link_number, value)
 
-class InnovTable(object, metaclass=InnovTableProperties):
+class InnovTable(metaclass=InnovTableProperties):
+    """Static class:
+        Keep track of innovations through the simulation
+
+    Attributes:
+        _node_number (int): current node number
+        _link_number (int): current link number
+
+    Static methods:
+        get_link_number:        Get the current link number
+        increment_link:         Increment the current link number by a given amount
+        get_node_number:        Get the current node number
+        increment_node:         Increment the current node number by a given amount
+        add_innovation:         Add an innovation to the history's list of innovations
+        reset_innovation_table: Reset the values of the innovation table
+        get_innovation:         Look if innovation already exists in table else create new one
+
+    """
     innovations: List[Innovation] = []
 
     _node_number: int = 1
@@ -36,7 +85,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
 
     @staticmethod
     def get_link_number(increment: bool=False) -> int:
-        """ Get the current link number
+        """Static method:
+            Get the current link number
 
         Returns:
             int: current link number
@@ -50,7 +100,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
 
     @staticmethod
     def increment_link(amount: int=1) -> None:
-        """ Increment the current link number by a given amount
+        """Static method:
+            Increment the current link number by a given amount
 
         Args:
             number (int, optional): link number's increment. Defaults to 1.
@@ -59,7 +110,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
 
     @staticmethod
     def get_node_number(increment: bool=False) -> int:
-        """ Get the current node number
+        """Static method:
+            Get the current node number
 
         Returns:
             int: current node number
@@ -73,7 +125,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
 
     @staticmethod
     def increment_node(amount: int=1) -> None:
-        """ Increment the current node number by a given amount
+        """Static method:
+            Increment the current node number by a given amount
 
         Args:
             number (int, optional): node number's increment. Defaults to 1.
@@ -82,7 +135,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
 
     @staticmethod
     def add_innovation(new_innovation: Innovation) -> None:
-        """ Add an innovation to the history's list of innovations
+        """Static method:
+            Add an innovation to the history's list of innovations
 
         Args:
             new_innovation (Innovation): innovation to add to the list
@@ -91,7 +145,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
 
     @staticmethod
     def reset_innovation_table() -> None:
-        """ Reset the values of the innovation table
+        """Static method:
+            Reset the values of the innovation table
         """
         InnovTable.innovations = []
         InnovTable._node_number = 1
@@ -100,7 +155,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
     @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,
                                          in_node: int, out_node: int) -> bool:
-        """ See if an innovation already exists
+        """Private static method:
+            See if an innovation already exists
 
         Args:
             the_innovation (Innovation):        innovation to check for
@@ -118,7 +174,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
     @staticmethod
     def _create_innovation(in_node: int, out_node: int, innovation_type: InnovationType,
                            old_innovation_number: int=-1) -> Innovation:
-        """ Create a new innovation
+        """Private static method:
+            Create a new innovation
 
         Args:
             in_node (int):                          incoming node's id
@@ -137,7 +194,7 @@ class InnovTable(object, metaclass=InnovTableProperties):
         # NEWLINK parameter
         new_weight: float = -1                                          # new weight
 
-
+        # New node
         if innovation_type == InnovationType.NEW_NODE:
             # one innovation number per new link created
             innovation_number2 = current_innovation + 1
@@ -145,7 +202,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
             InnovTable.increment_link(amount=2)
             # increment the current node number
             InnovTable.increment_node()
-
+            
+        # New link
         elif innovation_type == InnovationType.NEW_LINK:
             # increment the current innovation number
             InnovTable.increment_link(amount=1)
@@ -172,7 +230,8 @@ class InnovTable(object, metaclass=InnovTableProperties):
     @staticmethod
     def get_innovation(in_node: int, out_node: int, innovation_type: InnovationType,
                        old_innovation_number: int=-1) -> Innovation:
-        """ Look if the innovation already exists in the table else create a new innovation
+        """Static method:
+            Look if the innovation already exists in the table else create a new innovation
 
         Args:
             in_node (int):                          incoming node's id
@@ -202,21 +261,48 @@ class InnovTable(object, metaclass=InnovTableProperties):
             return new_innovation
 
 class Innovation:
+    """Class:
+        Keep track of information about a new innovation,
+        allow to compare assymetric genomes
+
+        Attributes:
+            innovation_type (InnovationType):   NEW_NODE or NEW_LINK
+            self.node_in_id (int):              Incoming node's id
+            self.node_out_id (int):             Outgoing node's id
+            self.innovation_number1 (int):      Number assigned to the innovation
+            self.innovation_number2 (int):      In case of NEW_NODE two links are created
+            self.new_node_id (int):             In case of NEW_NODE the id of the created node
+            self.old_innovation_number (int):   In case of NEW_NODE a link is being disabled
+            self.weight (float): new_weight     In case of NEW_LINK the weight associated to the link
+    """
     def __init__(self,
                  node_in_id: int,
                  node_out_id: int,
                  innovation_type: InnovationType,
                  innovation_number1: int,
-                 innovation_number2: int=-1,
+                 innovation_number2: int = -1,
                  old_innovation_number: int = -1,
-                 new_node_id: int=-1,
-                 new_weight: float=-1,
+                 new_node_id: int = -1,
+                 new_weight: float = -1,
                  ):
+        """Constructor:
+            Register a new innovation for genome comparison
+
+        Args:
+            node_in_id (int):                       Incoming node's id
+            node_out_id (int):                      Outgoing node's id
+            innovation_type (InnovationType):       NEW_NODE or NEW_LINK
+            innovation_number1 (int):               Number assigned to the innovation
+            innovation_number2 (int, optional):     In case of NEW_NODE two links are created. Defaults to -1.
+            old_innovation_number (int, optional):  In case of NEW_NODE a link is being disabled. Defaults to -1.
+            new_node_id (int, optional):            In case of NEW_NODE the id of the created node. Defaults to -1.
+            new_weight (float, optional):           In case of NEW_LINK the weight associated to the link. Defaults to -1.
+        """        
 
         self.innovation_type: InnovationType = innovation_type  # NEW_NODE or NEW_LINK
-        self.node_in_id: int = node_in_id                       # The incoming node's id
-        self.node_out_id: int = node_out_id                     # The outgoing node's id
-        self.innovation_number1: int = innovation_number1       # The number assigned to the innovation
+        self.node_in_id: int = node_in_id                       # Incoming node's id
+        self.node_out_id: int = node_out_id                     # Outgoing node's id
+        self.innovation_number1: int = innovation_number1       # Number assigned to the innovation
         self.innovation_number2: int = innovation_number2       # In case of NEW_NODE two links are created
 
         self.new_node_id: int = new_node_id                     # In case of NEW_NODE the id of the created node
