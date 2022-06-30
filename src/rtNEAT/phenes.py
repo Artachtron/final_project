@@ -21,6 +21,13 @@ class BasePhene(ABC):
     def __init__(self,
                  phene_id: int,
                  enabled: bool = True):
+        """Super constructor:
+            Get the necessary information for a gene
+
+        Args:
+            phene_id (int):             unique identifier
+            enabled (bool, optional):   can transmit activation value. Defaults to True.
+        """        
 
         self.__id: int = phene_id       # unique identifier
         self.enabled: bool = enabled    # does not output any value if false

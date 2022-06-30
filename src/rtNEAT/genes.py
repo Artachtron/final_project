@@ -85,8 +85,8 @@ class BaseGene(ABC):
                  mutation_number: int,
                  enabled: bool,
                  frozen: bool,):
-        """Constructor:
-            Initialize a gene
+        """Super constructor:
+            Get the necessary information for a gene
 
         Args:
             gene_id (int):          unique (per genome) identifier
