@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from itertools import product
 from random import randint, random, sample
-from typing import Dict, Final, Optional, Tuple
+from typing import Dict, Final, Optional, Tuple, ValuesView
 
 import numpy.typing as npt
 
@@ -40,12 +40,19 @@ class SimState:
     def id(self):
         return self.__id
 
-    def get_entities(self):
-        return (self.animals|self.trees).values()
+    def get_entities(self) -> ValuesView[Entity]:
+        return (self.animals | self.trees).values()
 
     @property
-    def entities(self):
-        return self.animals|self.trees
+    def entities(self) -> Dict[int, Entity]:
+        return self.animals | self.trees
+    
+    def get_resources(self) -> ValuesView[Resource]:
+        return (self.energies | self.seeds).values()
+    
+    @property
+    def resources(self) -> Dict[int, Resource]:
+        return self.energies | self.seeds
 
     def get_entity_id(self, increment: bool=False) -> int:
         """Public method:

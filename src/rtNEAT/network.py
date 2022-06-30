@@ -13,7 +13,7 @@ from project.src.rtNEAT.phenes import Link, Node
 class Network:
     """Class:
          Neural network, containing nodes and links
-         
+
          Attributes:
             __id (int):                     Unique identifier
             _inputs (Dict[int, Node]):      Dictionary of input nodes
@@ -25,7 +25,7 @@ class Network:
 
             activation_phase (int):         Current activation phase
             frozen (bool):                  Frozen state (can't modify weights)
-    """    
+    """
     def __init__(self,
                  network_id: int = 0,
                  frozen: bool = False):
@@ -35,7 +35,7 @@ class Network:
         Args:
             network_id (int, optional): Unique identifier. Defaults to 0.
             frozen (bool, optional):    Can not modify weight. Defaults to False.
-        """        
+        """
 
         self.__id: int = network_id             # Unique identifier
 
@@ -48,7 +48,7 @@ class Network:
 
         self.activation_phase: int = 0          # Current activation phase
         self.frozen: bool = frozen              # Frozen state (can't modify weights)
-        
+
     @property
     def id(self) -> int:
         """Property:
@@ -56,7 +56,7 @@ class Network:
 
         Returns:
             int: network's id
-        """        
+        """
         return self.__id
 
     @classmethod
@@ -277,7 +277,7 @@ class Network:
 
         Returns:
             int: number of input Nodes
-        """        
+        """
         return len(self._inputs)
 
     @property
@@ -287,7 +287,7 @@ class Network:
 
         Returns:
             int: number of output Nodes
-        """ 
+        """
         return len(self._outputs)
 
     @property
@@ -317,7 +317,7 @@ class Network:
 
         Returns:
             Dict[int, Node]: dictionary of input Nodes
-        """        
+        """
         return self._inputs
 
     @property
@@ -327,7 +327,7 @@ class Network:
 
         Returns:
             Dict[int, Node]: dictionary of output Nodes
-        """  
+        """
         return self._outputs
 
     @property
@@ -337,7 +337,7 @@ class Network:
 
         Returns:
             Dict[int, Node]: dictionary of hidden Nodes
-        """ 
+        """
         return self._hidden
 
     @property

@@ -202,7 +202,7 @@ class InnovTable(metaclass=InnovTableProperties):
             InnovTable.increment_link(amount=2)
             # increment the current node number
             InnovTable.increment_node()
-            
+
         # New link
         elif innovation_type == InnovationType.NEW_LINK:
             # increment the current innovation number
@@ -297,7 +297,7 @@ class Innovation:
             old_innovation_number (int, optional):  In case of NEW_NODE a link is being disabled. Defaults to -1.
             new_node_id (int, optional):            In case of NEW_NODE the id of the created node. Defaults to -1.
             new_weight (float, optional):           In case of NEW_LINK the weight associated to the link. Defaults to -1.
-        """        
+        """
 
         self.innovation_type: InnovationType = innovation_type  # NEW_NODE or NEW_LINK
         self.node_in_id: int = node_in_id                       # Incoming node's id

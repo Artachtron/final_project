@@ -1,52 +1,120 @@
 from __future__ import annotations
-from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFuncType
+
+from abc import ABC, abstractclassmethod, abstractmethod
 from typing import Dict, Set
-from abc import ABC, abstractmethod, abstractclassmethod
+
+from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
+                                      NodeType)
 
 
 class BasePhene(ABC):
+    """Abstract class:
+        Contains the phenes' common attributes and methods
+
+    Attributes:
+        __id (int):     Unique identifier
+        enabled (bool): Can output its activation value
+
+    Abstract class methods:
+        synthesis: Create a phene from gene information
+    """
     def __init__(self,
                  phene_id: int,
                  enabled: bool = True):
-        
+
         self.__id: int = phene_id       # unique identifier
         self.enabled: bool = enabled    # does not output any value if false
-     
+
     @property
     def id(self):
-        return self.__id 
-        
-    @abstractclassmethod  
+        return self.__id
+
+    @abstractclassmethod
     def synthesis(cls, kwargs):
-        raise NotImplementedError("Please Implement the synthesis method")
-        
+        """Abstract class method:
+            Create a phene from gene information
+
+        Args:
+            kwargs : phenes' information
+        """
+
+
 class Link(BasePhene):
+    """BasePhene sublcass:
+        Link created from LinkGene's information,
+        a Link connects two Nodes together
+
+    Attributes:
+        weight (float):     weight of the connection
+        in_node (Node):     incoming Node
+        out_node (Node):    outgoing Node
+
+    class method:
+        synthesis: create a link from LinkGene's information
+    """
     def __init__(self,
                 link_id: int,
                 weight: float,
-                in_node: int,
-                out_node: int,
+                in_node: Node,
+                out_node: Node,
                 enabled: bool = True,
                 ):
-        
-        super(Link, self).__init__(phene_id=link_id,
-                                    enabled=enabled)
-        
+        """Constructor:
+            Initialize a Link
+
+        Args:
+            link_id (int):              unique identifier
+            weight (float):             weight of the connection
+            in_node (Node):             incoming Node
+            out_node (Node):            outgoing Node
+            enabled (bool, optional):   can transmit activation value. Defaults to True.
+        """
+
+        super().__init__(phene_id=link_id,
+                         enabled=enabled)
+
         self.weight: float = weight     # Weight of the connection
         self.in_node: Node = in_node    # Node inputting into the link
         self.out_node: Node = out_node  # Node that the link affects
 
     @classmethod
     def synthesis(cls, kwargs) -> Link:
-        """ Synthesize a Link from a GeneLink
+        """Constructor:
+            Synthesize a Link from a LinkGene
             and return it
 
+        Args:
+            kwargs (Dict): contains the information to synthesize a Link
+
         Returns:
-            Link: the created Link
-        """        
+            Link: create Link
+        """
         return Link(**kwargs)
 
 class Node(BasePhene):
+    """BasePhene sublcass:
+        Node created from NodeGene's information
+
+    Attributes:
+        activation_phase (int):                         current activation phase based on network
+        activation_value (float):                       output value after activation
+        node_type (NodeType):                           position in the network
+        bias (float):                                   incoming bias' value
+        activation_function (ActivationFuncType):       calculate activation form incoming signals
+        aggregation_function (AggregationFuncType):     aggregate input signals' value
+        incoming (Dict[int, Link]):                     incoming Links
+        outgoing (Dict[int, Link]):                     outgoing Links
+
+    method:
+        get_incoming:   returns the set of incoming Links
+        get_outgoing:   returns the set of outgoing Links
+        is_sensor:      Check if the Node is a sensor (INPUT or BIAS)
+        is_output:      Check if the Node is an OUTPUT
+        get_activation: Browse the list of incoming Links and calculate the activation value
+
+    class method:
+        synthesis: synthesize a Node from a NodeGene
+    """
     def __init__(self,
                   node_id: int,
                   node_type: NodeType = NodeType.HIDDEN,
@@ -55,21 +123,32 @@ class Node(BasePhene):
                   bias: float = 1.0,
                   enabled: bool = True,
                   ):
+        """Constructor:
+            Initialize a Node
 
-        super(Node, self).__init__( phene_id=node_id,
-                                    enabled=enabled)
-        
+        Args:
+            node_id (int):                                          unique identifier
+            node_type (NodeType, optional):                         position in the network. Defaults to NodeType.HIDDEN.
+            activation_function (ActivationFuncType, optional):     calculate activation form incoming signals. Defaults to ActivationFuncType.SIGMOID.
+            aggregation_function (AggregationFuncType, optional):   aggregate input signals' value. Defaults to AggregationFuncType.SUM.
+            bias (float, optional):                                 incoming bias' value. Defaults to 1.0.
+            enabled (bool, optional):                               can transmit activation value. Defaults to True.
+        """
+
+        super().__init__(phene_id=node_id,
+                         enabled=enabled)
+
         self.activation_phase: int = 0              # Current activation phase
         self.activation_value: float = 0.0          # The total output value
         self.type: NodeType = node_type             # HIDDEN, INPUT, OUTPUT
-        self.bias = bias                            # Bias value
-       
-        self.activation_function: ActivationFuncType = activation_function 
+        self.bias: float = bias                     # Bias value
+
+        self.activation_function: ActivationFuncType = activation_function
         self.aggregation_function: AggregationFuncType = aggregation_function
-            
+
         self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links
         self.outgoing: Dict[int, Link] = {}          # Dictionary of outgoing links
-        
+
     def get_incoming(self)  ->  Set[Link]:
         """Public method:
             Return only the Links values from
@@ -77,9 +156,9 @@ class Node(BasePhene):
 
         Returns:
             Set[Link]: set of incoming links
-        """        
+        """
         return set(self.incoming.values())
-    
+
     def get_outgoing(self)  ->  Set[Link]:
         """Public method:
             Return only the Links values from
@@ -87,50 +166,54 @@ class Node(BasePhene):
 
         Returns:
             Set[Link]: set of outgoing links
-        """        
+        """
         return set(self.outgoing.values())
-        
+
     @classmethod
     def synthesis(cls, kwargs) -> Node:
-        """ Synthesize a Node from a NodeGene
+        """Constructor:
+            Synthesize a Node from a NodeGene
             and return it
 
         Returns:
             Node: the created Node
-        """ 
-        return Node(**kwargs)    
-                  
+        """
+        return Node(**kwargs)
+
     def is_sensor(self) -> bool:
-        """ determine if the node is a sensor (INPUT or BIAS)
+        """Public method:
+            Check if the node is a sensor (INPUT or BIAS)
 
         Returns:
-            bool: node is a sensor
-        """        
-        return (self.type == NodeType.INPUT or 
+            bool: Node is a sensor
+        """
+        return (self.type == NodeType.INPUT or
                 self.type == NodeType.BIAS)
-        
+
     def is_output(self) -> bool:
-        """ determine if the node is an OUTPUT
+        """Public method:
+            Check if the node is an OUTPUT
 
         Returns:
-            bool: node is an output
-        """        
+            bool: Node is an output
+        """
         return self.type == NodeType.OUTPUT
-        
-        
+
+
     def get_activation(self, activation_phase: int) -> float:
-        """ Browse the list of incoming links and calculate the output value
+        """Public method:
+            Browse the list of incoming Links and calculate the activation value
 
         Args:
             activation_phase (int): current activation phase of the network
 
         Returns:
             float: the output value of the node after activation
-        """  
-        # If the output was already calculated during the current phase, 
-        # or the node is an input: then just return the value      
+        """
+        # If the output was already calculated during the current phase,
+        # or the node is an input: then just return the value
         if self.activation_phase != activation_phase and not self.is_sensor():
-            
+
             values = [self.bias]
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
@@ -140,15 +223,14 @@ class Node(BasePhene):
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
                     values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
-                   
+
             self.activation_value = self.activation_function.value(
-                                    self.aggregation_function.value(values)) 
-            
+                                    self.aggregation_function.value(values))
+
             # set the activation phase to the current one,
             # since the value is now already calculated
-            self.activation_phase = activation_phase 
-                       
+            self.activation_phase = activation_phase
+
         return self.activation_value
-    
-    
-    
+
+

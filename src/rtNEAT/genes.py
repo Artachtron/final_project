@@ -74,11 +74,11 @@ class BaseGene(ABC):
             mutation_number (float):    differentiate two genes (from 2 genomes) with same id
 
         Abstract methods:
-            transcript:         Send information about gene as a dictionary
-            mutate:             Mutate the gene
-            duplicate:          Create a copy of the gene
-            is_allele:          Check if two genes are different versions of the same allele
-            mutation_distance:  Calculate the mutation distance between two genes
+            transcript:         send information about gene as a dictionary
+            mutate:             mutate the gene
+            duplicate:          create a copy of the gene
+            is_allele:          check if two genes are different versions of the same allele
+            mutation_distance:  calculate the mutation distance between two genes
     """
     def __init__(self,
                  gene_id: int,
@@ -187,11 +187,11 @@ class LinkGene(BaseGene):
             weight (float): weight of the connection
 
         Methods:
-            transcript:         Send information about gene as a dictionary
-            mutate:             Mutate the gene
-            duplicate:          Create a copy of the gene
-            is_allele:          Check if two genes are different versions of the same allele
-            mutation_distance:  Calculate the mutation distance between two genes """
+            transcript:         send information about gene as a dictionary
+            mutate:             mutate the gene
+            duplicate:          create a copy of the gene
+            is_allele:          check if two genes are different versions of the same allele
+            mutation_distance:  calculate the mutation distance between two genes """
 
     def __init__(self,
                  in_node: int,
