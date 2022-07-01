@@ -21,18 +21,50 @@ from universal import EntityType, Position, SimulatedObject
 
 
 class Direction(enum.Enum):
+    """Enum:
+        Cardinal direction
+    """
     RIGHT   =   (1, 0)
     LEFT    =   (-1, 0)
     DOWN    =   (0, 1)
     UP      =   (0, -1)
 
 class Status(enum.Enum):
+    """Enum:
+        Entity status
+    """
     ALIVE = 0
     DEAD = 1
     FERTILE = 2
 
 
 class Entity(SimulatedObject):
+    """Subclass of simulated object:
+        Simulated object that interact with the world,
+        and take decisions using a neural network
+
+    Attributes:
+        status (Status):                    # current status
+        _energies_stock (Dict[str, int]):   # energy currently owned
+        generation (int):                   # generation the entity was born in
+        species (int):                      # species the entity is part of
+        ancestors (set):                    # ancestors
+        _age (int):                         # time since birth
+        _max_age (int):                     # maximum longevity before dying
+        _adult_size (int):                  # size to reach before becoming adult
+        _is_adult (bool):                   # can reproduce only if adult
+        _action_cost (int):                 # blue energy cost of each action
+        brain (Brain):                      # brain containing genotype and mind
+        mind (Network):                     # neural network
+
+    Methods:
+        on_birth:           event on birth
+        on_death:           event on death
+        has_enough_energy:  check if has at least certain amount of energy from given type
+        update:             update entity
+
+
+    """
     MAX_AGE_SIZE_COEFF: Final[int] = 5
     GROWTH_ENERGY_REQUIRED: Final[int] = 10
     CHILD_ENERGY_COST_DIVISOR: Final[int] = 2
@@ -55,14 +87,29 @@ class Entity(SimulatedObject):
                  red_energy: int = INITIAL_RED_ENERGY,
                  appearance: str = "",
                  ):
+        """Super constructor:
+            Get the necessary information for an entity
+
+        Args:
+            position (Tuple[int, int]):     coordinates in the world
+            entity_id (int, optional):      unique identifier. Defaults to 0.
+            generation (int, optional):     generation the entity was born in. Defaults to 0.
+            adult_size (int, optional):     minimum size to reach adulthood. Defaults to 0.
+            max_age (int, optional):        maximum longevity. Defaults to 0.
+            size (int, optional):           initialization size. Defaults to INITIAL_SIZE.
+            action_cost (int, optional):    blue energy cost of each action. Defaults to INITIAL_ACTION_COST.
+            blue_energy (int, optional):    amount of blue energy owned. Defaults to INITIAL_BLUE_ENERGY.
+            red_energy (int, optional):     amount of red energy owned. Defaults to INITIAL_RED_ENERGY.
+            appearance (str, optional):     path to sprite's image. Defaults to "".
+        """
 
         appearance = "models/entities/" + appearance
-        super(Entity, self).__init__(sim_obj_id=entity_id,
-                                     position=position,
-                                     size=size,
-                                     appearance=appearance)
+        super().__init__(sim_obj_id=entity_id,
+                         position=position,
+                         size=size,
+                         appearance=appearance)
 
-        self.status: Status = Status.ALIVE                      # Current status
+        self.status: Status = Status.ALIVE                      # current status
 
         self._energies_stock: Dict[str, int] = {                # energy currently owned
             EnergyType.BLUE.value: blue_energy,
@@ -70,8 +117,9 @@ class Entity(SimulatedObject):
             }
 
         self.generation: int = generation                       # generation the entity was born in
-        self.specie: int = 0                                    # Species the entity is part of
-        self._age: int = 0                                      # age of the entity
+        self.species: int = 0                                   # species the entity is part of
+        self.ancestors: Dict[int, Entity]                       # ancestors
+        self._age: int = 0                                      # time since birth
         self._max_age: int = (max_age or                        # maximum longevity before dying
                               (size *
                                Entity.MAX_AGE_SIZE_COEFF))
@@ -82,24 +130,35 @@ class Entity(SimulatedObject):
 
         self._action_cost: int = action_cost                    # blue energy cost of each action
 
-        self.brain: Brain                                       # Brain containing genotype and mind
-        self.mind: Network
+        self.brain: Brain                                       # brain containing genotype and mind
+        self.mind: Network                                      # neural network
 
         if self.generation == 0:
             self._create_brain()
 
     def _create_brain(self):
-        pass
+        """Private method:
+            Create a brain's genotype and its associated phenotype
+        """
 
-    def born(self, parent1: Entity, parent2: Entity) -> None:
-        self.ancestors = ({parent1.id: parent1, parent2.id: parent2} |
-                          parent1.ancestors | 
-                          parent2.ancestors)
-        
+    def on_birth(self, parent1: Entity, parent2: Entity) -> None:
+        """Public method:
+            Event: on entity's birth,
+            add parents and their ancestors to ancestors set,
+            Transplant a brain by crossovering parent's ones.
+
+        Args:
+            parent1 (Entity): first parent
+            parent2 (Entity): second parent
+        """
+        self.ancestors: Dict[int, Entity] = ({parent1.id: parent1, parent2.id: parent2}
+                                            | parent1.ancestors
+                                            | parent2.ancestors)
+
         brain = Brain.crossover(brain_id=self.id,
                                 parent1=parent1.brain,
                                 parent2=parent2.brain)
-        
+
         self._transplant_brain(brain=brain)
 
     def _transplant_brain(self, brain: Brain) -> None:
@@ -170,7 +229,7 @@ class Entity(SimulatedObject):
 
     def _grow(self) -> None:
         """Private method:
-        Action:     Grow the entity to bigger size,
+            Action: Grow the entity to bigger size,
                     consumming red energy
         """
 
@@ -271,7 +330,7 @@ class Entity(SimulatedObject):
 
         # dies if the entity run out of blue energy
         if self._energies_stock[EnergyType.BLUE.value] <= 0:
-             self._die()
+            self._die()
 
         # effective quantity lost
         return quantity
@@ -282,10 +341,10 @@ class Entity(SimulatedObject):
         """
         self._loose_energy(energy_type=EnergyType.BLUE,
                            quantity=self._action_cost)
-        
+
     def has_enough_energy(self, energy_type: EnergyType, quantity: int) -> bool:
         """Public method:
-            Check if the entity has enough of a type of energy
+            Check if has at least certain amount of energy from given type
 
         Args:
             energy_type (EnergyType):   type of energy to loose
@@ -294,7 +353,7 @@ class Entity(SimulatedObject):
         Returns:
             bool: True the entity had enough energy
                   False if it does not
-        """        
+        """
         return self.energies[energy_type.value] >= quantity
 
     def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
@@ -312,7 +371,7 @@ class Entity(SimulatedObject):
         """
         if can_perform:= self.has_enough_energy(energy_type=energy_type,
                                                 quantity=quantity):
-            
+
             self._loose_energy(energy_type=energy_type,
                                quantity=quantity)
 
@@ -381,7 +440,14 @@ class Entity(SimulatedObject):
         self.status = Status.DEAD
 
 
-    def update(self, environment):
+    def update(self, environment: Environment) -> None:
+        """Public method:
+            Update entity, by resetting status,
+            increment age, and activate the mind
+
+        Args:
+            environment (Environment): _description_
+        """
         # Reset status
         self._change_status(new_status=Status.ALIVE)
         # Increase age by 1
@@ -405,16 +471,48 @@ class Entity(SimulatedObject):
                                 environment=environment)
 
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
+        """Private method:
+            Regroup and normalize inputs to feed brain
+
+        Args:
+            environment (Environment): current environment
+
+        Returns:
+            npt.NDArray: array of normalized inputs
+        """
         return np.array([])
 
     def _interpret_outputs(self, outputs: Dict[int, float], environment: Environment):
-        pass
-    
-    def on_death(self, environment: Environment):
-        pass
+        """Private method:
+            Take the adequate decision based on output values
+
+        Args:
+            outputs (Dict[int, float]): dictionary of output nodes' activation values
+            environment (Environment):  current environment
+        """
+
+    def on_death(self, environment: Environment) -> None:
+        """Public method:
+            Event: on death
+
+        Args:
+            environment (Environment): current environment
+        """
 
 
 class Animal(Entity):
+    """Subclass of Entity:
+        Animated entity
+
+        Attributes:
+            pocket (Optional[Seed]): pocket in which to store seed
+
+        methods:
+            on_death:           event: on animal death
+            can_reproduce:      fulfill conditions for reproduction
+            on_reproduction:    event when reproducing
+
+    """
     """ INITIAL_BLUE_ENERGY: Final[int] = 10
     INITIAL_RED_ENERGY: Final[int] = 10 """
 
@@ -431,42 +529,53 @@ class Animal(Entity):
                  action_cost: int = 1,
                  blue_energy: int = 10,
                  red_energy: int = 10,
-                 ancestors = dict(),
                  ):
 
-        super(Animal, self).__init__(position=position,
-                                     entity_id=animal_id,
-                                     generation=generation,
-                                     adult_size=adult_size,
-                                     max_age=max_age,
-                                     size=size,
-                                     action_cost=action_cost,
-                                     blue_energy=blue_energy,
-                                     red_energy=red_energy,
-                                     appearance="animal.png")
+        super().__init__(position=position,
+                         entity_id=animal_id,
+                         generation=generation,
+                         adult_size=adult_size,
+                         max_age=max_age,
+                         size=size,
+                         action_cost=action_cost,
+                         blue_energy=blue_energy,
+                         red_energy=red_energy,
+                         appearance="animal.png")
 
-        self._pocket: Optional[Seed] = None       # Pocket in which to store seed
-        self.ancestors: Dict[int, Animal] = ancestors
+        self._pocket: Optional[Seed] = None # pocket in which to store seed
 
     def __repr__(self):
         return f'Animal {self.id}'
 
     def can_reproduce(self) -> bool:
+        """Public method:
+            Fulfill conditions for reproduction
+
+        Returns:
+            bool:   True if conditions are satisfied,
+                    False if at least one condition is not fulfilled
+        """
         return (self._is_adult and
-                self.has_enough_energy(energy_type=EnergyType.RED, 
+                self.has_enough_energy(energy_type=EnergyType.RED,
                                        quantity=Animal.REPRODUCTION_ENERGY_COST * self._size))
-        
-    def reproduce(self) -> None:
+
+    def on_reproduction(self) -> None:
+        """Public method:
+            Event: when reproducing
+        """
         DIE_GIVING_BIRTH_PROB = 0.02
         if random() < DIE_GIVING_BIRTH_PROB:
-            parent1.status = (Status.DEAD
-                            if random() < DIE_GIVING_BIRTH_PROB
-                            else Status.ALIVE)
-            
+            self.status = (Status.DEAD
+                           if random() < DIE_GIVING_BIRTH_PROB
+                           else Status.ALIVE)
+
         self._loose_energy(energy_type=EnergyType.RED,
                            quantity=Animal.REPRODUCTION_ENERGY_COST * self._size)
 
-    def _create_brain(self):
+    def _create_brain(self) -> None:
+        """Private method:
+            Create an animal brain's genotype and its associated phenotype
+        """
         NUM_ANIMAL_INPUTS = 96
         NUM_ANIMAL_OUTPUTS = 12
 
@@ -476,7 +585,6 @@ class Animal(Entity):
 
         self.mind = self.brain.phenotype
         self.mind.verify_complete_post_genesis()
-
 
     def _move(self, direction: Direction, environment: Environment) -> None:
         """Private method:
@@ -612,7 +720,6 @@ class Animal(Entity):
 
         self._perform_action()
 
-
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Normalize input values for brain activation
@@ -722,6 +829,16 @@ class Animal(Entity):
                 self._want_to_reproduce()
 
 class Tree(Entity):
+    """Subclass of Entity:
+        Immobile entity, producing energy
+
+        Attributes:
+            _production_type: Type of energy produced by the tree
+
+        Methods:
+            on_death:       event on tree death
+            create_seed:    create a seed on current position
+    """
     def __init__(self,
                  position: Tuple[int, int],
                  tree_id: int = 0,
@@ -734,25 +851,43 @@ class Tree(Entity):
                  red_energy: int = 10,
                  production_type: Optional[EnergyType] = None,
                  ):
+        """Constructor:
+            Initialize a tree
 
-        super(Tree, self).__init__( position=position,
-                                    entity_id=tree_id,
-                                    generation=generation,
-                                    adult_size=adult_size,
-                                    max_age=max_age,
-                                    size=size,
-                                    action_cost=action_cost,
-                                    blue_energy=blue_energy,
-                                    red_energy=red_energy,
-                                    appearance="plant.png")
+        Args:
+            position (Tuple[int, int]):                         coordinates in the world
+            tree_id (int, optional):                            unique identifier. Defaults to 0.
+            generation (int, optional):                         generation the tree was born in. Defaults to 0.
+            adult_size (int, optional):                         minimum size to reach adulthood. Defaults to 0.
+            max_age (int, optional):                            maximum longevity. Defaults to 0.
+            size (int, optional):                               current size. Defaults to 10.
+            action_cost (int, optional):                        blue energy cost of each action. Defaults to 1.
+            blue_energy (int, optional):                        amount of blue energy owned. Defaults to 10.
+            red_energy (int, optional):                         amount of red energy owned. Defaults to 10.
+            production_type (Optional[EnergyType], optional):   type of energy produced. Defaults to None.
+        """
 
-        self._production_type: EnergyType = (production_type or                 # Type of energy produce by the tree
+        super().__init__(position=position,
+                         entity_id=tree_id,
+                         generation=generation,
+                         adult_size=adult_size,
+                         max_age=max_age,
+                         size=size,
+                         action_cost=action_cost,
+                         blue_energy=blue_energy,
+                         red_energy=red_energy,
+                         appearance="plant.png")
+
+        self._production_type: EnergyType = (production_type or         # Type of energy produced by the tree
                                              choice(list(EnergyType)))
 
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'
 
     def _create_brain(self):
+        """Private method:
+            Create a tree brain's genotype and its associated phenotype
+        """
         NUM_TREE_INPUTS = 88
         NUM_TREE_OUTPUTS = 5
 
@@ -765,7 +900,7 @@ class Tree(Entity):
 
     def _produce_energy(self, environment: Environment) -> None:
         """Private method:
-            Produce energy
+            Action: Produce energy
         """
         MINUMUM_AGE: Final[int] = 20
         if self._age < MINUMUM_AGE:
@@ -782,10 +917,10 @@ class Tree(Entity):
                           quantity=self._action_cost)
 
     def on_death(self, environment: Environment) -> None:
-        """Action on tree death, create a seed on dead tree position"""
+        """Public method:
+            Event: On tree death, create a seed on dead tree position"""
 
         environment.create_seed_from_tree(tree=self)
-
 
     def _encode_genetic_data(self, data: Dict) -> Dict:
         """Private method:
@@ -819,6 +954,16 @@ class Tree(Entity):
         return genetic_data
 
     def create_seed(self, data: Dict) -> Seed:
+        """Public method:
+            Create a seed on current position,
+            with tree's genetic information
+
+        Args:
+            data (Dict): genetic data to encode
+
+        Returns:
+            Seed: created Seed
+        """
         genetic_data = self._encode_genetic_data(data=data)
 
         seed = Seed(seed_id=self.id,
@@ -896,6 +1041,15 @@ class Tree(Entity):
                 self._grow()
 
 class Seed(Resource):
+    """Subclass of Resource:
+        Container of a tree's genetic information
+
+        Attributes:
+            genetic_data: genetic information of a tree
+
+        Methods:
+            germinate:  Spawn a tree from genetic data
+    """
     def __init__(self,
                  seed_id: int,
                  position: Tuple[int, int],

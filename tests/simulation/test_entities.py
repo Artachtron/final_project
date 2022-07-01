@@ -858,7 +858,7 @@ class TestAnimal:
                 anim2 = self.env.spawn_animal(coordinates=(5,6))
                 
                 self.animal.brain = None
-                self.animal.born(parent1=anim1,
+                self.animal.on_birth(parent1=anim1,
                                  parent2=anim2)
                 
                 assert self.animal.brain

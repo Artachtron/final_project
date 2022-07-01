@@ -321,7 +321,7 @@ class Environment:
                                             generation=self.state.cycle)
                 
                 if child:
-                    child.born(parent1=parent1,
+                    child.on_birth(parent1=parent1,
                                parent2=parent2)
 
 
