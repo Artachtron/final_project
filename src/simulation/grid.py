@@ -1,7 +1,6 @@
-# Typing
+
 from __future__ import annotations
 
-# External libraries
 import enum
 from itertools import combinations
 from random import sample
@@ -10,35 +9,71 @@ from typing import Any, Set, Tuple, Type
 import numpy as np
 import numpy.typing as npt
 
-# Internals packages
 from energies import Resource
 from entities import Animal, Entity, Tree
 
 
 class SubGridType(enum.Enum):
+    """Enum:
+        Layer of grid
+    """
     ENTITY = 0
     RESOURCE = 1
     COLOR = 2
 
 
 class SubGrid:
+    """Class:
+        Layer of the grid
+
+        Attributes:
+            dimensions (Tuple[int, int]):   dimensions of the grid
+            data_type (Any):                type of data allowed
+            initial_value (Any):            value to fill empty cells with
+            _array (npt.NDArray):           array of values
+
+        Methods:
+            are_available_coordinates:      check if the coordinates correspond to valid cell
+            are_vacant_coordinates:         check if a cell is vacant
+            are_coordinates_in_bounds:      check if a cell is in the bounds of the grid
+            are_instance_baseclass_around:  find all the instance of a certain base class in an area
+            find_free_coordinates:          find a free cell in range
+            select_free_coordinates:        select randomly from the free cells available
+            update_cell:                    move an element from a cell to another
+            get_cell_value:                 get the value of a cell
+            get_sub_region:                 Return an array around a given position of a defined size
+    """
     def __init__(
         self,
         dimensions: Tuple[int, ...],
         data_type: Any = Any,
         initial_value: Any = None,
     ):
+        """Constructor:
+            Initialize a subgrid
 
-        self.dimensions: Tuple[int, ...]  = dimensions  # dimensions of the grid
-        self.data_type = data_type  # type of data allowed on the grid
-        self.initial_value = initial_value  # value to fill the emtpy cells with
-        self._array: npt.NDArray[Any] = np.full(self.dimensions,
+        Args:
+            dimensions (Tuple[int, int]):   dimensions of the grid
+            data_type (Any, optional):      type of data allowed. Defaults to Any.
+            initial_value (Any, optional):  value to fill the emtpy cells with. Defaults to None.
+        """
+
+        self.dimensions: Tuple[int, ...]  = dimensions                      # dimensions of the grid
+        self.data_type: Any = data_type                                     # type of data allowed
+        self.initial_value: Any = initial_value                             # value to fill the emtpy cells with
+        self._array: npt.NDArray[Any] = np.full(self.dimensions,            # array of values
                                                 fill_value=initial_value,
                                                 dtype=data_type
         )
 
     @property
     def array(self) -> npt.NDArray[Any]:
+        """Property:
+            Return the array of values
+
+        Returns:
+            npt.NDArray[Any]: array of values
+        """
         return self._array
 
     def _empty_cell(self, coordinates: Tuple[int, int]):
@@ -65,14 +100,12 @@ class SubGrid:
             bool: True if all checks passed,
                   False if at least one check failed
         """
-        return (
-            self.are_coordinates_in_bounds(coordinates=coordinates)
+        return (self.are_coordinates_in_bounds(coordinates=coordinates)
             and self.are_vacant_coordinates(coordinates=coordinates)
-            and self._is_of_valid_type(value=value)
-        )
+            and self._is_of_valid_type(value=value))
 
     def place_on_grid(self, value: Any) -> bool:
-        """Private method:
+        """Public method:
             (Call place_entity or place_resource
             from grid instead)
             Place a given value on the grid,
@@ -148,8 +181,7 @@ class SubGrid:
         return not (x < 0 or
                     x >= self.dimensions[0] or
                     y < 0 or
-                    y >= self.dimensions[1]
-                    )
+                    y >= self.dimensions[1])
 
     def are_instance_baseclass_around(
         self,
@@ -478,7 +510,31 @@ class SubGrid:
 
 
 class Grid:
+    """Class:
+        2D world with different layers composed of cells
+
+        Attributes:
+            __id (int):                     unique identifier
+            dimensions(Tuple[int, int]):    dimensions of the grid
+            _resource_grid (SubGrid):       subgrid containing the resources
+            _entity_grid (SubGrid):         subgrid containing the entities
+            _color_grid (SubGrid):          subgrid containing the color values
+
+        Static methods:
+            is_subclass:        check if an object is an instance of a subclass
+            place_resource:     place a resource on the appropriate subgrid
+            place_entity:       place an entity on the appropriate subgrid
+            modify_cell_color:  modify the color of a cell in the color grid
+
+    """
     def __init__(self, grid_id: int, dimensions: Tuple[int, int]):
+        """Constructor:
+            Initialize a grid
+
+        Args:
+            grid_id (int):                  unique identifier
+            dimensions (Tuple[int, int]):   dimensions of the grid
+        """
 
         self.__id = grid_id  # unique identifier
         self.dimensions: Tuple[int, int] = dimensions  # dimensions of the grid
@@ -608,8 +664,7 @@ class Grid:
         return self.entity_grid.place_on_grid(value=value)
 
     def modify_cell_color(
-        self, coordinates: Tuple[int, int], color: Tuple[int, int, int]
-    ) -> None:
+        self, coordinates: Tuple[int, int], color: Tuple[int, int, int]) -> None:
         """Public method:
             Modify the color of a cell in the color grid
 
