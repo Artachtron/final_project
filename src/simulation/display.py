@@ -61,6 +61,7 @@ class DisplayedObject(pg.sprite.Sprite):
         self.appearance: str = appearance           # path of the sprite's image
         self.image: pg.surface.Surface              # sprite's image
         self.sprite: pg.surface.Surface             # sprite
+        self.rect: pg.rect.Rect                     # sprite's surface
 
     def init(self, block_size: int, assets_path: str, assets: Dict[str, pg.Image]):
         """Public method:

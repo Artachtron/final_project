@@ -140,20 +140,20 @@ class TestGrid:
         def test_find_occupied_cells_by_trees(self):
             coordinates = (1,1)
             # Empty grid
-            assert not self.grid._find_occupied_cells_by_trees(coordinates=coordinates)
+            assert not self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
             # Only the animal searching
             self.grid.place_entity(value=Tree(position=coordinates))
-            assert not self.grid._find_occupied_cells_by_trees(coordinates=coordinates)
+            assert not self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
             # Animals around
             self.grid.place_entity(value=Tree(position=(2,1)))
-            entities_around = self.grid._find_occupied_cells_by_trees(coordinates=coordinates)
+            entities_around = self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
             assert entities_around
             assert len(entities_around) == 1
             
             self.grid.place_entity(value=Tree(position=(0,1)))
             self.grid.place_entity(value=Tree(position=(1,0)))
             self.grid.place_entity(value=Tree(position=(2,2)))
-            entities_around = self.grid._find_occupied_cells_by_trees(coordinates=coordinates)
+            entities_around = self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
             assert len(entities_around) == 4
             
             

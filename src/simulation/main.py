@@ -13,7 +13,7 @@ def main():
                   block_size=BLOCK_SIZE,
                   sim_speed=SIMULATION_SPEED,
                   display_active=True)
-            
+
     world.init(show_grid=True)
     world.run()
 

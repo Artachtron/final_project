@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import enum
@@ -695,7 +694,7 @@ class Grid:
                 base_class=Animal
             )
 
-    def _find_occupied_cells_by_trees(
+    def find_occupied_cells_by_trees(
         self, coordinates: Tuple[int, int], radius: int = 1
     ) -> Set[Any]:
         """Private method:

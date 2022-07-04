@@ -41,7 +41,7 @@ class TestWorld:
             
             # Simulation
             assert world.simulation.__class__.__name__ == 'Simulation'
-            assert world.simulation.id == world.id
+            assert world.simulation.__id == world.id
            
            
            

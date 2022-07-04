@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from itertools import product
 from random import randint, random, sample
-from typing import Dict, Final, Optional, Tuple, ValuesView
+from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
 
@@ -17,41 +17,107 @@ from grid import Grid
 
 
 class SimState:
+    """Class:
+        State of a simulation
+
+        Attributes:
+            __id (int):                                 unique identifier
+            next_entity_id (int):                       incremental value for the next entity identifier
+            next_energy_id (int):                       incremental value for the next energy identifier
+            animals (Dict[int, Animal]):                register of simulation's animals
+            trees (Dict[int, Tree]):                    register of simulation's trees
+            energies (Dict[int, Energy]):               register of simulation's energies
+            seeds (Dict[int, Seed]):                    register of simulation's seeds
+            added_entities (Dict[int, Entity]):         register of added entities in the last simulation cycle
+            removed_entities (Dict[int, Entity]):       register of removed entities in the last simulation cycle
+            added_resources (Dict[int, Resource]):      register of added resources in the last simulation cycle
+            removed_resources (Dict[int, Resource]):    register of removed resources in the last simulation cycle
+            cycle (int):                                current cycle
+
+        Methods:
+            get_entities: get all   entities currently in the simulation
+            get_resources: get all  resources currently in the simulation
+            get_entity_id: get the  current entity id
+            increment_entity_id:    increment the current entity id
+            get_energy_id:          get the current energy id
+            increment_energy_id:    increment the current energy id
+            add_entity:             add an entity to the register
+            remove_entity:          remove a entity from the register
+            add_resource:           adds a resource to the register
+            remove_resource:        remove a resource from the register
+            new_cycle:              start a new cycle of simulation
+    """
     def __init__(self,
                  sim_id: int):
+        """Constructor:
+            Initialize a new simulation state
 
-        self.__id: int = sim_id
-        self.next_entity_id: int  = 1
-        self.next_energy_id: int = 1
+        Args:
+            sim_id (int): unique identifier of the simulation
+        """
 
-        self.animals: Dict[int, Animal] = {}
-        self.trees: Dict[int, Tree] = {}
-        self.energies: Dict[int, Tree] = {}
-        self.seeds: Dict[int, Seed] = {}
+        self.__id: int = sim_id                             # unique identifier
+        self.next_entity_id: int  = 1                       # incremental value for the next entity identifier
+        self.next_energy_id: int = 1                        # incremental value for the next energy identifier
 
-        self.added_entities: Dict[int, Entity] = {}
-        self.removed_entities: Dict[int, Entity] = {}
-        self.added_resources: Dict[int, Resource] = {}
-        self.removed_resources: Dict[int, Resource] = {}
+        self.animals: Dict[int, Animal] = {}                # register of simulation's animals
+        self.trees: Dict[int, Tree] = {}                    # register of simulation's trees
+        self.energies: Dict[int, Energy] = {}               # register of simulation's energies
+        self.seeds: Dict[int, Seed] = {}                    # register of simulation's seeds
+
+        self.added_entities: Dict[int, Entity] = {}         # register of added entities in the last simulation cycle
+        self.removed_entities: Dict[int, Entity] = {}       # register of removed entities in the last simulation cycle
+        self.added_resources: Dict[int, Resource] = {}      # register of added resources in the last simulation cycle
+        self.removed_resources: Dict[int, Resource] = {}    # register of removed resources in the last simulation cycle
 
         self.cycle: int = 1
 
     @property
-    def id(self):
+    def id(self) -> int:
+        """Property:
+            Return simulation state's id
+
+        Returns:
+            int: simulation's state id
+        """
         return self.__id
 
     def get_entities(self) -> ValuesView[Entity]:
+        """Public method:
+            Get all entities currently in the simulation
+
+        Returns:
+            ValuesView[Entity]: all entities in the simulation
+        """
         return (self.animals | self.trees).values()
 
     @property
     def entities(self) -> Dict[int, Entity]:
+        """Property:
+            Return the register of entities
+
+        Returns:
+            Dict[int, Entity]: register of entities
+        """
         return self.animals | self.trees
-    
+
     def get_resources(self) -> ValuesView[Resource]:
+        """Public method:
+            Get all the resources currently in the simulation
+
+        Returns:
+            ValuesView[Resource]: all resources in the simulation
+        """
         return (self.energies | self.seeds).values()
-    
+
     @property
     def resources(self) -> Dict[int, Resource]:
+        """Property:
+            Return the register of resources
+
+        Returns:
+            Dict[int, Resource]: register of resources
+        """
         return self.energies | self.seeds
 
     def get_entity_id(self, increment: bool=False) -> int:
@@ -72,7 +138,8 @@ class SimState:
         return entity_id
 
     def increment_entity_id(self, amount: int=1) -> None:
-        """ Increment the current entity id by a given amount
+        """Public method:
+            Increment the current entity id by a given amount
 
         Args:
             amount (int, optional): entity id's increment. Defaults to 1.
@@ -136,7 +203,6 @@ class SimState:
             case "Tree":
                 self.trees.pop(entity.id)
 
-
     def add_resource(self, new_resource: Resource) -> None:
         """Public method:
             Add an resource to the register
@@ -168,7 +234,10 @@ class SimState:
 
         self.removed_resources[resource.id] = resource
 
-    def new_cycle(self):
+    def new_cycle(self) -> None:
+        """Public method:
+            Start a new cycle of simulation
+        """
         self.added_entities: Dict[int, Entity] = {}
         self.removed_entities: Dict[int, Entity] = {}
         self.added_resources: Dict[int, Resource] = {}
@@ -177,6 +246,31 @@ class SimState:
         self.cycle += 1
 
 class Environment:
+    """Class:
+        Environment in which the entities interact
+
+        Attributes:
+            __id (int):                     unique identifier
+            state (SimState):               state of the simulation
+            grid (Grid):                    2 dimensional grid
+            dimensions (Tuple[int, int]):   dimensions of the world
+
+        Methods:
+            spawn_animal:               create an animal at given coordinates and add it to the world
+            spawn_tree:                 create a tree at given coordinates and add it to the world
+            create_seed_from_tree:      create a seed from a tree
+            sprout_tree:                spawn a tree from a seed at a given position on the grid
+            create_energy:              create energy on the grid
+            remove_resource:            remove resource from the grid
+            remove_entity:              remove entity from the grid
+            decompose_entity:           decompose an entity into its energy components
+            get_resource_at:            get the resource at the given coordinates and return it
+            find_if_entities_around:    look for entities in a radius around certain coordinates
+            find_if_resources_around:   look for resources in a radius around certain coordinates
+            get_colors_around:          get the colors in a radis around certain coordinates
+            modify_cell_color:          change the color of a cell
+            find_trees_around:          find and return all the cells occupied by trees
+    """
     GRID_WIDTH: Final[int] = 20
     GRID_HEIGHT: Final[int] = 20
 
@@ -184,25 +278,47 @@ class Environment:
                  env_id: int,
                  sim_state: Optional[SimState] = None,
                  dimensions: Tuple[int, int] = (20, 20)):
+        """Constructor:
+            Initiliaze an environment
 
-        self.__id: int = env_id
+        Args:
+            env_id (int):                               unique identifier
+            sim_state (Optional[SimState], optional):   simulation's state. Defaults to None.
+            dimensions (Tuple[int, int], optional):     dimensions of the world. Defaults to (20, 20).
+        """
 
-        self.state: SimState = sim_state or SimState(sim_id=env_id)
-        self.grid: Grid
-        self.dimensions: Tuple[int, int] = dimensions
+        self.__id: int = env_id                                     # unique identifier
 
-        self.init()
+        self.state: SimState = sim_state or SimState(sim_id=env_id) # simulation's state
+        self.grid: Grid                                             # 2 dimensional grid
+        self.dimensions: Tuple[int, int] = dimensions               # dimensions of the world
 
+        self._init()
 
-    def init(self, populate: bool=False):
+    def _init(self, populate: bool=False) -> Optional[SimState]:
+        """Private method:
+            Initilize the grid and populate the world
+
+        Args:
+            populate (bool, optional): should populate the world. Defaults to False.
+
+        Returns:
+            Optional[SimState]: simulation state after populating it
+        """
         # self.state = SimState(sim_id=self.id)
         self.grid = Grid(grid_id=self.id,
                          dimensions=self.dimensions)
 
         if populate:
-            return self.populate()
+            return self._populate()
 
-    def populate(self):
+    def _populate(self) -> SimState:
+        """Private method:
+            Populate the world with entities
+
+        Returns:
+            SimState: simulation state after populating it
+        """
         width, height = self.dimensions
         MIN_HORIZONTAL_SIZE_SECTION = 5
         MAX_HORIZONTAL_SIZE_SECTION = 10
@@ -254,10 +370,22 @@ class Environment:
         return self.state
 
     @property
-    def id(self):
+    def id(self) -> int:
+        """Property:
+            Return the simulation's id
+
+        Returns:
+            int: simulation's id
+        """
         return self.__id
 
-    def event_on_action(self, entity):
+    def _event_on_action(self, entity: Entity) -> None:
+        """Private method:
+            Event on an entity's actions
+
+        Args:
+            entity (Entity): entity deciding on action
+        """
 
         match entity.status:
             case Status.DEAD:
@@ -279,7 +407,6 @@ class Environment:
         """
         if self.grid.place_resource(value=new_resource):
             self.state.add_resource(new_resource=new_resource)
-
 
     def _add_new_entity_to_world(self, new_entity: Entity):
         """Private method:
@@ -311,7 +438,7 @@ class Environment:
 
             if birth_position:
                 adult_size = int((parent1.size + parent2.size)/2)
-                
+
 
                 child = self.spawn_animal(coordinates=birth_position,
                                             size=1,
@@ -319,7 +446,7 @@ class Environment:
                                             red_energy=Animal.INITIAL_RED_ENERGY,
                                             adult_size=adult_size,
                                             generation=self.state.cycle)
-                
+
                 if child:
                     child.on_birth(parent1=parent1,
                                parent2=parent2)
@@ -351,7 +478,6 @@ class Environment:
         return animal
 
     def spawn_tree(self, coordinates: Tuple[int, int], **kwargs) -> Optional[Tree]:
-        
         """Public  method:
             Create a tree at given coordinates and add it to the world
 
@@ -361,7 +487,7 @@ class Environment:
         Returns:
             Tree: tree that was created
         """
-        
+
         if not self.grid.entity_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
 
@@ -530,7 +656,6 @@ class Environment:
                                coordinates=blue_cell,
                                quantity=entity.energies[EnergyType.BLUE.value])
 
-
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
         """Public method:
             Get the resource at the given coordinates and return it
@@ -609,43 +734,91 @@ class Environment:
         self.grid.modify_cell_color(coordinates=coordinates,
                                     color=color)
 
-    def find_trees_around(self, coordinates: Tuple[int, int], radius: int=1):
-        return self.grid._find_occupied_cells_by_trees(coordinates=coordinates,
-                                                       radius=radius)
+    def find_trees_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set[Tuple[int, int]]:
+        """Public method:
+            Find and return all the cells occupied by trees
+            in a radius around a certain coordinates
+
+        Args:
+            coordinates (Tuple[int, int]): _description_
+            radius (int, optional): _description_. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int, int]]: _description_
+        """
+        return self.grid.find_occupied_cells_by_trees(coordinates=coordinates,
+                                                      radius=radius)
 
 
 class Simulation:
+    """Class:
+        Real-time simulation
+
+        Attributes:
+            __id (int):                     unique identifier
+            state (SimState):               state of the simulation
+            environment (Environment):      environment with which entities can interact
+            dimensions (: Tuple[int, int]): dimensions of the world
+    """
     def __init__(self,
                  sim_id: int,
                  dimensions: Tuple[int, int] = (20, 20)):
 
-        self.id = sim_id
+        self.__id: int = sim_id                         # unique identifier
 
-        self.state: SimState
-        self.environment: Environment
-        self.dimensions = dimensions
+        self.state: SimState                            # simulation's state
+        self.environment: Environment                   # environment with which entities can interact
+        self.dimensions: Tuple[int, int] = dimensions   # dimensions of the world
 
 
-    def init(self, populate: bool=True):
-        self.state = SimState(sim_id=self.id)
-        self.environment = Environment(env_id=self.id,
+    def init(self, populate: bool=True) -> SimState:
+        """Public method:
+            Initialize the simulation,
+            creating a state and environment
+
+        Args:
+            populate (bool, optional): should populate the world. Defaults to True.
+
+        Returns:
+            SimState: state of the simulation after initialization
+        """
+        self.state = SimState(sim_id=self.__id)
+        self.environment = Environment(env_id=self.__id,
                                        dimensions=self.dimensions,
                                        sim_state=self.state)
 
-        self.environment.init(populate=populate)
+        self.environment._init(populate=populate)
 
         return self.state
 
-    def update(self):
+    def update(self) -> Tuple[Grid, SimState]:
+        """Public method:
+            Update the simulation,
+            start a new cycle, update each entity,
+            apply entities' actions on environment
+
+        Returns:
+            Tuple[Grid, SimState]:  Grid: world's state
+                                    SimState: simulation's state
+        """
         self.state.new_cycle()
 
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
-            self.environment.event_on_action(entity=entity)
+            self.environment._event_on_action(entity=entity)
 
+        # Update state of the simulation
         return self.environment.grid, self.state
 
+    @property
+    def id(self) -> int:
+        """Property:
+            Return the simulation's id
 
+        Returns:
+            int: simulation's id
+        """
+        return self.__id
 
 
 
