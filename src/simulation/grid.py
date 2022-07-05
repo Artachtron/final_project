@@ -39,6 +39,7 @@ class SubGrid:
             find_free_coordinates:          find a free cell in range
             select_free_coordinates:        select randomly from the free cells available
             update_cell:                    move an element from a cell to another
+            empty_cell:                     empty the cell, putting it back to inital state
             get_cell_value:                 get the value of a cell
             get_sub_region:                 Return an array around a given position of a defined size
     """
@@ -75,9 +76,9 @@ class SubGrid:
         """
         return self._array
 
-    def _empty_cell(self, coordinates: Tuple[int, int]):
-        """Private method:
-            Emtpy the cell, putting it back to inital state
+    def empty_cell(self, coordinates: Tuple[int, int]):
+        """Public method:
+            Empty the cell, putting it back to inital state
 
         Args:
             coordinates (Tuple[int, int]): coordinates of the cell to emtpy
@@ -403,7 +404,7 @@ class SubGrid:
 
             # Reset the old position
             old_position = value.position
-            self._empty_cell(coordinates=old_position)
+            self.empty_cell(coordinates=old_position)
 
         return success
 
@@ -522,7 +523,9 @@ class Grid:
         Static methods:
             is_subclass:        check if an object is an instance of a subclass
             place_resource:     place a resource on the appropriate subgrid
+            remove_resource:    remove a resource from the appropriate subgrid
             place_entity:       place an entity on the appropriate subgrid
+            remove_entity:      remove a entity from the appropriate subgrid
             modify_cell_color:  modify the color of a cell in the color grid
 
     """
@@ -638,7 +641,7 @@ class Grid:
 
     def place_resource(self, value: Resource) -> bool:
         """Public method:
-            Place a resource on the appropriate subgrid
+            Place a resource from the appropriate subgrid
 
         Args:
             value (Resource): resource to place on the grid
@@ -648,6 +651,15 @@ class Grid:
                     False if the resource couldn't be placed
         """
         return self.resource_grid.place_on_grid(value=value)
+    
+    def remove_resource(self, resource: Resource)  -> None:
+        """Public method:
+            Remove a resource on the appropriate subgrid
+
+        Args:
+            resource (Resource): resource to remove
+        """  
+        self.resource_grid.empty_cell(coordinates=resource.position)      
 
     def place_entity(self, value: Entity) -> bool:
         """Public method:
@@ -661,6 +673,15 @@ class Grid:
                     False if the entity couldn't be placed
         """
         return self.entity_grid.place_on_grid(value=value)
+    
+    def remove_entity(self, entity: Entity)  -> None:
+        """Public method:
+            Remove a entity on the appropriate subgrid
+
+        Args:
+            entity (Entity): entity to remove
+        """  
+        self.entity_grid.empty_cell(coordinates=entity.position) 
 
     def modify_cell_color(
         self, coordinates: Tuple[int, int], color: Tuple[int, int, int]) -> None:
@@ -674,7 +695,7 @@ class Grid:
         if self.color_grid.are_coordinates_in_bounds(coordinates=coordinates):
             self.color_grid.array[coordinates] = color
 
-    def _find_occupied_cells_by_animals(
+    def find_occupied_cells_by_animals(
         self, coordinates: Tuple[int, int], radius: int = 1
     ) -> Set[Any]:
         """Private method:

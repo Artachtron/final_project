@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from entities import Animal, Tree, Entity
 
 from itertools import product
-from random import randint, random, sample
+from random import randint, sample
 from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
@@ -293,10 +293,10 @@ class Environment:
         self.grid: Grid                                             # 2 dimensional grid
         self.dimensions: Tuple[int, int] = dimensions               # dimensions of the world
 
-        self._init()
+        #self.init()
 
-    def _init(self, populate: bool=False) -> Optional[SimState]:
-        """Private method:
+    def init(self, populate: bool=False) -> Optional[SimState]:
+        """Public method:
             Initilize the grid and populate the world
 
         Args:
@@ -379,7 +379,7 @@ class Environment:
         """
         return self.__id
 
-    def _event_on_action(self, entity: Entity) -> None:
+    def event_on_action(self, entity: Entity) -> None:
         """Private method:
             Event on an entity's actions
 
@@ -392,7 +392,7 @@ class Environment:
                 self._entity_died(entity=entity)
 
             case Status.FERTILE:
-                entities_around = self.grid._find_occupied_cells_by_animals(coordinates=entity.position)
+                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=entity.position)
                 for other_entity in entities_around:
                     if other_entity.status == Status.FERTILE:
                         self._reproduce_entities(parent1=entity,
@@ -431,8 +431,8 @@ class Environment:
         """
         if parent1.can_reproduce() and parent2.can_reproduce():
 
-            parent1.reproduce()
-            parent2.reproduce()
+            parent1.on_reproduction()
+            parent2.on_reproduction()
 
             birth_position,  = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
 
@@ -591,9 +591,8 @@ class Environment:
         Args:
             resource (Resource): resource to remove
         """
-        resource_grid = self.grid.resource_grid
-        position = resource._position()
-        resource_grid._empty_cell(coordinates=position)
+        position = resource.position
+        self.grid.remove_resource(resource=resource)
 
         self.state.remove_resource(resource=resource)
         print(f"{resource} was deleted at {position}")
@@ -606,8 +605,8 @@ class Environment:
             entity (Entity): entity to remove
         """
         entity_grid = self.grid.entity_grid
-        position = entity._position()
-        entity_grid._empty_cell(coordinates=position)
+        position = entity.position
+        entity_grid.empty_cell(coordinates=position)
 
         self.state.remove_entity(entity=entity)
         print(f"{entity} was deleted at {position}")
@@ -787,7 +786,7 @@ class Simulation:
                                        dimensions=self.dimensions,
                                        sim_state=self.state)
 
-        self.environment._init(populate=populate)
+        self.environment.init(populate=populate)
 
         return self.state
 
@@ -805,7 +804,7 @@ class Simulation:
 
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
-            self.environment._event_on_action(entity=entity)
+            self.environment.event_on_action(entity=entity)
 
         # Update state of the simulation
         return self.environment.grid, self.state

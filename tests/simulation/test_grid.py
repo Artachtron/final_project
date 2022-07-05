@@ -121,20 +121,20 @@ class TestGrid:
         def test_find_occupied_cells_by_animals(self):
             coordinates = (1,1)
             # Empty grid
-            assert not self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            assert not self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
             # Only the animal searching
             self.grid.place_entity(value=Animal(position=coordinates))
-            assert not self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            assert not self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
             # Animals around
             self.grid.place_entity(value=Animal(position=(2,1)))
-            entities_around = self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            entities_around = self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
             assert entities_around
             assert len(entities_around) == 1
             
             self.grid.place_entity(value=Animal(position=(0,1)))
             self.grid.place_entity(value=Animal(position=(1,0)))
             self.grid.place_entity(value=Animal(position=(2,2)))
-            entities_around = self.grid._find_occupied_cells_by_animals(coordinates=coordinates)
+            entities_around = self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
             assert len(entities_around) == 4
             
         def test_find_occupied_cells_by_trees(self):
@@ -202,7 +202,7 @@ class TestSubGrid:
                             position=(2,5))
             self.grid.place_entity(animal)
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == animal
-            self.entity_grid._empty_cell(coordinates=(2,5))
+            self.entity_grid.empty_cell(coordinates=(2,5))
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
         
         def test_set_cell(self):
@@ -211,7 +211,7 @@ class TestSubGrid:
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
             self.entity_grid._set_cell_value(coordinates=(2,5), value=animal)
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == animal
-            self.entity_grid._empty_cell(coordinates=(2,5))
+            self.entity_grid.empty_cell(coordinates=(2,5))
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
             
             energy = BlueEnergy(energy_id=0,
@@ -220,7 +220,7 @@ class TestSubGrid:
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == None
             self.energy_grid._set_cell_value(coordinates=(2,5), value=energy)
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == energy
-            self.energy_grid._empty_cell(coordinates=(2,5))
+            self.energy_grid.empty_cell(coordinates=(2,5))
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == None
             
         def test_cell_out_of_bounds_handled(self):
