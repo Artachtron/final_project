@@ -469,7 +469,8 @@ class SubGrid:
             initial_pos[1] + radius + 1,
         )
 
-        ndim = self._array.ndim
+        padded_subregion: npt.NDArray[Any]
+        ndim: int = self._array.ndim
         width = height = 0
 
         if ndim == 3:
@@ -497,8 +498,6 @@ class SubGrid:
         subregion: npt.NDArray[Any] = self._array[x1:x2, y1:y2]
 
         x_shape, y_shape = subregion.shape[:2]
-
-        padded_subregion: npt.NDArray[Any] = subregion
 
         for x in range(x_shape):
             for y in range(y_shape):

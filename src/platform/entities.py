@@ -48,7 +48,7 @@ class Entity(SimulatedObject):
         _energies_stock (Dict[str, int]):   # energy currently owned
         generation (int):                   # generation the entity was born in
         species (int):                      # species the entity is part of
-        ancestors (set):                    # ancestors
+        ancestors (Dict[int, Entity]):      # ancestors
         _age (int):                         # time since birth
         _max_age (int):                     # maximum longevity before dying
         _adult_size (int):                  # size to reach before becoming adult
@@ -118,7 +118,7 @@ class Entity(SimulatedObject):
 
         self.generation: int = generation                       # generation the entity was born in
         self.species: int = 0                                   # species the entity is part of
-        self.ancestors: Dict[int, Entity]                       # ancestors
+        self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self._age: int = 0                                      # time since birth
         self._max_age: int = (max_age or                        # maximum longevity before dying
                               (size *

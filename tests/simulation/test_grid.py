@@ -4,12 +4,12 @@ import sys
 import numpy as np
 import pytest
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.energies import (BlueEnergy, Energy, EnergyType,
-                                             RedEnergy, Resource)
-from project.src.simulation.entities import Animal, Entity, Tree
-from project.src.simulation.grid import Grid, SubGrid
-from project.src.simulation.simulation import Environment
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
+from project.src.platform.energies import (BlueEnergy, Energy, EnergyType,
+                                           RedEnergy, Resource)
+from project.src.platform.entities import Animal, Entity, Tree
+from project.src.platform.grid import Grid, SubGrid
+from project.src.platform.simulation import Environment
 
 
 class TestGrid:
@@ -181,6 +181,7 @@ class TestSubGrid:
         @pytest.fixture(autouse=True)
         def setup(self):
             self.env = Environment(env_id=0)
+            self.env.init()
             self.grid =  self.env.grid
             
             self.entity_grid = self.grid.entity_grid

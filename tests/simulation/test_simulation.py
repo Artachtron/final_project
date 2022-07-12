@@ -3,10 +3,10 @@ import sys
 
 import pytest
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.energies import EnergyType
-from project.src.simulation.simulation import Environment, Simulation
-from project.src.simulation.universal import SimulatedObject
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
+from project.src.platform.energies import EnergyType
+from project.src.platform.simulation import Environment, Simulation
+from project.src.platform.universal import SimulatedObject
 
 
 class TestSimulation:
@@ -24,6 +24,7 @@ class TestEnvironment:
     
     def test_init_env(self):
             env = Environment(env_id=1)
+            env.init()
             
             # Sim state
             assert env.state.__class__.__name__ == 'SimState'
@@ -37,6 +38,7 @@ class TestEnvironment:
         def setup(self):
  
             self.env = Environment(env_id=1)
+            self.env.init()
             
             self.grid = self.env.grid
             self.state = self.env.state

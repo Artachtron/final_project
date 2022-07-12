@@ -4,14 +4,14 @@ import sys
 import iniconfig
 import pytest
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
+from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
+from project.src.platform.entities import (Animal, Direction, Entity, Seed,
+                                           Status, Tree)
+from project.src.platform.grid import Grid
+from project.src.platform.simulation import Environment
+from project.src.platform.universal import EntityType
 from project.src.rtNEAT.brain import Brain
-from project.src.simulation.energies import BlueEnergy, EnergyType, RedEnergy
-from project.src.simulation.entities import (Animal, Direction, Entity, Seed,
-                                             Status, Tree)
-from project.src.simulation.grid import Grid
-from project.src.simulation.simulation import Environment
-from project.src.simulation.universal import EntityType
 
 
 class TestEntity:
@@ -179,6 +179,7 @@ class TestEntity:
             @pytest.fixture(autouse=True)
             def setup(self):
                 self.env = Environment(env_id=0)
+                self.env.init()
                 self.grid = self.env.grid
                 self.entity_grid = self.grid.entity_grid
                 
@@ -288,6 +289,7 @@ class TestTree:
         @pytest.fixture(autouse=True)
         def setup(self):
             self.env = Environment(env_id=0)
+            self.env.init()
             
             self.tree1 = self.env.spawn_tree(coordinates=(19,10))
             
@@ -430,6 +432,7 @@ class TestAnimal:
                                     initial_value=None) """
             
             self.env = Environment(env_id=0)
+            self.env.init()
             
             self.animal = self.env.spawn_animal(coordinates=(3,3))
         
@@ -797,6 +800,7 @@ class TestAnimal:
             @pytest.fixture(autouse=True)
             def setup(self):
                 self.env = Environment(env_id=0)
+                self.env.init()
                 self.animal = self.env.spawn_animal(coordinates=(5,5),
                                                      blue_energy=157,
                                                      red_energy=122,
