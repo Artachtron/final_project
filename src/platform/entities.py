@@ -599,15 +599,18 @@ class Animal(Entity):
                                 vect=direction.value)()
 
         # Ask the grid to update, changing old position to empty,
-        #and new position to occupied by self
+        # and new position to occupied by self
         if entity_grid.update_cell(new_coordinates=next_pos,
-                                    value=self):
+                                   value=self):
 
             # update self position
-            self.position = next_pos
+            self._update_position(new_position=next_pos)
 
         # Energy cost of action
         self._perform_action()
+       
+    def _update_position(self, new_position: Tuple[int, int]) -> None:
+        self.position = new_position
 
     def _plant_tree(self, environment: Environment) -> None:
         """Private method:
