@@ -3,14 +3,15 @@ import sys
 
 import iniconfig
 import pytest
+from numpy import isin
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
+from project.src.platform.actions import *
 from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
 from project.src.platform.entities import (Animal, Direction, Entity, Seed,
                                            Status, Tree)
 from project.src.platform.grid import Grid
 from project.src.platform.simulation import Environment
-from project.src.platform.universal import EntityType
 from project.src.rtNEAT.brain import Brain
 
 
@@ -196,7 +197,7 @@ class TestEntity:
                 # Drop blue energy
                 blue_cell = (1,1)
                 assert self.grid.resource_grid.get_cell_value(coordinates=blue_cell) == None
-                self.entity._drop_energy(environment=self.env,
+                self.entity._decide_drop_energy(environment=self.env,
                                          energy_type=EnergyType.BLUE,
                                         quantity=1,
                                         coordinates=blue_cell)
@@ -211,7 +212,7 @@ class TestEntity:
                 red_cell = (3,2)
                 assert self.grid.resource_grid.get_cell_value(coordinates=red_cell) == None
                 assert self.entity.red_energy == 10
-                self.entity._drop_energy(environment=self.env,
+                self.entity._decide_drop_energy(environment=self.env,
                                          energy_type=EnergyType.RED,
                                         quantity=3,
                                         coordinates=red_cell)
@@ -224,7 +225,7 @@ class TestEntity:
                 assert red_energy.quantity == 3
                 
                 # Drop energy on occupied cell
-                self.entity._drop_energy(environment=self.env,
+                self.entity._decide_drop_energy(environment=self.env,
                                          energy_type=EnergyType.BLUE,
                                         quantity=1,
                                         coordinates=red_cell)
@@ -239,7 +240,7 @@ class TestEntity:
                 red_cell2 = (3,3)
                 assert self.grid.resource_grid.get_cell_value(coordinates=red_cell2) == None
                 assert self.entity.red_energy == 7
-                self.entity._drop_energy(environment=self.env,
+                self.entity._decide_drop_energy(environment=self.env,
                                          energy_type=EnergyType.RED,
                                         quantity=10,
                                         coordinates=red_cell2)
@@ -446,96 +447,38 @@ class TestAnimal:
             del self.animal
             del self.grid
             
-            
-            
+              
         def test_move(self):
             animal = self.animal
             
             # Down
-            assert animal.position == (3,3)
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
-            animal._move(Direction.DOWN,
-                         environment=self.env)
-            
-            assert animal.position == (3,4)
-            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal
-            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
+            animal._decide_move(Direction.DOWN)
+            action = animal.action
+            assert action.action_type.name == ActionType.MOVE.name
+            assert action.coordinates == (3,4)
             
             # Up
-            animal._move(Direction.UP,
-                         environment=self.env)
+            animal._decide_move(Direction.UP)
             
-            assert animal.position == (3,3)
-            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
-            assert self.entity_grid.get_cell_value(coordinates=(2,3)) == None
+            action = animal.action
+            assert action.action_type.name == ActionType.MOVE.name
+            assert action.coordinates == (3,2)
             
             # Left
-            animal._move(Direction.LEFT,
-                         environment=self.env)
+            animal._decide_move(Direction.LEFT)
             
-            assert animal.position == (2,3)
-            assert self.entity_grid.get_cell_value(coordinates=(2,3)) == animal
-            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
-            
-            # Right
-            animal._move(Direction.RIGHT,
-                         environment=self.env)
-            
-            assert animal.position == (3,3)
-            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
-            
-        def test_move_occupied_cell(self):
-            animal = Animal(position=(3,3))
-            animal2 = Animal(position=(3,4))
-            self.entity_grid._set_cell_value(coordinates=(3,4),
-                                            value=animal2)
-            
-            # Move on already occupied cell
-            assert animal.position == (3,3)
-            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
-            assert animal2.position == (3,4)
-            animal._move(Direction.DOWN, 
-                         environment=self.env)
-            
-            assert animal.position == (3,3)
-            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
-            assert animal2.position == (3,4)
-            
-        def test_move_out_of_bounds_cell(self):
-            animal = Animal(position=(0,0))
-            self.entity_grid._set_cell_value(coordinates=(0,0),
-                                            value=animal)
-            # Left
-            assert animal.position == (0,0)
-            assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
-            animal._move(Direction.LEFT, 
-                            environment=self.env)
-            assert animal.position == (0,0)
-            assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
-            
-            # Up
-            animal._move(Direction.UP, 
-                            environment=self.env)
-            assert animal.position == (0,0)
-            assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
+            action = animal.action
+            assert action.action_type.name == ActionType.MOVE.name
+            assert action.coordinates == (2,3)
             
             # Right
-            animal2 = Animal(position=(19,19))
-            self.entity_grid._set_cell_value(coordinates=(19,19),
-                                            value=animal2)
-            assert animal2.position == (19,19)
-            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
-            animal2._move(Direction.RIGHT, 
-                            environment=self.env)
-            assert animal2.position == (19,19)
-            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+            animal._decide_move(Direction.RIGHT)
             
-            #Down
-            animal2._move(Direction.DOWN, 
-                            environment=self.env)
-            assert animal2.position == (19,19)
-            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
-            
+            action = animal.action
+            assert action.action_type.name == ActionType.MOVE.name
+            assert action.coordinates == (4,3)
+                        
         def test_grow(self):
             self.animal = Animal(size=1,
                                  position=(0,0),
@@ -595,18 +538,13 @@ class TestAnimal:
             assert self.animal.red_energy == red_energy - (self.animal.size-1) * Entity.GROWTH_ENERGY_REQUIRED
             assert self.animal.size == 3
             assert self.animal._is_adult   
-        
-        
+
         def test_plant_tree(self):
             animal = self.env.spawn_animal(coordinates=(5,5))
             assert animal.red_energy == 10
-            animal._plant_tree(environment=self.env)
+            animal._decide_plant_tree()
             assert animal.red_energy == 0
-            tree_cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(5,5),
-                                                                      base_class=Tree)
-            tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
-            assert tree.__class__.__name__ == "Tree"
-            
+            assert animal.action.action_type == ActionType.PLANT_TREE
             # No free cells
     
             # env2 = Environment(env_id=2)
@@ -625,7 +563,7 @@ class TestAnimal:
             
             blue_stock = self.animal.blue_energy
             red_stock = self.animal.red_energy
-            self.animal._pick_up_resource(coordinates=position,
+            self.animal._decide_pick_up_resource(coordinates=position,
                                             environment=self.env)
             
             assert not self.grid.resource_grid.get_cell_value(position) 
@@ -647,7 +585,7 @@ class TestAnimal:
             assert not animal._pocket
             assert self.grid.resource_grid.get_cell_value(coordinates=position) == seed
             
-            animal._pick_up_resource(coordinates=position,
+            animal._decide_pick_up_resource(coordinates=position,
                                         environment=self.env)
             
             assert animal._pocket == seed
@@ -666,13 +604,13 @@ class TestAnimal:
             
             animal = self.env.spawn_animal(coordinates=(3,2))
             # Pocket empty
-            animal._recycle_seed(environment=self.env)
+            animal.on_recycle_seed(environment=self.env)
             assert len(self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
                                                                             coordinates=position)) == 0
-            animal._pick_up_resource(coordinates=position,
+            animal._decide_pick_up_resource(coordinates=position,
                                         environment=self.env)
             
-            animal._recycle_seed(environment=self.env)
+            animal.on_recycle_seed(environment=self.env)
             assert not animal._pocket 
             energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
                                                                                  coordinates=animal.position) | 
@@ -702,7 +640,7 @@ class TestAnimal:
             tree.on_death(environment=self.env)
             animal = self.env.spawn_animal(coordinates=(2,3))
             
-            animal._pick_up_resource(coordinates=tree.position,
+            animal._decide_pick_up_resource(coordinates=tree.position,
                                      environment=self.env)
             animal.red_energy == 10
             animal.blue_energy == 10
@@ -776,7 +714,7 @@ class TestAnimal:
                 
                 new_color = (177,125,234)
                 
-                self.animal._paint(color=new_color,
+                self.animal.on_paint(color=new_color,
                                    environment=self.env)
                 
                 cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
@@ -784,7 +722,7 @@ class TestAnimal:
                 
                 new_color = (46,12,57)
                 
-                self.animal._paint(color=new_color,
+                self.animal.on_paint(color=new_color,
                                    environment=self.env)
                 
                 cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)

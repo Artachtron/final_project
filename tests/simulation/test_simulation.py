@@ -5,6 +5,8 @@ import pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
 from project.src.platform.energies import EnergyType
+from project.src.platform.entities import Direction, Tree
+from project.src.platform.grid import Grid
 from project.src.platform.simulation import Environment, Simulation
 from project.src.platform.universal import SimulatedObject
 
@@ -258,6 +260,124 @@ class TestEnvironment:
                                                 radius=2)
             
             assert colors.shape == (5,5,3)
+
+    class TestAnimalActions:
+        @pytest.fixture(autouse=True)
+        def setup(self):
+            
+            self.env = Environment(env_id=0)
+            self.env.init()
+            
+            self.animal = self.env.spawn_animal(coordinates=(3,3))
+
+            self.grid: Grid = self.env.grid
+            
+            self.entity_grid = self.grid.entity_grid
+            
+            yield
+            
+            del self.animal
+            del self.grid
+            
+        def test_move_action(self):
+            animal = self.animal
+            
+            # Down
+            assert animal.position == (3,3)
+            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
+            animal._decide_move(Direction.DOWN)
+            self.env._event_on_action(entity=animal)
+            
+            assert animal.position == (3,4)
+            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal
+            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
+            
+            # Up
+            animal._decide_move(Direction.UP)
+            self.env._event_on_action(entity=animal)
+            
+            assert animal.position == (3,3)
+            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
+            assert self.entity_grid.get_cell_value(coordinates=(2,3)) == None
+            
+            # Left
+            animal._decide_move(Direction.LEFT)
+            self.env._event_on_action(entity=animal)
+            
+            assert animal.position == (2,3)
+            assert self.entity_grid.get_cell_value(coordinates=(2,3)) == animal
+            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == None
+            
+            # Right
+            animal._decide_move(Direction.RIGHT)
+            self.env._event_on_action(entity=animal)
+            
+            assert animal.position == (3,3)
+            assert self.entity_grid.get_cell_value(coordinates=(3,3)) == animal
+        
+        def test_move_occupied_cell(self):
+            animal = self.animal
+            animal2 = self.env.spawn_animal(coordinates=(3,4))
+            self.entity_grid._set_cell_value(coordinates=(3,4),
+                                            value=animal2)
+            
+            # Move on already occupied cell
+            assert animal.position == (3,3)
+            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
+            assert animal2.position == (3,4)
+            animal._decide_move(Direction.DOWN)
+            
+            self.env._event_on_action(entity=animal)
+            
+            assert animal.position == (3,3)
+            assert self.entity_grid.get_cell_value(coordinates=(3,4)) == animal2
+            assert animal2.position == (3,4)
+          
+        def test_move_out_of_bounds_cell(self):
+            animal = self.env.spawn_animal(coordinates=(0,0))
+            self.entity_grid._set_cell_value(coordinates=(0,0),
+                                            value=animal)
+            # Left
+            assert animal.position == (0,0)
+            assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
+            animal._decide_move(Direction.LEFT)
+            self.env._event_on_action(entity=animal)
+            assert animal.position == (0,0)
+            assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
+            
+            # Up
+            animal._decide_move(Direction.UP)
+            self.env._event_on_action(entity=animal)
+            assert animal.position == (0,0)
+            assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
+            
+            # Right
+            animal2 = self.env.spawn_animal(coordinates=(19,19))
+            self.entity_grid._set_cell_value(coordinates=(19,19),
+                                            value=animal2)
+            assert animal2.position == (19,19)
+            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+            animal2._decide_move(Direction.RIGHT)
+            self.env._event_on_action(entity=animal2)
+            assert animal2.position == (19,19)
+            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+            
+            #Down
+            animal2._decide_move(Direction.DOWN)
+            self.env._event_on_action(entity=animal2)
+            assert animal2.position == (19,19)
+            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2  
+
+        def test_plant_tree(self):
+            animal = self.env.spawn_animal(coordinates=(5,5))
+            assert animal.red_energy == 10
+            animal._decide_plant_tree()
+            self.env._event_on_action(entity=animal)
+            assert animal.red_energy == 0
+            tree_cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(5,5),
+                                                                      base_class=Tree)
+            tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
+            assert tree.__class__.__name__ == "Tree"
 
         
 class TestSimulatedObject:

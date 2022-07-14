@@ -1,11 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Tuple
+
+if TYPE_CHECKING:
+    from energies import EnergyType
+    from entities import Seed, Tree
+
 from abc import ABC
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional, Tuple
 
-from energies import EnergyType
-from entities import Status
 
+class Status(Enum):
+    """Enum:
+        Entity status
+    """
+    ALIVE = 0
+    DEAD = 1
+    FERTILE = 2
 
 class ActionType(Enum):
     """Enum:
@@ -56,6 +68,13 @@ class GrowAction(SelfAction):
         Action on decision to grow
     """
     action_type: ActionType = ActionType.GROW
+    
+@dataclass(kw_only=True, frozen=True)
+class IdleAction(SelfAction):
+    """SelfAction:
+        Action to do nothing
+    """
+    action_type: ActionType = ActionType.IDLE
 
 @dataclass(kw_only=True, frozen=True)
 class PlantTreeAction(Interaction):
@@ -63,6 +82,7 @@ class PlantTreeAction(Interaction):
         Action on decision to plant a tree
     """
     action_type: ActionType = ActionType.PLANT_TREE
+    seed: Optional[Seed]
 
 @dataclass(kw_only=True, frozen=True)
 class RecycleAction(Interaction):
@@ -70,6 +90,7 @@ class RecycleAction(Interaction):
         Action on decision to recycle a seed
     """
     action_type: ActionType = ActionType.RECYCLE
+    tree: Tree
 
 @dataclass(kw_only=True, frozen=True)
 class PickupAction(Interaction):

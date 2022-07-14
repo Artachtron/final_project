@@ -11,6 +11,7 @@ from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
 
+from actions import ActionType
 from energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
 from entities import Animal, Entity, Seed, Status, Tree
 from grid import Grid
@@ -379,13 +380,66 @@ class Environment:
         """
         return self.__id
 
-    def event_on_action(self, entity: Entity) -> None:
+    def _on_animal_action(self, animal: Animal) -> None:
+        action = animal.action
+        match action.action_type:
+            case ActionType.MOVE:
+                # Ask the grid to update, changing old position to empty,
+                # and new position to occupied by self
+                if self.grid.entity_grid.update_cell(new_coordinates=action.coordinates,
+                                                     value=animal):
+                    animal.on_move(new_position=action.coordinates)
+
+            case ActionType.PAINT:
+                self.modify_cell_color(coordinates=action.coordinates,
+                                       color=action.color)
+
+            case ActionType.DROP:
+                 # Create the energy
+                if self.create_energy(energy_type=action.energy_type,
+                                      coordinates=action.coordinates,
+                                      quantity=action.quantity):
+                    animal.on_drop_energy(energy_type=action.energy_type,
+                                          quantity=action.quantity)
+
+            case ActionType.PICKUP:
+                # Get the resource at coordinates from the environment
+                resource: Resource = self.get_resource_at(coordinates=action.coordinates)
+                if resource:
+                    animal.on_pick_up_resource(resource=resource)
+                    self.remove_resource(resource=resource)
+
+            case ActionType.RECYCLE:
+                # Drop energy from seed on the ground
+                self.decompose_entity(entity=action.tree)
+                animal.on_recycle_seed()
+
+            case ActionType.PLANT_TREE:
+                # Get a free cell around
+                free_cell,  = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+
+                if free_cell:
+                     # If animal possess a seed plant it,
+                    # else plant a new tree
+                    if action.seed:
+                        # spawn the tree from seed,
+                        # at given position on the grid
+                        self.sprout_tree(seed=action.seed,
+                                         position=position)
+                    else:
+                        self.spawn_tree(coordinates=free_cell)
+
+                animal.on_plant_tree()
+
+    def _event_on_action(self, entity: Entity) -> None:
         """Private method:
             Event on an entity's actions
 
         Args:
             entity (Entity): entity deciding on action
         """
+        if isinstance(entity, Animal):
+            self._on_animal_action(entity)
 
         match entity.status:
             case Status.DEAD:
@@ -804,7 +858,7 @@ class Simulation:
 
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
-            self.environment.event_on_action(entity=entity)
+            self.environment._event_on_action(entity=entity)
 
         # Update state of the simulation
         return self.environment.grid, self.state

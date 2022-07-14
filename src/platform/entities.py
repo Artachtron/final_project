@@ -16,6 +16,7 @@ import numpy as np
 import numpy.typing as npt
 from project.src.rtNEAT.brain import Brain
 
+from actions import *
 from energies import Energy, EnergyType, Resource
 from universal import EntityType, Position, SimulatedObject
 
@@ -28,15 +29,6 @@ class Direction(enum.Enum):
     LEFT    =   (-1, 0)
     DOWN    =   (0, 1)
     UP      =   (0, -1)
-
-class Status(enum.Enum):
-    """Enum:
-        Entity status
-    """
-    ALIVE = 0
-    DEAD = 1
-    FERTILE = 2
-
 
 class Entity(SimulatedObject):
     """Subclass of simulated object:
@@ -98,6 +90,7 @@ class Entity(SimulatedObject):
             max_age (int, optional):        maximum longevity. Defaults to 0.
             size (int, optional):           initialization size. Defaults to INITIAL_SIZE.
             action_cost (int, optional):    blue energy cost of each action. Defaults to INITIAL_ACTION_COST.
+            action (Action):                action of this turn decided by brain
             blue_energy (int, optional):    amount of blue energy owned. Defaults to INITIAL_BLUE_ENERGY.
             red_energy (int, optional):     amount of red energy owned. Defaults to INITIAL_RED_ENERGY.
             appearance (str, optional):     path to sprite's image. Defaults to "".
@@ -129,6 +122,7 @@ class Entity(SimulatedObject):
         self._reached_adulthood()                               # check if the adult size was reached
 
         self._action_cost: int = action_cost                    # blue energy cost of each action
+        self.action: Action                                     # action of this turn decided by brain
 
         self.brain: Brain                                       # brain containing genotype and mind
         self.mind: Network                                      # neural network
@@ -171,6 +165,19 @@ class Entity(SimulatedObject):
         """
         self.brain = brain
         self.mind = brain.phenotype
+
+    def _decide_action(self, action: Action):
+        """Private method:
+            Decide which action to perform,
+            set the action attribute to action
+
+        Args:
+            action (Action): action to set
+        """
+        self.action = action
+
+        # Energy cost of action
+        self._perform_action()
 
     @property
     def energies(self) -> Dict[str, int]:
@@ -377,59 +384,57 @@ class Entity(SimulatedObject):
 
         return can_perform
 
-    def _drop_energy(self, energy_type: EnergyType, quantity: int,
-                    coordinates: Tuple[int, int], environment: Environment) -> None:
+    def _decide_drop_energy(self, energy_type: EnergyType, quantity: int):
         """Private method:
             Action: Drop an amount energy of the specified type at a coordinate
 
         Args:
             energy_type (EnergyType):       type of energy to drop
             quantity (int):                 amount of energy to drop
-            coordinates (Tuple[int,int]):   coordinates on which to drop energy
-            grid (Grid):                    grid on which to drop energy
         """
 
         # Calculate the energy capable of being dropped
         quantity = self._quantity_from_stock(energy_type=energy_type,
                                                 quantity=quantity)
-        # Create the energy
-        if environment.create_energy(energy_type=energy_type,
-                                     coordinates=coordinates,
-                                     quantity=quantity):
 
-            # Remove energy amount from stock
-            self._loose_energy(energy_type=energy_type,
-                               quantity=quantity)
+        action = DropAction(coordinates=self.position,
+                            energy_type=energy_type,
+                            quantity=quantity)
 
-        # Energy cost of action
-        self._perform_action()
+        self._decide_action(action=action)
 
-    def _pick_up_resource(self, coordinates: Tuple[int, int], environment: Environment) -> None:
+    def on_drop_energy(self, energy_type: EnergyType, quantity: int):
+        # Remove energy amount from stock
+        self._loose_energy(energy_type=energy_type,
+                            quantity=quantity)
+
+
+    def _decide_pick_up_resource(self, coordinates: Tuple[int, int]):
         """Private method:
             Action: Pick energy up at coordinates
 
         Args:
             coordinates (Tuple[int, int]):  coordinates to pick up energy from
-            grid (Grid):                    grid on which to pick up energy
         """
+        action = PickupAction(coordinates=self.position)
 
-        # Get the resource at coordinates from the environment
-        resource: Resource = environment.get_resource_at(coordinates=coordinates)
+        self._decide_action(action=action)
 
-        if resource:
-            # If resource is an energy
-            if type(resource).__base__.__name__ == 'Energy':
-                self._gain_energy(energy_type=resource.type,
-                                  quantity=resource.quantity)
+    def on_pick_up_resource(self, resource: Resource):
+        """Public method:
+            Event: on pick up resource
 
-            # If resource is a seed
-            elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
-                self._store_seed(seed=resource)
+        Args:
+            resource (Resource): resource picked up
+        """
+        # If resource is an energy
+        if type(resource).__base__.__name__ == 'Energy':
+            self._gain_energy(energy_type=resource.type,
+                              quantity=resource.quantity)
 
-            environment.remove_resource(resource=resource)
-
-        self._perform_action()
-
+        # If resource is a seed
+        elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
+            self._store_seed(seed=resource)
 
     def _die(self) -> None:
         """Private method:
@@ -446,7 +451,7 @@ class Entity(SimulatedObject):
             increment age, and activate the mind
 
         Args:
-            environment (Environment): _description_
+            environment (Environment): environment on which the entity live
         """
         # Reset status
         self._change_status(new_status=Status.ALIVE)
@@ -460,38 +465,30 @@ class Entity(SimulatedObject):
     def _activate_mind(self, environment: Environment) -> None:
         """Private method:
             Activate entity's brain
-
-        Args:
-            environment (Environment): environment of the entity
         """
         inputs = self._normalize_inputs(environment=environment)
         mind = self.brain.phenotype
         outputs = mind.activate(input_values=inputs)
-        self._interpret_outputs(outputs=outputs,
-                                environment=environment)
+        self._interpret_outputs(outputs=outputs)
 
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Regroup and normalize inputs to feed brain
-
-        Args:
-            environment (Environment): current environment
 
         Returns:
             npt.NDArray: array of normalized inputs
         """
         return np.array([])
 
-    def _interpret_outputs(self, outputs: Dict[int, float], environment: Environment):
+    def _interpret_outputs(self, outputs: Dict[int, float]):
         """Private method:
             Take the adequate decision based on output values
 
         Args:
             outputs (Dict[int, float]): dictionary of output nodes' activation values
-            environment (Environment):  current environment
         """
 
-    def on_death(self, environment: Environment) -> None:
+    def on_death(self) -> None:
         """Public method:
             Event: on death
 
@@ -586,61 +583,60 @@ class Animal(Entity):
         self.mind = self.brain.phenotype
         self.mind.verify_complete_post_genesis()
 
-    def _move(self, direction: Direction, environment: Environment) -> None:
+    def _decide_move(self, direction: Direction):
         """Private method:
             Action: Move the animal in the given direction
 
         Args:
             direction (Direction):  direction in which to move
-            grid (Grid):            grid on which to move
         """
-        entity_grid: SubGrid = environment.grid.entity_grid
         next_pos = Position.add(position=self._position,
                                 vect=direction.value)()
 
-        # Ask the grid to update, changing old position to empty,
-        # and new position to occupied by self
-        if entity_grid.update_cell(new_coordinates=next_pos,
-                                   value=self):
+        action = MoveAction(coordinates=next_pos)
 
-            # update self position
-            self._update_position(new_position=next_pos)
+        self._decide_action(action=action)
 
-        # Energy cost of action
-        self._perform_action()
-       
+    def on_move(self, new_position: Tuple[int, int]) -> None:
+        """Public method:
+            Event: Update animal's position to the given coordinates
+
+        Args:
+            new_position (Tuple[int, int]): coordinates to move on
+        """
+        # update self position
+        self._update_position(new_position=new_position)
+
     def _update_position(self, new_position: Tuple[int, int]) -> None:
+        """Private method:
+            Update the position of the animal
+
+        Args:
+            new_position (Tuple[int, int]): position's updated value
+        """
         self.position = new_position
 
-    def _plant_tree(self, environment: Environment) -> None:
+    def _decide_plant_tree(self):
         """Private method:
             Action: Plant a tree nearby, consume red energy
         """
-
-        entity_grid: SubGrid = environment.grid.entity_grid
-
         # Verifiy that enough enough energy is available
         if self._can_perform_action(energy_type=EnergyType.RED,
                                     quantity=Animal.PLANTING_COST):
 
-            # Get a free cell around
-            free_cell,  = entity_grid.select_free_coordinates(
-                                            coordinates=self.position)
+            action = PlantTreeAction(coordinates=self.position,
+                                     seed=self._pocket)
+        
+        else:
+            action = IdleAction()
+        
+        self._decide_action(action=action)
 
-            if free_cell:
-                # If animal possess a seed plant it,
-                # else plant a new tree
-                if self._pocket:
-                    self._replant_seed(position=free_cell,
-                                       environment=environment)
-
-                else:
-                    environment.spawn_tree(coordinates=free_cell)
-
-                print(f"Tree was created at {free_cell}")
-
-            # Energy cost of action
-            self._perform_action()
+    def on_plant_tree(self):
+        """Public method:
+            Event: on animal planting a tree
+        """
+        self._pocket = None
 
     def _store_seed(self, seed: Seed) -> None:
         """Private method:
@@ -653,45 +649,29 @@ class Animal(Entity):
         # Energy cost of action
         self._perform_action()
 
-    def _recycle_seed(self, environment: Environment) -> None:
+    def _decide_recycle_seed(self):
         """Private method:
-        Action: Destroy seed stored and drop energy content
+            Action: Destroy seed stored and drop energy content
         """
-
         # if pocket is empty nothing to recycle
         if not self._pocket:
             return
 
         tree = self._pocket.germinate()
 
-        # Drop energy from seed on the ground
-        environment.decompose_entity(entity=tree)
+        action = RecycleAction(coordinates=self.position,
+                               tree=tree)
 
+        self._decide_action(action=action)
+
+    def on_recycle_seed(self) -> None:
+        """Private method:
+        Action: Destroy seed stored and drop energy content
+        """
         # Empty pocket
         self._pocket = None
-        # Energy cost of action
-        self._perform_action()
 
-    def _replant_seed(self, position: Tuple[int, int], environment: Environment) -> None:
-        """Private method:
-        Action: Replant seed store in pocket
-
-        Args:
-            position (Tuple[int, int]): cell coordinates on which to plant seed
-        """
-        # Nothing to replant if pocket is empty
-        if not self._pocket:
-            return
-
-        # spawn the tree from seed,
-        # at given position on the grid
-        environment.sprout_tree(seed=self._pocket,
-                               position=position)
-
-        # Emtpy pocket
-        self._pocket = None
-
-    def on_death(self, environment: Environment) -> None:
+    def on_death(self) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
         environment.decompose_entity(entity=self)
@@ -706,21 +686,23 @@ class Animal(Entity):
 
         self._perform_action()
 
-    def _paint(self, color: Tuple[int,int,int], environment: Environment,
-                          coordinates: Tuple[int,int] | None = None) -> None:
+    def _decide_paint(self, color: Tuple[int, int, int]):
         """Private method:
-            Modfify the color of a given cell, usually the cell currently sat on
+            Action: modify a cell color
 
         Args:
-            color (Tuple[int,int,int]):                     color to apply
-            environment (Environment):
-            coordinates (Tuple[int, int], optional):        coordinates of the cell to modify. Defaults to None.
+            color (Tuple[int, int, int]): color to change on cell
+
         """
+        action = PaintAction(coordinates=self.position,
+                             color=color)
 
-        coordinates = coordinates or self.position
-        environment.modify_cell_color(color=color,
-                                      coordinates=coordinates)
+        self._decide_action(action=action)
 
+    def on_paint(self) -> None:
+        """Public method:
+            Event: on paint action
+        """
         self._perform_action()
 
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
@@ -753,20 +735,19 @@ class Animal(Entity):
 
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
 
-    def _interpret_outputs(self, outputs: Dict[int, float], environment: Environment) -> None:
+    def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
 
         Args:
             outputs (np.array):         array or outputs values from brain activation
-            environment (Environment):  environment of the animal
         """
         # Get the most absolute active value of all the outputs
         most_active_output = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
         value = outputs[most_active_output]
 
         sorted_output_keys = sorted(outputs.keys())
-
+        
         match out:= sorted_output_keys.index(most_active_output):
             ## Simple actions ##
             # Move action
@@ -783,8 +764,7 @@ class Animal(Entity):
                     else:
                         direction = Direction.RIGHT
 
-                self._move(direction=direction,
-                           environment=environment)
+                self._decide_move(direction=direction)
 
             # Modify cell color
             case key if key in range(2,5):
@@ -792,44 +772,38 @@ class Animal(Entity):
                          int(outputs[sorted_output_keys[3]]*255),
                          int(outputs[sorted_output_keys[4]]*255))
 
-                self._paint(coordinates=self.position,
-                            color=color,
-                            environment=environment)
+                self._decide_paint(color=color)
 
             # Drop energy
             case key if key in range(5,7):
                 if out == 5:
-                    self._drop_energy(energy_type=EnergyType.BLUE,
-                                      coordinates=self.position,
-                                      quantity=10,
-                                      environment=environment)
+                    energy_type = EnergyType.BLUE
 
                 else:
-                    self._drop_energy(energy_type=EnergyType.RED,
-                                      coordinates=self.position,
-                                      quantity=10,
-                                      environment=environment)
+                    energy_type = EnergyType.RED
+
+                self._decide_drop_energy(energy_type=energy_type,
+                                                  quantity=10)
 
             # Pick up resource
             case 7:
-                self._pick_up_resource(coordinates=self.position,
-                                       environment=environment)
+                self._decide_pick_up_resource(coordinates=self.position)
 
             # Recycle seed
             case 8:
-                self._recycle_seed(environment=environment)
+                self._decide_recycle_seed()
 
             ## Complex actions ##
             # Plant tree
             case 9:
-                self._plant_tree(environment=environment)
+                self._decide_plant_tree()
 
             #Grow
             case 10:
-                self._grow()
+                GrowAction()
 
             case 11:
-                self._want_to_reproduce()
+                ReproduceAction()
 
 class Tree(Entity):
     """Subclass of Entity:
@@ -1037,7 +1011,7 @@ class Tree(Entity):
 
             # Pick up resource
             case 3:
-                self._pick_up_resource(coordinates=self.position,
+                self._decide_pick_up_resource(coordinates=self.position,
                                        environment=environment)
             #Grow
             case 4:
