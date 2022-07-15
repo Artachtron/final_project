@@ -24,13 +24,15 @@ class TestActions:
         
     def test_interactions(self):
         # plant tree
-        plant_action = PlantTreeAction(coordinates=(2,3))
+        plant_action = PlantTreeAction(coordinates=(2,3),
+                                       seed=None)
 
         assert plant_action.coordinates == (2,3)
         assert plant_action.action_type == ActionType.PLANT_TREE
         
         # recycle seed
-        recycle_action = RecycleAction(coordinates=(2,3))
+        recycle_action = RecycleAction(coordinates=(2,3),
+                                       tree=None)
         assert recycle_action.coordinates == (2,3)
         assert recycle_action.action_type == ActionType.RECYCLE
         

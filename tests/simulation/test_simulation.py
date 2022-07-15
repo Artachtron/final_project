@@ -4,7 +4,7 @@ import sys
 import pytest
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
-from project.src.platform.energies import EnergyType
+from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
 from project.src.platform.entities import Direction, Tree
 from project.src.platform.grid import Grid
 from project.src.platform.simulation import Environment, Simulation
@@ -379,6 +379,147 @@ class TestEnvironment:
             tree = self.grid.entity_grid.get_cell_value(coordinates=tree_cell)
             assert tree.__class__.__name__ == "Tree"
 
+        def test_pick_up_resource(self):
+            position = (3,3)
+            energy = self.env.create_energy(coordinates=position,
+                                            quantity=10,
+                                            energy_type=EnergyType.RED)
+            
+            assert self.grid.resource_grid.get_cell_value(position)
+            
+            blue_stock = self.animal.blue_energy
+            red_stock = self.animal.red_energy
+            self.animal._decide_pick_up_resource(coordinates=position)
+            self.env._event_on_action(entity=self.animal)
+            
+            assert not self.grid.resource_grid.get_cell_value(position) 
+            assert self.animal.blue_energy <= blue_stock 
+            assert self.animal.red_energy == red_stock + energy.quantity 
+            
+        def test_pick_up_seed(self):
+            tree = self.env.spawn_tree(coordinates=(3,2))
+            seed = self.env.create_seed_from_tree(tree)
+            
+            position = seed.position
+            
+            self.grid.resource_grid._set_cell_value(coordinates=position,
+                                                    value=seed)
+            
+            animal = self.env.spawn_animal(coordinates=(3,2))
+            
+            assert not animal._pocket
+            assert self.grid.resource_grid.get_cell_value(coordinates=position) == seed
+            
+            animal._decide_pick_up_resource(coordinates=position)
+            self.env._event_on_action(entity=animal)
+            
+            assert animal._pocket == seed
+            assert not self.grid.resource_grid.get_cell_value(coordinates=position)
+        
+        def test_recycle_seed(self):
+            tree = self.env.spawn_tree(coordinates=(3,2),
+                                        blue_energy=5,
+                                        red_energy=7)
+            seed = self.env.create_seed_from_tree(tree)
+            
+            position = seed.position
+            
+            self.grid.resource_grid._set_cell_value(coordinates=position,
+                                                    value=seed)
+            
+            animal = self.env.spawn_animal(coordinates=(3,2))
+            # Pocket empty
+            animal.on_recycle_seed()
+            assert len(self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
+                                                                            coordinates=position)) == 0
+            
+            animal._decide_pick_up_resource(coordinates=position)
+            self.env._event_on_action(entity=animal)
+            assert animal._pocket 
+            animal._decide_recycle_seed()
+            self.env._event_on_action(entity=animal)
+
+            assert not animal._pocket 
+            energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
+                                                                                 coordinates=animal.position) | 
+                             self.grid.resource_grid._find_coordinates_baseclass(base_class=RedEnergy,
+                                                                                 coordinates=animal.position))
+            energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]
+            assert len(energies) == 2
+            
+            blue, red = 0, 0
+            for energy in energies:
+                if energy.type.value == EnergyType.BLUE.value:
+                    assert energy.quantity == 5 
+                    blue += 1
+                elif energy.type.value == EnergyType.RED.value:
+                    assert energy.quantity == 7  
+                    red += 1
+            assert (blue,red) == (1,1)
+        
+        def test_replant_seed(self):
+            tree = self.env.spawn_tree(coordinates=(3,2),
+                                        max_age=32,
+                                        blue_energy=12,
+                                        red_energy=57)
+            
+            # Replant seed
+            max_age, blue_energy, red_energy = tree._max_age, tree.blue_energy, tree.red_energy
+            tree.on_death(environment=self.env)
+            animal = self.env.spawn_animal(coordinates=(2,3))
+            
+            animal._decide_pick_up_resource(coordinates=tree.position)
+            self.env._event_on_action(entity=animal)
+            assert animal.red_energy == 10
+            assert animal.blue_energy == 8
+            animal._decide_plant_tree()
+            self.env._event_on_action(entity=animal)
+            assert animal.red_energy == 0
+            assert animal.blue_energy == 7
+            
+            cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
+                                                                 base_class=Tree)
+            tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
+            assert tree._max_age == max_age
+            assert tree.blue_energy == blue_energy
+            assert tree.red_energy == red_energy
+            
+            tree.on_death(environment=self.env)
+            
+            
+            # New tree
+            animal._gain_energy(energy_type=EnergyType.RED,
+                                quantity=100)
+            animal._decide_plant_tree()
+            self.env._event_on_action(entity=animal)
+            cell, = self.entity_grid._find_coordinates_baseclass(coordinates=(2,3),
+                                                                 base_class=Tree)
+            tree = self.grid.entity_grid.get_cell_value(coordinates=cell)
+            assert not tree._max_age == max_age
+            assert not tree.blue_energy == blue_energy
+            assert not tree.red_energy == red_energy
+            
+        def test_modify_cell_color(self):
+            cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
+            assert tuple(cell_color) == (255,255,255)
+            
+            
+            new_color = (177,125,234)
+            
+            self.animal._decide_paint(color=new_color)
+            self.env._event_on_action(entity=self.animal)
+            
+            cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
+            assert tuple(cell_color) == new_color
+            
+            new_color = (46,12,57)
+            
+            self.animal._decide_paint(color=new_color)
+            self.env._event_on_action(entity=self.animal)
+            
+            cell_color = self.env.grid._color_grid.get_cell_value(coordinates=self.animal.position)
+            assert tuple(cell_color) == new_color
+        
         
 class TestSimulatedObject:
     def test_create_simulated_object(self):
@@ -386,9 +527,3 @@ class TestSimulatedObject:
                               size=10,
                               position=(20,10),
                               appearance="")
-        
-
-
-      
-        
-        

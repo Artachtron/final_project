@@ -11,7 +11,7 @@ from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
 
-from actions import ActionType
+from actions import Action, ActionType
 from energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
 from entities import Animal, Entity, Seed, Status, Tree
 from grid import Grid
@@ -380,56 +380,151 @@ class Environment:
         """
         return self.__id
 
+    def _on_animal_move(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's move action
+
+        Args:
+            animal (Animal): animal that moves
+            action (Action): move action
+        """
+        # Ask the grid to update, changing old position to empty,
+        # and new position to occupied by self
+        if self.grid.entity_grid.update_cell(new_coordinates=action.coordinates,
+                                             value=animal):
+            animal.on_move(new_position=action.coordinates)
+
+    def _on_animal_paint(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's paint action
+
+        Args:
+            animal (Animal): animal that paints
+            action (Action): paint action
+        """
+        self.modify_cell_color(coordinates=action.coordinates,
+                               color=action.color)
+
+    def _on_animal_drop(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's drop action
+
+        Args:
+            animal (Animal): animal that drop a resource
+            action (Action): drop action
+        """
+        # Create the energy
+        if self.create_energy(energy_type=action.energy_type,
+                              coordinates=action.coordinates,
+                              quantity=action.quantity):
+
+            animal.on_drop_energy(energy_type=action.energy_type,
+                                    quantity=action.quantity)
+
+    def _on_animal_pickup(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's pickup action
+
+        Args:
+            animal (Animal): animal that pickup a resource
+            action (Action): pickup action
+        """
+
+        # Get the resource at coordinates from the environment
+        resource: Resource = self.get_resource_at(coordinates=action.coordinates)
+        if resource:
+            animal.on_pick_up_resource(resource=resource)
+            self.remove_resource(resource=resource)
+
+    def _on_animal_recycle(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's recycle action
+
+        Args:
+            animal (Animal): animal that recycle a seed
+            action (Action): recycle action
+        """
+
+        # Drop energy from seed on the ground
+        self.decompose_entity(entity=action.tree)
+        animal.on_recycle_seed()
+
+    def _on_animal_plant_tree(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's plant tree action
+
+        Args:
+            animal (Animal): animal that plant a tree
+            action (Action): plant tree action
+        """
+
+        # Get a free cell around
+        free_cell,  = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+
+        if free_cell:
+                # If animal possess a seed plant it,
+            # else plant a new tree
+            if action.seed:
+                # spawn the tree from seed,
+                # at given position on the grid
+                self.sprout_tree(seed=action.seed,
+                                    position=free_cell)
+            else:
+                self.spawn_tree(coordinates=free_cell)
+
+        animal.on_plant_tree()
+
+
     def _on_animal_action(self, animal: Animal) -> None:
+        """Private method:
+            Handle the action to overtake based on animal's action
+
+        Args:
+            animal (Animal): animal with action to handle
+        """
         action = animal.action
         match action.action_type:
             case ActionType.MOVE:
-                # Ask the grid to update, changing old position to empty,
-                # and new position to occupied by self
-                if self.grid.entity_grid.update_cell(new_coordinates=action.coordinates,
-                                                     value=animal):
-                    animal.on_move(new_position=action.coordinates)
+                self._on_animal_move(animal=animal,
+                                     action=action)
 
             case ActionType.PAINT:
-                self.modify_cell_color(coordinates=action.coordinates,
-                                       color=action.color)
+                self._on_animal_paint(animal=animal,
+                                      action=action)
 
             case ActionType.DROP:
-                 # Create the energy
-                if self.create_energy(energy_type=action.energy_type,
-                                      coordinates=action.coordinates,
-                                      quantity=action.quantity):
-                    animal.on_drop_energy(energy_type=action.energy_type,
-                                          quantity=action.quantity)
+                self._on_animal_drop(animal=animal,
+                                     action=action)
 
             case ActionType.PICKUP:
-                # Get the resource at coordinates from the environment
-                resource: Resource = self.get_resource_at(coordinates=action.coordinates)
-                if resource:
-                    animal.on_pick_up_resource(resource=resource)
-                    self.remove_resource(resource=resource)
+                self._on_animal_pickup(animal=animal,
+                                       action=action)
 
             case ActionType.RECYCLE:
-                # Drop energy from seed on the ground
-                self.decompose_entity(entity=action.tree)
-                animal.on_recycle_seed()
+                self._on_animal_recycle(animal=animal,
+                                        action=action)
 
             case ActionType.PLANT_TREE:
-                # Get a free cell around
-                free_cell,  = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+                self._on_animal_plant_tree(animal=animal,
+                                           action=action)
 
-                if free_cell:
-                     # If animal possess a seed plant it,
-                    # else plant a new tree
-                    if action.seed:
-                        # spawn the tree from seed,
-                        # at given position on the grid
-                        self.sprout_tree(seed=action.seed,
-                                         position=position)
-                    else:
-                        self.spawn_tree(coordinates=free_cell)
+    def _on_animal_status(self, animal: Animal) -> None:
+        """Private method:
+            Handle the action to overtake based on animal's status
 
-                animal.on_plant_tree()
+        Args:
+            animal (Animal): animal with status to handle
+        """
+        match animal.status:
+            case Status.DEAD:
+                self._entity_died(entity=animal)
+
+            case Status.FERTILE:
+                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position)
+                for other_entity in entities_around:
+                    if other_entity.status == Status.FERTILE:
+                        self._reproduce_entities(parent1=animal,
+                                                 parent2=other_entity)
 
     def _event_on_action(self, entity: Entity) -> None:
         """Private method:
@@ -439,18 +534,9 @@ class Environment:
             entity (Entity): entity deciding on action
         """
         if isinstance(entity, Animal):
-            self._on_animal_action(entity)
+            self._on_animal_action(animal=entity)
+            self._on_animal_status(animal=entity)
 
-        match entity.status:
-            case Status.DEAD:
-                self._entity_died(entity=entity)
-
-            case Status.FERTILE:
-                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=entity.position)
-                for other_entity in entities_around:
-                    if other_entity.status == Status.FERTILE:
-                        self._reproduce_entities(parent1=entity,
-                                                 parent2=other_entity)
 
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
@@ -672,7 +758,10 @@ class Environment:
         Args:
             entity (Entity): entity that died
         """
-        entity.on_death(environment=self)
+        self.decompose_entity(entity=entity)
+        self.remove_entity(entity=entity)
+
+        entity.on_death()
 
     def decompose_entity(self, entity: Entity) -> None:
         """Public method

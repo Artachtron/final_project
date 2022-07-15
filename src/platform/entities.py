@@ -384,20 +384,21 @@ class Entity(SimulatedObject):
 
         return can_perform
 
-    def _decide_drop_energy(self, energy_type: EnergyType, quantity: int):
+    def _decide_drop_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Private method:
             Action: Drop an amount energy of the specified type at a coordinate
 
         Args:
             energy_type (EnergyType):       type of energy to drop
             quantity (int):                 amount of energy to drop
+            coordinates (Tuple[int, int]):  coordinates on which to drop
         """
 
         # Calculate the energy capable of being dropped
         quantity = self._quantity_from_stock(energy_type=energy_type,
                                                 quantity=quantity)
 
-        action = DropAction(coordinates=self.position,
+        action = DropAction(coordinates=coordinates,
                             energy_type=energy_type,
                             quantity=quantity)
 
@@ -416,7 +417,7 @@ class Entity(SimulatedObject):
         Args:
             coordinates (Tuple[int, int]):  coordinates to pick up energy from
         """
-        action = PickupAction(coordinates=self.position)
+        action = PickupAction(coordinates=coordinates)
 
         self._decide_action(action=action)
 
@@ -674,9 +675,7 @@ class Animal(Entity):
     def on_death(self) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
-        environment.decompose_entity(entity=self)
-
-        environment.remove_entity(entity=self)
+        pass
 
     def _want_to_reproduce(self) -> None:
         """Private method:
@@ -783,7 +782,8 @@ class Animal(Entity):
                     energy_type = EnergyType.RED
 
                 self._decide_drop_energy(energy_type=energy_type,
-                                                  quantity=10)
+                                         quantity=10,
+                                         coordinates=self.position)
 
             # Pick up resource
             case 7:
