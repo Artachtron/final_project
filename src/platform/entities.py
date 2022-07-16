@@ -602,7 +602,7 @@ class Animal(Entity):
             Create an animal brain's genotype and its associated phenotype
         """
         NUM_ANIMAL_INPUTS = 96
-        NUM_ANIMAL_OUTPUTS = 12
+        NUM_ANIMAL_OUTPUTS = 13
 
         self.brain = Brain.genesis(brain_id=self.id,
                                    n_inputs=NUM_ANIMAL_INPUTS,
@@ -797,9 +797,9 @@ class Animal(Entity):
             outputs (Dict[int, float]): output values
             keys (Tuple[int, ...]):     sorted output keys
         """
-        color = (int(outputs[keys[2]]*255),
-                 int(outputs[keys[3]]*255),
-                 int(outputs[keys[4]]*255))
+        color = (int(outputs[keys[-3]]*255),
+                 int(outputs[keys[-2]]*255),
+                 int(outputs[keys[-1]]*255))
 
         self._action_paint(color=color)
 
@@ -834,11 +834,13 @@ class Animal(Entity):
         Args:
             outputs (np.array):         array or outputs values from brain activation
         """
-        # Get the most absolute active value of all the outputs
-        most_active_output = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
-        value = outputs[most_active_output]
 
+        ANIMAL_TRIGGER_OUTPUTS: Final[int] = 10
         sorted_output_keys = tuple(sorted(outputs.keys()))
+        out_dict = {k: outputs[k] for k in sorted_output_keys[:ANIMAL_TRIGGER_OUTPUTS]}
+        # Get the most absolute active value of all the outputs
+        most_active_output = max(out_dict, key = lambda k : abs(out_dict.get(k, 0.0)))
+        value = outputs[most_active_output]
 
         match out:= sorted_output_keys.index(most_active_output):
             ## Simple actions ##
@@ -847,35 +849,36 @@ class Animal(Entity):
                 self._decide_move(out=out,
                                   value=value)
 
+            # Drop energy
+            case key if key in range(2,4):
+                self._decide_drop(out=out)
+                
             # Modify cell color
-            case key if key in range(2,5):
+            case 4:
                 self._decide_paint(outputs=outputs,
                                    keys=sorted_output_keys)
 
-            # Drop energy
-            case key if key in range(5,7):
-                self._decide_drop(out=out)
-
             # Pick up resource
-            case 7:
+            case 5:
                 self._decide_pickup(coordinates=self.position)
 
             # Recycle seed
-            case 8:
+            case 6:
                 self._decide_recycle()
 
             ## Complex actions ##
             # Plant tree
-            case 9:
+            case 7:
                 self._decide_plant_tree()
 
             # Grow
-            case 10:
+            case 8:
                 self._decide_grow()
 
             # Reproduction
-            case 11:
+            case 9:
                 self._decide_reproduce()
+
 
 class Tree(Entity):
     """Subclass of Entity:
@@ -1079,7 +1082,7 @@ class Tree(Entity):
         """
 
         TREE_TRIGGER_OUTPUTS: Final[int] = 5
-        sorted_output_keys = sorted(outputs.keys())
+        sorted_output_keys = tuple(sorted(outputs.keys()))
         out_dict = {k: outputs[k] for k in sorted_output_keys[:TREE_TRIGGER_OUTPUTS]}
         # Get the most absolute active value of the trigger outputs
         most_active_output = max(out_dict, key = lambda k : abs(out_dict.get(k, 0.0)))
@@ -1097,15 +1100,12 @@ class Tree(Entity):
             # Pick up resource
             case 3:
                 self._decide_pickup(outputs=outputs,
-                                    keys=tuple(sorted_output_keys))
+                                    keys=sorted_output_keys)
             #Grow
             case 4:
                 self._decide_grow()
-        print(f"keys: {out_dict.keys()}")
-        print(f"sorted keys: {sorted_output_keys}")
-        print(f"Most active: {most_active_output}")
-        print(f"OUT: {out}")
-
+                
+                
 class Seed(Resource):
     """Subclass of Resource:
         Container of a tree's genetic information
