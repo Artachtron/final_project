@@ -197,7 +197,7 @@ class TestEntity:
                 # Drop blue energy
                 blue_cell = (1,1)
                 assert self.grid.resource_grid.get_cell_value(coordinates=blue_cell) == None
-                self.entity._decide_drop_energy(energy_type=EnergyType.BLUE,
+                self.entity._action_drop_energy(energy_type=EnergyType.BLUE,
                                                 quantity=1,
                                                 coordinates=blue_cell)
                 self.env._event_on_action(entity=self.entity)
@@ -212,7 +212,7 @@ class TestEntity:
                 red_cell = (3,2)
                 assert self.grid.resource_grid.get_cell_value(coordinates=red_cell) == None
                 assert self.entity.red_energy == 10
-                self.entity._decide_drop_energy(energy_type=EnergyType.RED,
+                self.entity._action_drop_energy(energy_type=EnergyType.RED,
                                                 quantity=3,
                                                 coordinates=red_cell)
                 self.env._event_on_action(entity=self.entity)
@@ -225,7 +225,7 @@ class TestEntity:
                 assert red_energy.quantity == 3
                 
                 # Drop energy on occupied cell
-                self.entity._decide_drop_energy(energy_type=EnergyType.BLUE,
+                self.entity._action_drop_energy(energy_type=EnergyType.BLUE,
                                                 quantity=1,
                                                 coordinates=red_cell)
                 self.env._event_on_action(entity=self.entity)
@@ -240,7 +240,7 @@ class TestEntity:
                 red_cell2 = (3,3)
                 assert self.grid.resource_grid.get_cell_value(coordinates=red_cell2) == None
                 assert self.entity.red_energy == 7
-                self.entity._decide_drop_energy(energy_type=EnergyType.RED,
+                self.entity._action_drop_energy(energy_type=EnergyType.RED,
                                                 quantity=10,
                                                 coordinates=red_cell2)
                 self.env._event_on_action(entity=self.entity)
@@ -452,27 +452,27 @@ class TestAnimal:
             
             # Down
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
-            animal._decide_move(Direction.DOWN)
+            animal._action_move(Direction.DOWN)
             action = animal.action
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (3,4)
             
             # Up
-            animal._decide_move(Direction.UP)
+            animal._action_move(Direction.UP)
             
             action = animal.action
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (3,2)
             
             # Left
-            animal._decide_move(Direction.LEFT)
+            animal._action_move(Direction.LEFT)
             
             action = animal.action
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (2,3)
             
             # Right
-            animal._decide_move(Direction.RIGHT)
+            animal._action_move(Direction.RIGHT)
             
             action = animal.action
             assert action.action_type.name == ActionType.MOVE.name
@@ -541,7 +541,7 @@ class TestAnimal:
         def test_plant_tree(self):
             animal = self.env.spawn_animal(coordinates=(5,5))
             assert animal.red_energy == 10
-            animal._decide_plant_tree()
+            animal._action_plant_tree()
             assert animal.red_energy == 0
             assert animal.action.action_type.name == ActionType.PLANT_TREE.name
             # No free cells
@@ -562,7 +562,7 @@ class TestAnimal:
             
             blue_stock = self.animal.blue_energy
             red_stock = self.animal.red_energy
-            self.animal._decide_pick_up_resource(coordinates=position)
+            self.animal._action_pick_up_resource(coordinates=position)
             
             assert self.animal.blue_energy <= blue_stock 
             action = self.animal.action
@@ -579,7 +579,7 @@ class TestAnimal:
             
             animal = self.env.spawn_animal(coordinates=(4,2))
                         
-            animal._decide_pick_up_resource(coordinates=position)
+            animal._action_pick_up_resource(coordinates=position)
             
             assert animal.action.action_type.name == ActionType.PICKUP.name
             
@@ -593,12 +593,12 @@ class TestAnimal:
                         
             animal._pocket = seed
             assert animal._pocket 
-            animal._decide_recycle_seed()
+            animal._action_recycle_seed()
             
             assert animal.action.action_type.name == ActionType.RECYCLE.name
                         
         def test_replant_seed(self):
-            self.animal._decide_plant_tree()
+            self.animal._action_plant_tree()
 
             assert self.animal.action.action_type.name == ActionType.PLANT_TREE.name
                 
@@ -643,7 +643,7 @@ class TestAnimal:
         def test_modify_cell_color(self):
             new_color = (177,125,234)
             
-            self.animal._decide_paint(color=new_color)
+            self.animal._action_paint(color=new_color)
             action = self.animal.action
             assert action.action_type.name == ActionType.PAINT.name
             assert action.color == new_color
@@ -652,7 +652,68 @@ class TestAnimal:
             assert self.animal.status.name == Status.ALIVE.name
             self.animal._want_to_reproduce()
             assert self.animal.status.name == Status.FERTILE.name
-        
+            
+        def test_action_cost(self):
+            animal = self.env.spawn_animal(coordinates=(4,4),
+                                           blue_energy=100,
+                                           red_energy=100,
+                                           size=1,
+                                           adult_size=2)
+            
+            animal._action_cost = 1    
+            assert animal.blue_energy == 100
+            assert animal.red_energy == 100
+            
+            # Move
+            animal._action_move(direction=Direction.UP)    
+            assert animal.blue_energy == 99   
+            assert animal.red_energy == 100
+            
+            # Paint cell
+            animal._action_paint(color=(125,12,32))   
+            assert animal.blue_energy == 98   
+            assert animal.red_energy == 100
+            
+            # Drop energy
+            animal._action_drop_energy(energy_type=EnergyType.RED,
+                                       quantity=10,
+                                       coordinates=animal.position)   
+            assert animal.blue_energy == 97   
+            assert animal.red_energy == 100
+            
+            # Pickup energy
+            animal._action_pick_up_resource(coordinates=animal.position)
+            assert animal.blue_energy == 96   
+            assert animal.red_energy == 100
+            
+            # Recycle
+            animal._action_recycle_seed()
+            assert animal.blue_energy == 95   
+            assert animal.red_energy == 100
+            
+            # Recycle
+            animal._action_plant_tree()
+            assert animal.blue_energy == 94  
+            assert animal.red_energy == 90
+            
+            # Grow child
+            animal._action_grow()
+            assert animal.blue_energy == 93  
+            assert animal.red_energy == 85
+            
+            # Grow adult
+            animal._action_grow()
+            assert animal.blue_energy == 91  
+            assert animal.red_energy == 65
+            
+            # Reproduce
+            animal._action_reproduce()
+            assert animal.blue_energy == 88 
+            assert animal.red_energy == 65
+            animal.on_reproduction()
+            assert animal.blue_energy == 88
+            assert animal.red_energy == 35
+            
                 
         class TestAnimalMind:
             @pytest.fixture(autouse=True)
