@@ -31,6 +31,7 @@ class ActionType(Enum):
     PLANT_TREE = auto()
     GROW = auto()
     REPRODUCE = auto()
+    PRODUCE_ENERGY = auto()
     IDLE = auto()
 
 @dataclass(kw_only=True, frozen=True)
@@ -68,6 +69,14 @@ class GrowAction(SelfAction):
         Action on decision to grow
     """
     action_type: ActionType = ActionType.GROW
+    
+@dataclass(kw_only=True, frozen=True)
+class ProduceEnergyAction(Interaction):
+    """SelfAction:
+        Action on decision to produce energy
+    """
+    action_type: ActionType = ActionType.PRODUCE_ENERGY
+    energy_type: EnergyType
     
 @dataclass(kw_only=True, frozen=True)
 class IdleAction(SelfAction):

@@ -234,6 +234,22 @@ class Entity(SimulatedObject):
         if self._age > self._max_age:
             self._die()
 
+    def _decide_grow(self) -> None:
+        """Pivate method:
+            Decide on grow action
+        """
+        self._action_grow()
+
+    def _action_grow(self) -> None:
+        """Private method:
+            Action: Increase size
+        """
+        action = GrowAction()
+
+        self._decide_action(action=action)
+
+        self._grow()
+
     def _grow(self) -> None:
         """Private method:
             Action: Grow the entity to bigger size,
@@ -380,6 +396,23 @@ class Entity(SimulatedObject):
 
         return can_perform
 
+    def _decide_drop(self, out: int) -> None:
+        """Pivate method:
+            Decide on drop action
+
+        Args:
+            out (int): output chosen to trigger action
+        """
+        if out == 5:
+            energy_type = EnergyType.BLUE
+
+        else:
+            energy_type = EnergyType.RED
+
+        self._action_drop_energy(energy_type=energy_type,
+                                    quantity=10,
+                                    coordinates=self.position)
+
     def _action_drop_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Private method:
             Action: Drop an amount energy of the specified type at a coordinate
@@ -404,6 +437,12 @@ class Entity(SimulatedObject):
         # Remove energy amount from stock
         self._loose_energy(energy_type=energy_type,
                             quantity=quantity)
+
+    def _decide_pickup(self, coordinates: Tuple[int, int]) -> None:
+        """Pivate method:
+            Decide on pickup action
+        """
+        self._action_pick_up_resource(coordinates=coordinates)
 
 
     def _action_pick_up_resource(self, coordinates: Tuple[int, int]):
@@ -437,7 +476,6 @@ class Entity(SimulatedObject):
         """Private method:
             Action: Death of the entity
         """
-
         print(f"{self} died at age {self._age}")
         self.status = Status.DEAD
 
@@ -655,7 +693,7 @@ class Animal(Entity):
             tree = self._pocket.germinate()
 
             action = RecycleAction(coordinates=self.position,
-                                tree=tree)           
+                                tree=tree)
         else:
             action = IdleAction()
 
@@ -667,23 +705,13 @@ class Animal(Entity):
         """
         # Empty pocket
         self._pocket = None
-        
-    def _action_grow(self) -> None:
-        """Private method:
-            Action: Increase size
-        """
-        action = GrowAction()
 
-        self._decide_action(action=action)
-        
-        self._grow()
-        
     def _action_reproduce(self) -> None:
         """Private method:
             Action: Get ready for reproduction
         """
         action = ReproduceAction()
-        
+
         self._decide_action(action=action)
 
     def on_death(self) -> None:
@@ -753,7 +781,7 @@ class Animal(Entity):
         Args:
             out (int):      output chosen to trigger action
             value (float):  output value
-        """        
+        """
         if out == 0:
             if value > 0:
                 direction = Direction.UP
@@ -766,8 +794,8 @@ class Animal(Entity):
             else:
                 direction = Direction.RIGHT
 
-        self._action_move(direction=direction) 
-        
+        self._action_move(direction=direction)
+
     def _decide_paint(self, outputs: Dict[int, float], keys: Tuple[int, ...]) -> None:
         """Pivate method:
             Decide on paint action
@@ -775,58 +803,29 @@ class Animal(Entity):
         Args:
             outputs (Dict[int, float]): output values
             keys (Tuple[int, ...]):     sorted output keys
-        """               
+        """
         color = (int(outputs[keys[2]]*255),
                  int(outputs[keys[3]]*255),
                  int(outputs[keys[4]]*255))
 
         self._action_paint(color=color)
-        
-    def _decide_drop(self, out: int) -> None:
-        """Pivate method:
-            Decide on drop action
-            
-        Args:
-            out (int): output chosen to trigger action
-        """               
-        if out == 5:
-            energy_type = EnergyType.BLUE
 
-        else:
-            energy_type = EnergyType.RED
-
-        self._action_drop_energy(energy_type=energy_type,
-                                    quantity=10,
-                                    coordinates=self.position)
-        
-    def _decide_pickup(self) -> None:
-        """Pivate method:
-            Decide on pickup action
-        """               
-        self._action_pick_up_resource(coordinates=self.position)
-        
     def _decide_recycle(self) -> None:
         """Pivate method:
             Decide on recycle action
-        """               
+        """
         self._action_recycle_seed()
-    
+
     def _decide_plant_tree(self) -> None:
         """Pivate method:
             Decide on plant tree action
-        """               
+        """
         self._action_plant_tree()
 
-    def _decide_grow(self) -> None:
-        """Pivate method:
-            Decide on grow action
-        """               
-        self._action_grow()
-        
     def _decide_reproduce(self) -> None:
         """Pivate method:
             Decide on reproduce action
-        """               
+        """
         self._action_reproduce()
 
     def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
@@ -852,7 +851,7 @@ class Animal(Entity):
             # Modify cell color
             case key if key in range(2,5):
                 self._decide_paint(outputs=outputs,
-                                   keys=sorted_output_keys)    
+                                   keys=sorted_output_keys)
 
             # Drop energy
             case key if key in range(5,7):
@@ -860,7 +859,7 @@ class Animal(Entity):
 
             # Pick up resource
             case 7:
-                self._decide_pickup()
+                self._decide_pickup(coordinates=self.position)
 
             # Recycle seed
             case 8:
@@ -949,29 +948,10 @@ class Tree(Entity):
         self.mind = self.brain.phenotype
         self.mind.verify_complete_post_genesis()
 
-    def _produce_energy(self, environment: Environment) -> None:
-        """Private method:
-            Action: Produce energy
-        """
-        MINUMUM_AGE: Final[int] = 20
-        if self._age < MINUMUM_AGE:
-            pass
-
-        trees_around = environment.find_trees_around(coordinates=self.position) or []
-
-        count_trees_around = len(trees_around)
-
-        self._gain_energy(energy_type=self._production_type,
-                         quantity=int((5 * self._size) / 2**count_trees_around))
-
-        self._loose_energy(energy_type=EnergyType.BLUE,
-                          quantity=self._action_cost)
-
-    def on_death(self, environment: Environment) -> None:
+    def on_death(self) -> None:
         """Public method:
             Event: On tree death, create a seed on dead tree position"""
-
-        environment.create_seed_from_tree(tree=self)
+        pass
 
     def _encode_genetic_data(self, data: Dict) -> Dict:
         """Private method:
@@ -1023,6 +1003,31 @@ class Tree(Entity):
 
         return seed
 
+    def _action_produce_energy(self) -> None:
+        """Private method:
+            Action: Produce energy
+        """
+        action = ProduceEnergyAction(energy_type=self._production_type,
+                                     coordinates=self.position)
+        self._decide_action(action)
+
+    def _decide_produce(self) -> None:
+        """Pivate method:
+            Decide on produce energy action
+        """
+        self._action_produce_energy()
+
+    def on_produce_energy(self, count_trees_around: int) -> None:
+        """Public method:
+            Event: Produce energy
+        """
+        MINUMUM_AGE: Final[int] = 20
+        if self._age < MINUMUM_AGE:
+            pass
+
+        self._gain_energy(energy_type=self._production_type,
+                         quantity=int((5 * self._size) / 2**count_trees_around))
+
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Normalize input values for brain activation
@@ -1050,7 +1055,7 @@ class Tree(Entity):
 
         return np.array([age, size, blue_energy, red_energy] + see_energies + see_colors)
 
-    def _interpret_outputs(self, outputs: Dict[int, float], environment: Environment) -> None:
+    def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
 
@@ -1068,28 +1073,17 @@ class Tree(Entity):
             ## Simple actions ##
             # Produce energy
             case 0:
-                self._produce_energy(environment=environment)
+                self._decide_produce()
             # Drop energy
             case key if key in range(1,3):
-                if out == 1:
-                    self._drop_energy(energy_type=EnergyType.BLUE,
-                                      coordinates=self.position,
-                                      quantity=10,
-                                      environment=environment)
-
-                else:
-                    self._drop_energy(energy_type=EnergyType.RED,
-                                      coordinates=self.position,
-                                      quantity=10,
-                                      environment=environment)
+                self._decide_drop(out=out)
 
             # Pick up resource
             case 3:
-                self._action_pick_up_resource(coordinates=self.position,
-                                       environment=environment)
+                self._decide_pickup(coordinates=self.position)
             #Grow
             case 4:
-                self._grow()
+                self._decide_grow()
 
 class Seed(Resource):
     """Subclass of Resource:

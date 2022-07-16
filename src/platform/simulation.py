@@ -459,7 +459,11 @@ class Environment:
         """
 
         # Get a free cell around
-        free_cell,  = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+        free_cells  = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+        free_cell: Optional[Tuple[int,int]] = None
+        
+        if free_cells:
+            free_cell = free_cells.pop()
 
         if free_cell:
                 # If animal possess a seed plant it,
@@ -468,7 +472,7 @@ class Environment:
                 # spawn the tree from seed,
                 # at given position on the grid
                 self.sprout_tree(seed=action.seed,
-                                    position=free_cell)
+                                 position=free_cell)
             else:
                 self.spawn_tree(coordinates=free_cell)
 
@@ -508,6 +512,16 @@ class Environment:
                 self._on_animal_plant_tree(animal=animal,
                                            action=action)
 
+    def _on_animal_death(self, animal: Animal) -> None:
+        """Pivate method:
+            Handle animal death
+
+        Args:
+            animal (Animal): animal that died
+        """        
+        self.decompose_entity(entity=animal)
+        self._entity_died(entity=animal) 
+
     def _on_animal_status(self, animal: Animal) -> None:
         """Private method:
             Handle the action to overtake based on animal's status
@@ -517,7 +531,7 @@ class Environment:
         """
         match animal.status:
             case Status.DEAD:
-                self._entity_died(entity=animal)
+                self._on_animal_death(animal=animal)
 
             case Status.FERTILE:
                 entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position)
@@ -525,6 +539,79 @@ class Environment:
                     if other_entity.status == Status.FERTILE:
                         self._reproduce_entities(parent1=animal,
                                                  parent2=other_entity)
+                        
+    def _on_tree_produce_energy(self, tree: Tree) -> None:
+        """Private method:
+            Handle tree's produce energy action
+
+        Args:
+            tree (Tree): tree that produce energy
+        """           
+        trees_around = self.find_trees_around(coordinates=tree.position) or []
+        count_trees_around = len(trees_around)
+        
+        tree.on_produce_energy(count_trees_around=count_trees_around)
+        
+    def _on_tree_drop(self, tree: Tree, action: Action) -> None:
+        """Private method:
+            Handle tree's drop action
+
+        Args:
+            tree (Tree): tree that drop a resource
+            action (Action): drop action
+        """
+        free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+        free_cell: Optional[Tuple[int,int]] = None
+        
+        if free_cells:
+            free_cell = free_cells.pop()
+        
+        if free_cell:
+            # Create the energy
+            if self.create_energy(energy_type=action.energy_type,
+                                coordinates=free_cell,
+                                quantity=action.quantity):
+
+                tree.on_drop_energy(energy_type=action.energy_type,
+                                    quantity=action.quantity)          
+        
+                        
+    def _on_tree_action(self, tree: Tree) -> None:
+        """Private method:
+            Handle the action to overtake based on tree's action
+
+        Args:
+            tree (Tree): tree with action to handle
+        """
+        action = tree.action
+        match action.action_type:
+            case ActionType.PRODUCE_ENERGY:
+                self._on_tree_produce_energy(tree=tree)
+                
+            case ActionType.DROP:
+                self._on_tree_drop(tree=tree,
+                                   action=action)
+                
+    def _on_tree_death(self, tree: Tree) -> None:
+        """Pivate method:
+            Handle tree death
+
+        Args:
+            tree (Tree): tree that died
+        """
+        self._create_seed_from_tree(tree=tree)        
+        self._entity_died(entity=tree) 
+                
+    def _on_tree_status(self, tree: Tree) -> None:
+        """Private method:
+            Handle the action to overtake based on animal's status
+
+        Args:
+            animal (Tree): animal with status to handle
+        """
+        match tree.status:
+            case Status.DEAD:
+                self._entity_died(entity=tree)
 
     def _event_on_action(self, entity: Entity) -> None:
         """Private method:
@@ -536,6 +623,10 @@ class Environment:
         if isinstance(entity, Animal):
             self._on_animal_action(animal=entity)
             self._on_animal_status(animal=entity)
+            
+        elif isinstance(entity,Tree):
+            self._on_tree_action(tree=entity)
+            self._on_tree_status(tree=entity)
 
 
     def _add_new_resource_to_world(self, new_resource: Resource):
@@ -640,8 +731,8 @@ class Environment:
 
         return tree
 
-    def create_seed_from_tree(self, tree: Tree) -> Seed:
-        """Public method:
+    def _create_seed_from_tree(self, tree: Tree) -> Seed:
+        """Private method:
             Create a seed from a tree remove the tree from the world
             and place the seed instead
 
@@ -655,9 +746,7 @@ class Environment:
         # Create a seed from a tree
         seed = tree.create_seed(data={'size': 5,
                                       'action_cost': 1})
-        # Remove tree from world
-        self.remove_entity(tree)
-
+        
         # Add the seed to the world
         self._add_new_resource_to_world(new_resource=seed)
 
@@ -758,7 +847,6 @@ class Environment:
         Args:
             entity (Entity): entity that died
         """
-        self.decompose_entity(entity=entity)
         self.remove_entity(entity=entity)
 
         entity.on_death()

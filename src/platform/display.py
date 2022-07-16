@@ -125,7 +125,7 @@ class DisplayedObject(pg.sprite.Sprite):
         """
         # Retrieve information from current simulation state
         if sim_state:
-            entity = sim_state.entities[self.__id]
+            entity = sim_state.entities[self.id]
             self.size = entity.size
             self.position = entity.position
 
@@ -137,6 +137,16 @@ class DisplayedObject(pg.sprite.Sprite):
         self.rect: pg.rect.Rect = self.image.get_rect(
             center=(pos_x * block_size + block_size /2,
                     pos_y * block_size + block_size /2))
+        
+    @property
+    def id(self) -> int:
+        """Property
+            Return the display's id
+
+        Returns:
+            int: display's id
+        """
+        return self.__id
 
 
 class Display:
@@ -283,6 +293,11 @@ class Display:
         Args:
             sim_state (SimState): current state of the simulation
         """
+        
+        # Remove the extra entities
+        for entity in sim_state.removed_entities.values():
+            self._remove_entity(entity)
+            
         # update present entities
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
@@ -290,10 +305,6 @@ class Display:
         # Add the missing entities
         for entity in sim_state.added_entities.values():
             self._add_entity(entity)
-
-        # Remove the extra entities
-        for entity in sim_state.removed_entities.values():
-            self._remove_entity(entity)
 
         # Add the missing resources
         for resource in sim_state.added_resources.values():
@@ -370,7 +381,6 @@ class Display:
             Draw the energies"""
         self.resource_group.draw(self.screen)
 
-
     @property
     def id(self) -> int:
         """Property
@@ -380,5 +390,3 @@ class Display:
             int: display's id
         """
         return self.__id
-
-

@@ -313,7 +313,8 @@ class TestTree:
             assert self.tree1.status.name == Status.ALIVE.name
             self.tree1._die() 
             assert self.tree1.status.name == Status.DEAD.name
-            self.tree1.on_death(environment=self.env)
+            #self.tree1.on_death()
+            self.env._on_tree_death(tree=self.tree1)
             seed = self.grid.resource_grid.get_cell_value(coordinates=position)
             assert seed
             assert seed.__class__.__name__ == 'Seed'
@@ -327,16 +328,12 @@ class TestTree:
                                         size=1,
                                         red_energy=5,
                                         blue_energy=5)
-                      
-            assert tree.red_energy == 5
-            assert tree.blue_energy == 5
-            tree._produce_energy(environment=self.env)
-            assert tree.red_energy == 10
-            assert tree.blue_energy == 4
-            tree.size = 2
-            tree._produce_energy(environment=self.env)
-            assert tree.red_energy == 20
-            assert tree.blue_energy == 3
+
+            tree._decide_produce()
+            self.env._event_on_action(entity=tree)
+            action = tree.action
+            assert action.action_type.name == ActionType.PRODUCE_ENERGY.name
+            assert action.energy_type == EnergyType.RED
             
             # Blue energy
             tree2 = self.env.spawn_tree(production_type=EnergyType.BLUE, 
@@ -346,37 +343,11 @@ class TestTree:
                                         red_energy=5,
                                         action_cost=0)
             
-            assert tree2.blue_energy == 5
-            assert tree2.red_energy == 5
-            tree2._produce_energy(environment=self.env)
-            assert tree2.blue_energy == 10
-            assert tree2.red_energy == 5
-            tree2.size = 2
-            tree2._produce_energy(environment=self.env)
-            assert tree2.blue_energy == 20
-            assert tree2.red_energy == 5
-            
-            # trees around
-            tree3 = self.env.spawn_tree(production_type=EnergyType.BLUE,
-                                        coordinates=(2,1),
-                                        size=1,
-                                        blue_energy=5,
-                                        action_cost=0)
-            
-            tree2._produce_energy(environment=self.env)
-            assert tree2.blue_energy == 25
-            assert tree2.red_energy == 5
-            
-            tree4 = self.env.spawn_tree(production_type=EnergyType.BLUE,
-                                        coordinates=(1,2),
-                                        size=1,
-                                        blue_energy=5, 
-                                        action_cost=0)
-                            
-            tree2._produce_energy(environment=self.env)
-            assert tree2.blue_energy == 27
-            assert tree2.red_energy == 5
-       
+            tree2._decide_produce()
+            self.env._event_on_action(entity=tree2)
+            action = tree2.action
+            assert action.action_type.name == ActionType.PRODUCE_ENERGY.name
+            assert action.energy_type == EnergyType.BLUE
        
 
 class TestAnimal:
@@ -570,7 +541,7 @@ class TestAnimal:
             
         def test_pick_up_seed(self):
             tree = self.env.spawn_tree(coordinates=(3,2))
-            seed = self.env.create_seed_from_tree(tree)
+            seed = self.env._create_seed_from_tree(tree)
             
             position = seed.position
             
@@ -587,9 +558,9 @@ class TestAnimal:
             tree = self.env.spawn_tree(coordinates=(3,2),
                                         blue_energy=5,
                                         red_energy=7)
-            seed = self.env.create_seed_from_tree(tree)
+            seed = self.env._create_seed_from_tree(tree)
             
-            animal = self.env.spawn_animal(coordinates=(3,2))
+            animal = self.env.spawn_animal(coordinates=(3,4))
                         
             animal._pocket = seed
             assert animal._pocket 

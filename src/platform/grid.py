@@ -381,7 +381,7 @@ class SubGrid:
 
             else:
                 free_cells = set(samples)
-
+        
         return free_cells
 
     def update_cell(self, new_coordinates: Tuple[int, int], value: Any) -> bool:
