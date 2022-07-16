@@ -438,13 +438,6 @@ class Entity(SimulatedObject):
         self._loose_energy(energy_type=energy_type,
                             quantity=quantity)
 
-    def _decide_pickup(self, coordinates: Tuple[int, int]) -> None:
-        """Pivate method:
-            Decide on pickup action
-        """
-        self._action_pick_up_resource(coordinates=coordinates)
-
-
     def _action_pick_up_resource(self, coordinates: Tuple[int, int]):
         """Private method:
             Action: Pick energy up at coordinates
@@ -828,6 +821,12 @@ class Animal(Entity):
         """
         self._action_reproduce()
 
+    def _decide_pickup(self, coordinates: Tuple[int, int]) -> None:
+        """Pivate method:
+            Decide on pickup action
+        """
+        self._action_pick_up_resource(coordinates=coordinates)
+
     def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
@@ -939,7 +938,7 @@ class Tree(Entity):
             Create a tree brain's genotype and its associated phenotype
         """
         NUM_TREE_INPUTS = 88
-        NUM_TREE_OUTPUTS = 5
+        NUM_TREE_OUTPUTS = 7
 
         self.brain = Brain.genesis(brain_id=self.id,
                                    n_inputs=NUM_TREE_INPUTS,
@@ -1028,6 +1027,21 @@ class Tree(Entity):
         self._gain_energy(energy_type=self._production_type,
                          quantity=int((5 * self._size) / 2**count_trees_around))
 
+    def _decide_pickup(self, outputs: Dict[int,float], keys: Tuple[int, ...]) -> None:
+        """Pivate method:
+            Decide on pickup action
+
+        Args:
+            outputs (Dict[int, float]): output values
+            keys (Tuple[int, ...]):     sorted output keys
+        """
+        outs = (outputs[keys[-2]],
+                outputs[keys[-1]])
+        # Obtain value between 0 and 2 from -1 to 1
+        out_x, out_y = (int((abs(out)*3 - 0.0001)) for out in outs)
+
+        self._action_pick_up_resource(coordinates=(out_x, out_y))
+
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Normalize input values for brain activation
@@ -1063,11 +1077,13 @@ class Tree(Entity):
             outputs (np.array):         array or outputs values from brain activation
             environment (Environment):  environment of the tree
         """
-        # Get the most absolute active value of all the outputs
-        most_active_output = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
-        value = outputs[most_active_output]
 
+        TREE_TRIGGER_OUTPUTS: Final[int] = 5
         sorted_output_keys = sorted(outputs.keys())
+        out_dict = {k: outputs[k] for k in sorted_output_keys[:TREE_TRIGGER_OUTPUTS]}
+        # Get the most absolute active value of the trigger outputs
+        most_active_output = max(out_dict, key = lambda k : abs(out_dict.get(k, 0.0)))
+        #value = outputs[most_active_output]
 
         match out:= sorted_output_keys.index(most_active_output):
             ## Simple actions ##
@@ -1080,10 +1096,15 @@ class Tree(Entity):
 
             # Pick up resource
             case 3:
-                self._decide_pickup(coordinates=self.position)
+                self._decide_pickup(outputs=outputs,
+                                    keys=tuple(sorted_output_keys))
             #Grow
             case 4:
                 self._decide_grow()
+        print(f"keys: {out_dict.keys()}")
+        print(f"sorted keys: {sorted_output_keys}")
+        print(f"Most active: {most_active_output}")
+        print(f"OUT: {out}")
 
 class Seed(Resource):
     """Subclass of Resource:
