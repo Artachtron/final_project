@@ -401,7 +401,7 @@ class Entity(SimulatedObject):
             Decide on drop action
 
         Args:
-            out(Node): output chosen to trigger action
+            output (Node): output chosen to trigger action
         """
         energy = self.mind.value_outputs[output.associated_values[0]].activation_value 
         if energy > 0:
@@ -851,14 +851,10 @@ class Animal(Entity):
         Args:
             outputs (np.array):         array or outputs values from brain activation
         """
-
-        """ ANIMAL_TRIGGER_OUTPUTS: Final[int] = 10
-        sorted_output_keys = tuple(sorted(outputs.keys()))
-        out_dict = {k: outputs[k] for k in sorted_output_keys[:ANIMAL_TRIGGER_OUTPUTS]} """
         # Get the most absolute active value of all the outputs
         most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
         most_active_output = self.mind.trigger_outputs[most_active_output_id]
- 
+
         match most_active_output.name:
             ## Simple actions ##
             # Move action
@@ -891,7 +887,7 @@ class Animal(Entity):
                 self._decide_grow()
 
             # Reproduction
-            case 9:
+            case 'reproduce':
                 self._decide_reproduce()
 
 
@@ -1057,16 +1053,15 @@ class Tree(Entity):
         self._gain_energy(energy_type=self._production_type,
                          quantity=int((5 * self._size) / 2**count_trees_around))
 
-    def _decide_pickup(self, outputs: Dict[int,float], keys: Tuple[int, ...]) -> None:
+    def _decide_pickup(self, output: Node) -> None:
         """Pivate method:
             Decide on pickup action
 
         Args:
-            outputs (Dict[int, float]): output values
-            keys (Tuple[int, ...]):     sorted output keys
+            output (Node): output chosen to trigger action
         """
-        outs = (outputs[keys[-2]],
-                outputs[keys[-1]])
+        outs = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
+        
         # Obtain integer value from -1 to 1
         out_x, out_y = (int(out + 1.5) - 1 for out in outs)
 
@@ -1108,28 +1103,24 @@ class Tree(Entity):
             environment (Environment):  environment of the tree
         """
 
-        TREE_TRIGGER_OUTPUTS: Final[int] = 5
-        sorted_output_keys = tuple(sorted(outputs.keys()))
-        out_dict = {k: outputs[k] for k in sorted_output_keys[:TREE_TRIGGER_OUTPUTS]}
-        # Get the most absolute active value of the trigger outputs
-        most_active_output = max(out_dict, key = lambda k : abs(out_dict.get(k, 0.0)))
-        #value = outputs[most_active_output]
+        # Get the most absolute active value of all the outputs
+        most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
+        most_active_output = self.mind.trigger_outputs[most_active_output_id]
 
-        match out:= sorted_output_keys.index(most_active_output):
+        match most_active_output.name:
             ## Simple actions ##
             # Produce energy
-            case 0:
+            case 'produce':
                 self._decide_produce()
             # Drop energy
-            case key if key in range(1,3):
-                self._decide_drop(out=out)
+            case 'drop':
+                self._decide_drop(output=most_active_output)
 
             # Pick up resource
-            case 3:
-                self._decide_pickup(outputs=outputs,
-                                    keys=sorted_output_keys)
+            case 'pickup':
+                self._decide_pickup(output=most_active_output)
             #Grow
-            case 4:
+            case 'grow':
                 self._decide_grow()
                 
                 

@@ -88,6 +88,9 @@ class Link(BasePhene):
         self.in_node: Node = in_node    # Node inputting into the link
         self.out_node: Node = out_node  # Node that the link affects
 
+    def __repr__(self):
+        return f"{self.id}: {in_node} -> {out_node}"
+    
     @classmethod
     def synthesis(cls, kwargs) -> Link:
         """Constructor:
@@ -166,6 +169,9 @@ class Node(BasePhene):
         
         self.associated_values: Optional[Set[int]] = associated_values  # Associated values for trigger outputs
         self.output_type: Optional[str] = output_type                   # Type of output
+
+    def __repr__(self):
+        return f"{self.type} {self.id}"
 
     def get_incoming(self)  ->  Set[Link]:
         """Public method:

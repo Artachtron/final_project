@@ -492,6 +492,7 @@ class OutputNodeGene(NodeGene):
         dictionary = super().transcript()
         dictionary['associated_values'] = self.associated_values
         dictionary['output_type'] = self.output_type
+        dictionary['name'] = self.name
         return dictionary
     
     def __hash__(self): 
