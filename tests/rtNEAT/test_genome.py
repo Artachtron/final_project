@@ -108,7 +108,7 @@ class TestGenome:
                                         node_genes={node.id: node for node in self.nodes.values() if node.id < 5},
                                         link_genes={link.id: link for link in self.links.values() if link.id < 3})
 
-                self.genome2_extended.add_node(NodeGene(node_id=1,
+                self.genome2_extended.add_node(NodeGene(gene_id=1,
                                                         mutation_number=1))
 
                 self.genome2_extended.add_link(LinkGene(link_id=1,
@@ -132,7 +132,7 @@ class TestGenome:
                 reset_innovation_table()
 
             def test_insert_gene_in_dict(self):
-                node = NodeGene(node_id=1)
+                node = NodeGene(gene_id=1)
                 nodes_dict = Genome.insert_gene(genes_dict={},
                                                         gene=node)
                 genome = Genome(genome_id=0,

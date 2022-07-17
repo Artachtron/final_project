@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from project.src.rtNEAT.genome import Genome
 from project.src.rtNEAT.network import Network
 
@@ -14,14 +16,13 @@ class Brain:
 
 
     @classmethod
-    def genesis(cls, brain_id: int, n_inputs: int, n_outputs: int) -> Brain:
+    def genesis(cls, brain_id: int, genome_data: Dict[str, Any]) -> Brain:
         """Class method:
             Create a brain with genotype and phenotype for the given entity type
 
         Args:
-            brain_id (int):     id of the entity
-            n_inputs (int):     number of inputs of the brain
-            n_outputs (int):    number of outputs of the brain
+            brain_id (int):                 id of the entity
+            genome_data (Dict[str, Any]):   contain the brain's genome information
 
         Returns:
             Brain: created brain
@@ -31,8 +32,7 @@ class Brain:
 
         # Create the genome
         brain.genotype = Genome.genesis(genome_id=brain_id,
-                                        n_inputs=n_inputs,
-                                        n_outputs=n_outputs)
+                                        genome_data=genome_data)
 
         # Create the phenotype from the genome
         brain.phenotype = Network.genesis(genome=brain.genotype)

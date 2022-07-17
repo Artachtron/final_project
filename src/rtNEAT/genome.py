@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from random import choice, random, sample
-from typing import Dict, Optional, Set, Tuple, TypeVar
+from typing import Any, Dict, Optional, Set, Tuple, TypeVar
 
-from project.src.rtNEAT.genes import BaseGene, LinkGene, NodeGene, NodeType
+from attr import assoc
+from project.src.rtNEAT.genes import (BaseGene, LinkGene, NodeGene, NodeType,
+                                      OutputNodeGene, OutputType)
 from project.src.rtNEAT.innovation import InnovationType, InnovTable
 from project.src.rtNEAT.neat import Config
 
@@ -156,20 +158,25 @@ class Genome:
         return set(self._node_genes.values())
 
     @classmethod
-    def genesis(cls, genome_id: int, n_inputs: int, n_outputs: int) -> Genome:
+    def genesis(cls, genome_id: int, genome_data: Dict[str, Any]) -> Genome:
         """Constructor:
             Initialize a genome based on configuration.
             Create the input GeneNodes, output GeneNodes and
             GeneLinks connecting each input to each output
 
         Args:
-            genome_id (int):    id of the genome to initialize
-            n_inputs (int):     number of inputs
-            n_outputs (int):    number of outputs
+            genome_id (int):                id of the genome to initialize
+            genome_data (Dict[str, Any]):   contain the brain's genome information
 
         Returns:
             Genome: genome created
         """
+        
+        n_inputs: int = genome_data['n_inputs']
+        n_outputs: int = genome_data['n_outputs']
+        n_actions: int = genome_data['n_actions']
+        actions = genome_data['actions']
+        
         # Initialize inputs
         count_node_id: int = 1            # keep track of number of nodes created for ids
         inputs: Dict[int, NodeGene] = {}  # dictionary of inputs
@@ -182,10 +189,23 @@ class Genome:
 
         # Initialize outputs
         outputs: Dict[int, NodeGene] = {}  # dictionary of outputs
-        for _ in range(n_outputs):
+        for i in range(n_outputs):
+            if i < n_actions:
+                output_type = OutputType.TRIGGER
+                associated_values = list(actions.values())[i]
+                name = list(actions.keys())[i]
+            else:
+                output_type = OutputType.VALUE
+                name = None
+                associated_values = None
+                
+            node_gene = OutputNodeGene(node_id=count_node_id,
+                                       name=name,
+                                       output_type=output_type,
+                                       associated_values=associated_values)
+            
             outputs = Genome.insert_gene(genes_dict=outputs,
-                                         gene=NodeGene(node_id=count_node_id,
-                                                       node_type=NodeType.OUTPUT))
+                                         gene=node_gene)
             count_node_id += 1
 
         # Connect each input to each output
@@ -402,7 +422,7 @@ class Genome:
                                                     LinkGene: new LinkGene connecting in the new NodeGene
                                                     LinkGene: new LinkGene connecting out the new NodeGene
         """
-        new_node = NodeGene(node_id=node_id,
+        new_node = NodeGene(gene_id=node_id,
                             node_type=NodeType.HIDDEN)
 
         new_link1 = LinkGene(link_id=innovation_number1,

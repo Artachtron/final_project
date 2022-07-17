@@ -602,11 +602,27 @@ class Animal(Entity):
             Create an animal brain's genotype and its associated phenotype
         """
         NUM_ANIMAL_INPUTS = 96
-        NUM_ANIMAL_OUTPUTS = 13
+        NUM_ANIMAL_OUTPUTS = 15
+        NUM_ANIMAL_ACTIONS = 8
+        NUM_ACTION_VALUES = NUM_ANIMAL_OUTPUTS - NUM_ANIMAL_ACTIONS
+        
+        animal_genome_data: Dict[str, Any] = {"n_inputs": NUM_ANIMAL_INPUTS,
+                                              "n_outputs": NUM_ANIMAL_OUTPUTS,
+                                              "n_actions": NUM_ANIMAL_ACTIONS,
+                                              "n_values": NUM_ACTION_VALUES,
+                                              "actions":{
+                                                    "move": [0,1],
+                                                    "drop": [2,3],
+                                                    "paint": [4,5,6],
+                                                    "pickup": [],
+                                                    "recycle": [],
+                                                    "plant tree": [],
+                                                    "grow": [],
+                                                    "reproduce": []
+                                                }}
 
         self.brain = Brain.genesis(brain_id=self.id,
-                                   n_inputs=NUM_ANIMAL_INPUTS,
-                                   n_outputs=NUM_ANIMAL_OUTPUTS)
+                                   genome_data=animal_genome_data)
 
         self.mind = self.brain.phenotype
         self.mind.verify_complete_post_genesis()
@@ -941,11 +957,23 @@ class Tree(Entity):
             Create a tree brain's genotype and its associated phenotype
         """
         NUM_TREE_INPUTS = 88
-        NUM_TREE_OUTPUTS = 7
+        NUM_TREE_OUTPUTS = 8
+        NUM_TREE_ACTIONS = 4
+        NUM_TREE_VALUES = NUM_TREE_OUTPUTS - NUM_TREE_ACTIONS
 
+        tree_genome_data: Dict[str, Any] = {"n_inputs": NUM_TREE_INPUTS,
+                                            "n_outputs": NUM_TREE_OUTPUTS,
+                                            "n_actions": NUM_TREE_ACTIONS,
+                                            "n_values": NUM_TREE_VALUES,
+                                            "actions":{
+                                                "produce": [],
+                                                "drop": [0,1],
+                                                "pickup": [2,3],
+                                                "grow": [],
+                                            }}
+        
         self.brain = Brain.genesis(brain_id=self.id,
-                                   n_inputs=NUM_TREE_INPUTS,
-                                   n_outputs=NUM_TREE_OUTPUTS)
+                                   genome_data=tree_genome_data)
 
         self.mind = self.brain.phenotype
         self.mind.verify_complete_post_genesis()

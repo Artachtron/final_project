@@ -3,8 +3,9 @@ from __future__ import annotations
 import enum
 import math
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from functools import partial
-from typing import Dict
+from typing import Dict, Optional, Set
 
 from numpy.random import random, uniform
 from project.src.rtNEAT.innovation import InnovTable
@@ -21,6 +22,13 @@ class NodeType(enum.Enum):
     INPUT = 1
     OUTPUT = 2
     HIDDEN = 3
+
+class OutputType(enum.Enum):
+    """Enum:
+       Type of output node
+    """
+    TRIGGER = 0
+    VALUE = 1
 
 def sigmoid(x):
     """ Sigmoid activation function, Logistic activation with a range of 0 to 1
@@ -69,6 +77,7 @@ class BaseGene(ABC):
 
         Attributes:
             __id (int):                 unique (per genome) identifier of the gene
+            name (Optional[str]):       name of the gene
             frozen (bool):              can not mutate
             enabled (bool):             can output its activation value
             mutation_number (float):    differentiate two genes (from 2 genomes) with same id
@@ -82,6 +91,7 @@ class BaseGene(ABC):
     """
     def __init__(self,
                  gene_id: int,
+                 name: Optional[str],
                  mutation_number: int,
                  enabled: bool,
                  frozen: bool,):
@@ -90,12 +100,14 @@ class BaseGene(ABC):
 
         Args:
             gene_id (int):          unique (per genome) identifier
+            name (str):             name of the gene
             mutation_number (int):  to calculate the distance between two genes with same id
             enabled (bool):         can output its activation value
             frozen (bool):          can not mutate
         """
 
         self.__id: int = gene_id                        # unique (per genome) identifier corresponding to innovation number
+        self.name: Optional[str] = name                 # unique name
         self.frozen: bool = frozen                      # if the gene can be mutated
         self.enabled: bool = enabled                    # if the phene will participate in the activation calculation
         self.mutation_number: float = mutation_number   # allow to calculate distance between two genes with the same innovation number
@@ -199,6 +211,7 @@ class LinkGene(BaseGene):
                  weight: float = 0.0,
                  mutation_number: int = 0,
                  link_id: int = 0,
+                 name: Optional[str] = None,
                  enabled: bool = True,
                  frozen: bool = False,
                  ):
@@ -216,9 +229,10 @@ class LinkGene(BaseGene):
         """
 
         # If no id is given, check the next link number
-        link_id = link_id or InnovTable.get_link_number(increment=True)
+        link_id: int = link_id or InnovTable.get_link_number(increment=True)
 
         super().__init__(gene_id=link_id,
+                         name=name,
                          mutation_number=mutation_number,
                          enabled=enabled,
                          frozen=frozen)
@@ -324,6 +338,7 @@ class NodeGene(BaseGene):
             """
     def __init__(self,
                  node_id: int = 0,
+                 name: Optional[str] = None,
                  mutation_number: int = 0,
                  node_type: NodeType = NodeType.HIDDEN,
                  bias: float = 0.0,
@@ -332,22 +347,24 @@ class NodeGene(BaseGene):
                  enabled: bool = True,
                  frozen: bool = False,):
         """Constructor:
-
+            Node in a network
 
         Args:
             node_id (int, optional):                                unique identifier. Defaults to 0.
+            name (str):                                             name of the node
             mutation_number (int, optional):                        for mutation distance between two genes. Defaults to 0.
             node_type (NodeType, optional):                         position of the node in the network. Defaults to NodeType.HIDDEN.
             bias (float, optional):                                 incoming bias' value. Defaults to 0.0.
             activation_function (ActivationFuncType, optional):     calculate activation form incoming signals. Defaults to ActivationFuncType.SIGMOID.
             aggregation_function (AggregationFuncType, optional):   aggregate input signals' value. Defaults to AggregationFuncType.SUM.
             enabled (bool, optional):                               can transmit activation value. Defaults to True.
-            frozen (bool, optional): c                              an not mutate. Defaults to False.
+            frozen (bool, optional):                                can not mutate. Defaults to False.
         """
 
-        _id: int = node_id or InnovTable.get_node_number(increment=True)
+        node_id: int = node_id or InnovTable.get_node_number(increment=True)
 
-        super().__init__(gene_id=_id,
+        super().__init__(gene_id=node_id,
+                         name=name,
                          mutation_number=mutation_number,
                          enabled=enabled,
                          frozen=frozen)
@@ -402,7 +419,6 @@ class NodeGene(BaseGene):
         return abs(self.mutation_number -
                    other_gene.mutation_number)
 
-
     def distance(self, other_node: NodeGene) -> float:
         """Calculate the distance between two NodeGenes based on their properties
 
@@ -426,7 +442,7 @@ class NodeGene(BaseGene):
         Returns:
             NodeGene: copy of this NodeGene
         """
-        return NodeGene(node_id=self.id,
+        return NodeGene(gene_id=self.id,
                         node_type=self.type,
                         enabled=self.enabled,
                         frozen=self.frozen)
@@ -452,6 +468,26 @@ class NodeGene(BaseGene):
         """
         return (self.type == NodeType.INPUT or
                 self.type == NodeType.BIAS)
+
+@dataclass(kw_only=True)
+class OutputNodeGene(NodeGene):
+    node_id: int
+    name: str
+    node_type = NodeType.OUTPUT
+    output_type: OutputType
+    associated_values: Set[OutputNodeGene]
+    
+    def __post_init__(self):
+        super().__init__(node_id=self.node_id,
+                         name=self.name,
+                         node_type=self.node_type)
+
+    def is_trigger(self) -> bool:
+        return self.output_type == OutputType.TRIGGER
+
+    def is_value(self) -> bool:
+        return self.output_type == OutputType.VALUE
+
 
 def reset_innovation_table():
     """Public method:
