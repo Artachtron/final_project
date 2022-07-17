@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractclassmethod, abstractmethod
-from typing import Dict, Set
+from typing import Dict, Optional, Set
 
 from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
                                       NodeType)
@@ -20,6 +20,7 @@ class BasePhene(ABC):
     """
     def __init__(self,
                  phene_id: int,
+                 name: Optional[str] = None,
                  enabled: bool = True):
         """Super constructor:
             Get the necessary information for a gene
@@ -30,6 +31,7 @@ class BasePhene(ABC):
         """        
 
         self.__id: int = phene_id       # unique identifier
+        self.name: Optional[str] = name # unique name
         self.enabled: bool = enabled    # does not output any value if false
 
     @property
@@ -64,6 +66,7 @@ class Link(BasePhene):
                 weight: float,
                 in_node: Node,
                 out_node: Node,
+                name: Optional[str] = None,
                 enabled: bool = True,
                 ):
         """Constructor:
@@ -78,6 +81,7 @@ class Link(BasePhene):
         """
 
         super().__init__(phene_id=link_id,
+                         name=name,
                          enabled=enabled)
 
         self.weight: float = weight     # Weight of the connection
@@ -124,11 +128,14 @@ class Node(BasePhene):
     """
     def __init__(self,
                   node_id: int,
+                  name: Optional[str] = None,
                   node_type: NodeType = NodeType.HIDDEN,
                   activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
                   aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
                   bias: float = 1.0,
                   enabled: bool = True,
+                  associated_values: Optional[Set[int]] = None,
+                  output_type: Optional[str] = None
                   ):
         """Constructor:
             Initialize a Node
@@ -143,6 +150,7 @@ class Node(BasePhene):
         """
 
         super().__init__(phene_id=node_id,
+                         name=name,
                          enabled=enabled)
 
         self.activation_phase: int = 0              # Current activation phase
@@ -155,6 +163,9 @@ class Node(BasePhene):
 
         self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links
         self.outgoing: Dict[int, Link] = {}          # Dictionary of outgoing links
+        
+        self.associated_values: Optional[Set[int]] = associated_values  # Associated values for trigger outputs
+        self.output_type: Optional[str] = output_type                   # Type of output
 
     def get_incoming(self)  ->  Set[Link]:
         """Public method:

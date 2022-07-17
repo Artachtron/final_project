@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Set
 
+from project.src.rtNEAT.genes import OutputType
+
 if TYPE_CHECKING:
     from genome import Genome
     from genes import NodeGene, LinkGene
@@ -37,17 +39,19 @@ class Network:
             frozen (bool, optional):    Can not modify weight. Defaults to False.
         """
 
-        self.__id: int = network_id             # Unique identifier
+        self.__id: int = network_id                 # Unique identifier
 
-        self._inputs: Dict[int, Node] = {}      # Dictionary of input nodes
-        self._outputs: Dict[int, Node] = {}     # Dictionary of output nodes
-        self._hidden: Dict[int, Node] = {}      # Dictionary of hidden nodes
-        self._all_nodes: Dict[int, Node] = {}   # Dictionary of all nodes
+        self._inputs: Dict[int, Node] = {}          # Dictionary of input nodes
+        self._outputs: Dict[int, Node] = {}         # Dictionary of output nodes
+        self._trigger_outputs: Dict[int, Node] = {} # outputs to decide which action
+        self._value_outputs: Dict[int, Node] = {}   # outputs with actions' values
+        self._hidden: Dict[int, Node] = {}          # Dictionary of hidden nodes
+        self._all_nodes: Dict[int, Node] = {}       # Dictionary of all nodes
 
-        self._links: Dict[int, Link] = {}       # Dictionary of all links
+        self._links: Dict[int, Link] = {}           # Dictionary of all links
 
-        self.activation_phase: int = 0          # Current activation phase
-        self.frozen: bool = frozen              # Frozen state (can't modify weights)
+        self.activation_phase: int = 0              # Current activation phase
+        self.frozen: bool = frozen                  # Frozen state (can't modify weights)
 
     @property
     def id(self) -> int:
@@ -159,6 +163,10 @@ class Network:
                     self._inputs[key] = node
                 case 'OUTPUT':
                     self._outputs[key] = node
+                    if node.output_type == OutputType.TRIGGER:
+                        self._trigger_outputs[key] = node
+                    else:
+                        self._value_outputs[key] = node
                 case 'HIDDEN':
                     self._hidden[key] = node
 
@@ -255,9 +263,10 @@ class Network:
                         are not of the proper type
 
         Returns:
-            np.array: list of the output values after calculation
+            Set: set of trigger outputs
         """
         output_values: Dict[int, float] = {}
+
 
         for node in self.get_outputs():
             if not node.is_output():
@@ -265,7 +274,10 @@ class Network:
 
             output_value = node.get_activation(
                 activation_phase=self.activation_phase)
-            output_values[node.id] = output_value
+            
+            if node.output_type == OutputType.TRIGGER:
+                output_values[node.id] = output_value
+            
             node.activation_value = output_value
 
         return output_values
@@ -329,6 +341,26 @@ class Network:
             Dict[int, Node]: dictionary of output Nodes
         """
         return self._outputs
+    
+    @property
+    def trigger_outputs(self) -> Dict[int, Node]:
+        """Property:
+            Return the dictionary of trigger output Nodes
+
+        Returns:
+            Dict[int, Node]: dictionary of trigger output Nodes
+        """
+        return self._trigger_outputs
+    
+    @property
+    def value_outputs(self) -> Dict[int, Node]:
+        """Property:
+            Return the dictionary of value output Nodes
+
+        Returns:
+            Dict[int, Node]: dictionary of value output Nodes
+        """
+        return self._value_outputs
 
     @property
     def hidden(self) -> Dict[int, Node]:

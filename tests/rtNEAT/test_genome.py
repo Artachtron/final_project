@@ -37,17 +37,19 @@ class TestGenome:
         assert genome._link_genes == genes
 
     def test_genesis(self):
+        gen_data = {'n_inputs':3,
+                    'n_outputs':5,
+                    'n_actions':0,
+                    'actions':{}}
         genome = Genome.genesis(genome_id=0,
-                                n_inputs=3,
-                                n_outputs=5)
+                                genome_data=gen_data)
 
         assert genome.n_node_genes == 3 + 5
         assert genome.n_link_genes == 3 * 5
         assert list(genome.size.values()) == [8, 15]
 
         genome2 = Genome.genesis(   genome_id=2,
-                                    n_inputs=3,
-                                    n_outputs=5)
+                                    genome_data=gen_data)
 
         for id1, id2 in zip(genome._node_genes, genome2._node_genes):
             assert id1 == id2
@@ -108,7 +110,7 @@ class TestGenome:
                                         node_genes={node.id: node for node in self.nodes.values() if node.id < 5},
                                         link_genes={link.id: link for link in self.links.values() if link.id < 3})
 
-                self.genome2_extended.add_node(NodeGene(gene_id=1,
+                self.genome2_extended.add_node(NodeGene(node_id=1,
                                                         mutation_number=1))
 
                 self.genome2_extended.add_link(LinkGene(link_id=1,
@@ -132,7 +134,7 @@ class TestGenome:
                 reset_innovation_table()
 
             def test_insert_gene_in_dict(self):
-                node = NodeGene(gene_id=1)
+                node = NodeGene(node_id=1)
                 nodes_dict = Genome.insert_gene(genes_dict={},
                                                         gene=node)
                 genome = Genome(genome_id=0,

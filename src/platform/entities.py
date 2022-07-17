@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from grid import Grid, SubGrid
     from simulation import Environment
     from project.src.rtNEAT.network import Network
+    from project.src.rtNEAT.phenes import Node
 
 import enum
 import inspect
@@ -396,21 +396,23 @@ class Entity(SimulatedObject):
 
         return can_perform
 
-    def _decide_drop(self, out: int) -> None:
+    def _decide_drop(self, output: Node) -> None:
         """Pivate method:
             Decide on drop action
 
         Args:
-            out (int): output chosen to trigger action
+            out(Node): output chosen to trigger action
         """
-        if out == 5:
+        energy = self.mind.value_outputs[output.associated_values[0]].activation_value 
+        if energy > 0:
             energy_type = EnergyType.BLUE
 
         else:
             energy_type = EnergyType.RED
 
+        quantity = int(abs(energy)*10)
         self._action_drop_energy(energy_type=energy_type,
-                                    quantity=10,
+                                    quantity=quantity,
                                     coordinates=self.position)
 
     def _action_drop_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
@@ -612,8 +614,8 @@ class Animal(Entity):
                                               "n_values": NUM_ACTION_VALUES,
                                               "actions":{
                                                     "move": [0,1],
-                                                    "drop": [2,3],
-                                                    "paint": [4,5,6],
+                                                    "drop": [2],
+                                                    "paint": [3,4,5],
                                                     "pickup": [],
                                                     "recycle": [],
                                                     "plant tree": [],
@@ -783,39 +785,38 @@ class Animal(Entity):
 
         return np.array([age, size, blue_energy, red_energy] + see_entities + see_energies + see_colors)
 
-    def _decide_move(self, out: int, value: float) -> None:
+    def _decide_move(self, output: Node) -> None:
         """Pivate method:
             Decide on move action
 
         Args:
-            out (int):      output chosen to trigger action
-            value (float):  output value
+            output (int): output chosen to trigger action
         """
-        if out == 0:
-            if value > 0:
+        
+        vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
+        
+        if abs(vertical) > abs(horizontal):
+            if vertical > 0:
                 direction = Direction.UP
             else:
                 direction = Direction.DOWN
 
         else:
-            if value > 0:
+            if horizontal > 0:
                 direction = Direction.LEFT
             else:
                 direction = Direction.RIGHT
 
         self._action_move(direction=direction)
 
-    def _decide_paint(self, outputs: Dict[int, float], keys: Tuple[int, ...]) -> None:
+    def _decide_paint(self, output: Node) -> None:
         """Pivate method:
             Decide on paint action
 
         Args:
-            outputs (Dict[int, float]): output values
-            keys (Tuple[int, ...]):     sorted output keys
+            output (int): output chosen to trigger action
         """
-        color = (int(outputs[keys[-3]]*255),
-                 int(outputs[keys[-2]]*255),
-                 int(outputs[keys[-1]]*255))
+        color = tuple(int(self.mind.value_outputs[i].activation_value*255) for i in output.associated_values)
 
         self._action_paint(color=color)
 
@@ -851,44 +852,42 @@ class Animal(Entity):
             outputs (np.array):         array or outputs values from brain activation
         """
 
-        ANIMAL_TRIGGER_OUTPUTS: Final[int] = 10
+        """ ANIMAL_TRIGGER_OUTPUTS: Final[int] = 10
         sorted_output_keys = tuple(sorted(outputs.keys()))
-        out_dict = {k: outputs[k] for k in sorted_output_keys[:ANIMAL_TRIGGER_OUTPUTS]}
+        out_dict = {k: outputs[k] for k in sorted_output_keys[:ANIMAL_TRIGGER_OUTPUTS]} """
         # Get the most absolute active value of all the outputs
-        most_active_output = max(out_dict, key = lambda k : abs(out_dict.get(k, 0.0)))
-        value = outputs[most_active_output]
-
-        match out:= sorted_output_keys.index(most_active_output):
+        most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
+        most_active_output = self.mind.trigger_outputs[most_active_output_id]
+ 
+        match most_active_output.name:
             ## Simple actions ##
             # Move action
-            case key if key in range(0,2):
-                self._decide_move(out=out,
-                                  value=value)
+            case 'move':
+                self._decide_move(output=most_active_output)
 
             # Drop energy
-            case key if key in range(2,4):
-                self._decide_drop(out=out)
+            case 'drop':
+                self._decide_drop(output=most_active_output)
                 
             # Modify cell color
-            case 4:
-                self._decide_paint(outputs=outputs,
-                                   keys=sorted_output_keys)
+            case 'paint':
+                self._decide_paint(output=most_active_output)
 
             # Pick up resource
-            case 5:
+            case 'pickup':
                 self._decide_pickup(coordinates=self.position)
 
             # Recycle seed
-            case 6:
+            case 'recycle':
                 self._decide_recycle()
 
             ## Complex actions ##
             # Plant tree
-            case 7:
+            case 'plant tree':
                 self._decide_plant_tree()
 
             # Grow
-            case 8:
+            case 'grow':
                 self._decide_grow()
 
             # Reproduction
@@ -1068,8 +1067,8 @@ class Tree(Entity):
         """
         outs = (outputs[keys[-2]],
                 outputs[keys[-1]])
-        # Obtain value between 0 and 2 from -1 to 1
-        out_x, out_y = (int((abs(out)*3 - 0.0001)) for out in outs)
+        # Obtain integer value from -1 to 1
+        out_x, out_y = (int(out + 1.5) - 1 for out in outs)
 
         self._action_pick_up_resource(coordinates=(out_x, out_y))
 

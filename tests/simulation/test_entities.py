@@ -392,7 +392,7 @@ class TestAnimal:
         assert gen.id == animal.id
         
         assert len(net.inputs) == 96
-        assert len(net.outputs) == 12
+        assert len(net.outputs) == 15
         
     class TestAnimalMethods:
         @pytest.fixture(autouse=True)
@@ -739,9 +739,12 @@ class TestAnimal:
                     
                     
             def test_transplant_brain(self):
+                gen_data = {'n_inputs':96,
+                            'n_outputs':15,
+                            'n_actions':0,
+                            'actions':{}}
                 brain = Brain.genesis(brain_id=0,
-                                      n_inputs=96,
-                                      n_outputs=12)
+                                      genome_data=gen_data)
                 
                 self.animal._transplant_brain(brain=brain)
                 

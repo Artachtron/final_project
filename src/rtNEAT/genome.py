@@ -189,10 +189,11 @@ class Genome:
 
         # Initialize outputs
         outputs: Dict[int, NodeGene] = {}  # dictionary of outputs
+        last_trigger_id: int = count_node_id + n_actions
         for i in range(n_outputs):
             if i < n_actions:
                 output_type = OutputType.TRIGGER
-                associated_values = list(actions.values())[i]
+                associated_values = [node_id + last_trigger_id for node_id in list(actions.values())[i]]
                 name = list(actions.keys())[i]
             else:
                 output_type = OutputType.VALUE
@@ -422,7 +423,7 @@ class Genome:
                                                     LinkGene: new LinkGene connecting in the new NodeGene
                                                     LinkGene: new LinkGene connecting out the new NodeGene
         """
-        new_node = NodeGene(gene_id=node_id,
+        new_node = NodeGene(node_id=node_id,
                             node_type=NodeType.HIDDEN)
 
         new_link1 = LinkGene(link_id=innovation_number1,

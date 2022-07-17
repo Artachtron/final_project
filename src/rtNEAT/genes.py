@@ -442,7 +442,7 @@ class NodeGene(BaseGene):
         Returns:
             NodeGene: copy of this NodeGene
         """
-        return NodeGene(gene_id=self.id,
+        return NodeGene(node_id=self.id,
                         node_type=self.type,
                         enabled=self.enabled,
                         frozen=self.frozen)
@@ -475,8 +475,8 @@ class OutputNodeGene(NodeGene):
     name: str
     node_type = NodeType.OUTPUT
     output_type: OutputType
-    associated_values: Set[OutputNodeGene]
-    
+    associated_values: Set[int]
+
     def __post_init__(self):
         super().__init__(node_id=self.node_id,
                          name=self.name,
@@ -487,6 +487,15 @@ class OutputNodeGene(NodeGene):
 
     def is_value(self) -> bool:
         return self.output_type == OutputType.VALUE
+    
+    def transcript(self):
+        dictionary = super().transcript()
+        dictionary['associated_values'] = self.associated_values
+        dictionary['output_type'] = self.output_type
+        return dictionary
+    
+    def __hash__(self): 
+        return hash(self.node_id)
 
 
 def reset_innovation_table():
@@ -494,3 +503,6 @@ def reset_innovation_table():
         Reset the innovation table to initial values
     """
     InnovTable.reset_innovation_table()
+    
+
+                
