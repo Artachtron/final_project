@@ -693,11 +693,11 @@ class Environment:
 
 
                 child = self.spawn_animal(coordinates=birth_position,
-                                            size=1,
-                                            blue_energy=Animal.INITIAL_BLUE_ENERGY,
-                                            red_energy=Animal.INITIAL_RED_ENERGY,
-                                            adult_size=adult_size,
-                                            generation=self.state.cycle)
+                                          size=1,
+                                          blue_energy=Animal.INITIAL_BLUE_ENERGY,
+                                          red_energy=Animal.INITIAL_RED_ENERGY,
+                                          adult_size=adult_size,
+                                          generation=self.state.cycle)
 
                 if child:
                     child.on_birth(parent1=parent1,
