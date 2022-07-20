@@ -1,3 +1,4 @@
+from config import config
 from world import World
 
 GRID_WIDTH = 50
