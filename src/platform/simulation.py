@@ -279,7 +279,7 @@ class Environment:
     def __init__(self,
                  env_id: int,
                  sim_state: Optional[SimState] = None,
-                 dimensions: Tuple[int, int] = (20, 20)):
+                 dimensions: Optional[Tuple[int, int]] = None):
         """Constructor:
             Initiliaze an environment
 
@@ -293,9 +293,9 @@ class Environment:
 
         self.state: SimState = sim_state or SimState(sim_id=env_id) # simulation's state
         self.grid: Grid                                             # 2 dimensional grid
-        self.dimensions: Tuple[int, int] = dimensions               # dimensions of the world
-
-        #self.init()
+        self.dimensions: Tuple[int, int] = dimensions or (          # dimensions of the world
+                                            Environment.GRID_WIDTH,
+                                            Environment.GRID_HEIGHT)
 
     def init(self, populate: bool=False) -> Optional[SimState]:
         """Public method:
@@ -322,18 +322,13 @@ class Environment:
             SimState: simulation state after populating it
         """
         width, height = self.dimensions
-        MIN_HORIZONTAL_SIZE_SECTION = 5
-        MAX_HORIZONTAL_SIZE_SECTION = 10
-
-        MIN_VERTICAL_SIZE_SECTION = 5
-        MAX_VERTICAL_SIZE_SECTION = 10
 
         # How much time the grid can be divided by sections
-        num_min_section_horizontal = int(width/MIN_HORIZONTAL_SIZE_SECTION)
-        num_min_section_vertical = int(height/MIN_VERTICAL_SIZE_SECTION)
+        num_min_section_horizontal = int(width/config["Simulation"]["min_horizontal_size_section"])
+        num_min_section_vertical = int(height/config["Simulation"]["min_vertical_size_section"])
 
-        num_max_section_horizontal = int(width/MAX_HORIZONTAL_SIZE_SECTION)
-        num_max_section_vertical = int(height/MAX_VERTICAL_SIZE_SECTION)
+        num_max_section_horizontal = int(width/config["Simulation"]["max_horizontal_size_section"])
+        num_max_section_vertical = int(height/config["Simulation"]["max_vertical_size_section"])
 
         # Choose the number of divisions into section h * v
         horizontal_divisor = randint(num_max_section_horizontal,
@@ -350,7 +345,7 @@ class Environment:
 
         section_dimension = len(possible_coordinates)
 
-        SPARSITY = 5
+        SPARSITY: Final[int] = config["Simulation"]["sparsity"]
         DENSITY = int(section_dimension/SPARSITY)
 
         for h in range(horizontal_divisor):
@@ -365,8 +360,8 @@ class Environment:
                 for x, y in coordinates:
                     self.spawn_animal(coordinates=(x + x_offset,
                                                     y + y_offset),
-                                       blue_energy=100,
-                                       red_energy=5000,
+                                       blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
+                                       red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
                                        size=15)
 
         return self.state
@@ -694,8 +689,8 @@ class Environment:
 
                 child = self.spawn_animal(coordinates=birth_position,
                                           size=1,
-                                          blue_energy=Animal.INITIAL_BLUE_ENERGY,
-                                          red_energy=Animal.INITIAL_RED_ENERGY,
+                                          blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
+                                          red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
                                           adult_size=adult_size,
                                           generation=self.state.cycle)
 

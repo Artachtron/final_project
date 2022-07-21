@@ -34,16 +34,35 @@ default_options = {
                             "link_diff_coeff": 0.5,
                             "mutation_difference_coeff": 0.5,
                             "compatibility_threshod": 3.0,                          
-                            },
+                        },
                     
                     "Simulation":{
+                        # Grid
                         "grid_width": 20,
                         "grid_height": 20,
+                        # Populate
+                        "min_horizontal_size_section": 5,
+                        "max_horizontal_size_section": 10,
+                        "min_vertical_size_section": 5,
+                        "max_vertical_size_section": 10,
+                        "sparsity": 5,
+                        
+                        "Entity":{
+                            "initial_size": 20,
+                            "init_blue_energy": 100,
+                            "init_red_energy": 100,
+                            "init_action_cost": 1,
+                            "max_age_size_coeff": 5,
+                            "growth_energy_required": 10,
+                            "child_energy_cost_divisor": 2,
+                        },
                         
                         "Animal":{
                             # Animal
                             ## Initial attributes
                             "init_adult_size": 5,
+                            "init_blue_energy": 100,
+                            "init_red_energy": 100,
                             ## Brain
                             "num_input": 96,
                             "num_output": 15,
@@ -62,7 +81,7 @@ default_options = {
                             #Tree
                             ## Brain
                             "num_tree_input": 88,
-                            "num_tree_output" 8,
+                            "num_tree_output": 8,
                             "num_tree_action": 4,
                             ## Inputs
                             "normal_size": 100,

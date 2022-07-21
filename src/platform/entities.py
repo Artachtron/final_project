@@ -55,18 +55,17 @@ class Entity(SimulatedObject):
         on_death:           event on death
         has_enough_energy:  check if has at least certain amount of energy from given type
         update:             update entity
-
-
     """
-    MAX_AGE_SIZE_COEFF: Final[int] = 5
-    GROWTH_ENERGY_REQUIRED: Final[int] = 10
-    CHILD_ENERGY_COST_DIVISOR: Final[int] = 2
+    
+    MAX_AGE_SIZE_COEFF: Final[int] = config['Simulation']['Entity']['max_age_size_coeff']
+    GROWTH_ENERGY_REQUIRED: Final[int] = config['Simulation']['Entity']['growth_energy_required']
+    CHILD_ENERGY_COST_DIVISOR: Final[int] = config['Simulation']['Entity']['child_energy_cost_divisor']
     CHILD_GROWTH_ENERGY_REQUIRED: Final[int] = int(GROWTH_ENERGY_REQUIRED /
                                                    CHILD_ENERGY_COST_DIVISOR)
-    INITIAL_SIZE: Final[int] = 20
-    INITIAL_BLUE_ENERGY: Final[int] = 100
-    INITIAL_RED_ENERGY: Final[int] = 100
-    INITIAL_ACTION_COST: Final[int] = int(INITIAL_SIZE/20)
+    INITIAL_SIZE: Final[int] = config['Simulation']['Entity']['initial_size']
+    INITIAL_BLUE_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
+    INITIAL_RED_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
+    INITIAL_ACTION_COST: Final[int] = config['Simulation']['Entity']['init_action_cost']
 
     def __init__(self,
                  position: Tuple[int, int],
@@ -428,7 +427,7 @@ class Entity(SimulatedObject):
 
         # Calculate the energy capable of being dropped
         quantity = self._quantity_from_stock(energy_type=energy_type,
-                                                quantity=quantity)
+                                             quantity=quantity)
 
         action = DropAction(coordinates=coordinates,
                             energy_type=energy_type,
@@ -541,8 +540,8 @@ class Animal(Entity):
             on_reproduction:    event when reproducing
 
     """
-    """ INITIAL_BLUE_ENERGY: Final[int] = 10
-    INITIAL_RED_ENERGY: Final[int] = 10 """
+    INITIAL_ANIMAL_BLUE_ENERGY: Final[int] = config['Simulation']["Animal"]['init_blue_energy']
+    INITIAL_ANIMAL_RED_ENERGY: Final[int] = config['Simulation']["Animal"]['init_red_energy']
 
     REPRODUCTION_COST: Final[int] = config['Simulation']["Animal"]['reproduction_cost']
     PLANTING_COST: Final[int] = config['Simulation']["Animal"]['reproduction_cost']
