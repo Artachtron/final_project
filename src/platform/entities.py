@@ -17,6 +17,7 @@ import numpy.typing as npt
 from project.src.rtNEAT.brain import Brain
 
 from actions import *
+from config import config
 from energies import Energy, EnergyType, Resource
 from universal import EntityType, Position, SimulatedObject
 
@@ -403,7 +404,7 @@ class Entity(SimulatedObject):
         Args:
             output (Node): output chosen to trigger action
         """
-        energy = self.mind.value_outputs[output.associated_values[0]].activation_value 
+        energy = self.mind.value_outputs[output.associated_values[0]].activation_value
         if energy > 0:
             energy_type = EnergyType.BLUE
 
@@ -543,8 +544,16 @@ class Animal(Entity):
     """ INITIAL_BLUE_ENERGY: Final[int] = 10
     INITIAL_RED_ENERGY: Final[int] = 10 """
 
-    REPRODUCTION_ENERGY_COST: Final[int] = 10
-    PLANTING_COST: Final[int] = 10
+    REPRODUCTION_COST: Final[int] = config['Simulation']["Animal"]['reproduction_cost']
+    PLANTING_COST: Final[int] = config['Simulation']["Animal"]['reproduction_cost']
+
+    INIT_ADULT_SIZE: Final[int] = config['Simulation']["Animal"]['init_adult_size']
+    DIE_GIVING_BIRTH_PROB: Final[float] = config['Simulation']["Animal"]['die_giving_birth_prob']
+
+    NUM_INPUTS: Final[int] = config['Simulation']["Animal"]['num_input']
+    NUM_OUTPUTS: Final[int] = config['Simulation']["Animal"]['num_output']
+    NUM_ACTIONS: Final[int] = config['Simulation']["Animal"]['num_action']
+    NUM_VALUES: Final[int] = NUM_OUTPUTS - NUM_ACTIONS
 
     def __init__(self,
                  position: Tuple[int, int],
@@ -557,6 +566,8 @@ class Animal(Entity):
                  blue_energy: int = 10,
                  red_energy: int = 10,
                  ):
+
+        adult_size = adult_size or Animal.INIT_ADULT_SIZE
 
         super().__init__(position=position,
                          entity_id=animal_id,
@@ -590,11 +601,9 @@ class Animal(Entity):
         """Public method:
             Event: when reproducing
         """
-        DIE_GIVING_BIRTH_PROB = 0.02
-        if random() < DIE_GIVING_BIRTH_PROB:
-            self.status = (Status.DEAD
-                           if random() < DIE_GIVING_BIRTH_PROB
-                           else Status.ALIVE)
+        self.status = (Status.DEAD
+                        if random() < Animal.DIE_GIVING_BIRTH_PROB
+                        else Status.ALIVE)
 
         self._loose_energy(energy_type=EnergyType.RED,
                            quantity=Animal.REPRODUCTION_ENERGY_COST * self._size)
@@ -603,15 +612,11 @@ class Animal(Entity):
         """Private method:
             Create an animal brain's genotype and its associated phenotype
         """
-        NUM_ANIMAL_INPUTS = 96
-        NUM_ANIMAL_OUTPUTS = 15
-        NUM_ANIMAL_ACTIONS = 8
-        NUM_ACTION_VALUES = NUM_ANIMAL_OUTPUTS - NUM_ANIMAL_ACTIONS
-        
-        animal_genome_data: Dict[str, Any] = {"n_inputs": NUM_ANIMAL_INPUTS,
-                                              "n_outputs": NUM_ANIMAL_OUTPUTS,
-                                              "n_actions": NUM_ANIMAL_ACTIONS,
-                                              "n_values": NUM_ACTION_VALUES,
+
+        animal_genome_data: Dict[str, Any] = {"n_inputs": Animal.NUM_INPUTS,
+                                              "n_outputs": Animal.NUM_OUTPUTS,
+                                              "n_actions": Animal.NUM_ACTIONS,
+                                              "n_values": Animal.NUM_VALUES,
                                               "actions":{
                                                     "move": [0,1],
                                                     "drop": [2],
@@ -704,7 +709,7 @@ class Animal(Entity):
             tree = self._pocket.germinate()
 
             action = RecycleAction(coordinates=self.position,
-                                tree=tree)
+                                   tree=tree)
         else:
             action = IdleAction()
 
@@ -768,8 +773,9 @@ class Animal(Entity):
         #Inputs
         ## Internal properties
         age = self._age/self._max_age
-        size = self._size/100
-        blue_energy, red_energy = (energy/100000 for energy in self.energies.values())
+        size = self._size/config["Simulation"]["Animal"]["normal_size"]
+        blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
+                                   for energy in self.energies.values())
         ## Perceptions
         entities = environment.find_if_entities_around(coordinates=self.position,
                                                        include_self=False)
@@ -792,9 +798,9 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-        
+
         vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
-        
+
         if abs(vertical) > abs(horizontal):
             if vertical > 0:
                 direction = Direction.UP
@@ -864,7 +870,7 @@ class Animal(Entity):
             # Drop energy
             case 'drop':
                 self._decide_drop(output=most_active_output)
-                
+
             # Modify cell color
             case 'paint':
                 self._decide_paint(output=most_active_output)
@@ -902,6 +908,13 @@ class Tree(Entity):
             on_death:       event on tree death
             create_seed:    create a seed on current position
     """
+    INIT_ADULT_SIZE: Final[int] = config['Simulation']["Tree"]['init_adult_size']
+    
+    NUM_TREE_INPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_input"]
+    NUM_TREE_OUTPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_output"]
+    NUM_TREE_ACTIONS: Final[int] = config["Simulation"]["Tree"]["num_tree_action"]
+    NUM_TREE_VALUES: Final[int] = NUM_TREE_OUTPUTS - NUM_TREE_ACTIONS
+
     def __init__(self,
                  position: Tuple[int, int],
                  tree_id: int = 0,
@@ -929,7 +942,9 @@ class Tree(Entity):
             red_energy (int, optional):                         amount of red energy owned. Defaults to 10.
             production_type (Optional[EnergyType], optional):   type of energy produced. Defaults to None.
         """
-
+        
+        adult_size = adult_size or Tree.INIT_ADULT_SIZE
+        
         super().__init__(position=position,
                          entity_id=tree_id,
                          generation=generation,
@@ -951,22 +966,17 @@ class Tree(Entity):
         """Private method:
             Create a tree brain's genotype and its associated phenotype
         """
-        NUM_TREE_INPUTS = 88
-        NUM_TREE_OUTPUTS = 8
-        NUM_TREE_ACTIONS = 4
-        NUM_TREE_VALUES = NUM_TREE_OUTPUTS - NUM_TREE_ACTIONS
-
-        tree_genome_data: Dict[str, Any] = {"n_inputs": NUM_TREE_INPUTS,
-                                            "n_outputs": NUM_TREE_OUTPUTS,
-                                            "n_actions": NUM_TREE_ACTIONS,
-                                            "n_values": NUM_TREE_VALUES,
+        tree_genome_data: Dict[str, Any] = {"n_inputs": Tree.NUM_TREE_INPUTS,
+                                            "n_outputs": Tree.NUM_TREE_OUTPUTS,
+                                            "n_actions": Tree.NUM_TREE_ACTIONS,
+                                            "n_values": Tree.NUM_TREE_VALUES,
                                             "actions":{
                                                 "produce": [],
                                                 "drop": [0,1],
                                                 "pickup": [2,3],
                                                 "grow": [],
                                             }}
-        
+
         self.brain = Brain.genesis(brain_id=self.id,
                                    genome_data=tree_genome_data)
 
@@ -1046,8 +1056,7 @@ class Tree(Entity):
         """Public method:
             Event: Produce energy
         """
-        MINUMUM_AGE: Final[int] = 20
-        if self._age < MINUMUM_AGE:
+        if self.size < Tree.INIT_ADULT_SIZE:
             pass
 
         self._gain_energy(energy_type=self._production_type,
@@ -1061,7 +1070,7 @@ class Tree(Entity):
             output (Node): output chosen to trigger action
         """
         outs = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
-        
+
         # Obtain integer value from -1 to 1
         out_x, out_y = (int(out + 1.5) - 1 for out in outs)
 
@@ -1080,8 +1089,9 @@ class Tree(Entity):
         #Inputs
         ## Internal properties
         age = self._age/self._max_age
-        size = self._size/100
-        blue_energy, red_energy = (energy/100000 for energy in self.energies.values())
+        size = self._size/config["Simulation"]["Tree"]["normal_size"]
+        blue_energy, red_energy = (energy/config["Simulation"]["Tree"]["normal_energy"]
+                                   for energy in self.energies.values())
         ## Perceptions
         energies = environment.find_if_resources_around(coordinates=self.position,
                                                         include_self=True)
@@ -1122,8 +1132,8 @@ class Tree(Entity):
             #Grow
             case 'grow':
                 self._decide_grow()
-                
-                
+
+
 class Seed(Resource):
     """Subclass of Resource:
         Container of a tree's genetic information

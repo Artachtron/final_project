@@ -8,10 +8,9 @@ from functools import partial
 from typing import Dict, Optional, Set
 
 from numpy.random import random, uniform
+from project.src.platform.config import config
 from project.src.rtNEAT.innovation import InnovTable
-from project.src.rtNEAT.neat import Config
 
-Config.configure()
 
 class NodeType(enum.Enum):
     """Enum:
@@ -260,20 +259,20 @@ class LinkGene(BaseGene):
             return
 
         # link is being reset
-        if random() < Config.new_link_prob:
+        if random() < config["NEAT"]["new_link_prob"]:
             self.weight = uniform(-1,1)
         # value is being added to current weight
         else:
-            self.weight += uniform(-1,1) * Config.weight_mutate_power
+            self.weight += uniform(-1,1) * config["NEAT"]["weight_mutate_power"]
 
             # associate new weight to mutation number
             self.mutation_number = self.weight
 
         # disable the link
-        if random() < Config.disable_prob:
+        if random() < config["NEAT"]["disable_prob"]:
             self.enabled = False
         # enable the link
-        elif random() < Config.enable_prob:
+        elif random() < config["NEAT"]["enable_prob"]:
             self.enabled = True
 
     def duplicate(self) -> LinkGene:
@@ -396,15 +395,15 @@ class NodeGene(BaseGene):
             return
 
         # modify bias value
-        if (random() < Config.mutate_bias_prob and
+        if (random() < config["NEAT"]["mutate_bias_prob"] and
             not self.is_sensor()):
             self.bias = uniform(-1,1)
 
         # disable the node
-        if random() < Config.disable_prob:
+        if random() < config["NEAT"]["disable_prob"]:
             self.enabled= False
         # enable the node
-        elif random() < Config.enable_prob:
+        elif random() < config["NEAT"]["enable_prob"]:
             self.enabled = True
 
     def mutation_distance(self, other_gene: NodeGene) -> float:

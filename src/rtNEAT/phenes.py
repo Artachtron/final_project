@@ -28,7 +28,7 @@ class BasePhene(ABC):
         Args:
             phene_id (int):             unique identifier
             enabled (bool, optional):   can transmit activation value. Defaults to True.
-        """        
+        """
 
         self.__id: int = phene_id       # unique identifier
         self.name: Optional[str] = name # unique name
@@ -90,7 +90,7 @@ class Link(BasePhene):
 
     def __repr__(self):
         return f"{self.id}: {in_node} -> {out_node}"
-    
+
     @classmethod
     def synthesis(cls, kwargs) -> Link:
         """Constructor:
@@ -166,7 +166,7 @@ class Node(BasePhene):
 
         self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links
         self.outgoing: Dict[int, Link] = {}          # Dictionary of outgoing links
-        
+
         self.associated_values: Optional[Set[int]] = associated_values  # Associated values for trigger outputs
         self.output_type: Optional[str] = output_type                   # Type of output
 
@@ -256,5 +256,3 @@ class Node(BasePhene):
             self.activation_phase = activation_phase
 
         return self.activation_value
-
-

@@ -274,10 +274,10 @@ class Network:
 
             output_value = node.get_activation(
                 activation_phase=self.activation_phase)
-            
+
             if node.output_type == OutputType.TRIGGER:
                 output_values[node.id] = output_value
-            
+
             node.activation_value = output_value
 
         return output_values
@@ -341,7 +341,7 @@ class Network:
             Dict[int, Node]: dictionary of output Nodes
         """
         return self._outputs
-    
+
     @property
     def trigger_outputs(self) -> Dict[int, Node]:
         """Property:
@@ -351,7 +351,7 @@ class Network:
             Dict[int, Node]: dictionary of trigger output Nodes
         """
         return self._trigger_outputs
-    
+
     @property
     def value_outputs(self) -> Dict[int, Node]:
         """Property:

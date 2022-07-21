@@ -273,8 +273,8 @@ class Environment:
             modify_cell_color:          change the color of a cell
             find_trees_around:          find and return all the cells occupied by trees
     """
-    GRID_WIDTH: Final[int] = 20
-    GRID_HEIGHT: Final[int] = 20
+    GRID_WIDTH: Final[int] = config['Simulation']['grid_width']
+    GRID_HEIGHT: Final[int] = config['Simulation']['grid_height']
 
     def __init__(self,
                  env_id: int,

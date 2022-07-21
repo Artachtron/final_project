@@ -3,13 +3,10 @@ from __future__ import annotations
 from random import choice, random, sample
 from typing import Any, Dict, Optional, Set, Tuple, TypeVar
 
-from attr import assoc
+from project.src.platform.config import config
 from project.src.rtNEAT.genes import (BaseGene, LinkGene, NodeGene, NodeType,
                                       OutputNodeGene, OutputType)
 from project.src.rtNEAT.innovation import InnovationType, InnovTable
-from project.src.rtNEAT.neat import Config
-
-Config.configure()
 
 Gene = TypeVar('Gene', bound=BaseGene)
 
@@ -351,10 +348,10 @@ class Genome:
 
         # Calulate the final genetic distance by applying formula,
         # with coefficient from settings
-        genetic_distance: float = (num_excess * Config.excess_coeff +
-                                   num_disjoint * Config.disjoint_coeff +
-                                   Config.mutation_difference_coeff *
-                                    mutation_difference/max(num_matching, 1))
+        genetic_distance: float = (num_excess * config["NEAT"]["excess_coeff"]
+                                 + num_disjoint * config["NEAT"]["disjoint_coeff"]
+                                 + config["NEAT"]["mutation_difference_coeff"]
+                                    * mutation_difference/max(num_matching, 1))
 
         return genetic_distance
 
@@ -363,11 +360,11 @@ class Genome:
             Mutate the genome
         """
         # Add a node to the genome
-        if random() < Config.add_node_prob:
+        if random() < config["NEAT"]["add_node_prob"]:
             self._mutate_add_node()
         # Add a link to the genome
-        if random() < Config.add_link_prob:
-            self._mutate_add_link(tries=Config.add_link_tries)
+        if random() < config["NEAT"]["add_link_prob"]:
+            self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
         # Modify the weights of the links
         # and their enabled status
         self._mutate_links()
@@ -378,7 +375,7 @@ class Genome:
             mutate the LinkGenes
         """
         for link in self.get_link_genes():
-            if random() < Config.link_mutate_prob:
+            if random() < config["NEAT"]["link_mutate_prob"]:
                 link.mutate()
 
     def _mutate_nodes(self) -> None:
@@ -386,7 +383,7 @@ class Genome:
             mutate the NodeGenes
         """
         for node in self.get_node_genes():
-            if random() < Config.node_mutate_prob:
+            if random() < config["NEAT"]["node_mutate_prob"]:
                 node.mutate()
 
     def _find_random_link(self) -> Optional[LinkGene]:
