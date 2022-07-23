@@ -35,8 +35,10 @@ default_settings = {
 
                     "Simulation":{
                         # Grid
-                        "grid_width": 20,
-                        "grid_height": 20,
+                        "grid_width": 50,
+                        "grid_height": 50,
+                        "block_size": 17,
+                        "simulation_speed": 20,
                         # Populate
                         "min_horizontal_size_section": 5,
                         "max_horizontal_size_section": 10,

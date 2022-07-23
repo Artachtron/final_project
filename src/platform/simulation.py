@@ -647,7 +647,7 @@ class Environment:
         """
         match tree.status:
             case Status.DEAD:
-                self._entity_died(entity=tree)
+                self._on_tree_death(tree=tree)
 
     def _event_on_action(self, entity: Entity) -> None:
         """Private method:

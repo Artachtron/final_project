@@ -1,21 +1,16 @@
 from config import ConfigManager, config
 from world import World
 
-GRID_WIDTH = 50
-GRID_HEIGHT = 50
-BLOCK_SIZE = 17
-
-SIMULATION_SPEED = 20
 
 def main():
 
     #write_config()
 
     world = World(world_id=0,
-                  dimensions=(GRID_WIDTH,
-                              GRID_HEIGHT),
-                  block_size=BLOCK_SIZE,
-                  sim_speed=SIMULATION_SPEED,
+                  dimensions=(config['Simulation']['grid_width'],
+                              config['Simulation']['grid_height']),
+                  block_size=config['Simulation']['block_size'],
+                  sim_speed=config['Simulation']['simulation_speed'],
                   display_active=True)
 
     world.init(show_grid=True)
