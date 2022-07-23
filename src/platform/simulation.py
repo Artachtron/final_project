@@ -12,6 +12,7 @@ from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 import numpy.typing as npt
 
 from actions import Action, ActionType
+from config import config
 from energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
 from entities import Animal, Entity, Seed, Status, Tree
 from grid import Grid
@@ -345,8 +346,27 @@ class Environment:
 
         section_dimension = len(possible_coordinates)
 
-        SPARSITY: Final[int] = config["Simulation"]["sparsity"]
-        DENSITY = int(section_dimension/SPARSITY)
+        self.state = self.populate_animal(section_dimension=section_dimension,
+                                          horizontal_divisor=horizontal_divisor,
+                                          section_horizontal_size=section_horizontal_size,
+                                          vertical_divisor=vertical_divisor,
+                                          section_vertical_size=section_vertical_size,
+                                          possible_coordinates=possible_coordinates)
+
+        return self.state
+
+    def populate_animal(self, section_dimension: int, horizontal_divisor: int,
+                        section_horizontal_size: int, vertical_divisor: int,
+                        section_vertical_size: int, possible_coordinates: Set[Tuple[int, int]]
+                        ) -> SimState:
+        """Private method:
+            Populate the world with animals
+
+        Returns:
+            SimState: simulation state after populating it
+        """
+        ANIMAL_SPARSITY: Final[int] = config["Simulation"]["animal_sparsity"]
+        DENSITY = int(section_dimension/ANIMAL_SPARSITY)
 
         for h in range(horizontal_divisor):
             x_offset = h * section_horizontal_size

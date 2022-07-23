@@ -137,7 +137,7 @@ class DisplayedObject(pg.sprite.Sprite):
         self.rect: pg.rect.Rect = self.image.get_rect(
             center=(pos_x * block_size + block_size /2,
                     pos_y * block_size + block_size /2))
-        
+
     @property
     def id(self) -> int:
         """Property
@@ -293,11 +293,11 @@ class Display:
         Args:
             sim_state (SimState): current state of the simulation
         """
-        
+
         # Remove the extra entities
         for entity in sim_state.removed_entities.values():
             self._remove_entity(entity)
-            
+
         # update present entities
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
