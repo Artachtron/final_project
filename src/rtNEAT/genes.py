@@ -9,7 +9,8 @@ from typing import Dict, Optional, Set
 
 from numpy.random import random, uniform
 from project.src.platform.config import config
-from project.src.rtNEAT.innovation import InnovTable
+
+from .innovation import InnovTable
 
 
 class NodeType(enum.Enum):

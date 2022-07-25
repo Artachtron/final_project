@@ -1,7 +1,7 @@
-import pytest, os, sys
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
-from project.src.rtNEAT.genes import BaseGene, LinkGene, NodeGene, NodeType, ActivationFuncType, AggregationFuncType, reset_innovation_table
+import pytest
+from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
+                                      BaseGene, LinkGene, NodeGene, NodeType,
+                                      reset_innovation_table)
 
 
 class TestGene:

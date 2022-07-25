@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from project.src.rtNEAT.genome import Genome
-from project.src.rtNEAT.network import Network
+from .genome import Genome
+from .network import Network
 
 
 class Brain:

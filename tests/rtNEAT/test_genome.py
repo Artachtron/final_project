@@ -1,12 +1,7 @@
-import os
 import random
-import sys
 
-import numpy as np
 import pytest
 from numpy.random import choice
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.genes import (LinkGene, NodeGene, NodeType,
                                       reset_innovation_table)
 from project.src.rtNEAT.genome import Genome

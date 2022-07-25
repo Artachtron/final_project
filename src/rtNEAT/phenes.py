@@ -3,8 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractclassmethod, abstractmethod
 from typing import Dict, Optional, Set
 
-from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
-                                      NodeType)
+from .genes import ActivationFuncType, AggregationFuncType, NodeType
 
 
 class BasePhene(ABC):

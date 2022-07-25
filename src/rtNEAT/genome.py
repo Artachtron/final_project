@@ -4,9 +4,9 @@ from random import choice, random, sample
 from typing import Any, Dict, Optional, Set, Tuple, TypeVar
 
 from project.src.platform.config import config
-from project.src.rtNEAT.genes import (BaseGene, LinkGene, NodeGene, NodeType,
+from .genes import (BaseGene, LinkGene, NodeGene, NodeType,
                                       OutputNodeGene, OutputType)
-from project.src.rtNEAT.innovation import InnovationType, InnovTable
+from .innovation import InnovationType, InnovTable
 
 Gene = TypeVar('Gene', bound=BaseGene)
 

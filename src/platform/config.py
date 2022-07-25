@@ -94,6 +94,11 @@ default_settings = {
                 }
 
 class ConfigManager:
+    directory = join(
+            Path(
+                dirname(
+                    realpath(__file__))).parent.parent.absolute(),
+            "configuration/")
     def __init__(self):
         self.parser = parser = optparse.OptionParser()
         group = optparse.OptionGroup(parser, "Settings")
@@ -107,7 +112,7 @@ class ConfigManager:
         opt, args = self.parser.parse_args()
 
         if opt.my_config_file:
-            config_data = json.load(open(opt.my_config_file))
+            config_data = json.load(open(join(ConfigManager.directory,opt.my_config_file)))
             for key in default_settings:
                 if key in config_data.keys():
                     self.settings[key].update(config_data[key])
@@ -116,20 +121,15 @@ class ConfigManager:
         return self.settings[key]
 
     @staticmethod
-    def write_config(configs: Dict, config_num: int, config_path: str='') -> None:
-        config_path = join(
-            Path(
-                dirname(
-                    realpath(__file__))).parent.parent.absolute(),
-            "configuration/")
-
+    def write_config(configs: Dict, config_num: int) -> None:
+        
         settings = default_settings
 
         for key in default_settings:
             if key in configs.keys():
                 settings[key].update(configs[key])
 
-        with open(join(config_path,f"config_{config_num}.json"), "w") as write_file:
+        with open(join(ConfigManager.directory,f"config_{config_num}.json"), "w") as write_file:
             json.dump(settings, write_file, indent=4)
 
 config = ConfigManager()

@@ -1,9 +1,3 @@
-import os
-import sys
-
-import pytest
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.brain import Brain
 
 

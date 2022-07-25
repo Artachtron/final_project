@@ -1,5 +1,5 @@
-from config import ConfigManager, config
-from world import World
+from .config import ConfigManager, config
+from .world import World
 
 
 def main():

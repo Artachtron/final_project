@@ -9,7 +9,8 @@ if TYPE_CHECKING:
     from genes import NodeGene, LinkGene
 
 import numpy.typing as npt
-from project.src.rtNEAT.phenes import Link, Node
+
+from .phenes import Link, Node
 
 
 class Network:

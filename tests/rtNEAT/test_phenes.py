@@ -1,10 +1,6 @@
-
-import os, sys
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
+from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
+                                      LinkGene, NodeGene, NodeType)
 from project.src.rtNEAT.phenes import Link, Node
-from project.src.rtNEAT.genes import NodeType, ActivationFuncType, AggregationFuncType
-from project.src.rtNEAT.genes import LinkGene, NodeGene
 
 
 class TestPhenes:
