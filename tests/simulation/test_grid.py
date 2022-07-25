@@ -194,9 +194,9 @@ class TestSubGrid:
             assert self.grid.__class__.__name__ == 'Grid'
             
         def test_dimensions_grid(self):
-            assert self.grid.width == 20
-            assert self.grid.height == 20
-            assert self.grid.dimensions == (20,20)
+            assert self.grid.width == 50
+            assert self.grid.height == 50
+            assert self.grid.dimensions == (50,50)
             
         def test_empty_cell(self):
             animal = Animal(animal_id=0,
@@ -226,8 +226,8 @@ class TestSubGrid:
             
         def test_cell_out_of_bounds_handled(self):
             array = np.zeros(self.grid.dimensions, dtype=int)
-            pos_1 = (20,0)
-            pos_2 = (0,25)
+            pos_1 = (50,0)
+            pos_2 = (0,55)
             pos_3 = (-1,0)
             pos_4 = (0,-1)
             
@@ -260,8 +260,8 @@ class TestSubGrid:
             
         
         def test_are_coordinates_in_bounds(self):
-            pos_1 = (20,0)
-            pos_2 = (0,25)
+            pos_1 = (50,0)
+            pos_2 = (0,55)
             pos_3 = (-1,0)
             pos_4 = (0,-1)
             

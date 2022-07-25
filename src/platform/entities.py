@@ -594,7 +594,7 @@ class Animal(Entity):
         """
         return (self._is_adult and
                 self.has_enough_energy(energy_type=EnergyType.RED,
-                                       quantity=Animal.REPRODUCTION_ENERGY_COST * self._size))
+                                       quantity=Animal.REPRODUCTION_COST * self._size))
 
     def on_reproduction(self) -> None:
         """Public method:
@@ -605,7 +605,7 @@ class Animal(Entity):
                         else Status.ALIVE)
 
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_ENERGY_COST * self._size)
+                           quantity=Animal.REPRODUCTION_COST * self._size)
 
     def _create_brain(self) -> None:
         """Private method:

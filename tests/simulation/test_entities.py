@@ -455,6 +455,7 @@ class TestAnimal:
                                  blue_energy=5,
                                  red_energy=10,)
 
+            self.animal._is_adult = True
             assert self.animal.energies == {"blue energy": 5, "red energy": 10}
             assert self.animal.red_energy == 10
             assert self.animal.size == 1
