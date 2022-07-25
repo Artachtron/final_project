@@ -11,12 +11,12 @@ from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
 
-from actions import Action, ActionType
-from config import config
-from energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
-from entities import Animal, Entity, Seed, Status, Tree
-from grid import Grid
-from universal import Position
+from .actions import Action, ActionType
+from .config import config
+from .energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
+from .entities import Animal, Entity, Seed, Status, Tree
+from .grid import Grid
+from .universal import Position
 
 
 class SimState:

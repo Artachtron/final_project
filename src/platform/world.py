@@ -7,8 +7,8 @@ if TYPE_CHECKING:
 
 from typing import Final, Tuple
 
-from display import Display
-from simulation import Simulation
+from .display import Display
+from .simulation import Simulation
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2

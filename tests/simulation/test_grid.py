@@ -3,8 +3,6 @@ import sys
 
 import numpy as np
 import pytest
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
 from project.src.platform.energies import (BlueEnergy, Energy, EnergyType,
                                            RedEnergy, Resource)
 from project.src.platform.entities import Animal, Entity, Tree

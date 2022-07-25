@@ -8,8 +8,8 @@ from typing import Any, Set, Tuple, Type
 import numpy as np
 import numpy.typing as npt
 
-from energies import Resource
-from entities import Animal, Entity, Tree
+from .energies import Resource
+from .entities import Animal, Entity, Tree
 
 
 class SubGridType(enum.Enum):

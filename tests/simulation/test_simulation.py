@@ -3,8 +3,6 @@ import random
 import sys
 
 import pytest
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
 from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
 from project.src.platform.entities import Direction, Tree
 from project.src.platform.grid import Grid
