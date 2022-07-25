@@ -1,0 +1,63 @@
+{
+    "NEAT": {
+        "disable_prob": 10,
+        "enable_prob": 12,
+        "weight_mutate_power": 13,
+        "link_mutate_prob": 15,
+        "node_mutate_prob": 0.1,
+        "mutate_bias_prob": 0.1,
+        "new_link_prob": 0.1,
+        "add_link_prob": 0.05,
+        "add_link_tries": 20,
+        "add_node_prob": 0.02,
+        "mate_multipoint_prob": 0.0,
+        "disjoint_coeff": 1.0,
+        "excess_coeff": 1.0,
+        "node_diff_coeff": 0.5,
+        "link_diff_coeff": 0.5,
+        "mutation_difference_coeff": 0.5,
+        "compatibility_threshod": 3.0,
+        "test": 123
+    },
+    "Simulation": {
+        "grid_width": 20,
+        "grid_height": 20,
+        "min_horizontal_size_section": 5,
+        "max_horizontal_size_section": 10,
+        "min_vertical_size_section": 5,
+        "max_vertical_size_section": 10,
+        "animal_sparsity": 5,
+        "Entity": {
+            "initial_size": 20,
+            "init_blue_energy": 100,
+            "init_red_energy": 100,
+            "init_action_cost": 1,
+            "max_age_size_coeff": 5,
+            "growth_energy_required": 10,
+            "child_energy_cost_divisor": 2
+        },
+        "Animal": {
+            "init_adult_size": 5,
+            "init_blue_energy": 100,
+            "init_red_energy": 100,
+            "num_input": 96,
+            "num_output": 15,
+            "num_action": 8,
+            "reproduction_cost": 10,
+            "planting_cost": 10,
+            "normal_size": 100,
+            "normal_energy": 100000,
+            "die_giving_birth_prob": 0.02
+        },
+        "Tree": {
+            "init_adult_size": 5,
+            "init_blue_energy": 100,
+            "init_red_energy": 100,
+            "num_tree_input": 88,
+            "num_tree_output": 8,
+            "num_tree_action": 4,
+            "normal_size": 100,
+            "normal_energy": 100000
+        }
+    }
+}

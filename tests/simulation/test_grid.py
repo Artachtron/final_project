@@ -1,11 +1,16 @@
-import os, sys, pytest
-import numpy as np
+import os
+import sys
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.grid import Grid, SubGrid
-from project.src.simulation.entities import Animal, Tree, Entity
-from project.src.simulation.energies import BlueEnergy, RedEnergy, Energy, Resource, EnergyType
-from project.src.simulation.simulation import Environment
+import numpy as np
+import pytest
+
+sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
+from project.src.platform.energies import (BlueEnergy, Energy, EnergyType,
+                                           RedEnergy, Resource)
+from project.src.platform.entities import Animal, Entity, Tree
+from project.src.platform.grid import Grid, SubGrid
+from project.src.platform.simulation import Environment
+
 
 class TestGrid:
     def test_create_grid(self):
@@ -30,7 +35,7 @@ class TestGrid:
         def setup(self):
  
             self.grid = Grid(grid_id=0,
-                                dimensions=(20,20))
+                             dimensions=(20,20))
             
             yield
             
@@ -112,6 +117,46 @@ class TestGrid:
             
             assert not self.grid.is_subclass(derived=red_energy,
                                              base_class=BlueEnergy)
+            
+        def test_find_occupied_cells_by_animals(self):
+            coordinates = (1,1)
+            # Empty grid
+            assert not self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
+            # Only the animal searching
+            self.grid.place_entity(value=Animal(position=coordinates))
+            assert not self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
+            # Animals around
+            self.grid.place_entity(value=Animal(position=(2,1)))
+            entities_around = self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
+            assert entities_around
+            assert len(entities_around) == 1
+            
+            self.grid.place_entity(value=Animal(position=(0,1)))
+            self.grid.place_entity(value=Animal(position=(1,0)))
+            self.grid.place_entity(value=Animal(position=(2,2)))
+            entities_around = self.grid.find_occupied_cells_by_animals(coordinates=coordinates)
+            assert len(entities_around) == 4
+            
+        def test_find_occupied_cells_by_trees(self):
+            coordinates = (1,1)
+            # Empty grid
+            assert not self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
+            # Only the animal searching
+            self.grid.place_entity(value=Tree(position=coordinates))
+            assert not self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
+            # Animals around
+            self.grid.place_entity(value=Tree(position=(2,1)))
+            entities_around = self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
+            assert entities_around
+            assert len(entities_around) == 1
+            
+            self.grid.place_entity(value=Tree(position=(0,1)))
+            self.grid.place_entity(value=Tree(position=(1,0)))
+            self.grid.place_entity(value=Tree(position=(2,2)))
+            entities_around = self.grid.find_occupied_cells_by_trees(coordinates=coordinates)
+            assert len(entities_around) == 4
+            
+            
         
 class TestSubGrid:
     def test_create_subgrid(self):
@@ -136,6 +181,7 @@ class TestSubGrid:
         @pytest.fixture(autouse=True)
         def setup(self):
             self.env = Environment(env_id=0)
+            self.env.init()
             self.grid =  self.env.grid
             
             self.entity_grid = self.grid.entity_grid
@@ -157,7 +203,7 @@ class TestSubGrid:
                             position=(2,5))
             self.grid.place_entity(animal)
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == animal
-            self.entity_grid._empty_cell(coordinates=(2,5))
+            self.entity_grid.empty_cell(coordinates=(2,5))
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
         
         def test_set_cell(self):
@@ -166,7 +212,7 @@ class TestSubGrid:
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
             self.entity_grid._set_cell_value(coordinates=(2,5), value=animal)
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == animal
-            self.entity_grid._empty_cell(coordinates=(2,5))
+            self.entity_grid.empty_cell(coordinates=(2,5))
             assert self.entity_grid.get_cell_value(coordinates=(2,5)) == None
             
             energy = BlueEnergy(energy_id=0,
@@ -175,7 +221,7 @@ class TestSubGrid:
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == None
             self.energy_grid._set_cell_value(coordinates=(2,5), value=energy)
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == energy
-            self.energy_grid._empty_cell(coordinates=(2,5))
+            self.energy_grid.empty_cell(coordinates=(2,5))
             assert self.energy_grid.get_cell_value(coordinates=(2,5)) == None
             
         def test_cell_out_of_bounds_handled(self):
@@ -219,20 +265,20 @@ class TestSubGrid:
             pos_3 = (-1,0)
             pos_4 = (0,-1)
             
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_1)
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_2)
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_3)
-            assert not self.entity_grid._are_coordinates_in_bounds(coordinates=pos_4)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_1)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_2)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_3)
+            assert not self.entity_grid.are_coordinates_in_bounds(coordinates=pos_4)
             
             pos_5 = (10,0)
             pos_6 = (0,15)
             pos_7 = (3,0)
             pos_8 = (0,4)
             
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_5)
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_6)
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_7)
-            assert self.entity_grid._are_coordinates_in_bounds(coordinates=pos_8)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_5)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_6)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_7)
+            assert self.entity_grid.are_coordinates_in_bounds(coordinates=pos_8)
             
         def test_are_vacant_coordinates(self):
             # Free cell
@@ -256,44 +302,44 @@ class TestSubGrid:
                                                          value=self.animal)
             
         def test_find_coordinates_with_class(self):
-            tree1 = self.env.create_tree(coordinates=(1,1))
+            tree1 = self.env.spawn_tree(coordinates=(1,1))
             
-            assert len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
-                                                                     target_class=Tree)) == 1
+            assert len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
+                                                                     base_class=Tree)) == 1
             
-            tree2 = self.env.create_tree(coordinates=(2,1))
+            tree2 = self.env.spawn_tree(coordinates=(2,1))
             
-            len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
-                                                              target_class=Tree))  == 2
+            len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
+                                                              base_class=Tree))  == 2
             
             
             
             # Does not detect animal
-            animal = self.env.create_animal(coordinates=(1,2))
+            animal = self.env.spawn_animal(coordinates=(1,2))
             
-            len(self.entity_grid._find_coordinates_baseclass(position=(1,1),
-                                                              target_class=Tree))  == 2
+            len(self.entity_grid._find_coordinates_baseclass(coordinates=(1,1),
+                                                              base_class=Tree))  == 2
             
         
         def test_find_free_coordinates(self):
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 9
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 9
             
-            self.env.create_tree(coordinates=(1,1))
+            self.env.spawn_tree(coordinates=(1,1))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 8
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 8
             
-            self.env.create_tree(coordinates=(0,1))
+            self.env.spawn_tree(coordinates=(0,1))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 7
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 7
             
-            self.env.create_tree(coordinates=(0,0))
+            self.env.spawn_tree(coordinates=(0,0))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 6
             
             # Out of search range, no change
-            self.env.create_tree(coordinates=(3,3))
+            self.env.spawn_tree(coordinates=(3,3))
             
-            assert len(self.entity_grid.find_free_coordinates(position=(1,1))) == 6
+            assert len(self.entity_grid.find_free_coordinates(coordinates=(1,1))) == 6
         
         def test_select_free_coordinates(self):
             cells = []
@@ -304,7 +350,7 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinates(position=position,
+                free_cell, = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                     radius=radius)
                 assert free_cell in cells
                 
@@ -317,19 +363,19 @@ class TestSubGrid:
                     cells.append(tuple(np.add(position,(x,y))))
             
             for _ in range(100):
-                free_cell = self.entity_grid.select_free_coordinates(position=position,
+                free_cell, = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                      radius=radius)
                 assert free_cell 
                 assert free_cell in cells
                 
             # Multiple free cells
-            free_cells = self.entity_grid.select_free_coordinates(position=position,
+            free_cells = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                   radius=radius,
                                                                   num_cells=2)
             
             assert len(free_cells) == 2
             
-            free_cells = self.entity_grid.select_free_coordinates(position=position,
+            free_cells = self.entity_grid.select_free_coordinates(coordinates=position,
                                                                   radius=radius,
                                                                   num_cells=3)
             

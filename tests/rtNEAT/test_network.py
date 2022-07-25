@@ -1,13 +1,17 @@
-import pytest, os, sys
-from numpy.random import choice
+import os
+import sys
+
 import numpy as np
+import pytest
+from numpy.random import choice
 
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
-from project.src.rtNEAT.network import Network
-from project.src.rtNEAT.genes import NodeGene, LinkGene, NodeType, reset_innovation_table, sigmoid
+from project.src.rtNEAT.genes import (LinkGene, NodeGene, NodeType,
+                                      OutputNodeGene, OutputType,
+                                      reset_innovation_table, sigmoid)
 from project.src.rtNEAT.genome import Genome
-
-from project.src.rtNEAT.phenes import Node, Link
+from project.src.rtNEAT.network import Network
+from project.src.rtNEAT.phenes import Link, Node
 
 
 class TestNetwork:
@@ -119,12 +123,18 @@ class TestNetwork:
             assert self.mind.n_outputs > 0
             
         def test_not_same_instance(self):
+            gen1_data = {'n_inputs':10,
+                            'n_outputs':10,
+                            'n_actions':0,
+                            'actions':{}}
+            gen2_data = {'n_inputs':10,
+                            'n_outputs':10,
+                            'n_actions':0,
+                            'actions':{}}
             gen1 = Genome.genesis(genome_id=1,
-                                  n_inputs=10,
-                                  n_outputs=10)
+                                  genome_data=gen1_data)
             gen2 = Genome.genesis(genome_id=2,
-                                  n_inputs=10,
-                                  n_outputs=10)
+                                  genome_data=gen2_data)
             
             net1 = Network.genesis(genome=gen1)
             net2 = Network.genesis(genome=gen2)
@@ -141,9 +151,12 @@ class TestNetwork:
             
         def test_brain_structure(self):
             reset_innovation_table()
+            gen_data = {'n_inputs':96,
+                            'n_outputs':15,
+                            'n_actions':0,
+                            'actions':{}}
             gen = Genome.genesis(genome_id=1,
-                                n_inputs=96,
-                                n_outputs=12)
+                                 genome_data=gen_data)
             
             net = Network.genesis(genome=gen)
             # Complete
@@ -184,9 +197,13 @@ class TestNetwork:
             
         def test_activate_complete_no_hidden_nodes(self):
             n_inputs, n_outputs = np.random.randint(3,10,2)
+            gen_data = {'n_inputs':n_inputs,
+                        'n_outputs':n_outputs,
+                        'n_actions':n_outputs,
+                        'actions':{f"{i}":[] for i in range(n_outputs)}}
             self.genome = Genome.genesis(genome_id=10,
-                                    n_inputs=n_inputs,
-                                    n_outputs=n_outputs)
+                                         genome_data=gen_data)
+            
             dim = (n_inputs+1) * n_outputs
             weights = np.random.uniform(-1,1,dim)
             l_inputs = np.random.uniform(-1,1,n_inputs)
@@ -248,7 +265,11 @@ class TestNetwork:
                 input1 = NodeGene(node_type=NodeType.INPUT)
                 input2 = NodeGene(node_type=NodeType.INPUT)
                 hidden = NodeGene(node_type=NodeType.HIDDEN)
-                output = NodeGene(node_type=NodeType.OUTPUT)
+                output = OutputNodeGene(name="",
+                                        node_id = 0,
+                                        output_type=OutputType.TRIGGER,
+                                        associated_values=set())
+                # output = NodeGene(node_type=NodeType.OUTPUT)
                 
                 link1 = LinkGene(in_node=input1.id,
                                 out_node=hidden.id,
@@ -335,6 +356,7 @@ class TestNetwork:
             
             network2 = Network.genesis(genome=genome3)   
             inputs = np.random.uniform(-1,1,n_inputs)
-            outputs = network2.activate(np.array(inputs))
-            assert len(outputs) == n_outputs
+            # outputs = network2.activate(np.array(inputs))
+            outputs = network2.n_outputs
+            assert outputs == n_outputs
             

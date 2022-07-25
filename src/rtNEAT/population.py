@@ -1,14 +1,14 @@
-import numpy as np
+import numpy.typing as npt
 
 
 # Might not be necessary
 class Population:
     def __init__(self,
-                 organisms: np.array,
-                 species: np.array):
-        self.organisms = organisms
+                 brain: npt.NDArray,
+                 species: npt.NDArray):
+        self.brain = brain
         self.species = species
-        self.size = len(organisms)
+        self.size = len(brain)
     
     """ def speciate(self):
         comparison_organism = 0
