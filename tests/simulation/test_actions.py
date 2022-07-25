@@ -1,7 +1,6 @@
 import os
 import sys
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
 from project.src.platform.actions import *
 from project.src.platform.energies import EnergyType
 from project.src.platform.entities import Status

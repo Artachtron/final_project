@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 from numpy.random import randint
 
-from universal import SimulatedObject
+from .universal import SimulatedObject
 
 
 class Resource(SimulatedObject):

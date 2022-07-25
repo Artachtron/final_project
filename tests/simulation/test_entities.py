@@ -756,7 +756,7 @@ class TestAnimal:
                 
                 self.animal.brain = None
                 self.animal.on_birth(parent1=anim1,
-                                 parent2=anim2)
+                                     parent2=anim2)
                 
                 assert self.animal.brain
                 assert self.animal.brain.id == self.animal.id
