@@ -10,9 +10,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__
 from project.src.rtNEAT.genes import (LinkGene, NodeGene, NodeType,
                                       reset_innovation_table)
 from project.src.rtNEAT.genome import Genome
-from project.src.rtNEAT.neat import Config
 
-Config.configure()
 
 class TestGenome:
     def test_create_genome(self):
