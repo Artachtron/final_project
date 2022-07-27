@@ -1,9 +1,9 @@
 {
     "NEAT": {
-        "disable_prob": 10,
-        "enable_prob": 12,
-        "weight_mutate_power": 13,
-        "link_mutate_prob": 15,
+        "disable_prob": 0.01,
+        "enable_prob": 0.02,
+        "weight_mutate_power": 0.02,
+        "link_mutate_prob": 0.03,
         "node_mutate_prob": 0.1,
         "mutate_bias_prob": 0.1,
         "new_link_prob": 0.1,
@@ -20,6 +20,7 @@
         "test": 123
     },
     "Simulation": {
+        "max_cycle": 1000,
         "grid_width": 20,
         "grid_height": 20,
         "min_horizontal_size_section": 5,
@@ -38,8 +39,8 @@
         },
         "Animal": {
             "init_adult_size": 5,
-            "init_blue_energy": 100,
-            "init_red_energy": 100,
+            "init_blue_energy": 10000,
+            "init_red_energy": 10000,
             "num_input": 96,
             "num_output": 15,
             "num_action": 8,

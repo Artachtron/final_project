@@ -222,7 +222,6 @@ class Node(BasePhene):
         """
         return self.type == NodeType.OUTPUT
 
-
     def get_activation(self, activation_phase: int) -> float:
         """Public method:
             Browse the list of incoming Links and calculate the activation value
@@ -241,7 +240,7 @@ class Node(BasePhene):
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
             for link in self.get_incoming():
-                # ONly take the value of activated links
+                # Only take the value of activated links
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values

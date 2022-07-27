@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from typing import Final, Tuple
 
+from .config import config
 from .display import Display
 from .simulation import Simulation
 
@@ -34,12 +35,12 @@ class World:
             shutdown:   Shutdown the simulation
             run:        run the simulation until shutdown is called
     """
-    GRID_HEIGHT: Final[int] = 20
-    GRID_WIDTH: Final[int] = 20
-    BLOCK_SIZE: Final[int] = 50
-    MAX_CYCLE = 1000
+    GRID_HEIGHT: Final[int] = config['Simulation']['grid_height']
+    GRID_WIDTH: Final[int] = config['Simulation']['grid_width']
+    BLOCK_SIZE: Final[int] = config['Simulation']['block_size']
+    MAX_CYCLE = config['Simulation']['max_cycle']
 
-    SIMULATION_SPEED: Final[int] = 20
+    SIMULATION_SPEED: Final[int] = config['Simulation']['simulation_speed']
 
     def __init__(self,
                  world_id: int,
@@ -108,7 +109,7 @@ class World:
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
 
-            print("SHUTDOWN")
+            print(f"SHUTDOWN after {sim_state.cycle} cycles")
             self.shutdown()
 
     def shutdown(self) -> None:

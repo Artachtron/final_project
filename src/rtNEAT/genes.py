@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import enum
-import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
 from typing import Dict, Optional, Set
 
+import numpy as np
 from numpy.random import random, uniform
 from project.src.platform.config import config
 
@@ -40,7 +40,7 @@ def sigmoid(x):
         float: output value
     """
     try:
-        return (1.0 / (1.0 + math.exp(-x)))
+        return (1.0 / (1.0 + np.exp(-x)))
     except OverflowError:
         return 0 if x < 0 else 1
 
