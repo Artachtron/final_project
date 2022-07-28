@@ -6,6 +6,13 @@ from pathlib import Path
 from typing import Any, Dict
 
 default_settings = {
+                    "Log":{
+                        "resources": False,
+                        "death": False,
+                        "birth": True,
+                        "grid_resources": False,
+                        "grid_entities": False,
+                        },
                     "NEAT":{
                             # Mutations
                             ## Link mutation
@@ -34,6 +41,7 @@ default_settings = {
                         },
 
                     "Simulation":{
+                        "max_cycle": 1000,
                         # Grid
                         "grid_width": 50,
                         "grid_height": 50,
