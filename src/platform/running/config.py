@@ -6,6 +6,12 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 default_settings = {
+                    "Run":{
+                        "parameter": "",
+                        "variation": 0,
+                        "run": 0,   
+                    },
+                    
                     "Log":{
                         "resources": False,
                         "death": False,
@@ -13,6 +19,7 @@ default_settings = {
                         "grid_resources": False,
                         "grid_entities": False,
                         },
+                    
                     "NEAT":{
                             # Mutations
                             ## Link mutation

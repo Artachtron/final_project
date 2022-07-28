@@ -7,8 +7,8 @@ if TYPE_CHECKING:
 
 from typing import Final, Tuple
 
-from .running.config import config
 from .display import Display
+from .running.config import config
 from .simulation import Simulation
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
@@ -59,7 +59,6 @@ class World:
 
         self.simulation: Simulation
         self.display: Display
-
 
     @property
     def id(self) -> int:
