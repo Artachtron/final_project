@@ -23,11 +23,14 @@ def main():
     world.init(show_grid=True)
     world.run()
 
+def profile(profiler):
+    stats = pstats.Stats(pr)
+    stats.sort_stats(pstats.SortKey.TIME)
+    stats.dump_stats(filename='profile.prof')
+
 if __name__ == '__main__':
     with cProfile.Profile() as pr:
         main()
 
+    profile(profiler=pr)
     
-    stats = pstats.Stats(pr)
-    stats.sort_stats(pstats.SortKey.TIME)
-    stats.dump_stats(filename='profile.prof')

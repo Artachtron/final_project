@@ -142,7 +142,11 @@ class ConfigManager:
 
         for key in default_settings:
             if key in configs.keys():
-                settings[key].update(configs[key])
+                for subkey in configs[key]:
+                    if type(settings[key][subkey]) == type(dict()):
+                        settings[key][subkey].update(configs[key][subkey])
+                    else:
+                        settings[key].update(configs[key])
 
         with open(join(ConfigManager.directory,f"config_{config_letter}_{config_num}.json"), "w") as write_file:
             json.dump(settings, write_file, indent=4)
