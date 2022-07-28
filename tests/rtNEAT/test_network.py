@@ -163,7 +163,7 @@ class TestNetwork:
             for node in net.get_inputs():
                 assert {n.out_node.id for n in node.get_outgoing()} == set(net.outputs.keys())
                 assert not node.incoming
-            
+                         
             
     class TestActivation: 
         @pytest.fixture(autouse=True)

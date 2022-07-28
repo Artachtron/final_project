@@ -750,4 +750,7 @@ class TestGenome:
                 assert baby.id == 8
                 assert baby.n_link_genes == 50
                 assert baby.n_node_genes == 100
+                
+
+                
 

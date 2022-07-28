@@ -3,6 +3,7 @@ import sys
 
 import pytest
 from project.src.platform.actions import *
+from project.src.platform.config import config
 from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
 from project.src.platform.entities import (Animal, Direction, Entity, Seed,
                                            Status, Tree)
@@ -757,17 +758,22 @@ class TestAnimal:
 
                 assert self.animal.brain
                 assert self.animal.brain.id == self.animal.id
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                
+            def test_child(self):
+                anim1 = self.env.spawn_animal(coordinates=(5,7),
+                                              size=5,
+                                              red_energy=1000)
+                anim2 = self.env.spawn_animal(coordinates=(5,6),
+                                              size=5,
+                                              red_energy=1000)
+                
+                assert anim1.can_reproduce()
+                assert anim2.can_reproduce()
+                
+                child = self.env._reproduce_entities(parent1=anim1,
+                                                     parent2=anim2)
+                
+                mind = child.brain.phenotype
+                assert mind.n_inputs == config['Simulation']['Animal']['num_input']
+                assert mind.n_outputs == config['Simulation']['Animal']['num_output']
+                child._activate_mind(environment=self.env)

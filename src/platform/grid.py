@@ -376,11 +376,12 @@ class SubGrid:
 
             samples = sample(free_cells, num_choice)
 
-            if num_cells == 1:
+            """ if num_cells == 1:
                 return set(samples)
 
             else:
-                free_cells = set(samples)
+                free_cells = set(samples) """
+            free_cells = set(samples)
         
         return free_cells
 

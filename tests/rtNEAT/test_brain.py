@@ -48,6 +48,7 @@ class TestBrain:
             assert brain3.id == 2
             assert brain3.genotype.id == 2
             assert brain3.phenotype.id == 2
+            
 
 
 

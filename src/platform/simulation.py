@@ -495,7 +495,7 @@ class Environment:
         """
 
         # Get a free cell around
-        free_cells  = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+        free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
         free_cell: Optional[Tuple[int,int]] = None
 
         if free_cells:
@@ -716,13 +716,16 @@ class Environment:
         Returns:
             Entity: born child
         """
-        print("try reproduce")
         if parent1.can_reproduce() and parent2.can_reproduce():
 
             parent1.on_reproduction()
             parent2.on_reproduction()
 
-            birth_position,  = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
+            free_cells  = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
+            birth_position: Optional[Tuple[int,int]] = None
+
+            if free_cells:
+                birth_position = free_cells.pop()
 
             if birth_position:
                 adult_size = int((parent1.size + parent2.size)/2)

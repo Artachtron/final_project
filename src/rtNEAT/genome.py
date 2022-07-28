@@ -4,8 +4,9 @@ from random import choice, random, sample
 from typing import Any, Dict, Optional, Set, Tuple, TypeVar
 
 from project.src.platform.config import config
-from .genes import (BaseGene, LinkGene, NodeGene, NodeType,
-                                      OutputNodeGene, OutputType)
+
+from .genes import (BaseGene, LinkGene, NodeGene, NodeType, OutputNodeGene,
+                    OutputType)
 from .innovation import InnovationType, InnovTable
 
 Gene = TypeVar('Gene', bound=BaseGene)
@@ -797,7 +798,7 @@ class Genome:
 
                 # Add the new node
                 Genome.insert_gene(genes_dict=new_nodes,
-                                           gene=new_node)
+                                   gene=new_node)
 
         # Choose the links to transmit to offspring
         main_links: Dict[int, LinkGene] = main_genome.link_genes
