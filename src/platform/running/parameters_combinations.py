@@ -1,11 +1,6 @@
-from msilib import init_database
-
-from numpy import gradient
-from pygame import init
-
 from .config import ConfigManager
 
-""" 
+"""
 "animal_sparsity": 5
 # Entity
 "initial_size": 20,
@@ -36,4 +31,187 @@ init_blue_energy = [10, 100, 1000, 10000]
 init_red_energy = [10, 100, 1000, 10000]
 reproduction_cost = [1, 5, 10]
 planting_cost = [1, 5, 10]
+
+
+for num,val in enumerate(animal_sparsity, 1):
+    configs={
+        "Simulation":{
+            "animal_sparsity":val
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='A')
+
+for num,val in enumerate( initial_size, 1):
+    configs={
+        "Simulation":{
+            "Entity":
+            {
+                "initial_size":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='B')
+
+for num,val in enumerate( initial_action_cost, 1):
+    configs={
+        "Simulation":{
+            "Entity":
+            {
+                "initial_action_cost":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='C')
+
+
+for num,val in enumerate( max_age_size_coeff, 1):
+    configs={
+        "Simulation":{
+            "Entity":
+            {
+                "max_age_size_coeff":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='D')
+
+for num,val in enumerate( growth_energy_required, 1):
+    configs={
+        "Simulation":{
+            "Entity":
+            {
+                "growth_energy_required":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='E')
+
+for num,val in enumerate( child_energy_cost_divisor, 1):
+    configs={
+        "Simulation":{
+            "Entity":
+            {
+                "child_energy_cost_divisor":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='F')
+
+for num,val in enumerate( init_adult_size, 1):
+    configs={
+        "Simulation":{
+            "Animal":
+            {
+                "init_adult_size":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='G')
+
+for num,val in enumerate( init_blue_energy, 1):
+    configs={
+        "Simulation":{
+            "Animal":
+            {
+                "init_blue_energy":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='H')
+
+for num,val in enumerate( init_red_energy, 1):
+    configs={
+        "Simulation":{
+            "Animal":
+            {
+                "init_red_energy":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='I')
+
+for num,val in enumerate( reproduction_cost, 1):
+    configs={
+        "Simulation":{
+            "Animal":
+            {
+                "reproduction_cost":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='J')
+
+for num,val in enumerate( planting_cost, 1):
+    configs={
+        "Simulation":{
+            "Animal":
+            {
+                "planting_cost":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='K')
+
+for num,val in enumerate( init_blue_energy, 1):
+    configs={
+        "Simulation":{
+            "Tree":
+            {
+                "init_blue_energy":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='L')
+
+for num,val in enumerate( init_red_energy, 1):
+    configs={
+        "Simulation":{
+            "Tree":
+            {
+                "init_red_energy":val
+            }
+        }
+    }
+    
+    ConfigManager.write_config(configs=configs,
+                                config_num=num,
+                                config_letter='M')
+
+
 

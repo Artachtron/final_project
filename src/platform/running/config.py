@@ -3,7 +3,7 @@ import optparse
 import sys
 from os.path import dirname, join, realpath
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 default_settings = {
                     "Log":{
@@ -129,7 +129,7 @@ class ConfigManager:
         return self.settings[key]
 
     @staticmethod
-    def write_config(configs: Dict, config_num: int) -> None:
+    def write_config(configs: Dict, config_num: int, config_letter: Optional[str]=None) -> None:
         
         settings = default_settings
 
@@ -137,7 +137,7 @@ class ConfigManager:
             if key in configs.keys():
                 settings[key].update(configs[key])
 
-        with open(join(ConfigManager.directory,f"config_{config_num}.json"), "w") as write_file:
+        with open(join(ConfigManager.directory,f"config_{config_letter}_{config_num}.json"), "w") as write_file:
             json.dump(settings, write_file, indent=4)
 
 config = ConfigManager()
