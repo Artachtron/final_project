@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from typing import Final, Tuple
 
-from .config import config
+from .running.config import config
 from .display import Display
 from .simulation import Simulation
 

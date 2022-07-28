@@ -33,7 +33,7 @@
             "init_blue_energy": 100,
             "init_red_energy": 100,
             "init_action_cost": 1,
-            "max_age_size_coeff": 5,
+            "max_age_size_coeff": 10,
             "growth_energy_required": 10,
             "child_energy_cost_divisor": 2
         },
@@ -44,7 +44,7 @@
             "num_input": 96,
             "num_output": 15,
             "num_action": 8,
-            "reproduction_cost": 10,
+            "reproduction_cost": 0,
             "planting_cost": 10,
             "normal_size": 100,
             "normal_energy": 100000,
@@ -52,7 +52,7 @@
         },
         "Tree": {
             "init_adult_size": 5,
-            "init_blue_energy": 100,
+            "init_blue_energy": 1000,
             "init_red_energy": 100,
             "num_tree_input": 88,
             "num_tree_output": 8,

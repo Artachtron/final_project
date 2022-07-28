@@ -1,8 +1,8 @@
 import cProfile
 import pstats
 
+from ..world import World
 from .config import ConfigManager, config
-from .world import World
 
 # py-spy record -o profile.svg --subprocesses -- python -m src.platform.main
 # python -m cProfile -m src.platform.main

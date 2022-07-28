@@ -18,7 +18,7 @@ import numpy.typing as npt
 from project.src.rtNEAT.brain import Brain
 
 from .actions import *
-from .config import config
+from .running.config import config
 from .energies import Energy, EnergyType, Resource
 from .universal import EntityType, Position, SimulatedObject
 

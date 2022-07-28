@@ -9,7 +9,7 @@ default_settings = {
                     "Log":{
                         "resources": False,
                         "death": False,
-                        "birth": True,
+                        "birth": False,
                         "grid_resources": False,
                         "grid_entities": False,
                         },
@@ -105,7 +105,7 @@ class ConfigManager:
     directory = join(
             Path(
                 dirname(
-                    realpath(__file__))).parent.parent.absolute(),
+                    realpath(__file__))).parent.parent.parent.absolute(),
             "configuration/")
     def __init__(self):
         self.parser = parser = optparse.OptionParser()

@@ -8,7 +8,7 @@ from typing import Dict, Optional, Set
 
 import numpy as np
 from numpy.random import random, uniform
-from project.src.platform.config import config
+from src.platform.running.config import config
 
 from .innovation import InnovTable
 
