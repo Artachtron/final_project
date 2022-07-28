@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import new
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -232,7 +233,7 @@ class Entity(SimulatedObject):
         # if new age above maximum age threshold,
         # the entity dies
         if self._age > self._max_age:
-            self._die()
+            self._die(cause="old age")
 
     def _decide_grow(self) -> None:
         """Pivate method:
@@ -349,7 +350,7 @@ class Entity(SimulatedObject):
 
         # dies if the entity run out of blue energy
         if self._energies_stock[EnergyType.BLUE.value] <= 0:
-            self._die()
+            self._die(cause="lack of energy")
 
         # effective quantity lost
         return quantity
@@ -467,11 +468,12 @@ class Entity(SimulatedObject):
         elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
             self._store_seed(seed=resource)
 
-    def _die(self) -> None:
+    def _die(self, cause: Optional[str]="") -> None:
         """Private method:
             Action: Death of the entity
         """
-        print(f"{self} died at age {self._age}")
+        if config['Log']['death']:
+            print(f"{self} died of {cause} at age {self._age}")
         self.status = Status.DEAD
 
 
@@ -599,10 +601,9 @@ class Animal(Entity):
     def on_reproduction(self) -> None:
         """Public method:
             Event: when reproducing
-        """
-        self.status = (Status.DEAD
-                        if random() < Animal.DIE_GIVING_BIRTH_PROB
-                        else Status.ALIVE)
+        """        
+        if random() < Animal.DIE_GIVING_BIRTH_PROB:
+            self._die(cause="giving birth")  
 
         self._loose_energy(energy_type=EnergyType.RED,
                            quantity=Animal.REPRODUCTION_COST * self._size)
@@ -726,6 +727,7 @@ class Animal(Entity):
             Action: Get ready for reproduction
         """
         action = ReproduceAction()
+        self._want_to_reproduce()
 
         self._decide_action(action=action)
 

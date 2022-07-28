@@ -33,7 +33,6 @@ class Resource(SimulatedObject):
         """
 
         self.quantity = quantity or randint(10,100) # collectible amount of resources
-        print(quantity)
         size: int = int(5 + log(quantity, 2))
         # size = size/50 if size > 50 else size
 

@@ -103,6 +103,16 @@ class SimState:
             Dict[int, Entity]: register of entities
         """
         return self.animals | self.trees
+    
+    @property
+    def n_entities(self) -> int:
+        """Property:
+            Return the number of entities in the simulation
+
+        Returns:
+            int: number of entities in the simulation
+        """        
+        return len(self.entities)
 
     def get_resources(self) -> ValuesView[Resource]:
         """Public method:
@@ -122,6 +132,16 @@ class SimState:
             Dict[int, Resource]: register of resources
         """
         return self.energies | self.seeds
+    
+    @property
+    def n_energies(self) -> int:
+        """Property:
+            Return the number of energies in the simulation
+
+        Returns:
+            int: number of energies in the simulation
+        """        
+        return len(self.energies)
 
     def get_entity_id(self, increment: bool=False) -> int:
         """Public method:
@@ -383,7 +403,7 @@ class Environment:
                                        blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
                                        red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
                                        size=15)
-
+        print(f"Initial population of animal: {self.state.n_entities}")
         return self.state
 
     @property
@@ -696,6 +716,7 @@ class Environment:
         Returns:
             Entity: born child
         """
+        print("try reproduce")
         if parent1.can_reproduce() and parent2.can_reproduce():
 
             parent1.on_reproduction()
@@ -716,8 +737,10 @@ class Environment:
 
                 if child:
                     child.on_birth(parent1=parent1,
-                               parent2=parent2)
-
+                                   parent2=parent2)
+                    
+                    if config['Log']['birth']:
+                        print(f"{child} was born from {parent1} and {parent2}")
 
                 return child
 
@@ -828,7 +851,8 @@ class Environment:
         if quantity < 1:
             return None
 
-        print(f"{energy_type}:{quantity} was created at {coordinates}")
+        if config['Log']['grid_resources']:
+            print(f"{energy_type}:{quantity} was created at {coordinates}")
         if not self.grid.resource_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
 
@@ -860,7 +884,8 @@ class Environment:
         self.grid.remove_resource(resource=resource)
 
         self.state.remove_resource(resource=resource)
-        print(f"{resource} was deleted at {position}")
+        if config['Log']['grid_resources']:
+            print(f"{resource} was deleted at {position}")
 
     def remove_entity(self, entity: Entity):
         """Public method:
@@ -874,7 +899,8 @@ class Environment:
         entity_grid.empty_cell(coordinates=position)
 
         self.state.remove_entity(entity=entity)
-        print(f"{entity} was deleted at {position}")
+        if config['Log']['grid_entities']:
+            print(f"{entity} was deleted at {position}")
 
     def _entity_died(self, entity: Entity) -> None:
         """Private method:

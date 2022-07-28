@@ -425,7 +425,8 @@ class SubGrid:
             try:
                 self._array[coordinates] = value
             except IndexError:
-                print("{coordinates} is out of bounds")
+                pass
+                # print("{coordinates} is out of bounds")
 
         return success
 
@@ -446,7 +447,7 @@ class SubGrid:
             return self._array[tuple(coordinates)]
 
         except IndexError:
-            print(f"{coordinates} is out of bounds")
+            # print(f"{coordinates} is out of bounds")
             return False
 
     def get_sub_region(self, initial_pos: Tuple[int, int], radius: int = 1) -> npt.NDArray[Any]:

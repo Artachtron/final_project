@@ -14,13 +14,12 @@ from .world import World
 def main():
 
     #write_config()
-
     world = World(world_id=0,
                 #   dimensions=(config['Simulation']['grid_width'],
                 #               config['Simulation']['grid_height']),
                 #   block_size=config['Simulation']['block_size'],
                 #   sim_speed=config['Simulation']['simulation_speed'],
-                  display_active=False)
+                display_active=False)
 
     world.init(show_grid=True)
     world.run()
