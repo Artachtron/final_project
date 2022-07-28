@@ -496,13 +496,10 @@ class Environment:
 
         # Get a free cell around
         free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
-        free_cell: Optional[Tuple[int,int]] = None
-
-        if free_cells:
-            free_cell = free_cells.pop()
+        free_cell = free_cells.pop() if free_cells else None
 
         if free_cell:
-                # If animal possess a seed plant it,
+            # If animal possess a seed plant it,
             # else plant a new tree
             if action.seed:
                 # spawn the tree from seed,
@@ -597,10 +594,7 @@ class Environment:
             action (Action): drop action
         """
         free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
-        free_cell: Optional[Tuple[int,int]] = None
-
-        if free_cells:
-            free_cell = free_cells.pop()
+        free_cell = free_cells.pop() if free_cells else None
 
         if free_cell:
             # Create the energy
@@ -721,11 +715,8 @@ class Environment:
             parent1.on_reproduction()
             parent2.on_reproduction()
 
-            free_cells  = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
-            birth_position: Optional[Tuple[int,int]] = None
-
-            if free_cells:
-                birth_position = free_cells.pop()
+            free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
+            birth_position = free_cells.pop() if free_cells else None
 
             if birth_position:
                 adult_size = int((parent1.size + parent2.size)/2)
