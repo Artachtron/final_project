@@ -3,7 +3,7 @@ from __future__ import annotations
 from random import choice, random, sample
 from typing import Any, Dict, Optional, Set, Tuple, TypeVar
 
-from src.platform.running.config import config
+from project.src.platform.running.config import config
 
 from .genes import (BaseGene, LinkGene, NodeGene, NodeType, OutputNodeGene,
                     OutputType)

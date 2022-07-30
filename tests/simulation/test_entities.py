@@ -3,11 +3,11 @@ import sys
 
 import pytest
 from project.src.platform.actions import *
-from src.platform.running.config import config
 from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
 from project.src.platform.entities import (Animal, Direction, Entity, Seed,
                                            Status, Tree)
 from project.src.platform.grid import Grid
+from project.src.platform.running.config import config
 from project.src.platform.simulation import Environment
 from project.src.rtNEAT.brain import Brain
 
