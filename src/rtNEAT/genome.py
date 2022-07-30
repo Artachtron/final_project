@@ -276,10 +276,10 @@ class Genome:
             raise ValueError(f"Number of inputs {size} instead of {n_outputs}")
 
         for link in links.values():
-            if link.in_node not in range(1, n_inputs+1):
+            if link.in_node not in range(0, n_inputs+1):
                 raise ValueError(f"{link} has an output as in_node")
 
-            if link.out_node not in range(n_inputs+1, len(links)):
+            if link.out_node <= n_inputs:
                 raise ValueError(f"{link} has an input as out_node")
 
         # Fully connected

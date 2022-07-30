@@ -23,7 +23,7 @@ default_settings = {
                     "NEAT":{
                             #Genome
                             ## genesis
-                            "skip_connection": 0.85,
+                            "skip_connection": 0.95,
                             # Mutations
                             ## Link mutation
                             "disable_prob": 0.05,

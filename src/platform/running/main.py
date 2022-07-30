@@ -24,7 +24,7 @@ def main():
     world.run()
 
     metrics = world.metrics
-    print(metrics.total_animals, metrics.max_generation)
+    print(metrics.total_animals, metrics.max_generation, metrics.last_cycle)
 
 def profile(profiler):
     stats = pstats.Stats(profiler)

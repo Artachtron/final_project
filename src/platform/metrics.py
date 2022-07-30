@@ -26,7 +26,10 @@ class Metrics:
         added_entities = self.sim_state.added_entities
         self.total_animals += len(added_entities["Animal"])
         self.total_trees += len(added_entities["Tree"])
+        
         self.find_max_generation(entities=set(added_entities["Animal"].values()))
+        
+        self.last_cycle = self.sim_state.cycle
         
     @property
     def total_entities(self):
