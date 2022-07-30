@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 from typing import Final, Tuple
 
 from .display import Display
-from .metrics import Metrics
+from .probe import Probe
 from .running.config import config
 from .simulation import Simulation
 
@@ -60,7 +60,7 @@ class World:
 
         self.simulation: Simulation
         self.display: Display
-        self.metrics: Metrics
+        self.metrics: Probe
 
     @property
     def id(self) -> int:
@@ -84,7 +84,7 @@ class World:
                                      dimensions=self.dimensions)
 
         sim_state = self.simulation.init()
-        self.metrics = Metrics(sim_state=sim_state)
+        self.metrics = Probe(sim_state=sim_state)
 
         if self.display_active:
             self.display = Display(display_id=self.id,
@@ -128,3 +128,7 @@ class World:
         self.running = True
         while self.running:
             self._update()
+            
+    def write_metrics(self) -> None:
+        self.metrics.write(parameter=config['Run']['parameter'],
+                           variation=config['Run']['variation'])

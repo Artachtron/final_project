@@ -9,9 +9,9 @@ default_settings = {
                     "Run":{
                         "parameter": "",
                         "variation": 0,
-                        "run": 0,   
+                        "run": 0,
                     },
-                    
+
                     "Log":{
                         "resources": False,
                         "death": False,
@@ -19,11 +19,11 @@ default_settings = {
                         "grid_resources": False,
                         "grid_entities": False,
                         },
-                    
+
                     "NEAT":{
                             #Genome
                             ## genesis
-                            "skip_connection": 0.95,
+                            "skip_connection": 0.75,
                             # Mutations
                             ## Link mutation
                             "disable_prob": 0.05,
@@ -119,6 +119,7 @@ class ConfigManager:
                 dirname(
                     realpath(__file__))).parent.parent.parent.absolute(),
             "configuration/")
+
     def __init__(self):
         self.parser = parser = optparse.OptionParser()
         group = optparse.OptionGroup(parser, "Settings")
@@ -131,23 +132,23 @@ class ConfigManager:
     def parse_config(self):
         opt, args = self.parser.parse_args()
         if opt.my_config_file:
-            config_data = json.load(open(join(ConfigManager.directory,opt.my_config_file)))
-            
+            config_data = json.load(open(join(ConfigManager.directory, opt.my_config_file)))
+
             for key in config_data:
                 for subkey in config_data[key]:
                     if isinstance(config_data[key][subkey], type(dict())):
                         self.settings[key][subkey].update(config_data[key][subkey])
-                        
+
                     else:
                         self.settings[key][subkey] = config_data[key][subkey]
-            
+
 
     def __getitem__(self, key):
         return self.settings[key]
 
     @staticmethod
     def write_config(configs: Dict, config_num: int, config_letter: Optional[str]=None) -> None:
-        
+
         settings = default_settings
 
         for key in default_settings:
@@ -155,7 +156,7 @@ class ConfigManager:
                 for subkey in configs[key]:
                     if type(settings[key][subkey]) == type(dict()):
                         settings[key][subkey].update(configs[key][subkey])
-                        
+
                     else:
                         settings[key].update(configs[key])
 

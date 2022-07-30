@@ -23,13 +23,14 @@ def main():
     world.init(show_grid=True)
     world.run()
 
-    metrics = world.metrics
-    print(metrics.total_animals, metrics.max_generation, metrics.last_cycle)
+    world.write_metrics()
 
 def profile(profiler):
     stats = pstats.Stats(profiler)
     stats.sort_stats(pstats.SortKey.TIME)
     stats.dump_stats(filename='profile.prof')
+
+
 
 if __name__ == '__main__':
     with cProfile.Profile() as pr:
