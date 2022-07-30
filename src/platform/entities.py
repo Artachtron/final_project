@@ -557,6 +557,7 @@ class Animal(Entity):
     INIT_ADULT_SIZE: Final[int] = config['Simulation']["Animal"]['init_adult_size']
     DIE_GIVING_BIRTH_PROB: Final[float] = config['Simulation']["Animal"]['die_giving_birth_prob']
 
+    COMPLETE_NETWORK: Final[bool] = config['Simulation']['Animal']['complete']
     NUM_INPUTS: Final[int] = config['Simulation']["Animal"]['num_input']
     NUM_OUTPUTS: Final[int] = config['Simulation']["Animal"]['num_output']
     NUM_ACTIONS: Final[int] = config['Simulation']["Animal"]['num_action']
@@ -566,6 +567,7 @@ class Animal(Entity):
                  position: Tuple[int, int],
                  animal_id: int = 0,
                  generation: int = 0,
+                 birthday: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = 20,
@@ -579,6 +581,7 @@ class Animal(Entity):
         super().__init__(position=position,
                          entity_id=animal_id,
                          generation=generation,
+                         birthday=birthday,
                          adult_size=adult_size,
                          max_age=max_age,
                          size=size,
@@ -619,7 +622,8 @@ class Animal(Entity):
             Create an animal brain's genotype and its associated phenotype
         """
 
-        animal_genome_data: Dict[str, Any] = {"n_inputs": Animal.NUM_INPUTS,
+        animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
+                                              "n_inputs": Animal.NUM_INPUTS,
                                               "n_outputs": Animal.NUM_OUTPUTS,
                                               "n_actions": Animal.NUM_ACTIONS,
                                               "n_values": Animal.NUM_VALUES,
@@ -917,6 +921,7 @@ class Tree(Entity):
     """
     INIT_ADULT_SIZE: Final[int] = config['Simulation']["Tree"]['init_adult_size']
     
+    COMPLETE_NETWORK: Final[bool] = config['Simulation']['Tree']['complete']
     NUM_TREE_INPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_input"]
     NUM_TREE_OUTPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_output"]
     NUM_TREE_ACTIONS: Final[int] = config["Simulation"]["Tree"]["num_tree_action"]
@@ -973,7 +978,8 @@ class Tree(Entity):
         """Private method:
             Create a tree brain's genotype and its associated phenotype
         """
-        tree_genome_data: Dict[str, Any] = {"n_inputs": Tree.NUM_TREE_INPUTS,
+        tree_genome_data: Dict[str, Any] = {"completed": Tree.COMPLETE_NETWORK,
+                                            "n_inputs": Tree.NUM_TREE_INPUTS,
                                             "n_outputs": Tree.NUM_TREE_OUTPUTS,
                                             "n_actions": Tree.NUM_TREE_ACTIONS,
                                             "n_values": Tree.NUM_TREE_VALUES,

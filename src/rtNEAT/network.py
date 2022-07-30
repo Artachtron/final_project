@@ -28,6 +28,7 @@ class Network:
 
             activation_phase (int):         Current activation phase
             frozen (bool):                  Frozen state (can't modify weights)
+            complete (bool):                Whether the network is fully connected
     """
     def __init__(self,
                  network_id: int = 0,
@@ -53,6 +54,7 @@ class Network:
 
         self.activation_phase: int = 0              # Current activation phase
         self.frozen: bool = frozen                  # Frozen state (can't modify weights)
+        self.complete: bool
 
     @property
     def id(self) -> int:
@@ -76,6 +78,7 @@ class Network:
             Network: created network
         """
         network = cls(network_id=genome.id)
+        network.complete = genome.complete
 
         network._synthetize_nodes(node_genes=genome.node_genes)
         network._synthetize_links(link_genes=genome.link_genes)
@@ -186,28 +189,37 @@ class Network:
             ValueError: Inputs outgoing connections must be equal to set of outputs
             ValueError: Inputs must not have any incoming connections
         """
-        # Complete
+        # Outputs
         for node in self.get_outputs():
-            if len(node.incoming) != len(self.inputs):
-                raise ValueError(
-                    f"{node} is connected to {len(node.incoming)}/{len(self.inputs)}")
-
-            if {n.in_node.id for n in node.get_incoming()} != set(self.inputs.keys()):
-                raise ValueError(f"{node} is not connected to all inputs ")
-
+            
             if node.outgoing:
                 raise ValueError(f"{node} has some outgoing connections")
+            
+            # Fully connected
+            if self.complete:
+                if len(node.incoming) != len(self.inputs):
+                    raise ValueError(
+                        f"{node} is connected to {len(node.incoming)}/{len(self.inputs)}")
 
+                if {n.in_node.id for n in node.get_incoming()} != set(self.inputs.keys()):
+                    raise ValueError(f"{node} is not connected to all inputs ")
+
+        # Inputs
         for node in self.get_inputs():
-            if len(node.outgoing) != len(self.outputs):
-                raise ValueError(
-                    f"{node} is connected to {len(node.outgoing)}/{len(self.outputs)}")
-
-            if {n.out_node.id for n in node.get_outgoing()} != set(self.outputs.keys()):
-                raise ValueError(f"{node} is not connected to all outputs")
-
+            
             if node.incoming:
                 raise ValueError(f"{node} has some incoming connections")
+            
+            # Fully connected
+            if self.complete:
+                if len(node.outgoing) != len(self.outputs):
+                    raise ValueError(
+                        f"{node} is connected to {len(node.outgoing)}/{len(self.outputs)}")
+
+                if {n.out_node.id for n in node.get_outgoing()} != set(self.outputs.keys()):
+                    raise ValueError(f"{node} is not connected to all outputs")
+
+            
 
     def activate(self, input_values: npt.NDArray) -> Dict[int, float]:
         """Public method:

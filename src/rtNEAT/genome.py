@@ -19,6 +19,7 @@ class Genome:
             __id (int):                         unique identifier
             _node_genes (Dict[int, NodeGene]):  dictionary of NodeGenes
             _link_genes (Dict[int, LinkGene]):  dictionary of LinkGenes
+            complete (bool):                    whether the network is fully connected
 
         Methods:
             add_link:       Add a LinkGene to the dictionary of LinkGenes
@@ -41,12 +42,14 @@ class Genome:
     def __init__(self,
                  genome_id: int,
                  node_genes: Dict[int, NodeGene] | None = None,
-                 link_genes: Dict[int, LinkGene] | None = None):
+                 link_genes: Dict[int, LinkGene] | None = None,
+                 complete: bool = False):
 
         self.__id: int = genome_id                                  # unique identifier
         self._node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
         self._link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
         #self.ancestors: Set = {}                                   # set of ancestors
+        self.complete = complete                                    # wheter the network is fully connected
 
     @property
     def id(self) -> int:
@@ -169,12 +172,14 @@ class Genome:
         Returns:
             Genome: genome created
         """
-        
+
+        complete: bool = genome_data.get('complete', True)
         n_inputs: int = genome_data['n_inputs']
         n_outputs: int = genome_data['n_outputs']
         n_actions: int = genome_data['n_actions']
         actions = genome_data['actions']
-        
+
+
         # Initialize inputs
         count_node_id: int = 1            # keep track of number of nodes created for ids
         inputs: Dict[int, NodeGene] = {}  # dictionary of inputs
@@ -197,12 +202,12 @@ class Genome:
                 output_type = OutputType.VALUE
                 name = None
                 associated_values = None
-                
+
             node_gene = OutputNodeGene(node_id=count_node_id,
                                        name=name,
                                        output_type=output_type,
                                        associated_values=associated_values)
-            
+
             outputs = Genome.insert_gene(genes_dict=outputs,
                                          gene=node_gene)
             count_node_id += 1
@@ -212,6 +217,10 @@ class Genome:
         count_link_id: int = 1              # keep track of number of links created for ids
         for node1 in inputs.keys():
             for node2 in outputs.keys():
+                if  (not complete
+                 and random() < config["NEAT"]["skip_connection"]):
+                    continue
+
                 links = Genome.insert_gene(genes_dict=links,
                                            gene=LinkGene(link_id=count_link_id,
                                                          in_node=node1,
@@ -222,7 +231,8 @@ class Genome:
                                    n_outputs=n_outputs,
                                    inputs=inputs,
                                    outputs=outputs,
-                                   links=links)
+                                   links=links,
+                                   complete=complete)
 
         # Set the innovation tables to the number
         # of links and nodes craeted
@@ -231,13 +241,15 @@ class Genome:
 
         genome = cls(genome_id=genome_id,
                      node_genes=inputs|outputs,
-                     link_genes=links)
+                     link_genes=links,
+                     complete=complete)
 
         return genome
 
     @staticmethod
     def verify_post_genesis(n_inputs: int, n_outputs: int, links: Dict[int, LinkGene],
-                            inputs: Dict[int, NodeGene], outputs: Dict[int, NodeGene]):
+                            inputs: Dict[int, NodeGene], outputs: Dict[int, NodeGene],
+                            complete: bool) -> None:
         """Static method:
             Check that the genome is valid
 
@@ -247,6 +259,7 @@ class Genome:
             links (Dict[int, LinkGene]):    dictionary of LinkGenes
             inputs (Dict[int, NodeGene]):   dictionary of inputs NodeGenes
             outputs (Dict[int, NodeGene]):  dictionary of outputs NodeGenes
+            complete (bool):                whether the network is fully connected
 
         Raises:
             ValueError: incorrect number of inputs
@@ -255,22 +268,24 @@ class Genome:
             ValueError: link has an output as ingoing NodeGene
             ValueError: link has an input as incoming NodeGene
         """
-        # Complete
+
         if (size:= len(inputs)) != n_inputs:
             raise ValueError(f"Number of inputs {size} instead of {n_inputs}")
 
         if (size:= len(outputs)) != n_outputs:
             raise ValueError(f"Number of inputs {size} instead of {n_outputs}")
 
-        if n_links:= len(links) != n_inputs*n_outputs:
-           raise ValueError(f"Number of links {n_links} instead of {n_inputs*n_outputs}")
-
         for link in links.values():
-            if link.in_node not in range(0, n_inputs):
-                ValueError(f"{link} has an output as in_node")
+            if link.in_node not in range(1, n_inputs+1):
+                raise ValueError(f"{link} has an output as in_node")
 
-            if link.out_node not in range(n_inputs, len(links)):
-                ValueError(f"{link} has an input as out_node")
+            if link.out_node not in range(n_inputs+1, len(links)):
+                raise ValueError(f"{link} has an input as out_node")
+
+        # Fully connected
+        if complete:
+            if n_links:= len(links) != n_inputs*n_outputs:
+                raise ValueError(f"Number of links {n_links} instead of {n_inputs*n_outputs}")
 
     @staticmethod
     def genetic_distance(genome1: Genome, genome2: Genome) -> float:

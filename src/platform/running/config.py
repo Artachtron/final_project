@@ -21,6 +21,9 @@ default_settings = {
                         },
                     
                     "NEAT":{
+                            #Genome
+                            ## genesis
+                            "skip_connection": 0.85,
                             # Mutations
                             ## Link mutation
                             "disable_prob": 0.05,
@@ -78,11 +81,12 @@ default_settings = {
                             "init_blue_energy": 100,
                             "init_red_energy": 100,
                             ## Brain
+                            "complete": False,
                             "num_input": 96,
                             "num_output": 15,
                             "num_action": 8,
                             ## Energy
-                            "reproduction_cost": 10,
+                            "reproduction_cost": 1,
                             "planting_cost": 10,
                             ## Inputs
                             "normal_size": 100,
@@ -98,6 +102,7 @@ default_settings = {
                             "init_blue_energy": 100,
                             "init_red_energy": 100,
                             ## Brain
+                            "complete": False,
                             "num_tree_input": 88,
                             "num_tree_output": 8,
                             "num_tree_action": 4,
