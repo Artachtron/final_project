@@ -302,9 +302,13 @@ class Display:
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
 
-        # Add the missing entities
-        for entity in sim_state.added_entities.values():
-            self._add_entity(entity)
+        # Add the missing animals
+        for animal in sim_state.added_entities["Animal"].values():
+            self._add_entity(animal)
+            
+        # Add the missing trees
+        for tree in sim_state.added_entities["Tree"].values():
+            self._add_entity(tree)
 
         # Add the missing resources
         for resource in sim_state.added_resources.values():

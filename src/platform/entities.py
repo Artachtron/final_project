@@ -18,8 +18,8 @@ import numpy.typing as npt
 from project.src.rtNEAT.brain import Brain
 
 from .actions import *
-from .running.config import config
 from .energies import Energy, EnergyType, Resource
+from .running.config import config
 from .universal import EntityType, Position, SimulatedObject
 
 
@@ -41,6 +41,7 @@ class Entity(SimulatedObject):
         status (Status):                    # current status
         _energies_stock (Dict[str, int]):   # energy currently owned
         generation (int):                   # generation the entity was born in
+        birthday (int):                     # cycle in which the entity was born
         species (int):                      # species the entity is part of
         ancestors (Dict[int, Entity]):      # ancestors
         _age (int):                         # time since birth
@@ -72,6 +73,7 @@ class Entity(SimulatedObject):
                  position: Tuple[int, int],
                  entity_id: int = 0,
                  generation: int = 0,
+                 birthday: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
                  size: int = INITIAL_SIZE,
@@ -87,6 +89,7 @@ class Entity(SimulatedObject):
             position (Tuple[int, int]):     coordinates in the world
             entity_id (int, optional):      unique identifier. Defaults to 0.
             generation (int, optional):     generation the entity was born in. Defaults to 0.
+            birthday(int, optional):        cycle in which the entity was born. Defaults to 0.
             adult_size (int, optional):     minimum size to reach adulthood. Defaults to 0.
             max_age (int, optional):        maximum longevity. Defaults to 0.
             size (int, optional):           initialization size. Defaults to INITIAL_SIZE.
@@ -111,6 +114,7 @@ class Entity(SimulatedObject):
             }
 
         self.generation: int = generation                       # generation the entity was born in
+        self.birthday: int = 0                                  # cycle in which the entity was born
         self.species: int = 0                                   # species the entity is part of
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self._age: int = 0                                      # time since birth
@@ -149,6 +153,8 @@ class Entity(SimulatedObject):
         self.ancestors: Dict[int, Entity] = ({parent1.id: parent1, parent2.id: parent2}
                                             | parent1.ancestors
                                             | parent2.ancestors)
+        
+        self.generation = max(parent1.generation, parent2.generation) + 1
 
         brain = Brain.crossover(brain_id=self.id,
                                 parent1=parent1.brain,

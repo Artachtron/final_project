@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 from typing import Final, Tuple
 
 from .display import Display
+from .metrics import Metrics
 from .running.config import config
 from .simulation import Simulation
 
@@ -59,6 +60,7 @@ class World:
 
         self.simulation: Simulation
         self.display: Display
+        self.metrics: Metrics
 
     @property
     def id(self) -> int:
@@ -82,6 +84,7 @@ class World:
                                      dimensions=self.dimensions)
 
         sim_state = self.simulation.init()
+        self.metrics = Metrics(sim_state=sim_state)
 
         if self.display_active:
             self.display = Display(display_id=self.id,
@@ -100,6 +103,7 @@ class World:
             display and draw display
         """
         grid, sim_state = self.simulation.update()
+        self.metrics.update()
 
         if self.display_active:
             self.display.update(sim_state=sim_state)

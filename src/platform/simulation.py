@@ -12,10 +12,10 @@ from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 import numpy.typing as npt
 
 from .actions import Action, ActionType
-from .running.config import config
 from .energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
 from .entities import Animal, Entity, Seed, Status, Tree
 from .grid import Grid
+from .running.config import config
 from .universal import Position
 
 
@@ -59,19 +59,20 @@ class SimState:
             sim_id (int): unique identifier of the simulation
         """
 
-        self.__id: int = sim_id                             # unique identifier
-        self.next_entity_id: int  = 1                       # incremental value for the next entity identifier
-        self.next_energy_id: int = 1                        # incremental value for the next energy identifier
+        self.__id: int = sim_id                                 # unique identifier
+        self.next_entity_id: int  = 1                           # incremental value for the next entity identifier
+        self.next_energy_id: int = 1                            # incremental value for the next energy identifier
 
-        self.animals: Dict[int, Animal] = {}                # register of simulation's animals
-        self.trees: Dict[int, Tree] = {}                    # register of simulation's trees
-        self.energies: Dict[int, Energy] = {}               # register of simulation's energies
-        self.seeds: Dict[int, Seed] = {}                    # register of simulation's seeds
+        self.animals: Dict[int, Animal] = {}                    # register of simulation's animals
+        self.trees: Dict[int, Tree] = {}                        # register of simulation's trees
+        self.energies: Dict[int, Energy] = {}                   # register of simulation's energies
+        self.seeds: Dict[int, Seed] = {}                        # register of simulation's seeds
 
-        self.added_entities: Dict[int, Entity] = {}         # register of added entities in the last simulation cycle
-        self.removed_entities: Dict[int, Entity] = {}       # register of removed entities in the last simulation cycle
-        self.added_resources: Dict[int, Resource] = {}      # register of added resources in the last simulation cycle
-        self.removed_resources: Dict[int, Resource] = {}    # register of removed resources in the last simulation cycle
+        self.added_entities: Dict[int, Entity] = {"Animal": {},
+                                                  "Tree": {}}   # register of added entities in the last simulation cycle
+        self.removed_entities: Dict[int, Entity] = {}           # register of removed entities in the last simulation cycle
+        self.added_resources: Dict[int, Resource] = {}          # register of added resources in the last simulation cycle
+        self.removed_resources: Dict[int, Resource] = {}        # register of removed resources in the last simulation cycle
 
         self.cycle: int = 1
 
@@ -205,10 +206,12 @@ class SimState:
         match new_entity.__class__.__name__:
             case "Animal":
                 self.animals[new_entity.id] = new_entity
+                self.added_entities["Animal"][new_entity.id] = new_entity
             case "Tree":
                 self.trees[new_entity.id] = new_entity
+                self.added_entities["Tree"][new_entity.id] = new_entity
 
-        self.added_entities[new_entity.id] = new_entity
+        # self.added_entities[new_entity.id] = new_entity
 
     def remove_entity(self, entity: Entity) -> None:
         """Public method:
@@ -261,7 +264,8 @@ class SimState:
         """Public method:
             Start a new cycle of simulation
         """
-        self.added_entities: Dict[int, Entity] = {}
+        self.added_entities: Dict[int, Entity] = {"Animal": {},
+                                                  "Tree": {}}
         self.removed_entities: Dict[int, Entity] = {}
         self.added_resources: Dict[int, Resource] = {}
         self.removed_resources: Dict[int, Resource] = {}
@@ -727,7 +731,7 @@ class Environment:
                                           blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
                                           red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
                                           adult_size=adult_size,
-                                          generation=self.state.cycle)
+                                          birthday=self.state.cycle)
 
                 if child:
                     child.on_birth(parent1=parent1,
