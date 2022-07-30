@@ -130,12 +130,17 @@ class ConfigManager:
 
     def parse_config(self):
         opt, args = self.parser.parse_args()
-
         if opt.my_config_file:
             config_data = json.load(open(join(ConfigManager.directory,opt.my_config_file)))
-            for key in default_settings:
-                if key in config_data.keys():
-                    self.settings[key].update(config_data[key])
+            
+            for key in config_data:
+                for subkey in config_data[key]:
+                    if isinstance(config_data[key][subkey], type(dict())):
+                        self.settings[key][subkey].update(config_data[key][subkey])
+                        
+                    else:
+                        self.settings[key][subkey] = config_data[key][subkey]
+            
 
     def __getitem__(self, key):
         return self.settings[key]
@@ -150,6 +155,7 @@ class ConfigManager:
                 for subkey in configs[key]:
                     if type(settings[key][subkey]) == type(dict()):
                         settings[key][subkey].update(configs[key][subkey])
+                        
                     else:
                         settings[key].update(configs[key])
 
