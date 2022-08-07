@@ -78,8 +78,8 @@ default_settings = {
                             # Animal
                             ## Initial attributes
                             "init_adult_size": 5,
-                            "init_blue_energy": 10000,
-                            "init_red_energy": 10000,
+                            "init_blue_energy": 1000,
+                            "init_red_energy": 1000,
                             ## Brain
                             "complete": False,
                             "num_input": 96,

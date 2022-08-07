@@ -48,9 +48,11 @@ class Probe:
     def total_entities(self) -> int:
         return self.added_animals + self.total_trees
 
+    @property
     def total_animals(self) -> int:
         return self.init_animals + self.added_animals
 
+    @property
     def total_trees(self) -> int:
         return self.init_trees + self.added_trees
 

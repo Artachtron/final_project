@@ -29,8 +29,9 @@ class TestGenome:
         assert genome._node_genes == nodes
         assert genome._link_genes == genes
 
-    def test_genesis(self):
-        gen_data = {'n_inputs':3,
+    def test_complete_genesis(self):
+        gen_data = {'complete': True,
+                    'n_inputs':3,
                     'n_outputs':5,
                     'n_actions':0,
                     'actions':{}}
@@ -49,6 +50,16 @@ class TestGenome:
 
         for id1, id2 in zip(genome._link_genes, genome2._link_genes):
             assert id1 == id2
+            
+    def test_incomplete_genesis(self):
+        gen_data = {'complete': False,
+                    'n_inputs':3,
+                    'n_outputs':5,
+                    'n_actions':0,
+                    'actions':{}}
+        genome = Genome.genesis(genome_id=0,
+                                genome_data=gen_data)
+        
 
     class TestGenomeMethods:
         class TestGeneticDistance:
