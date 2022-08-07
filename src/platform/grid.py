@@ -257,7 +257,7 @@ class SubGrid:
             # that is a subclass of the class given, if yes add it to the list of coordinates.
             # Avoid indexError when out of bounds
             positions = {
-                tuple(np.add(coordinates, coordinate) - 1)
+                tuple(np.add(coordinates, coordinate) - radius)
                 for x, y in set(search_area)
                 if Grid.is_subclass(derived=subregion[coordinate:= tuple((x, y))],
                                     base_class=base_class)
