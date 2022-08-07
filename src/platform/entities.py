@@ -114,7 +114,7 @@ class Entity(SimulatedObject):
             }
 
         self.generation: int = generation                       # generation the entity was born in
-        self.birthday: int = 0                                  # cycle in which the entity was born
+        self.birthday: int = birthday                           # cycle in which the entity was born
         self.species: int = 0                                   # species the entity is part of
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self._age: int = 0                                      # time since birth
@@ -234,7 +234,10 @@ class Entity(SimulatedObject):
         Args:
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
-        self._age += amount
+        if self._is_adult:
+            self._age += amount
+        else:
+            self._grow()
 
         # if new age above maximum age threshold,
         # the entity dies

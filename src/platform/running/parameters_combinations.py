@@ -27,8 +27,8 @@ growth_energy_required = [1, 5, 10, 100]
 child_energy_cost_divisor = [1, 2, 5, 10]
 
 init_adult_size = [1, 5, 10, 100]
-init_blue_energy = [10, 100, 1000, 10000]
-init_red_energy = [10, 100, 1000, 10000]
+init_blue_energy = [100, 1000, 10000, 100000]
+init_red_energy = [100, 1000, 10000, 100000]
 reproduction_cost = [1, 2, 3]
 planting_cost = [1, 5, 10]
 

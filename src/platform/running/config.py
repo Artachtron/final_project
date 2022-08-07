@@ -65,7 +65,7 @@ default_settings = {
                         "animal_sparsity": 5,
 
                         "Entity":{
-                            "initial_size": 20,
+                            "initial_size": 10,
                             "init_blue_energy": 100,
                             "init_red_energy": 100,
                             "init_action_cost": 1,
@@ -78,8 +78,8 @@ default_settings = {
                             # Animal
                             ## Initial attributes
                             "init_adult_size": 5,
-                            "init_blue_energy": 100,
-                            "init_red_energy": 100,
+                            "init_blue_energy": 10000,
+                            "init_red_energy": 10000,
                             ## Brain
                             "complete": False,
                             "num_input": 96,

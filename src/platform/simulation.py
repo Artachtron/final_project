@@ -104,7 +104,7 @@ class SimState:
             Dict[int, Entity]: register of entities
         """
         return self.animals | self.trees
-    
+
     @property
     def n_entities(self) -> int:
         """Property:
@@ -112,7 +112,7 @@ class SimState:
 
         Returns:
             int: number of entities in the simulation
-        """        
+        """
         return len(self.entities)
 
     def get_resources(self) -> ValuesView[Resource]:
@@ -133,7 +133,7 @@ class SimState:
             Dict[int, Resource]: register of resources
         """
         return self.energies | self.seeds
-    
+
     @property
     def n_energies(self) -> int:
         """Property:
@@ -141,7 +141,7 @@ class SimState:
 
         Returns:
             int: number of energies in the simulation
-        """        
+        """
         return len(self.energies)
 
     def get_entity_id(self, increment: bool=False) -> int:
@@ -725,7 +725,6 @@ class Environment:
             if birth_position:
                 adult_size = int((parent1.size + parent2.size)/2)
 
-
                 child = self.spawn_animal(coordinates=birth_position,
                                           size=1,
                                           blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
@@ -736,7 +735,7 @@ class Environment:
                 if child:
                     child.on_birth(parent1=parent1,
                                    parent2=parent2)
-                    
+
                     if config['Log']['birth']:
                         print(f"{child} was born from {parent1} and {parent2}")
 
