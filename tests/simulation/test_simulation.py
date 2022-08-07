@@ -444,7 +444,8 @@ class TestEnvironment:
 
             assert not animal._pocket
             energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
-                                                                                 coordinates=animal.position) |
+                                                                                 coordinates=animal.position,
+                                                                                 radius=2) |
                              self.grid.resource_grid._find_coordinates_baseclass(base_class=RedEnergy,
                                                                                  coordinates=animal.position))
             energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]

@@ -59,6 +59,7 @@ class TestEntity:
             self.entity = None
 
         def test_increase_age(self):
+            self.entity._is_adult = True
             assert self.entity._age == 0
             self.entity._increase_age()
             assert self.entity._age == 1
@@ -705,8 +706,8 @@ class TestAnimal:
                 assert len(inputs) == 96
                 assert inputs[0] == 0.5
                 assert inputs[1] == 37/100
-                assert round(inputs[2],5) == 157/100000
-                assert round(inputs[3],5) == 122/100000
+                assert round(inputs[2],5) == 157/10000
+                assert round(inputs[3],5) == 122/10000
                 assert sum(inputs[4:12]) == 0
                 assert sum(inputs[12:21]) == 0
                 assert sum(inputs[21:]) == 75*0

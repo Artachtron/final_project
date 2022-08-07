@@ -255,9 +255,9 @@ class InnovTable(metaclass=InnovTableProperties):
         else:
             # Novel innovation
             new_innovation = InnovTable._create_innovation(in_node=in_node,
-                                                            out_node=out_node,
-                                                            innovation_type=innovation_type,
-                                                            old_innovation_number=old_innovation_number)
+                                                           out_node=out_node,
+                                                           innovation_type=innovation_type,
+                                                           old_innovation_number=old_innovation_number)
             return new_innovation
 
 class Innovation:

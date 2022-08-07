@@ -214,9 +214,12 @@ class Genome:
 
         # Connect each input to each output
         links: Dict[int, LinkGene] = {}     # dictionary of links
-        count_link_id: int = 1              # keep track of number of links created for ids
+        count_link_id: int = 0              # keep track of number of links created for ids
         for node1 in inputs.keys():
             for node2 in outputs.keys():
+
+                count_link_id += 1
+
                 if  (not complete
                  and random() < config["NEAT"]["skip_connection"]):
                     continue
@@ -225,7 +228,6 @@ class Genome:
                                            gene=LinkGene(link_id=count_link_id,
                                                          in_node=node1,
                                                          out_node=node2))
-                count_link_id += 1
 
         Genome.verify_post_genesis(n_inputs=n_inputs,
                                    n_outputs=n_outputs,
@@ -236,8 +238,8 @@ class Genome:
 
         # Set the innovation tables to the number
         # of links and nodes craeted
-        InnovTable.node_number = count_node_id
-        InnovTable.node_number = count_link_id
+        InnovTable.node_number = count_node_id + 1
+        InnovTable.link_number = count_link_id + 1
 
         genome = cls(genome_id=genome_id,
                      node_genes=inputs|outputs,
@@ -550,7 +552,6 @@ class Genome:
         Returns:
             LinkGene: newly created LinkGene
         """
-
         the_innovation = InnovTable.get_innovation( in_node=in_node.id,
                                                     out_node=out_node.id,
                                                     innovation_type=InnovationType.NEW_LINK)
@@ -810,7 +811,7 @@ class Genome:
 
         # Make sure all sensors and outputs are included
         for node in parent1.get_node_genes():
-            if(Genome._is_edge_node(node)):
+            if Genome._is_edge_node(node):
 
                 # Create a new node off the sensor or output
                 new_node: NodeGene = node.duplicate()
@@ -822,6 +823,8 @@ class Genome:
         # Choose the links to transmit to offspring
         main_links: Dict[int, LinkGene] = main_genome.link_genes
         sub_links: Dict[int, LinkGene] = sub_genome.link_genes
+        Genome._verify_link_innovations(main_links, sub_links)
+
         new_links = Genome._genes_to_transmit(main_genome=main_links,
                                               sub_genome=sub_links)
 
@@ -845,4 +848,31 @@ class Genome:
                              node_genes=new_nodes,
                              link_genes=new_links)
 
+        baby_genome.verify_post_crossover()
+
         return baby_genome
+
+    @staticmethod
+    def _verify_link_innovations(main_links, sub_links):
+        for link in main_links:
+            if link in sub_links:
+                if main_links[link].in_node != sub_links[link].in_node:
+                    print(f"{link}")
+                    raise ValueError(f"in node: {main_links[link].in_node} != {sub_links[link].in_node}")
+
+                if main_links[link].out_node != sub_links[link].out_node:
+                    print(f"{link}")
+                    raise ValueError(f"out node: {main_links[link].out_node} != {sub_links[link].out_node}")
+
+
+    def verify_post_crossover(self):
+        node_genes = self.get_node_genes()
+        node_links = self.get_link_genes()
+
+        for link in node_links:
+            if link.in_node not in self.node_genes:
+                raise ValueError(f"in node {link.in_node} not in node genes")
+            if link.out_node not in self.node_genes:
+                raise ValueError(f"out node {link.out_node} not in node genes")
+
+        # for gene in node_genes:

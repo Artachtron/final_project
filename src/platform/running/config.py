@@ -86,11 +86,11 @@ default_settings = {
                             "num_output": 15,
                             "num_action": 8,
                             ## Energy
-                            "reproduction_cost": 1,
+                            "reproduction_cost": 10,
                             "planting_cost": 10,
                             ## Inputs
                             "normal_size": 100,
-                            "normal_energy": 100000,
+                            "normal_energy": 10000,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
                         },
@@ -108,7 +108,7 @@ default_settings = {
                             "num_tree_action": 4,
                             ## Inputs
                             "normal_size": 100,
-                            "normal_energy": 100000,
+                            "normal_energy": 10000,
                         }
                     }
                 }

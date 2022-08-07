@@ -172,6 +172,7 @@ class Entity(SimulatedObject):
         """
         self.brain = brain
         self.mind = brain.phenotype
+        self.mind.verify_post_genesis()
 
     def _decide_action(self, action: Action):
         """Private method:
@@ -555,7 +556,7 @@ class Animal(Entity):
     INITIAL_ANIMAL_RED_ENERGY: Final[int] = config['Simulation']["Animal"]['init_red_energy']
 
     REPRODUCTION_COST: Final[int] = config['Simulation']["Animal"]['reproduction_cost']
-    PLANTING_COST: Final[int] = config['Simulation']["Animal"]['reproduction_cost']
+    PLANTING_COST: Final[int] = config['Simulation']["Animal"]['planting_cost']
 
     INIT_ADULT_SIZE: Final[int] = config['Simulation']["Animal"]['init_adult_size']
     DIE_GIVING_BIRTH_PROB: Final[float] = config['Simulation']["Animal"]['die_giving_birth_prob']
@@ -645,7 +646,7 @@ class Animal(Entity):
                                    genome_data=animal_genome_data)
 
         self.mind = self.brain.phenotype
-        self.mind.verify_complete_post_genesis()
+        self.mind.verify_post_genesis()
 
     def _action_move(self, direction: Direction) -> None:
         """Private method:
@@ -997,7 +998,7 @@ class Tree(Entity):
                                    genome_data=tree_genome_data)
 
         self.mind = self.brain.phenotype
-        self.mind.verify_complete_post_genesis()
+        self.mind.verify_post_genesis()
 
     def on_death(self) -> None:
         """Public method:

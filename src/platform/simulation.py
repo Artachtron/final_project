@@ -486,6 +486,7 @@ class Environment:
         """
 
         # Drop energy from seed on the ground
+        action.tree.position = animal.position
         self.decompose_entity(entity=action.tree)
         animal.on_recycle_seed()
 

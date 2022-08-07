@@ -177,7 +177,7 @@ class Network:
             # Keep track of all nodes
             self._all_nodes[key] = node
 
-    def verify_complete_post_genesis(self):
+    def verify_post_genesis(self):
         """Public method:
             Verify if the complete network's structure is correct
 
