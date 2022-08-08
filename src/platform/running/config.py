@@ -1,3 +1,4 @@
+import copy
 import json
 import optparse
 import sys
@@ -149,7 +150,7 @@ class ConfigManager:
     @staticmethod
     def write_config(configs: Dict, config_num: int, config_letter: Optional[str]=None) -> None:
 
-        settings = default_settings
+        settings = copy.deepcopy(default_settings)
 
         for key in default_settings:
             if key in configs.keys():
