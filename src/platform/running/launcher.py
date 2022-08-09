@@ -19,7 +19,7 @@ for param, comb in combinations:
     pass """
 for n, f in enumerate(files):
     for i in range(0, 5):
-        print(f"n file: {f} {i}")
+        print(f"{n} file: {f} {i}")
         os.system(f"python -m src.platform.running.main --c {f}")
 #subprocess.call([sys.executable, 'src/platform/running/main.py', '--c config_A_1.json'])
 #subprocess.run("python -m src.platform.running.main --c config_A_1.json",env={"PATH": "H:/UoL/Semester 5/Code/final-project"})

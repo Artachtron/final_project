@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .config import ConfigManager
 
 """
@@ -32,6 +34,23 @@ init_red_energy = [100, 1000, 10000, 100000]
 reproduction_cost = [1, 2, 3]
 planting_cost = [1, 5, 10]
 
+def create_config(category: str, subcategory: Optional[str],
+                  name: str, value: int, variation: int):
+    configs = dict()
+    configs['Run'] = dict()
+    configs['Run']['parameter'] = name
+    configs['Run']['variation'] = variation
+    configs['Run']['value'] = value
+    configs[category] = dict()
+    if subcategory:
+        configs[category][subcategory] = dict()
+        configs[category][subcategory][name] = value
+    else:
+        configs[category][name] = value
+
+    ConfigManager.write_config(configs=configs,
+                               config_num=value,
+                               config_letter=name)
 
 for num,val in enumerate(animal_sparsity, 1):
     configs={

@@ -1,5 +1,6 @@
 import cProfile
 import pstats
+from cProfile import Profile
 
 from ..world import World
 from .config import config
@@ -25,7 +26,15 @@ def main():
 
     world.write_metrics()
 
-def profile(profiler):
+def profile(profiler: Profile):
+    """Function:
+        Save execution timing stats
+        of the simulation's run
+        into a profile file
+
+    Args:
+        profiler (Profile): Keep track of execution timing for all calls
+    """    
     stats = pstats.Stats(profiler)
     stats.sort_stats(pstats.SortKey.TIME)
     stats.dump_stats(filename='profile.prof')

@@ -20,7 +20,6 @@ class Probe:
                     realpath(__file__))).parent.parent.absolute(),
             "measurements/")
 
-
     sim_state: SimState
 
     added_animals: Optional[int] = 0
