@@ -148,9 +148,9 @@ class TestNetwork:
         def test_brain_structure(self):
             reset_innovation_table()
             gen_data = {'n_inputs':96,
-                            'n_outputs':15,
-                            'n_actions':0,
-                            'actions':{}}
+                        'n_outputs':15,
+                        'n_actions':0,
+                        'actions':{}}
             gen = Genome.genesis(genome_id=1,
                                  genome_data=gen_data)
             

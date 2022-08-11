@@ -1,6 +1,7 @@
 import cProfile
 import pstats
 from cProfile import Profile
+from time import time
 
 from ..world import World
 from .config import config
@@ -13,7 +14,7 @@ from .config import config
 
 
 def main():
-
+    start = time()
     world = World(world_id=0,
                 #   dimensions=(config['Simulation']['grid_width'],
                 #               config['Simulation']['grid_height']),
@@ -23,7 +24,8 @@ def main():
 
     world.init(show_grid=True)
     world.run()
-
+    end = time()
+    print(f'It took {end - start} seconds!')
     world.write_metrics()
 
 def profile(profiler: Profile):
@@ -37,6 +39,7 @@ def profile(profiler: Profile):
     """    
     stats = pstats.Stats(profiler)
     stats.sort_stats(pstats.SortKey.TIME)
+    stats.get_stats_profile()
     stats.dump_stats(filename='profile.prof')
 
 

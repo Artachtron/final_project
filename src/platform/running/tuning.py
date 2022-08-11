@@ -34,8 +34,9 @@ init_red_energy = [100, 1000, 10000, 100000]
 reproduction_cost = [1, 2, 3]
 planting_cost = [1, 5, 10]
 
-def create_config(category: str, subcategory: Optional[str],
-                  name: str, value: int, variation: int):
+def create_config(name: str, value: int, variation: int,
+                  category: str, subcategory: Optional[str]=None
+                  ):
     configs = dict()
     configs['Run'] = dict()
     configs['Run']['parameter'] = name
@@ -53,6 +54,12 @@ def create_config(category: str, subcategory: Optional[str],
                                config_letter=name)
 
 for num,val in enumerate(animal_sparsity, 1):
+    create_config(category="Simulation",
+                name="animal_sparsity",
+                variation=num,
+                value=val)
+
+""" for num,val in enumerate(animal_sparsity, 1):
     configs={
         "Run": {
             "parameter": "animal_sparsity",
@@ -269,4 +276,4 @@ for num,val in enumerate( init_red_energy, 1):
 
     ConfigManager.write_config(configs=configs,
                                 config_num=num,
-                                config_letter='M')
+                                config_letter='M') """

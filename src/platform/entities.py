@@ -126,7 +126,7 @@ class Entity(SimulatedObject):
         self._is_adult: bool = False                            # can reproduce only if adult
         self._reached_adulthood()                               # check if the adult size was reached
 
-        self._action_cost: int = action_cost                    # blue energy cost of each action
+        self._action_cost: int = action_cost * self.size        # blue energy cost of each action
         self.action: Action                                     # action of this turn decided by brain
 
         self.brain: Brain                                       # brain containing genotype and mind
@@ -369,8 +369,9 @@ class Entity(SimulatedObject):
         """Private method:
             Consume blue energy when performing an action
         """
+        difficulty = 5 - config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.BLUE,
-                           quantity=self._action_cost)
+                           quantity=int(self._action_cost/difficulty))
 
     def has_enough_energy(self, energy_type: EnergyType, quantity: int) -> bool:
         """Public method:

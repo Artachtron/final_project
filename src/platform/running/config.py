@@ -52,6 +52,7 @@ default_settings = {
                         },
 
                     "Simulation":{
+                        "difficulty_level": 0.0,
                         "max_cycle": 1000,
                         # Grid
                         "grid_width": 50,

@@ -729,7 +729,7 @@ class Environment:
                 child = self.spawn_animal(coordinates=birth_position,
                                           size=1,
                                           blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                          red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
+                                          red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/10,
                                           adult_size=adult_size,
                                           birthday=self.state.cycle)
 
