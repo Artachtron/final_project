@@ -52,7 +52,11 @@ default_settings = {
                         },
 
                     "Simulation":{
-                        "difficulty_level": 0.0,
+                        # Difficutly
+                        "difficulty_max": 10,
+                        "diffulty_cycles_step": 100,
+                        "difficulty_factor": 1,
+                        "difficulty_level": 1,
                         "max_cycle": 1000,
                         # Grid
                         "grid_width": 50,
@@ -164,5 +168,15 @@ class ConfigManager:
 
         with open(join(ConfigManager.directory,f"config_{config_letter}_{config_num}.json"), "w") as write_file:
             json.dump(settings, write_file, indent=4)
+            
+    def set_difficulty(self, new_difficulty):
+        new_difficulty *= self.settings['Simulation']['difficulty_factor']
+        max_difficulty = self.settings['Simulation']['difficulty_max']
+        new_difficulty = int(min(max(1, new_difficulty), max_difficulty))
+        self.settings['Simulation']['difficulty_level'] = new_difficulty
+        return self.settings['Simulation']['difficulty_level']
+    
+    def increment_difficulty_factor(self):
+        self.settings['Simulation']['difficulty_factor'] +=  1
 
 config = ConfigManager()

@@ -105,6 +105,26 @@ class SimState:
         """
         return self.animals | self.trees
 
+    @property 
+    def n_animals(self) -> int:
+        """Property:
+            Return the number of animals in the simulation
+
+        Returns:
+            int: number of animals in the simulation
+        """
+        return len(self.animals)
+    
+    @property 
+    def n_trees(self) -> int:
+        """Property:
+            Return the number of trees in the simulation
+
+        Returns:
+            int: number of trees in the simulation
+        """
+        return len(self.trees)
+    
     @property
     def n_entities(self) -> int:
         """Property:
@@ -725,11 +745,12 @@ class Environment:
 
             if birth_position:
                 adult_size = int((parent1.size + parent2.size)/2)
+                difficulty = config['Simulation']['difficulty_level']
 
                 child = self.spawn_animal(coordinates=birth_position,
                                           size=1,
                                           blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                          red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/10,
+                                          red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty,
                                           adult_size=adult_size,
                                           birthday=self.state.cycle)
 

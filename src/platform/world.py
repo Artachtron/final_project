@@ -109,6 +109,14 @@ class World:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid=grid)
 
+        difficulty = int((sim_state.n_animals  - 100)/50)
+        diff = config.set_difficulty(difficulty)
+         
+        print(f"{sim_state.cycle}: {sim_state.n_animals} {diff}")
+    
+        if sim_state.cycle % config['Simulation']['diffulty_cycles_step'] == 0:
+            config.increment_difficulty_factor()
+
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
 

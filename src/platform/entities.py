@@ -369,7 +369,7 @@ class Entity(SimulatedObject):
         """Private method:
             Consume blue energy when performing an action
         """
-        difficulty = 5 - config['Simulation']['difficulty_level']
+        difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.BLUE,
                            quantity=int(self._action_cost/difficulty))
 
