@@ -132,6 +132,7 @@ class ConfigManager:
         self.parser = parser = optparse.OptionParser()
         group = optparse.OptionGroup(parser, "Settings")
         group.add_option("-c", "--config", dest="my_config_file", help="configuration")
+        group.add_option("-l", "--load", dest="load_simulation", help="simulation")
 
         self.settings: Dict[str, Any] = default_settings
         if "pytest" not in sys.modules:
@@ -150,6 +151,9 @@ class ConfigManager:
                     else:
                         self.settings[key][subkey] = config_data[key][subkey]
 
+
+        self.loaded_simulation = opt.load_simulation or None
+        
 
     def __getitem__(self, key):
         return self.settings[key]

@@ -105,7 +105,7 @@ class SimState:
         """
         return self.animals | self.trees
 
-    @property 
+    @property
     def n_animals(self) -> int:
         """Property:
             Return the number of animals in the simulation
@@ -114,8 +114,8 @@ class SimState:
             int: number of animals in the simulation
         """
         return len(self.animals)
-    
-    @property 
+
+    @property
     def n_trees(self) -> int:
         """Property:
             Return the number of trees in the simulation
@@ -124,7 +124,7 @@ class SimState:
             int: number of trees in the simulation
         """
         return len(self.trees)
-    
+
     @property
     def n_entities(self) -> int:
         """Property:
@@ -1130,6 +1130,3 @@ class Simulation:
             int: simulation's id
         """
         return self.__id
-
-
-

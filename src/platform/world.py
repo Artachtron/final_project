@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from grid import Grid
 
+import pickle
 from typing import Final, Tuple
 
 from .display import Display
@@ -80,10 +81,19 @@ class World:
         Args:
             show_grid (bool, optional): Show grid's lines. Defaults to False.
         """
-        self.simulation = Simulation(sim_id=self.id,
-                                     dimensions=self.dimensions)
+        try:
+            self.simulation = pickle.load(open(config.loaded_simulation, "rb"))
+            sim_state = self.simulation.state
+            World.MAX_CYCLE += sim_state.cycle
+            self.display = True
 
-        sim_state = self.simulation.init()
+        except FileNotFoundError:
+            print(f"the file {config.loaded_simulation} does not exist")
+            self.simulation = Simulation(sim_id=self.id,
+                                         dimensions=self.dimensions)
+            sim_state = self.simulation.init()
+
+
         self.metrics = Probe(sim_state=sim_state)
 
         if self.display_active:
@@ -112,15 +122,15 @@ class World:
         difficulty = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])/
                       config['Simulation']['difficulty_pop_factor']) + 1
         diff = config.set_difficulty(difficulty)
-         
+
         print(f"{sim_state.cycle}: {sim_state.n_animals} {diff}")
-    
+
         if sim_state.cycle % config['Simulation']['diffulty_cycles_step'] == 0:
             config.increment_difficulty_factor()
 
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
-
+            pickle.dump(self.simulation, open('simulation', "wb"))
             print(f"SHUTDOWN after {sim_state.cycle} cycles")
             self.shutdown()
 
@@ -137,7 +147,7 @@ class World:
         self.running = True
         while self.running:
             self._update()
-            
+
     def write_metrics(self) -> None:
         self.metrics.write(parameter=config['Run']['parameter'],
                            variation=config['Run']['variation'])

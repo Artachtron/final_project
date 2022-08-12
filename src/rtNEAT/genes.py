@@ -133,6 +133,12 @@ class BaseGene(ABC):
         """
         return self.id < other.id
 
+    def __eq__(self, other) -> bool:
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
     @abstractmethod
     def transcript(self) -> Dict:
         """Send information about gene as a dictionary
@@ -342,7 +348,7 @@ class NodeGene(BaseGene):
                  mutation_number: int = 0,
                  node_type: NodeType = NodeType.HIDDEN,
                  bias: float = 0.0,
-                 activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
+                 activation_function: ActivationFuncType=partial(sigmoid),
                  aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
                  enabled: bool = True,
                  frozen: bool = False,):
@@ -487,14 +493,14 @@ class OutputNodeGene(NodeGene):
 
     def is_value(self) -> bool:
         return self.output_type == OutputType.VALUE
-    
+
     def transcript(self) -> Dict:
         dictionary = super().transcript()
         dictionary['associated_values'] = self.associated_values
         dictionary['output_type'] = self.output_type
         dictionary['name'] = self.name
         return dictionary
-    
+
     def duplicate(self) -> NodeGene:
         node_gene = OutputNodeGene(node_id=self.node_id,
                                    output_type=self.output_type,
@@ -502,8 +508,8 @@ class OutputNodeGene(NodeGene):
                                    name=self.name)
 
         return node_gene
-    
-    def __hash__(self): 
+
+    def __hash__(self):
         return hash(self.node_id)
 
 
@@ -512,6 +518,6 @@ def reset_innovation_table():
         Reset the innovation table to initial values
     """
     InnovTable.reset_innovation_table()
-    
 
-                
+
+
