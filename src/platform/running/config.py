@@ -55,7 +55,9 @@ default_settings = {
                         # Difficutly
                         "difficulty_max": 10,
                         "diffulty_cycles_step": 100,
-                        "difficulty_factor": 1,
+                        "difficulty_pop_threshold": 200,
+                        "difficulty_pop_factor": 50,
+                        "difficulty_factor": 0.5,
                         "difficulty_level": 1,
                         "max_cycle": 1000,
                         # Grid

@@ -109,7 +109,8 @@ class World:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid=grid)
 
-        difficulty = int((sim_state.n_animals  - 100)/50)
+        difficulty = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])/
+                      config['Simulation']['difficulty_pop_factor']) + 1
         diff = config.set_difficulty(difficulty)
          
         print(f"{sim_state.cycle}: {sim_state.n_animals} {diff}")
