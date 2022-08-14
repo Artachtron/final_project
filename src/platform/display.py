@@ -126,7 +126,7 @@ class DisplayedObject(pg.sprite.Sprite):
         # Retrieve information from current simulation state
         if sim_state:
             entity = sim_state.entities[self.id]
-            self.size = entity.size
+            self.size = max(5,entity.size)
             self.position = entity.position
 
         # Scale the image based on object's size

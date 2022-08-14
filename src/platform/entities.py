@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from errno import ENETUNREACH
 from hashlib import new
 from typing import TYPE_CHECKING
 
@@ -68,6 +69,7 @@ class Entity(SimulatedObject):
     INITIAL_BLUE_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
     INITIAL_RED_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
     INITIAL_ACTION_COST: Final[int] = config['Simulation']['Entity']['init_action_cost']
+    
 
     def __init__(self,
                  position: Tuple[int, int],
@@ -238,7 +240,8 @@ class Entity(SimulatedObject):
         if self._is_adult:
             self._age += amount
         else:
-            self._grow()
+            if random() < 0.1:
+                self._grow()
 
         # if new age above maximum age threshold,
         # the entity dies
@@ -281,7 +284,7 @@ class Entity(SimulatedObject):
             # maximum age,
             # action cost
             self._size += 1
-            self._max_age += 5
+            self._max_age += Entity.MAX_AGE_SIZE_COEFF
             self._action_cost += 1
 
         # Check if new size
@@ -673,6 +676,8 @@ class Animal(Entity):
         # update self position
         self._update_position(new_position=new_position)
 
+        self._max_age += 10
+
     def _update_position(self, new_position: Tuple[int, int]) -> None:
         """Private method:
             Update the position of the animal
@@ -814,7 +819,6 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-
         vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
 
         if abs(vertical) > abs(horizontal):
@@ -925,7 +929,7 @@ class Tree(Entity):
             create_seed:    create a seed on current position
     """
     INIT_ADULT_SIZE: Final[int] = config['Simulation']["Tree"]['init_adult_size']
-    
+
     COMPLETE_NETWORK: Final[bool] = config['Simulation']['Tree']['complete']
     NUM_TREE_INPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_input"]
     NUM_TREE_OUTPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_output"]

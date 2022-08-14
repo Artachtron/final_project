@@ -30,16 +30,16 @@ default_settings = {
                             "disable_prob": 0.05,
                             "enable_prob": 0.1,
                             "weight_mutate_power": 0.5,
-                            "link_mutate_prob": 0.1,
+                            "link_mutate_prob": 0.25,
                             ## Node mutation
                             "node_mutate_prob": 0.1,
                             "mutate_bias_prob": 0.1,
                             ## Add link mutation
                             "new_link_prob": 0.1,
-                            "add_link_prob": 0.05,
+                            "add_link_prob": 0.1,
                             "add_link_tries": 20,
                             ## Add node mutation
-                            "add_node_prob": 0.02,
+                            "add_node_prob": 0.25,
                             # Mating
                             "mate_multipoint_prob": 0.0,
                             # Compatibility
@@ -53,11 +53,13 @@ default_settings = {
 
                     "Simulation":{
                         # Difficutly
-                        "difficulty_max": 10,
-                        "diffulty_cycles_step": 100,
-                        "difficulty_pop_threshold": 200,
-                        "difficulty_pop_factor": 50,
-                        "difficulty_factor": 0.5,
+                        "difficulty_max": 15,
+                        "difficulty_min": 1,
+                        "diffulty_cycles_step": 10,
+                        "diffulty_factor_increment": 0.1,
+                        "difficulty_pop_threshold": 100,
+                        "difficulty_pop_factor": 100,
+                        "difficulty_factor": 0.25,
                         "difficulty_level": 1,
                         "max_cycle": 1000,
                         # Grid
@@ -71,6 +73,7 @@ default_settings = {
                         "min_vertical_size_section": 5,
                         "max_vertical_size_section": 10,
                         "animal_sparsity": 5,
+                        "energy_sparsity": 1,
 
                         "Entity":{
                             "initial_size": 10,
@@ -87,7 +90,7 @@ default_settings = {
                             ## Initial attributes
                             "init_adult_size": 5,
                             "init_blue_energy": 1000,
-                            "init_red_energy": 1000,
+                            "init_red_energy": 100,
                             ## Brain
                             "complete": False,
                             "num_input": 96,
@@ -117,6 +120,9 @@ default_settings = {
                             ## Inputs
                             "normal_size": 100,
                             "normal_energy": 10000,
+                        },
+                        "Resource":{
+                            "expiry_date": 20
                         }
                     }
                 }
@@ -127,6 +133,12 @@ class ConfigManager:
                 dirname(
                     realpath(__file__))).parent.parent.parent.absolute(),
             "configuration/")
+
+    __instance = None
+    def __new__(cls, *args):
+        if cls.__instance is None:
+            cls.__instance = object.__new__(cls, *args)
+        return cls.__instance
 
     def __init__(self):
         self.parser = parser = optparse.OptionParser()
@@ -153,7 +165,7 @@ class ConfigManager:
 
 
         self.loaded_simulation = opt.load_simulation or None
-        
+
 
     def __getitem__(self, key):
         return self.settings[key]
@@ -174,15 +186,23 @@ class ConfigManager:
 
         with open(join(ConfigManager.directory,f"config_{config_letter}_{config_num}.json"), "w") as write_file:
             json.dump(settings, write_file, indent=4)
-            
+
     def set_difficulty(self, new_difficulty):
         new_difficulty *= self.settings['Simulation']['difficulty_factor']
         max_difficulty = self.settings['Simulation']['difficulty_max']
-        new_difficulty = int(min(max(1, new_difficulty), max_difficulty))
+        min_difficulty = self.settings['Simulation']['difficulty_min']
+        new_difficulty = min(max(min_difficulty, new_difficulty), max_difficulty)
         self.settings['Simulation']['difficulty_level'] = new_difficulty
         return self.settings['Simulation']['difficulty_level']
-    
+
     def increment_difficulty_factor(self):
         self.settings['Simulation']['difficulty_factor'] +=  1
+
+    def set_difficulty_factor(self, factor):
+        self.settings['Simulation']['difficulty_factor'] = factor
+
+    def set_difficulty_range(self, phase: int):
+        self.settings['Simulation']['difficulty_max'] *= phase
+        self.settings['Simulation']['difficulty_min'] *= phase
 
 config = ConfigManager()

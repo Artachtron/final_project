@@ -472,8 +472,8 @@ class NodeGene(BaseGene):
         Returns:
             bool: node is a sensor
         """
-        return (self.type == NodeType.INPUT or
-                self.type == NodeType.BIAS)
+        return self.type in (NodeType.INPUT,
+                             NodeType.BIAS)
 
 @dataclass(kw_only=True)
 class OutputNodeGene(NodeGene):
@@ -518,6 +518,3 @@ def reset_innovation_table():
         Reset the innovation table to initial values
     """
     InnovTable.reset_innovation_table()
-
-
-

@@ -81,14 +81,23 @@ class World:
         Args:
             show_grid (bool, optional): Show grid's lines. Defaults to False.
         """
+
         try:
+            if not config.loaded_simulation:
+                raise FileNotFoundError
             self.simulation = pickle.load(open(config.loaded_simulation, "rb"))
             sim_state = self.simulation.state
+            self.simulation.load_innovations()
+
             World.MAX_CYCLE += sim_state.cycle
-            self.display = True
+            self.display_active = True
+            phase = sim_state.cycle//1000 + 1
+            config.set_difficulty_range(phase=phase)
+            # config.set_difficulty(10)
 
         except FileNotFoundError:
-            print(f"the file {config.loaded_simulation} does not exist")
+            if config.loaded_simulation:
+                print(f"the file {config.loaded_simulation} does not exist")
             self.simulation = Simulation(sim_id=self.id,
                                          dimensions=self.dimensions)
             sim_state = self.simulation.init()
@@ -119,20 +128,25 @@ class World:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid=grid)
 
+        self.set_difficulty(sim_state=sim_state)
+
+        if (sim_state.cycle == World.MAX_CYCLE or
+            len(sim_state.entities) == 0):
+            if sim_state.cycle == World.MAX_CYCLE:
+                self.simulation.save()
+                pickle.dump(self.simulation, open('simulation2', "wb"))
+            print(f"SHUTDOWN after {sim_state.cycle} cycles")
+            self.shutdown()
+
+    def set_difficulty(self, sim_state) -> None:
         difficulty = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])/
                       config['Simulation']['difficulty_pop_factor']) + 1
         diff = config.set_difficulty(difficulty)
 
-        print(f"{sim_state.cycle}: {sim_state.n_animals} {diff}")
+        print(f"{sim_state.cycle}: {sim_state.n_animals} {diff:.2f}")
 
-        if sim_state.cycle % config['Simulation']['diffulty_cycles_step'] == 0:
-            config.increment_difficulty_factor()
-
-        if (sim_state.cycle == World.MAX_CYCLE or
-            len(sim_state.entities) == 0):
-            pickle.dump(self.simulation, open('simulation', "wb"))
-            print(f"SHUTDOWN after {sim_state.cycle} cycles")
-            self.shutdown()
+        difficulty_factor = sim_state.cycle//config['Simulation']['diffulty_cycles_step']
+        config.set_difficulty_factor(difficulty_factor * config['Simulation']['diffulty_factor_increment'])
 
     def shutdown(self) -> None:
         """Public method:
@@ -149,5 +163,11 @@ class World:
             self._update()
 
     def write_metrics(self) -> None:
+        metrics = {'cycles': True,
+                   'generations': True,
+                   'born_animals':True,
+                   'actions_count': True,
+                   }
         self.metrics.write(parameter=config['Run']['parameter'],
-                           variation=config['Run']['variation'])
+                           variation=config['Run']['variation'],
+                           **metrics)

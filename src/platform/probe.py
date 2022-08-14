@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Dict, Optional, Set
 
 if TYPE_CHECKING:
     from simulation import SimState
@@ -30,6 +30,8 @@ class Probe:
     max_generation: Optional[int] = 0
     last_cycle: Optional[int] = 0
 
+    actions_count: Dict = None
+
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
         self.init_trees = len(self.sim_state.trees)
@@ -42,6 +44,9 @@ class Probe:
         self.find_max_generation(entities=set(added_entities["Animal"].values()))
 
         self.last_cycle = self.sim_state.cycle
+
+        entities = self.sim_state.entities.values()
+        self.count_actions(entities=entities)
 
     @property
     def total_entities(self) -> int:
@@ -60,7 +65,14 @@ class Probe:
             if entity.generation > self.max_generation:
                 self.max_generation = entity.generation
 
-    def write(self, parameter: str, variation: str) -> None:
+    def count_actions(self, entities: Set[Entity]):
+        self.actions_count = dict()
+        for entity in entities:
+            if hasattr(entity, 'action'):
+                action = entity.action.action_type.value
+                self.actions_count[action] = self.actions_count.get(action, 0) + 1
+
+    def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")
 
         try:
@@ -69,13 +81,20 @@ class Probe:
             existing_data = {}
 
         variation = str(variation)
-  
+
         existing_data.setdefault(parameter, {})
         existing_data[parameter].setdefault(variation, {})
-        
+
         data = existing_data[parameter][variation]
-        data.setdefault('cycles', []).append(self.last_cycle)
-        data.setdefault('generations', []).append(self.max_generation)
-        data.setdefault('born_animals', []).append(self.added_animals)
+        if metrics.get('cycles', None):
+            data.setdefault('cycles', []).append(self.last_cycle)
+        if metrics.get('generations', None):
+            data.setdefault('generations', []).append(self.max_generation)
+        if metrics.get('born_animals', None):
+            data.setdefault('born_animals', []).append(self.added_animals)
+        if metrics.get('actions_count', None):
+           data.setdefault('actions_count', []).append(self.actions_count)
+
+
         with open(measure_file, "w+") as write_file:
             json.dump(existing_data, write_file, indent=4)

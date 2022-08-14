@@ -23,16 +23,16 @@ class ActionType(Enum):
     """Enum:
         Type of action
     """
-    MOVE = auto()
-    PAINT = auto()
-    DROP = auto()
-    PICKUP = auto()
-    RECYCLE = auto()
-    PLANT_TREE = auto()
-    GROW = auto()
-    REPRODUCE = auto()
-    PRODUCE_ENERGY = auto()
-    IDLE = auto()
+    MOVE = "move"
+    PAINT = "paint"
+    DROP = "drop"
+    PICKUP = "pickup"
+    RECYCLE = "recycle"
+    PLANT_TREE = "plant"
+    GROW = "grow"
+    REPRODUCE = "reproduce"
+    PRODUCE_ENERGY = "produce"
+    IDLE = "idle"
 
 @dataclass(kw_only=True, frozen=True)
 class Action(ABC):

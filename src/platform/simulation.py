@@ -6,12 +6,13 @@ if TYPE_CHECKING:
     from entities import Animal, Tree, Entity
 
 from itertools import product
-from random import randint, sample
+from random import choice, randint, random, sample
 from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
+from project.src.rtNEAT.innovation import InnovTable
 
-from .actions import Action, ActionType
+from .actions import Action, ActionType, PickupAction
 from .energies import BlueEnergy, Energy, EnergyType, RedEnergy, Resource
 from .entities import Animal, Entity, Seed, Status, Tree
 from .grid import Grid
@@ -396,8 +397,64 @@ class Environment:
                                           vertical_divisor=vertical_divisor,
                                           section_vertical_size=section_vertical_size,
                                           possible_coordinates=possible_coordinates)
+      
+        self.state = self.populate_energy()
 
         return self.state
+
+    def populate_energy(self) -> SimState:
+        """Private method:
+            Populate the world with energies
+
+        Returns:
+            SimState: simulation state after populating it
+        """
+        width, height = self.dimensions
+
+        # How much time the grid can be divided by sections
+        num_min_section_horizontal = int(width/config["Simulation"]["min_horizontal_size_section"])
+        num_min_section_vertical = int(height/config["Simulation"]["min_vertical_size_section"])
+
+        num_max_section_horizontal = int(width/config["Simulation"]["max_horizontal_size_section"])
+        num_max_section_vertical = int(height/config["Simulation"]["max_vertical_size_section"])
+
+        # Choose the number of divisions into section h * v
+        horizontal_divisor = randint(num_max_section_horizontal,
+                                     num_min_section_horizontal+1)
+
+        vertical_divisor = randint(num_max_section_vertical,
+                                   num_min_section_vertical+1)
+
+        section_horizontal_size = int(width/horizontal_divisor)
+        section_vertical_size = int(height/vertical_divisor)
+
+        possible_coordinates = set(product(range(section_horizontal_size),
+                                           range(section_vertical_size)))
+
+        section_dimension = len(possible_coordinates)
+ 
+        ENERGY_SPARSITY: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
+        DENSITY = int(section_dimension/ENERGY_SPARSITY)
+
+        for h in range(horizontal_divisor):
+            x_offset = h * section_horizontal_size
+            for v in range(vertical_divisor):
+                y_offset = v * section_vertical_size
+
+                num_energy_section = randint(0, DENSITY)
+                coordinates = sample(possible_coordinates,
+                                     num_energy_section)
+
+                for x, y in coordinates:
+                    energy_type = choice(list(EnergyType))
+                    self.create_energy(energy_type=energy_type,
+                                       quantity=500,
+                                       coordinates=(x + x_offset,
+                                                    y + y_offset),
+                                       expiry=50)
+        print(f"Initial population of energies: {self.state.n_energies}")
+        return self.state
+
 
     def populate_animal(self, section_dimension: int, horizontal_divisor: int,
                         section_horizontal_size: int, vertical_divisor: int,
@@ -410,7 +467,7 @@ class Environment:
             SimState: simulation state after populating it
         """
         ANIMAL_SPARSITY: Final[int] = config["Simulation"]["animal_sparsity"]
-        DENSITY = int(section_dimension/ANIMAL_SPARSITY)
+        DENSITY = int(section_dimension/ANIMAL_SPARSITY)*2
 
         for h in range(horizontal_divisor):
             x_offset = h * section_horizontal_size
@@ -426,7 +483,7 @@ class Environment:
                                                     y + y_offset),
                                        blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
                                        red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
-                                       size=15)
+                                       size=Animal.INITIAL_SIZE)
         print(f"Initial population of animal: {self.state.n_entities}")
         return self.state
 
@@ -453,6 +510,10 @@ class Environment:
         if self.grid.entity_grid.update_cell(new_coordinates=action.coordinates,
                                              value=animal):
             animal.on_move(new_position=action.coordinates)
+
+            action = PickupAction(coordinates=animal.position)
+            self._on_animal_pickup(animal=animal,
+                                   action=action)
 
     def _on_animal_paint(self, animal: Animal, action: Action) -> None:
         """Private method:
@@ -592,7 +653,8 @@ class Environment:
                 self._on_animal_death(animal=animal)
 
             case Status.FERTILE:
-                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position)
+                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
+                                                                           radius=5)
                 for other_entity in entities_around:
                     if other_entity.status == Status.FERTILE:
                         self._reproduce_entities(parent1=animal,
@@ -853,7 +915,7 @@ class Environment:
         return tree
 
     def create_energy(self, energy_type: EnergyType, quantity: int,
-                      coordinates: Tuple[int, int]) -> Optional[Energy]:
+                      coordinates: Tuple[int, int], **kwargs) -> Optional[Energy]:
         """Public method:
             Create energy on the grid
 
@@ -881,12 +943,14 @@ class Environment:
             case EnergyType.BLUE.value:
                 energy = BlueEnergy(energy_id=energy_id,
                                     position=coordinates,
-                                    quantity=quantity)
+                                    quantity=quantity,
+                                    **kwargs)
 
             case EnergyType.RED.value:
                 energy = RedEnergy(energy_id=energy_id,
                                    position=coordinates,
-                                   quantity=quantity)
+                                   quantity=quantity,
+                                   **kwargs)
 
         self._add_new_resource_to_world(new_resource=energy)
 
@@ -955,11 +1019,12 @@ class Environment:
         elif len(free_cells) == 1:
             red_cell, = free_cells
 
+        difficulty = config['Simulation']['difficulty_level']
         # Red energy
         if red_cell:
             self.create_energy(energy_type=EnergyType.RED,
                                 coordinates=red_cell,
-                                quantity=entity.energies[EnergyType.RED.value])
+                                quantity=entity.energies[EnergyType.RED.value]/difficulty)
 
         # Blue energy
         if blue_cell:
@@ -1080,6 +1145,7 @@ class Simulation:
         self.state: SimState                            # simulation's state
         self.environment: Environment                   # environment with which entities can interact
         self.dimensions: Tuple[int, int] = dimensions   # dimensions of the world
+        self.innov_table: InnovTable = InnovTable
 
 
     def init(self, populate: bool=True) -> SimState:
@@ -1113,13 +1179,26 @@ class Simulation:
                                     SimState: simulation's state
         """
         self.state.new_cycle()
+        if self.state.cycle%50 == 0:
+            self.environment.populate_energy()
 
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
             self.environment._event_on_action(entity=entity)
 
+        for resource in self.state.get_resources():
+            resource.update(environment=self.environment)
         # Update state of the simulation
         return self.environment.grid, self.state
+
+    def save(self):
+        self.innovations = {"innovations" : self.innov_table.innovations,
+                            "node_number" : self.innov_table.node_number,
+                            "link_number" : self.innov_table.link_number
+        }
+
+    def load_innovations(self) -> None:
+        InnovTable.load_innovations_infos(**self.innovations)
 
     @property
     def id(self) -> int:
