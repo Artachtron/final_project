@@ -177,4 +177,3 @@ class SimulatedObject:
             str: path to the sprite's image
         """
         return self._appearance
-

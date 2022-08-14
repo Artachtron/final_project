@@ -3,8 +3,6 @@ import random
 import sys
 
 import pytest
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'platform')))
 from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
 from project.src.platform.entities import Direction, Tree
 from project.src.platform.grid import Grid
@@ -338,6 +336,7 @@ class TestEnvironment:
             assert animal2.position == (3,4)
 
         def test_move_out_of_bounds_cell(self):
+            
             animal = self.env.spawn_animal(coordinates=(0,0))
             self.entity_grid._set_cell_value(coordinates=(0,0),
                                             value=animal)
@@ -356,21 +355,21 @@ class TestEnvironment:
             assert self.entity_grid.get_cell_value(coordinates=(0,0)) == animal
 
             # Right
-            animal2 = self.env.spawn_animal(coordinates=(19,19))
-            self.entity_grid._set_cell_value(coordinates=(19,19),
+            animal2 = self.env.spawn_animal(coordinates=(49,49))
+            self.entity_grid._set_cell_value(coordinates=(49,49),
                                             value=animal2)
-            assert animal2.position == (19,19)
-            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+            assert animal2.position == (49,49)
+            assert self.entity_grid.get_cell_value(coordinates=(49,49)) == animal2
             animal2._action_move(Direction.RIGHT)
             self.env._event_on_action(entity=animal2)
-            assert animal2.position == (19,19)
-            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+            assert animal2.position == (49,49)
+            assert self.entity_grid.get_cell_value(coordinates=(49,49)) == animal2
 
             #Down
             animal2._action_move(Direction.DOWN)
             self.env._event_on_action(entity=animal2)
-            assert animal2.position == (19,19)
-            assert self.entity_grid.get_cell_value(coordinates=(19,19)) == animal2
+            assert animal2.position == (49,49)
+            assert self.entity_grid.get_cell_value(coordinates=(49,49)) == animal2
 
         def test_plant_tree(self):
             animal = self.env.spawn_animal(coordinates=(5,5))
@@ -445,7 +444,8 @@ class TestEnvironment:
 
             assert not animal._pocket
             energie_cells = (self.grid.resource_grid._find_coordinates_baseclass(base_class=BlueEnergy,
-                                                                                 coordinates=animal.position) |
+                                                                                 coordinates=animal.position,
+                                                                                 radius=2) |
                              self.grid.resource_grid._find_coordinates_baseclass(base_class=RedEnergy,
                                                                                  coordinates=animal.position))
             energies =  [self.grid.resource_grid.get_cell_value(coordinates=energy) for energy in energie_cells]

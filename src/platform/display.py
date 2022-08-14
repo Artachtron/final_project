@@ -126,7 +126,7 @@ class DisplayedObject(pg.sprite.Sprite):
         # Retrieve information from current simulation state
         if sim_state:
             entity = sim_state.entities[self.id]
-            self.size = entity.size
+            self.size = max(5,entity.size)
             self.position = entity.position
 
         # Scale the image based on object's size
@@ -302,9 +302,13 @@ class Display:
         self.entity_group.update(block_size=self.block_size,
                                  sim_state=sim_state)
 
-        # Add the missing entities
-        for entity in sim_state.added_entities.values():
-            self._add_entity(entity)
+        # Add the missing animals
+        for animal in sim_state.added_entities["Animal"].values():
+            self._add_entity(animal)
+            
+        # Add the missing trees
+        for tree in sim_state.added_entities["Tree"].values():
+            self._add_entity(tree)
 
         # Add the missing resources
         for resource in sim_state.added_resources.values():

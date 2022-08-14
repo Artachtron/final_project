@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import enum
-import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
 from typing import Dict, Optional, Set
 
+import numpy as np
 from numpy.random import random, uniform
-from project.src.platform.config import config
-from project.src.rtNEAT.innovation import InnovTable
+from project.src.platform.running.config import config
+
+from .innovation import InnovTable
 
 
 class NodeType(enum.Enum):
@@ -39,7 +40,7 @@ def sigmoid(x):
         float: output value
     """
     try:
-        return (1.0 / (1.0 + math.exp(-x)))
+        return (1.0 / (1.0 + np.exp(-x)))
     except OverflowError:
         return 0 if x < 0 else 1
 
@@ -131,6 +132,12 @@ class BaseGene(ABC):
             bool: if the current gene's id is less than the other
         """
         return self.id < other.id
+
+    def __eq__(self, other) -> bool:
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
     @abstractmethod
     def transcript(self) -> Dict:
@@ -341,7 +348,7 @@ class NodeGene(BaseGene):
                  mutation_number: int = 0,
                  node_type: NodeType = NodeType.HIDDEN,
                  bias: float = 0.0,
-                 activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
+                 activation_function: ActivationFuncType=partial(sigmoid),
                  aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
                  enabled: bool = True,
                  frozen: bool = False,):
@@ -465,8 +472,8 @@ class NodeGene(BaseGene):
         Returns:
             bool: node is a sensor
         """
-        return (self.type == NodeType.INPUT or
-                self.type == NodeType.BIAS)
+        return self.type in (NodeType.INPUT,
+                             NodeType.BIAS)
 
 @dataclass(kw_only=True)
 class OutputNodeGene(NodeGene):
@@ -486,15 +493,23 @@ class OutputNodeGene(NodeGene):
 
     def is_value(self) -> bool:
         return self.output_type == OutputType.VALUE
-    
-    def transcript(self):
+
+    def transcript(self) -> Dict:
         dictionary = super().transcript()
         dictionary['associated_values'] = self.associated_values
         dictionary['output_type'] = self.output_type
         dictionary['name'] = self.name
         return dictionary
-    
-    def __hash__(self): 
+
+    def duplicate(self) -> NodeGene:
+        node_gene = OutputNodeGene(node_id=self.node_id,
+                                   output_type=self.output_type,
+                                   associated_values=self.associated_values,
+                                   name=self.name)
+
+        return node_gene
+
+    def __hash__(self):
         return hash(self.node_id)
 
 
@@ -503,6 +518,3 @@ def reset_innovation_table():
         Reset the innovation table to initial values
     """
     InnovTable.reset_innovation_table()
-    
-
-                

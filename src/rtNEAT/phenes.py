@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractclassmethod, abstractmethod
+from functools import partial
 from typing import Dict, Optional, Set
 
-from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
-                                      NodeType)
+from .genes import ActivationFuncType, AggregationFuncType, NodeType, sigmoid
 
 
 class BasePhene(ABC):
@@ -37,6 +37,12 @@ class BasePhene(ABC):
     @property
     def id(self):
         return self.__id
+
+    def __eq__(self, other) -> bool:
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
     @abstractclassmethod
     def synthesis(cls, kwargs):
@@ -89,7 +95,7 @@ class Link(BasePhene):
         self.out_node: Node = out_node  # Node that the link affects
 
     def __repr__(self):
-        return f"{self.id}: {in_node} -> {out_node}"
+        return f"{self.id}: {self.in_node} -> {self.out_node}"
 
     @classmethod
     def synthesis(cls, kwargs) -> Link:
@@ -131,10 +137,10 @@ class Node(BasePhene):
     """
     def __init__(self,
                   node_id: int,
+                  activation_function,
+                  aggregation_function,
                   name: Optional[str] = None,
                   node_type: NodeType = NodeType.HIDDEN,
-                  activation_function: ActivationFuncType=ActivationFuncType.SIGMOID,
-                  aggregation_function: AggregationFuncType=AggregationFuncType.SUM,
                   bias: float = 1.0,
                   enabled: bool = True,
                   associated_values: Optional[Set[int]] = None,
@@ -161,8 +167,8 @@ class Node(BasePhene):
         self.type: NodeType = node_type             # HIDDEN, INPUT, OUTPUT
         self.bias: float = bias                     # Bias value
 
-        self.activation_function: ActivationFuncType = activation_function
-        self.aggregation_function: AggregationFuncType = aggregation_function
+        self.activation_function: ActivationFuncType = partial(sigmoid)
+        self.aggregation_function: AggregationFuncType = sum
 
         self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links
         self.outgoing: Dict[int, Link] = {}          # Dictionary of outgoing links
@@ -223,7 +229,6 @@ class Node(BasePhene):
         """
         return self.type == NodeType.OUTPUT
 
-
     def get_activation(self, activation_phase: int) -> float:
         """Public method:
             Browse the list of incoming Links and calculate the activation value
@@ -242,14 +247,14 @@ class Node(BasePhene):
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
             for link in self.get_incoming():
-                # ONly take the value of activated links
+                # Only take the value of activated links
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
                     values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
 
-            self.activation_value = self.activation_function.value(
-                                    self.aggregation_function.value(values))
+            self.activation_value = self.activation_function(
+                                    self.aggregation_function(values))
 
             # set the activation phase to the current one,
             # since the value is now already calculated

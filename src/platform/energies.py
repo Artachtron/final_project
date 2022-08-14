@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import enum
 from math import log
-from typing import Optional, Tuple
+from typing import Final, Optional, Tuple
 
 from numpy.random import randint
 
+from .running.config import config
 from .universal import SimulatedObject
 
 
@@ -16,11 +17,13 @@ class Resource(SimulatedObject):
     Attributes:
         quantity (int): collectible amount
     """
+    DEFAULTY_EXPIRY: Final[int] = config['Simulation']['Resource']['expiry_date']
     def __init__(self,
                  resource_id: int,
                  position: Tuple[int, int],
                  appearance: str = "",
-                 quantity: int = 0
+                 quantity: int = 0,
+                 expiry: int = DEFAULTY_EXPIRY,
                  ):
         """Super constructor:
             Get the necessary information for a resource
@@ -32,16 +35,22 @@ class Resource(SimulatedObject):
             quantity (int, optional):   collectible amount. Defaults to 0.
         """
 
-        self.quantity = quantity or randint(10,100) # collectible amount of resources
-        print(quantity)
+        self.quantity: int = quantity or randint(10,100) # collectible amount of resources
         size: int = int(5 + log(quantity, 2))
-        # size = size/50 if size > 50 else size
+        self.age: int = 0
+        self.expiry: int = expiry
+                # size = size/50 if size > 50 else size
 
         appearance = "models/resources/" + appearance
         super().__init__(sim_obj_id=resource_id,
                          position=position,
                          size=size,
                          appearance=appearance)
+
+    def update(self, environment):
+        self.age += 1
+        if self.age >= self.expiry:
+            environment.remove_resource(resource=self)
 
 
 class EnergyType(enum.Enum):
@@ -66,6 +75,7 @@ class Energy(Resource):
                  quantity: int = 10,
                  appearance: str = "",
                  owner_id: Optional[int] = 0,
+                 expiry: int = Resource.DEFAULTY_EXPIRY,
                  ):
         """Super constructor:
             Get the necessary information for an energy
@@ -83,7 +93,8 @@ class Energy(Resource):
         super().__init__(resource_id=energy_id,
                          position=position,
                          appearance=appearance,
-                         quantity=quantity)
+                         quantity=quantity,
+                         expiry=expiry)
 
         self._type: EnergyType = energy_type # BLUE or RED
         self.owner: Optional[int] = owner_id # unique identifier of owner
@@ -107,7 +118,7 @@ class RedEnergy(Energy):
                  energy_id: int = 0,
                  quantity: int = 10,
                  owner_id: Optional[int] = 0,
-                 ):
+                 expiry: int = Resource.DEFAULTY_EXPIRY):
         """Constructor:
             Create a red energy
 
@@ -123,7 +134,8 @@ class RedEnergy(Energy):
                          quantity=quantity,
                          appearance="red_energy.png",
                          energy_type=EnergyType.RED,
-                         owner_id=owner_id)
+                         owner_id=owner_id,
+                         expiry=expiry)
 
 class BlueEnergy(Energy):
     """Subclass of Energy:
@@ -134,6 +146,7 @@ class BlueEnergy(Energy):
                  energy_id: int = 0,
                  quantity: int = 10,
                  owner_id: Optional[int] = 0,
+                 expiry: int = Resource.DEFAULTY_EXPIRY
                  ):
         """Constructor:
             Create a blue energy
@@ -150,4 +163,5 @@ class BlueEnergy(Energy):
                          quantity=quantity,
                          appearance="blue_energy.png",
                          energy_type=EnergyType.BLUE,
-                         owner_id=owner_id)
+                         owner_id=owner_id,
+                         expiry=expiry)

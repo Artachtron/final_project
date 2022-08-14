@@ -1,11 +1,7 @@
-import os
-import sys
 
 import numpy as np
 import pytest
 from numpy.random import choice
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.genes import (LinkGene, NodeGene, NodeType,
                                       OutputNodeGene, OutputType,
                                       reset_innovation_table, sigmoid)
@@ -152,9 +148,9 @@ class TestNetwork:
         def test_brain_structure(self):
             reset_innovation_table()
             gen_data = {'n_inputs':96,
-                            'n_outputs':15,
-                            'n_actions':0,
-                            'actions':{}}
+                        'n_outputs':15,
+                        'n_actions':0,
+                        'actions':{}}
             gen = Genome.genesis(genome_id=1,
                                  genome_data=gen_data)
             
@@ -167,7 +163,7 @@ class TestNetwork:
             for node in net.get_inputs():
                 assert {n.out_node.id for n in node.get_outgoing()} == set(net.outputs.keys())
                 assert not node.incoming
-            
+                         
             
     class TestActivation: 
         @pytest.fixture(autouse=True)

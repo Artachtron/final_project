@@ -1,12 +1,7 @@
-import os
 import random
-import sys
 
-import numpy as np
 import pytest
 from numpy.random import choice
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.genes import (LinkGene, NodeGene, NodeType,
                                       reset_innovation_table)
 from project.src.rtNEAT.genome import Genome
@@ -34,8 +29,9 @@ class TestGenome:
         assert genome._node_genes == nodes
         assert genome._link_genes == genes
 
-    def test_genesis(self):
-        gen_data = {'n_inputs':3,
+    def test_complete_genesis(self):
+        gen_data = {'complete': True,
+                    'n_inputs':3,
                     'n_outputs':5,
                     'n_actions':0,
                     'actions':{}}
@@ -54,6 +50,16 @@ class TestGenome:
 
         for id1, id2 in zip(genome._link_genes, genome2._link_genes):
             assert id1 == id2
+            
+    def test_incomplete_genesis(self):
+        gen_data = {'complete': False,
+                    'n_inputs':3,
+                    'n_outputs':5,
+                    'n_actions':0,
+                    'actions':{}}
+        genome = Genome.genesis(genome_id=0,
+                                genome_data=gen_data)
+        
 
     class TestGenomeMethods:
         class TestGeneticDistance:
@@ -755,4 +761,7 @@ class TestGenome:
                 assert baby.id == 8
                 assert baby.n_link_genes == 50
                 assert baby.n_node_genes == 100
+                
+
+                
 

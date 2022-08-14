@@ -1,9 +1,3 @@
-import os
-import sys
-
-import pytest
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
 from project.src.rtNEAT.brain import Brain
 
 
@@ -20,8 +14,9 @@ class TestBrain:
 
 
     class TestBrainMethods:
-        def test_brain_genesis(self):
-            gen_data = {'n_inputs':96,
+        def test_complete_brain_genesis(self):
+            gen_data = {'complete': True,
+                        'n_inputs':96,
                         'n_outputs':15,
                         'n_actions':0,
                         'actions':{}}
@@ -31,6 +26,21 @@ class TestBrain:
             assert brain.id == 0
             assert brain.genotype.id == 0
             assert brain.phenotype.id == 0
+
+        def test_incomplete_brain_genesis(self):
+            gen_data = {'complete': False,
+                        'n_inputs':96,
+                        'n_outputs':15,
+                        'n_actions':0,
+                        'actions':{}}
+
+            brain = Brain.genesis(brain_id=0,
+                                    genome_data=gen_data)
+
+            assert brain.id == 0
+            assert brain.genotype.id == 0
+            assert brain.phenotype.id == 0
+
 
         def test_brain_reproduce(self):
             gen_data = {'n_inputs':96,
@@ -54,6 +64,7 @@ class TestBrain:
             assert brain3.id == 2
             assert brain3.genotype.id == 2
             assert brain3.phenotype.id == 2
+
 
 
 

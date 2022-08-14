@@ -3,13 +3,13 @@ from __future__ import annotations
 import enum
 from itertools import combinations
 from random import sample
-from typing import Any, Set, Tuple, Type
+from typing import Any, Optional, Set, Tuple, Type
 
 import numpy as np
 import numpy.typing as npt
 
-from energies import Resource
-from entities import Animal, Entity, Tree
+from .energies import Resource
+from .entities import Animal, Entity, Tree
 
 
 class SubGridType(enum.Enum):
@@ -257,7 +257,7 @@ class SubGrid:
             # that is a subclass of the class given, if yes add it to the list of coordinates.
             # Avoid indexError when out of bounds
             positions = {
-                tuple(np.add(coordinates, coordinate) - 1)
+                tuple(np.add(coordinates, coordinate) - radius)
                 for x, y in set(search_area)
                 if Grid.is_subclass(derived=subregion[coordinate:= tuple((x, y))],
                                     base_class=base_class)
@@ -350,7 +350,7 @@ class SubGrid:
 
     def select_free_coordinates(
         self, coordinates: Tuple[int, int], radius: int = 1, num_cells: int = 1
-    ) -> Set[Tuple[int, int]]:
+    ) -> Optional[Set[Tuple[int, int]]]:
 
         """Public method:
             Select randomly from the free cells available
@@ -361,8 +361,7 @@ class SubGrid:
             num_cells (int):                number of cells to return. Defaults to 1
 
         Returns:
-            Tuple[int,int]:         coordinates of the free cell, if num_cells = 1
-            List[Tuple[int,int]]:   list of coordinates of free cells, if num_cells > 1
+            Optional[Set[Tuple[int, int]]]: Set of coordinates of free cells, if num_cells > 1
         """
         free_cells: Set[Tuple[int, int]] = self.find_free_coordinates(
                                                     coordinates=coordinates,
@@ -376,11 +375,7 @@ class SubGrid:
 
             samples = sample(free_cells, num_choice)
 
-            if num_cells == 1:
-                return set(samples)
-
-            else:
-                free_cells = set(samples)
+            free_cells = set(samples)
         
         return free_cells
 
@@ -425,7 +420,8 @@ class SubGrid:
             try:
                 self._array[coordinates] = value
             except IndexError:
-                print("{coordinates} is out of bounds")
+                pass
+                # print("{coordinates} is out of bounds")
 
         return success
 
@@ -446,7 +442,7 @@ class SubGrid:
             return self._array[tuple(coordinates)]
 
         except IndexError:
-            print(f"{coordinates} is out of bounds")
+            # print(f"{coordinates} is out of bounds")
             return False
 
     def get_sub_region(self, initial_pos: Tuple[int, int], radius: int = 1) -> npt.NDArray[Any]:

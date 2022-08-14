@@ -17,6 +17,12 @@ class InnovTableProperties(type):
     """Meta class:
         Containt the information properties of InnovTable
     """
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
     @property
     def node_number(cls) -> int:
         """Poperty:
@@ -153,6 +159,16 @@ class InnovTable(metaclass=InnovTableProperties):
         InnovTable._link_number = 1
 
     @staticmethod
+    def load_innovations_infos(**infos) -> None:
+        """Static method:
+            Load the information for the innovation table
+        """
+        InnovTable.innovations = infos['innovations']
+        InnovTable.node_number = infos['node_number']
+        InnovTable.link_number = infos['link_number']
+
+
+    @staticmethod
     def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,
                                          in_node: int, out_node: int) -> bool:
         """Private static method:
@@ -255,9 +271,9 @@ class InnovTable(metaclass=InnovTableProperties):
         else:
             # Novel innovation
             new_innovation = InnovTable._create_innovation(in_node=in_node,
-                                                            out_node=out_node,
-                                                            innovation_type=innovation_type,
-                                                            old_innovation_number=old_innovation_number)
+                                                           out_node=out_node,
+                                                           innovation_type=innovation_type,
+                                                           old_innovation_number=old_innovation_number)
             return new_innovation
 
 class Innovation:
