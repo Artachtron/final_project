@@ -36,7 +36,7 @@ default_settings = {
                             "mutate_bias_prob": 0.1,
                             ## Add link mutation
                             "new_link_prob": 0.1,
-                            "add_link_prob": 0.1,
+                            "add_link_prob": 0.25,
                             "add_link_tries": 20,
                             ## Add node mutation
                             "add_node_prob": 0.25,
@@ -55,13 +55,13 @@ default_settings = {
                         # Difficutly
                         "difficulty_max": 15,
                         "difficulty_min": 1,
-                        "diffulty_cycles_step": 10,
-                        "diffulty_factor_increment": 0.1,
+                        "diffulty_cycles_step": 50,
+                        "diffulty_factor_increment": 0.05,
                         "difficulty_pop_threshold": 100,
                         "difficulty_pop_factor": 100,
-                        "difficulty_factor": 0.25,
+                        "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 1000,
+                        "max_cycle": 10000,
                         # Grid
                         "grid_width": 50,
                         "grid_height": 50,

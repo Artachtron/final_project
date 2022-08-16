@@ -191,10 +191,10 @@ class Network:
         """
         # Outputs
         for node in self.get_outputs():
-            
+
             if node.outgoing:
                 raise ValueError(f"{node} has some outgoing connections")
-            
+
             # Fully connected
             if self.complete:
                 if len(node.incoming) != len(self.inputs):
@@ -206,10 +206,10 @@ class Network:
 
         # Inputs
         for node in self.get_inputs():
-            
+
             if node.incoming:
                 raise ValueError(f"{node} has some incoming connections")
-            
+
             # Fully connected
             if self.complete:
                 if len(node.outgoing) != len(self.outputs):
@@ -219,7 +219,7 @@ class Network:
                 if {n.out_node.id for n in node.get_outgoing()} != set(self.outputs.keys()):
                     raise ValueError(f"{node} is not connected to all outputs")
 
-            
+
 
     def activate(self, input_values: npt.NDArray) -> Dict[int, float]:
         """Public method:
@@ -279,7 +279,6 @@ class Network:
             Set: set of trigger outputs
         """
         output_values: Dict[int, float] = {}
-
 
         for node in self.get_outputs():
             if not node.is_output():
@@ -445,3 +444,6 @@ class Network:
             Set[Link]: Set of Links
         """
         return set(self._links.values())
+
+def _get_node_activation(node: Node, activation_phase: int):
+        return node, node.get_activation(activation_phase=activation_phase)

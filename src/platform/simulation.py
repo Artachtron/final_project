@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from entities import Animal, Tree, Entity
 
+from functools import partial
 from itertools import product
+from multiprocessing.pool import Pool
 from random import choice, randint, random, sample
 from typing import Dict, Final, Optional, Set, Tuple, ValuesView
 
@@ -1182,6 +1184,9 @@ class Simulation:
         if self.state.cycle%50 == 0:
             self.environment.populate_energy()
 
+        """ with Pool() as pool:
+            pool.imap_unordered(partial(entity_update, environment=self.environment), self.state.get_entities()) """
+
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
             self.environment._event_on_action(entity=entity)
@@ -1209,3 +1214,7 @@ class Simulation:
             int: simulation's id
         """
         return self.__id
+
+def entity_update(environment: Environment, entity: Entity):  
+    entity.update(environment=environment)
+    environment._event_on_action(entity=entity)

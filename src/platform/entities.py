@@ -59,7 +59,7 @@ class Entity(SimulatedObject):
         has_enough_energy:  check if has at least certain amount of energy from given type
         update:             update entity
     """
-    
+
     MAX_AGE_SIZE_COEFF: Final[int] = config['Simulation']['Entity']['max_age_size_coeff']
     GROWTH_ENERGY_REQUIRED: Final[int] = config['Simulation']['Entity']['growth_energy_required']
     CHILD_ENERGY_COST_DIVISOR: Final[int] = config['Simulation']['Entity']['child_energy_cost_divisor']
@@ -69,7 +69,7 @@ class Entity(SimulatedObject):
     INITIAL_BLUE_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
     INITIAL_RED_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
     INITIAL_ACTION_COST: Final[int] = config['Simulation']['Entity']['init_action_cost']
-    
+
 
     def __init__(self,
                  position: Tuple[int, int],
@@ -155,7 +155,7 @@ class Entity(SimulatedObject):
         self.ancestors: Dict[int, Entity] = ({parent1.id: parent1, parent2.id: parent2}
                                             | parent1.ancestors
                                             | parent2.ancestors)
-        
+
         self.generation = max(parent1.generation, parent2.generation) + 1
 
         brain = Brain.crossover(brain_id=self.id,
@@ -618,12 +618,15 @@ class Animal(Entity):
     def on_reproduction(self) -> None:
         """Public method:
             Event: when reproducing
-        """        
+        """
         if random() < Animal.DIE_GIVING_BIRTH_PROB:
-            self._die(cause="giving birth")  
+            self._die(cause="giving birth")
 
+        difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_COST * self._size)
+                           quantity=Animal.REPRODUCTION_COST
+                                  * self._size
+                                  * difficulty)
 
     def _create_brain(self) -> None:
         """Private method:
@@ -963,9 +966,9 @@ class Tree(Entity):
             red_energy (int, optional):                         amount of red energy owned. Defaults to 10.
             production_type (Optional[EnergyType], optional):   type of energy produced. Defaults to None.
         """
-        
+
         adult_size = adult_size or Tree.INIT_ADULT_SIZE
-        
+
         super().__init__(position=position,
                          entity_id=tree_id,
                          generation=generation,
