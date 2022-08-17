@@ -168,6 +168,16 @@ class World:
                    'generations': True,
                    'born_animals':True,
                    }
+        
         self.metrics.write(parameter=config['Run']['parameter'],
                            variation=config['Run']['variation'],
                            **metrics)
+        
+    def graph_metrics(self) -> None:
+        metrics = {'population':True,
+                   'brain_complexity':True,
+                   'actions_count':True,
+                   'actions_overtime':True,
+                   'death_age': True}
+        
+        self.metrics.graph(**metrics)

@@ -23,6 +23,7 @@ def main():
     end = time()
     print(f'It took {end - start} seconds!')
     world.write_metrics()
+    world.graph_metrics()
 
 def profile(profiler: Profile):
     """Function:

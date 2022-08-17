@@ -119,7 +119,7 @@ class Entity(SimulatedObject):
         self.birthday: int = birthday                           # cycle in which the entity was born
         self.species: int = 0                                   # species the entity is part of
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
-        self._age: int = 0                                      # time since birth
+        self.age: int = 0                                       # time since birth
         self._max_age: int = (max_age or                        # maximum longevity before dying
                               (size *
                                Entity.MAX_AGE_SIZE_COEFF))
@@ -238,14 +238,14 @@ class Entity(SimulatedObject):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
         if self._is_adult:
-            self._age += amount
+            self.age += amount
         else:
             if random() < 0.1:
                 self._grow()
 
         # if new age above maximum age threshold,
         # the entity dies
-        if self._age > self._max_age:
+        if self.age > self._max_age:
             self._die(cause="old age")
 
     def _decide_grow(self) -> None:
@@ -487,7 +487,7 @@ class Entity(SimulatedObject):
             Action: Death of the entity
         """
         if config['Log']['death']:
-            print(f"{self} died of {cause} at age {self._age}")
+            print(f"{self} died of {cause} at age {self.age}")
         self.status = Status.DEAD
 
 
@@ -796,7 +796,7 @@ class Animal(Entity):
         """
         #Inputs
         ## Internal properties
-        age = self._age/self._max_age
+        age = self.age/self._max_age
         size = self._size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
                                    for energy in self.energies.values())
@@ -1113,7 +1113,7 @@ class Tree(Entity):
         """
         #Inputs
         ## Internal properties
-        age = self._age/self._max_age
+        age = self.age/self._max_age
         size = self._size/config["Simulation"]["Tree"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Tree"]["normal_energy"]
                                    for energy in self.energies.values())

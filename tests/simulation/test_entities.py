@@ -36,7 +36,7 @@ class TestEntity:
         assert entity.position == (20,10)
         assert entity._adult_size == 15
         assert entity._max_age == 100
-        assert entity._age == 0
+        assert entity.age == 0
         assert entity._size == 13
         assert entity._action_cost == 1
         assert entity._energies_stock == {'blue energy': 12, 'red energy': 27}
@@ -60,9 +60,9 @@ class TestEntity:
 
         def test_increase_age(self):
             self.entity._is_adult = True
-            assert self.entity._age == 0
+            assert self.entity.age == 0
             self.entity._increase_age()
-            assert self.entity._age == 1
+            assert self.entity.age == 1
 
         def test_grow(self):
             assert self.entity._size == 13
@@ -276,7 +276,7 @@ class TestTree:
         assert tree.position == (20,10)
         assert tree._adult_size == 15
         assert tree._max_age == 100
-        assert tree._age == 0
+        assert tree.age == 0
         assert tree._size == 13
         assert tree._action_cost == 1
         assert tree._energies_stock == {'blue energy': 12, 'red energy': 27}
@@ -373,7 +373,7 @@ class TestAnimal:
         assert animal.position == (20,10)
         assert animal._adult_size == 15
         assert animal._max_age == 100
-        assert animal._age == 0
+        assert animal.age == 0
         assert animal._size == 13
         assert animal._action_cost == 1
         assert animal._energies_stock == {'blue energy': 12, 'red energy': 27}
@@ -469,15 +469,15 @@ class TestAnimal:
 
         def test_age(self):
             self.animal._max_age = 5
-            assert self.animal._age == 0
+            assert self.animal.age == 0
             self.animal._increase_age()
 
             # +1
-            assert self.animal._age == 1
+            assert self.animal.age == 1
 
             # +5
             self.animal._increase_age(amount=4)
-            assert self.animal._age == 5
+            assert self.animal.age == 5
 
             # Above max age
             assert self.animal.status.name != Status.DEAD.name
