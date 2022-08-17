@@ -33,10 +33,15 @@ class Probe:
 
     actions_count: Dict = field(default_factory=dict)
 
+    brain_complexity: Dict = field(default_factory=dict)
+
+    max_hidden: int = 0
+    max_links: int = 0
+
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
         self.init_trees = len(self.sim_state.trees)
-        
+
     @property
     def total_entities(self) -> int:
         return self.total_animals + self.total_trees
@@ -51,42 +56,63 @@ class Probe:
 
     def update(self) -> None:
         self.set_added_entities()
-        self.update_population()
+        self.set_cycle()
+
         self.set_max_generation()
-        self.set_cycle()        
-        self.update_count_actions()
+
+        for entity in self.sim_state.entities.values():
+            self.set_max_brain_complexity(entity=entity)
+            self.update_count_actions(entity=entity)
+
+        self.update_brain_complexity()
+        self.update_population()
+
 
     def set_added_entities(self) -> None:
         added_entities = self.sim_state.added_entities
         self.added_animals += len(added_entities["Animal"])
-        self.added_trees += len(added_entities["Tree"]) 
+        self.added_trees += len(added_entities["Tree"])
 
     def set_max_generation(self) -> None:
         entities = set(self.sim_state.added_entities["Animal"].values())
-        
         for entity in entities:
             if entity.generation > self.max_generation:
                 self.max_generation = entity.generation
-                
+
     def set_cycle(self) -> None:
         self.last_cycle = self.sim_state.cycle
 
-    def update_count_actions(self) -> None:
-        entities = self.sim_state.entities.values()
+    def update_count_actions(self, entity: Entity) -> None:
         cycle = self.last_cycle
         self.actions_count.setdefault(cycle, {})
-        for entity in entities:
-            if hasattr(entity, 'action'):
-                action = entity.action.action_type.value
-                self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
-                
+
+        if hasattr(entity, 'action'):
+            action = entity.action.action_type.value
+            self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
+
     def update_population(self) -> None:
         cycle = self.last_cycle
         self.population.setdefault('animal', {})
         self.population['animal'][cycle] = self.sim_state.n_animals
         self.population.setdefault('tree', {})
         self.population['tree'][cycle] = self.sim_state.n_trees
-        print(self.population)
+
+    def set_max_brain_complexity(self, entity: Entity) -> None:
+        mind = entity.brain.phenotype
+
+        if mind.n_hidden > self.max_hidden:
+            self.max_hidden = mind.n_hidden
+
+        if mind.n_nodes > self.max_links:
+            self.max_links = mind.n_links
+
+    def update_brain_complexity(self) -> None:
+        cycle = self.last_cycle
+
+        self.brain_complexity.setdefault('nodes', {})
+        self.brain_complexity.setdefault('links', {})
+        self.brain_complexity['nodes'][cycle] = self.max_hidden
+        self.brain_complexity['links'][cycle] = self.max_links
 
     def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")
@@ -108,9 +134,17 @@ class Probe:
             data.setdefault('generations', []).append(self.max_generation)
         if 'born_animals' in metrics:
             data.setdefault('born_animals', []).append(self.added_animals)
-        if 'actions_count' in metrics:
-           data.setdefault('actions_count', []).append(self.actions_count)
 
+        """ if 'actions_count' in metrics:
+           data.setdefault('actions_count', []).append(self.actions_count) """
+           
+    def graph(self, **metrics) -> None:
+        if 'population' in metrics:
+            self.graph_population()
+        if 'brain_complexity' in metrics:
+            self.graph_brain_complexity()
+        if 'actions_count' in metrics:
+            self.graph_actions_count()
 
         with open(measure_file, "w+") as write_file:
             json.dump(existing_data, write_file, indent=4)

@@ -333,6 +333,16 @@ class Network:
             int: number of Links
         """
         return len(self._links)
+    
+    @property
+    def n_hidden(self) -> int:
+        """Property:
+            Return the number of hidden nodes
+
+        Returns:
+            int: number of hidden nodes
+        """
+        return len(self.hidden)
 
     @property
     def inputs(self) -> Dict[int, Node]:
@@ -444,6 +454,3 @@ class Network:
             Set[Link]: Set of Links
         """
         return set(self._links.values())
-
-def _get_node_activation(node: Node, activation_phase: int):
-        return node, node.get_activation(activation_phase=activation_phase)
