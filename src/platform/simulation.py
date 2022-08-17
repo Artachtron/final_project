@@ -77,7 +77,7 @@ class SimState:
         self.added_resources: Dict[int, Resource] = {}          # register of added resources in the last simulation cycle
         self.removed_resources: Dict[int, Resource] = {}        # register of removed resources in the last simulation cycle
 
-        self.cycle: int = 1
+        self.cycle: int = 0
 
     @property
     def id(self) -> int:
@@ -369,6 +369,13 @@ class Environment:
         Returns:
             SimState: simulation state after populating it
         """
+        self.state = self.populate_animal()
+      
+        self.state = self.populate_energy()
+
+        return self.state
+    
+    def get_populate_properties(self):
         width, height = self.dimensions
 
         # How much time the grid can be divided by sections
@@ -392,17 +399,15 @@ class Environment:
                                            range(section_vertical_size)))
 
         section_dimension = len(possible_coordinates)
-
-        self.state = self.populate_animal(section_dimension=section_dimension,
-                                          horizontal_divisor=horizontal_divisor,
-                                          section_horizontal_size=section_horizontal_size,
-                                          vertical_divisor=vertical_divisor,
-                                          section_vertical_size=section_vertical_size,
-                                          possible_coordinates=possible_coordinates)
-      
-        self.state = self.populate_energy()
-
-        return self.state
+        
+        populate_properties = {'section_dimension': section_dimension,
+                               'horizontal_divisor': horizontal_divisor,
+                               'section_horizontal_size': section_horizontal_size,
+                               'vertical_divisor': vertical_divisor,
+                               'section_vertical_size': section_vertical_size,
+                               'possible_coordinates': possible_coordinates}
+        
+        return populate_properties
 
     def populate_energy(self) -> SimState:
         """Private method:
@@ -411,41 +416,20 @@ class Environment:
         Returns:
             SimState: simulation state after populating it
         """
-        width, height = self.dimensions
-
-        # How much time the grid can be divided by sections
-        num_min_section_horizontal = int(width/config["Simulation"]["min_horizontal_size_section"])
-        num_min_section_vertical = int(height/config["Simulation"]["min_vertical_size_section"])
-
-        num_max_section_horizontal = int(width/config["Simulation"]["max_horizontal_size_section"])
-        num_max_section_vertical = int(height/config["Simulation"]["max_vertical_size_section"])
-
-        # Choose the number of divisions into section h * v
-        horizontal_divisor = randint(num_max_section_horizontal,
-                                     num_min_section_horizontal+1)
-
-        vertical_divisor = randint(num_max_section_vertical,
-                                   num_min_section_vertical+1)
-
-        section_horizontal_size = int(width/horizontal_divisor)
-        section_vertical_size = int(height/vertical_divisor)
-
-        possible_coordinates = set(product(range(section_horizontal_size),
-                                           range(section_vertical_size)))
-
-        section_dimension = len(possible_coordinates)
- 
+        prop = self.get_populate_properties()
+         
         ENERGY_SPARSITY: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
-        DENSITY = int(section_dimension/ENERGY_SPARSITY)
+        DENSITY = DENSITY = int(prop['section_dimension']/ENERGY_SPARSITY)*2
 
-        for h in range(horizontal_divisor):
-            x_offset = h * section_horizontal_size
-            for v in range(vertical_divisor):
-                y_offset = v * section_vertical_size
+        for h in range(prop['horizontal_divisor']):
+            x_offset = h * prop['section_horizontal_size']
+            for v in range(prop['vertical_divisor']):
+                y_offset = v * prop['section_vertical_size']
 
                 num_energy_section = randint(0, DENSITY)
-                coordinates = sample(possible_coordinates,
+                coordinates = sample(prop['possible_coordinates'],
                                      num_energy_section)
+
 
                 for x, y in coordinates:
                     energy_type = choice(list(EnergyType))
@@ -458,26 +442,24 @@ class Environment:
         return self.state
 
 
-    def populate_animal(self, section_dimension: int, horizontal_divisor: int,
-                        section_horizontal_size: int, vertical_divisor: int,
-                        section_vertical_size: int, possible_coordinates: Set[Tuple[int, int]]
-                        ) -> SimState:
+    def populate_animal(self) -> SimState:
         """Private method:
             Populate the world with animals
 
         Returns:
             SimState: simulation state after populating it
         """
+        prop = self.get_populate_properties()
         ANIMAL_SPARSITY: Final[int] = config["Simulation"]["animal_sparsity"]
-        DENSITY = int(section_dimension/ANIMAL_SPARSITY)*2
+        DENSITY = int(prop['section_dimension']/ANIMAL_SPARSITY)*2
 
-        for h in range(horizontal_divisor):
-            x_offset = h * section_horizontal_size
-            for v in range(vertical_divisor):
-                y_offset = v * section_vertical_size
+        for h in range(prop['horizontal_divisor']):
+            x_offset = h * prop['section_horizontal_size']
+            for v in range(prop['vertical_divisor']):
+                y_offset = v * prop['section_vertical_size']
 
                 num_animal_section = randint(0, DENSITY)
-                coordinates = sample(possible_coordinates,
+                coordinates = sample(prop['possible_coordinates'],
                                      num_animal_section)
 
                 for x, y in coordinates:

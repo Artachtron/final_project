@@ -26,6 +26,7 @@ class Probe:
     init_animals: Optional[int] = 0
     added_trees: Optional[int] = 0
     init_trees: Optional[int] = 0
+    population: Dict = field(default_factory=dict)
 
     max_generation: Optional[int] = 0
     last_cycle: Optional[int] = 0
@@ -35,22 +36,10 @@ class Probe:
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
         self.init_trees = len(self.sim_state.trees)
-
-    def update(self):
-        added_entities = self.sim_state.added_entities
-        self.added_animals += len(added_entities["Animal"])
-        self.added_trees += len(added_entities["Tree"])
-
-        self.find_max_generation(entities=set(added_entities["Animal"].values()))
-
-        self.last_cycle = self.sim_state.cycle
-
-        entities = self.sim_state.entities.values()
-        self.count_actions(entities=entities)
-
+        
     @property
     def total_entities(self) -> int:
-        return self.added_animals + self.total_trees
+        return self.total_animals + self.total_trees
 
     @property
     def total_animals(self) -> int:
@@ -60,18 +49,44 @@ class Probe:
     def total_trees(self) -> int:
         return self.init_trees + self.added_trees
 
-    def find_max_generation(self, entities: Set[Entity]):
+    def update(self) -> None:
+        self.set_added_entities()
+        self.update_population()
+        self.set_max_generation()
+        self.set_cycle()        
+        self.update_count_actions()
+
+    def set_added_entities(self) -> None:
+        added_entities = self.sim_state.added_entities
+        self.added_animals += len(added_entities["Animal"])
+        self.added_trees += len(added_entities["Tree"]) 
+
+    def set_max_generation(self) -> None:
+        entities = set(self.sim_state.added_entities["Animal"].values())
+        
         for entity in entities:
             if entity.generation > self.max_generation:
                 self.max_generation = entity.generation
+                
+    def set_cycle(self) -> None:
+        self.last_cycle = self.sim_state.cycle
 
-    def count_actions(self, entities: Set[Entity]):
+    def update_count_actions(self) -> None:
+        entities = self.sim_state.entities.values()
         cycle = self.last_cycle
         self.actions_count.setdefault(cycle, {})
         for entity in entities:
             if hasattr(entity, 'action'):
                 action = entity.action.action_type.value
                 self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
+                
+    def update_population(self) -> None:
+        cycle = self.last_cycle
+        self.population.setdefault('animal', {})
+        self.population['animal'][cycle] = self.sim_state.n_animals
+        self.population.setdefault('tree', {})
+        self.population['tree'][cycle] = self.sim_state.n_trees
+        print(self.population)
 
     def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")

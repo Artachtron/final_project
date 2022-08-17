@@ -86,7 +86,7 @@ class World:
         try:
             if not config.loaded_simulation:
                 raise FileNotFoundError
-            self.simulation = pickle.load(open(config.loaded_simulation, "rb"))
+            self.simulation = pickle.load(open('simulations/' + config.loaded_simulation, "rb"))
             sim_state = self.simulation.state
             self.simulation.load_innovations()
 
@@ -124,7 +124,7 @@ class World:
         """
         grid, sim_state = self.simulation.update()
         self.metrics.update()
-
+        
         if self.display_active:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid=grid)
@@ -135,7 +135,7 @@ class World:
             len(sim_state.entities) == 0):
             if sim_state.cycle == World.MAX_CYCLE:
                 self.simulation.save()
-                pickle.dump(self.simulation, open('simulation2', "wb"))
+                pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
             print(f"SHUTDOWN after {sim_state.cycle} cycles")
             self.shutdown()
 
