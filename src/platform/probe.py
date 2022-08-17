@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from entities import Entity
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from os.path import dirname, join, realpath
 from pathlib import Path
 
@@ -30,7 +30,7 @@ class Probe:
     max_generation: Optional[int] = 0
     last_cycle: Optional[int] = 0
 
-    actions_count: Dict = None
+    actions_count: Dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -66,11 +66,12 @@ class Probe:
                 self.max_generation = entity.generation
 
     def count_actions(self, entities: Set[Entity]):
-        self.actions_count = dict()
+        cycle = self.last_cycle
+        self.actions_count.setdefault(cycle, {})
         for entity in entities:
             if hasattr(entity, 'action'):
                 action = entity.action.action_type.value
-                self.actions_count[action] = self.actions_count.get(action, 0) + 1
+                self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
 
     def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")
@@ -86,13 +87,13 @@ class Probe:
         existing_data[parameter].setdefault(variation, {})
 
         data = existing_data[parameter][variation]
-        if metrics.get('cycles', None):
+        if 'cycles' in metrics:
             data.setdefault('cycles', []).append(self.last_cycle)
-        if metrics.get('generations', None):
+        if 'generations' in metrics:
             data.setdefault('generations', []).append(self.max_generation)
-        if metrics.get('born_animals', None):
+        if 'born_animals' in metrics:
             data.setdefault('born_animals', []).append(self.added_animals)
-        if metrics.get('actions_count', None):
+        if 'actions_count' in metrics:
            data.setdefault('actions_count', []).append(self.actions_count)
 
 

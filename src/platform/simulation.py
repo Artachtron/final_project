@@ -808,7 +808,8 @@ class Environment:
             birth_position = free_cells.pop() if free_cells else None
 
             if birth_position:
-                adult_size = int((parent1.size + parent2.size)/2)
+                init_adult_size = config['Simulation']['Animal']['init_adult_size']
+                adult_size = max(init_adult_size, int((parent1.size + parent2.size)/2))
                 difficulty = config['Simulation']['difficulty_level']
 
                 child = self.spawn_animal(coordinates=birth_position,

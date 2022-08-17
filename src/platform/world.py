@@ -92,8 +92,8 @@ class World:
 
             World.MAX_CYCLE += sim_state.cycle
             self.display_active = True
-            phase = sim_state.cycle//1000 + 1
-            config.set_difficulty_range(phase=phase)
+            """ phase = sim_state.cycle//1000 + 1
+            config.set_difficulty_range(phase=phase) """
             # config.set_difficulty(10)
 
         except FileNotFoundError:
@@ -167,7 +167,6 @@ class World:
         metrics = {'cycles': True,
                    'generations': True,
                    'born_animals':True,
-                   'actions_count': True,
                    }
         self.metrics.write(parameter=config['Run']['parameter'],
                            variation=config['Run']['variation'],

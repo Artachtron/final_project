@@ -61,7 +61,7 @@ default_settings = {
                         "difficulty_pop_factor": 100,
                         "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 10000,
+                        "max_cycle": 10,
                         # Grid
                         "grid_width": 50,
                         "grid_height": 50,

@@ -3,3 +3,9 @@ experiments/
 measurements/
 profile.prof
 configuration/
+simulations/simulation
+simulations/simulation_multi_group
+simulations/simulation2
+simulations/simulation5000
+simulations/simulation10000
+simulations/simulation20000
