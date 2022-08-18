@@ -623,7 +623,7 @@ class Animal(Entity):
 
         difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_COST
+                           quantity=Animal.REPRODUCTION_COST * self._size
                                   * self._size
                                   * difficulty)
 

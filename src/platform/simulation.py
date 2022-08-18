@@ -368,15 +368,15 @@ class Environment:
             SimState: simulation state after populating it
         """
         self.state = self._populate_animal()
-        
+
         if config['Simulation']['spawn_energy']:
             self.state = self._populate_energy()
-            
+
         if config['Simulation']['spawn_tree']:
             self.state = self._populate_tree()
 
         return self.state
-    
+
     def _get_populate_properties(self) -> Dict[str, Any]:
         """Private method:
             Get the necessary information to populate the grid,
@@ -384,7 +384,7 @@ class Environment:
 
         Returns:
             Dict[str, Any]: dictionary of populate information
-        """        
+        """
         width, height = self.dimensions
 
         # How much time the grid can be divided by sections
@@ -408,56 +408,56 @@ class Environment:
                                            range(section_vertical_size)))
 
         section_dimension = len(possible_coordinates)
-                
+
         populate_properties = {'section_dimension': section_dimension,
                                'horizontal_divisor': horizontal_divisor,
                                'section_horizontal_size': section_horizontal_size,
                                'vertical_divisor': vertical_divisor,
                                'section_vertical_size': section_vertical_size,
                                'possible_coordinates': possible_coordinates}
-        
+
         return populate_properties
-    
+
     def _populate_energy(self):
         """Private method:
             Populate the world with energies
-        
+
         Returns:
             SimState: state of the simulation
         """
         energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
         self._populate_with_item(sparsity=energy_sparsity,
-                                item='energy')
+                                 item='energy')
         print(f"Initial population of energies: {self.state.n_energies}")
         return self.state
-        
-    
+
+
     def _populate_animal(self) -> SimState:
         """Private method:
             Populate the world with animals
-            
+
         Returns:
             SimState: state of the simulation
         """
         animal_sparsity: Final[int] = config["Simulation"]["animal_sparsity"]
         self._populate_with_item(sparsity=animal_sparsity,
-                                item='animal')            
+                                 item='animal')
         print(f"Initial population of animal: {self.state.n_animals}")
         return self.state
-    
+
     def _populate_tree(self) -> SimState:
         """Private method:
             Populate the world with trees
-            
+
         Returns:
             SimState: state of the simulation
         """
         tree_sparsity: Final[int] = config["Simulation"]["tree_sparsity"]
         self._populate_with_item(sparsity=tree_sparsity,
-                                item='tree')            
+                                 item='tree')
         print(f"Initial population of trees: {self.state.n_trees}")
         return self.state
-    
+
     def _populate_with_item(self, sparsity:int, item:str) -> SimState:
         """Private method:
             Populate the world with a specified item
@@ -468,7 +468,7 @@ class Environment:
 
         Returns:
             SimState: state of the simulation
-        """        
+        """
         prop = self._get_populate_properties()
         density = int(prop['section_dimension']/sparsity)
 
@@ -489,18 +489,18 @@ class Environment:
                                                coordinates=(x + x_offset,
                                                             y + y_offset),
                                                expiry=config['Simulation']['energy_expiry'])
-                            
+
                         case 'animal':
                             self.spawn_animal(coordinates=(x + x_offset,
                                                            y + y_offset),
                                               blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
                                               red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
                                               size=Animal.INITIAL_SIZE)
-                            
+
                         case 'tree':
                             self.spawn_tree(coordinates=(x + x_offset,
                                                          y + y_offset))
-                            
+
         return self.state
 
     @property
@@ -671,7 +671,7 @@ class Environment:
             case Status.FERTILE:
                 entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
                                                                            radius=5)
-                
+
                 blue_energy_stock: int = 0
                 most_suited_mate: Animal = None
                 for other_entity in entities_around:
@@ -679,8 +679,8 @@ class Environment:
                         if other_entity.blue_energy > blue_energy_stock:
                             blue_energy_stock = other_entity.blue_energy
                             most_suited_mate = other_entity
-                          
-                if most_suited_mate:  
+
+                if most_suited_mate:
                     self._reproduce_entities(parent1=animal,
                                             parent2=most_suited_mate)
 
@@ -1239,6 +1239,6 @@ class Simulation:
         """
         return self.__id
 
-def entity_update(environment: Environment, entity: Entity):  
+def entity_update(environment: Environment, entity: Entity):
     entity.update(environment=environment)
     environment._event_on_action(entity=entity)

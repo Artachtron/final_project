@@ -59,7 +59,7 @@ class Brain:
                                   parent1=parent1.genotype,
                                   parent2=parent2.genotype)
 
-        genome.mutate()
+        genome.crossover_mutate()
 
         brain.genotype = genome
 

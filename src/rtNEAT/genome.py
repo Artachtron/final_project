@@ -383,10 +383,28 @@ class Genome:
 
         return genetic_distance
 
+
+    def crossover_mutate(self) -> None:
+        if (
+                (
+                config['Simulation']['difficulty_level']
+             <= config['NEAT']['turbo_threshold']
+                )
+            and random() < config['NEAT']['turbo_prob']
+            ):
+            
+            factor = config['NEAT']['turbo_factor']
+            
+        else:
+            factor = 1
+            
+        for _ in range(factor):
+            self.mutate()
+
     def mutate(self) -> None:
         """Public method:
             Mutate the genome
-        """
+        """               
         # Add a node to the genome
         if random() < config["NEAT"]["add_node_prob"]:
             self._mutate_add_node()
@@ -394,6 +412,7 @@ class Genome:
         for _ in range(0, 5):
             if random() < config["NEAT"]["add_link_prob"]:
                 self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
+                
         # Modify the weights of the links
         # and their enabled status
         self._mutate_links()

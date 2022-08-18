@@ -68,12 +68,12 @@ class Probe:
         self.sum_hidden:int = 0
         self.max_links:int = 0
         self.max_hidden:int = 0
-        entities = self.sim_state.entities.values()
-        for entity in entities:
-            self.set_max_brain_complexity(entity=entity)
-            self.update_count_actions(entity=entity)
+        animals = self.sim_state.animals.values()
+        for animal in animals:
+            self.set_max_brain_complexity(entity=animal)
+            self.update_count_actions(entity=animal)
 
-        count: int = max(1, len(entities))
+        count: int = max(1, len(animals))
         self.avg_links = self.sum_links/count
         self.avg_hidden = self.sum_hidden/count
 

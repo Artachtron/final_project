@@ -26,6 +26,10 @@ default_settings = {
                             ## genesis
                             "skip_connection": 0.75,
                             # Mutations
+                            ## Turbo
+                            "turbo_threshold": 1.0,
+                            "turbo_prob": 0.05,
+                            "turbo_factor": 5,
                             ## Link mutation
                             "disable_prob": 0.05,
                             "enable_prob": 0.1,
