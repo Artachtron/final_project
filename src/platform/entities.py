@@ -69,6 +69,7 @@ class Entity(SimulatedObject):
     INITIAL_BLUE_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
     INITIAL_RED_ENERGY: Final[int] = config['Simulation']['Entity']['init_blue_energy']
     INITIAL_ACTION_COST: Final[int] = config['Simulation']['Entity']['init_action_cost']
+    INITIAL_MAX_AGE: Final[int] = config['Simulation']['Entity']['init_max_age']
 
 
     def __init__(self,
@@ -120,9 +121,8 @@ class Entity(SimulatedObject):
         self.species: int = 0                                   # species the entity is part of
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self.age: int = 0                                       # time since birth
-        self._max_age: int = (max_age or                        # maximum longevity before dying
-                              (size *
-                               Entity.MAX_AGE_SIZE_COEFF))
+        self._max_age: int = Entity.INITIAL_MAX_AGE             # maximum longevity before dying
+
 
         self._adult_size: int = adult_size                      # size to reach before becoming adult
         self._is_adult: bool = False                            # can reproduce only if adult
@@ -237,9 +237,8 @@ class Entity(SimulatedObject):
         Args:
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
-        if self._is_adult:
-            self.age += amount
-        else:
+        self.age += amount
+        if not self._is_adult:
             if random() < 0.1:
                 self._grow()
 

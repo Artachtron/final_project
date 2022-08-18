@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from random import choice, random, sample
+from random import choice, randint, random, sample
 from typing import Any, Dict, Optional, Set, Tuple, TypeVar
 
 from project.src.platform.running.config import config
@@ -43,13 +43,17 @@ class Genome:
                  genome_id: int,
                  node_genes: Dict[int, NodeGene] | None = None,
                  link_genes: Dict[int, LinkGene] | None = None,
-                 complete: bool = False):
+                 complete: bool = False,
+                 n_inputs:int = 0,
+                 n_outputs:int = 0):
 
         self.__id: int = genome_id                                  # unique identifier
         self._node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
         self._link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
         #self.ancestors: Set = {}                                   # set of ancestors
         self.complete = complete                                    # wheter the network is fully connected
+        self.n_inputs = n_inputs                                    # number of input nodes
+        self.n_outputs = n_outputs                                  # number of output nodes
 
     @property
     def id(self) -> int:
@@ -244,7 +248,9 @@ class Genome:
         genome = cls(genome_id=genome_id,
                      node_genes=inputs|outputs,
                      link_genes=links,
-                     complete=complete)
+                     complete=complete,
+                     n_inputs=n_inputs,
+                     n_outputs=n_outputs)
 
         return genome
 
@@ -601,10 +607,15 @@ class Genome:
             Tuple[Node, Node]:  Node: incoming NodeGene
                                 Node: outgoing NodeGene
         """
+        in_nodes = list(range(1, self.n_inputs + 1))
+        hiddens =  list(range(self.n_outputs + 1, self.n_node_genes))
+        out_nodes = list(range(self.n_inputs + 1, self.n_outputs + 1))
         # Try until it's time to give up
         for _ in range(tries + 1):
             # Select two NodeGenes at random
-            node1, node2 = sample(self.get_node_genes(), 2)
+            node1 = self.node_genes[choice(in_nodes + hiddens)]
+            node2 = self.node_genes[choice(out_nodes + hiddens)]
+            # node1, node2 = sample(self.get_node_genes(), 2)
 
             # Check if the LinkGene is valid
             if self._is_valid_link(node_in=node1,

@@ -61,7 +61,7 @@ default_settings = {
                         "difficulty_pop_factor": 100,
                         "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 10,
+                        "max_cycle": 10000,
                         # Grid
                         "grid_width": 50,
                         "grid_height": 50,
@@ -77,6 +77,7 @@ default_settings = {
 
                         "Entity":{
                             "initial_size": 10,
+                            "init_max_age": 50,
                             "init_blue_energy": 100,
                             "init_red_energy": 100,
                             "init_action_cost": 1,

@@ -64,9 +64,16 @@ class Probe:
 
         self.set_max_generation()
 
-        for entity in self.sim_state.entities.values():
+        self.sum_links:int = 0
+        self.sum_hidden:int = 0
+        entities = self.sim_state.entities.values()
+        for entity in entities:
             self.set_max_brain_complexity(entity=entity)
             self.update_count_actions(entity=entity)
+            
+        count: int = max(1,len(entities))
+        self.avg_links = self.sum_links/count
+        self.avg_hidden = self.sum_hidden/count
 
         self.update_brain_complexity()
         self.update_population()
@@ -104,11 +111,13 @@ class Probe:
 
     def set_max_brain_complexity(self, entity: Entity) -> None:
         mind = entity.brain.phenotype
+        self.sum_links += mind.n_links
+        self.sum_hidden += mind.n_hidden
 
         if mind.n_hidden > self.max_hidden:
             self.max_hidden = mind.n_hidden
 
-        if mind.n_nodes > self.max_links:
+        if mind.n_links > self.max_links:
             self.max_links = mind.n_links
 
     def update_brain_complexity(self) -> None:
@@ -116,8 +125,14 @@ class Probe:
 
         self.brain_complexity.setdefault('nodes', {})
         self.brain_complexity.setdefault('links', {})
-        self.brain_complexity['nodes'][cycle] = self.max_hidden
-        self.brain_complexity['links'][cycle] = self.max_links
+        self.brain_complexity['nodes'].setdefault('average', {})
+        self.brain_complexity['nodes'].setdefault('maximum', {})
+        self.brain_complexity['links'].setdefault('average', {})
+        self.brain_complexity['links'].setdefault('maximum', {})
+        self.brain_complexity['nodes']['maximum'][cycle] = self.max_hidden
+        self.brain_complexity['links']['maximum'][cycle] = self.max_links
+        self.brain_complexity['nodes']['average'][cycle] = self.avg_hidden
+        self.brain_complexity['links']['average'][cycle] = self.avg_links
         
     def update_death_age(self) -> None:
         age_sum: int = 0
@@ -191,12 +206,16 @@ class Probe:
     def graph_brain_complexity(self) -> None:
         fig, axs = plt.subplots(nrows=2)
         data = self.brain_complexity
-        g1 = sns.lineplot(x=data['nodes'].keys(), y=data['nodes'].values(), ax=axs[0])
-        g2 = sns.lineplot(x=data['links'].keys(), y=data['links'].values(), ax=axs[1])
+        g1 = sns.lineplot(x=data['nodes']['maximum'].keys(), y=data['nodes']['maximum'].values(), ax=axs[0])
+        g2 = sns.lineplot(x=data['links']['maximum'].keys(), y=data['links']['maximum'].values(), ax=axs[1])
+        sns.lineplot(x=data['nodes']['average'].keys(), y=data['nodes']['average'].values(), ax=axs[0])
+        sns.lineplot(x=data['links']['average'].keys(), y=data['links']['average'].values(), ax=axs[1])
         fig.suptitle('Brain Complexity')
         plt.xlabel('Cycle')
         g1.set_ylabel('Nodes')
         g2.set_ylabel('Links')
+        g1.legend(labels=['Maximum hidden nodes','Average hidden nodes'])
+        g2.legend(labels=['Maximum links','Average links'])
         
         self.save_fig('brain_complexity')
         plt.show()
@@ -224,12 +243,15 @@ class Probe:
         for cycle in self.actions_count:
             for action in self.actions_count[cycle]:
                 actions.setdefault(action, {})
-                actions[action][cycle] = self.actions_count[cycle][action]
+                actions[action][cycle] = self.actions_count[cycle][action]/self.population['animal'][cycle]
                 
         for action in actions:
             data = actions[action]
             g = sns.lineplot(x=data.keys(), y=data.values())
             
+        plt.title('Actions over time')
+        plt.xlabel('Cycle')
+        plt.ylabel('Action proportion(%)')
         plt.legend(labels = actions.keys(), title='Actions', loc='center left', bbox_to_anchor=(1, 0.5))
         self.save_fig('actions_overtime')
         plt.show()

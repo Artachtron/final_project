@@ -451,7 +451,7 @@ class Environment:
         """
         prop = self.get_populate_properties()
         ANIMAL_SPARSITY: Final[int] = config["Simulation"]["animal_sparsity"]
-        DENSITY = int(prop['section_dimension']/ANIMAL_SPARSITY)*2
+        DENSITY = int(prop['section_dimension']/ANIMAL_SPARSITY)
 
         for h in range(prop['horizontal_divisor']):
             x_offset = h * prop['section_horizontal_size']
@@ -639,10 +639,18 @@ class Environment:
             case Status.FERTILE:
                 entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
                                                                            radius=5)
+                
+                blue_energy_stock: int = 0
+                most_suited_mate: Animal = None
                 for other_entity in entities_around:
                     if other_entity.status == Status.FERTILE:
-                        self._reproduce_entities(parent1=animal,
-                                                 parent2=other_entity)
+                        if other_entity.blue_energy > blue_energy_stock:
+                            blue_energy_stock = other_entity.blue_energy
+                            most_suited_mate = other_entity
+                          
+                if most_suited_mate:  
+                    self._reproduce_entities(parent1=animal,
+                                            parent2=most_suited_mate)
 
     def _on_tree_produce_energy(self, tree: Tree) -> None:
         """Private method:
