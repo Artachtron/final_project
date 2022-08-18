@@ -391,8 +391,9 @@ class Genome:
         if random() < config["NEAT"]["add_node_prob"]:
             self._mutate_add_node()
         # Add a link to the genome
-        if random() < config["NEAT"]["add_link_prob"]:
-            self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
+        for _ in range(0, 5):
+            if random() < config["NEAT"]["add_link_prob"]:
+                self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
         # Modify the weights of the links
         # and their enabled status
         self._mutate_links()
@@ -608,7 +609,7 @@ class Genome:
                                 Node: outgoing NodeGene
         """
         in_nodes = list(range(1, self.n_inputs + 1))
-        hiddens =  list(range(self.n_outputs + 1, self.n_node_genes))
+        hiddens =  [i for i in self.node_genes if i > self.n_outputs]
         out_nodes = list(range(self.n_inputs + 1, self.n_outputs + 1))
         # Try until it's time to give up
         for _ in range(tries + 1):

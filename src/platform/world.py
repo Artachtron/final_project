@@ -130,18 +130,25 @@ class World:
             self.display.draw(grid=grid)
 
         self.set_difficulty(sim_state=sim_state)
+        
+        if sim_state.cycle%1000 == 0:
+            self.graph_metrics()
+            self.save_simulation()
 
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
             if sim_state.cycle == World.MAX_CYCLE:
-                self.simulation.save()
-                pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
+                self.save_simulation()
             print(f"SHUTDOWN after {sim_state.cycle} cycles")
             self.shutdown()
+            
+    def save_simulation(self):
+        self.simulation.save()
+        pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
 
     def set_difficulty(self, sim_state) -> None:
-        difficulty = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])/
-                      config['Simulation']['difficulty_pop_factor']) + 1
+        difficulty = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
+                      /config['Simulation']['difficulty_pop_factor']) + 1
         diff = config.set_difficulty(difficulty)
 
         print(f"{sim_state.cycle}: {sim_state.n_animals} {diff:.2f}")

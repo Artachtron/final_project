@@ -1176,7 +1176,8 @@ class Seed(Resource):
         super(Seed, self).__init__(resource_id=seed_id,
                                    position=position,
                                    appearance="seed.png",
-                                   quantity=1)
+                                   quantity=1,
+                                   expiry=50)
 
         self.genetic_data = genetic_data
 

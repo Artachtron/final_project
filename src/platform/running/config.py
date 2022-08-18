@@ -37,7 +37,7 @@ default_settings = {
                             ## Add link mutation
                             "new_link_prob": 0.1,
                             "add_link_prob": 0.25,
-                            "add_link_tries": 20,
+                            "add_link_tries": 50,
                             ## Add node mutation
                             "add_node_prob": 0.25,
                             # Mating
@@ -73,7 +73,13 @@ default_settings = {
                         "min_vertical_size_section": 5,
                         "max_vertical_size_section": 10,
                         "animal_sparsity": 5,
+                        "spawn_energy": True,
                         "energy_sparsity": 1,
+                        "spawn_energy_frequency":10,
+                        "energy_expiry": 10,
+                        'energy_quantity': 100,
+                        "spawn_tree": False,
+                        "tree_sparsity": 5,
 
                         "Entity":{
                             "initial_size": 10,

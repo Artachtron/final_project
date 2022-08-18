@@ -5,11 +5,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from entities import Animal, Tree, Entity
 
-from functools import partial
 from itertools import product
-from multiprocessing.pool import Pool
 from random import choice, randint, random, sample
-from typing import Dict, Final, Optional, Set, Tuple, ValuesView
+from typing import Any, Dict, Final, Optional, Set, Tuple, ValuesView
 
 import numpy.typing as npt
 from project.src.rtNEAT.innovation import InnovTable
@@ -369,13 +367,24 @@ class Environment:
         Returns:
             SimState: simulation state after populating it
         """
-        self.state = self.populate_animal()
-      
-        self.state = self.populate_energy()
+        self.state = self._populate_animal()
+        
+        if config['Simulation']['spawn_energy']:
+            self.state = self._populate_energy()
+            
+        if config['Simulation']['spawn_tree']:
+            self.state = self._populate_tree()
 
         return self.state
     
-    def get_populate_properties(self):
+    def _get_populate_properties(self) -> Dict[str, Any]:
+        """Private method:
+            Get the necessary information to populate the grid,
+            and return them as a dictionary
+
+        Returns:
+            Dict[str, Any]: dictionary of populate information
+        """        
         width, height = self.dimensions
 
         # How much time the grid can be divided by sections
@@ -399,7 +408,7 @@ class Environment:
                                            range(section_vertical_size)))
 
         section_dimension = len(possible_coordinates)
-        
+                
         populate_properties = {'section_dimension': section_dimension,
                                'horizontal_divisor': horizontal_divisor,
                                'section_horizontal_size': section_horizontal_size,
@@ -408,67 +417,90 @@ class Environment:
                                'possible_coordinates': possible_coordinates}
         
         return populate_properties
-
-    def populate_energy(self) -> SimState:
+    
+    def _populate_energy(self):
         """Private method:
             Populate the world with energies
-
+        
         Returns:
-            SimState: simulation state after populating it
+            SimState: state of the simulation
         """
-        prop = self.get_populate_properties()
-         
-        ENERGY_SPARSITY: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
-        DENSITY = DENSITY = int(prop['section_dimension']/ENERGY_SPARSITY)*2
-
-        for h in range(prop['horizontal_divisor']):
-            x_offset = h * prop['section_horizontal_size']
-            for v in range(prop['vertical_divisor']):
-                y_offset = v * prop['section_vertical_size']
-
-                num_energy_section = randint(0, DENSITY)
-                coordinates = sample(prop['possible_coordinates'],
-                                     num_energy_section)
-
-
-                for x, y in coordinates:
-                    energy_type = choice(list(EnergyType))
-                    self.create_energy(energy_type=energy_type,
-                                       quantity=500,
-                                       coordinates=(x + x_offset,
-                                                    y + y_offset),
-                                       expiry=50)
+        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
+        self._populate_with_item(sparsity=energy_sparsity,
+                                item='energy')
         print(f"Initial population of energies: {self.state.n_energies}")
         return self.state
-
-
-    def populate_animal(self) -> SimState:
+        
+    
+    def _populate_animal(self) -> SimState:
         """Private method:
             Populate the world with animals
+            
+        Returns:
+            SimState: state of the simulation
+        """
+        animal_sparsity: Final[int] = config["Simulation"]["animal_sparsity"]
+        self._populate_with_item(sparsity=animal_sparsity,
+                                item='animal')            
+        print(f"Initial population of animal: {self.state.n_animals}")
+        return self.state
+    
+    def _populate_tree(self) -> SimState:
+        """Private method:
+            Populate the world with trees
+            
+        Returns:
+            SimState: state of the simulation
+        """
+        tree_sparsity: Final[int] = config["Simulation"]["tree_sparsity"]
+        self._populate_with_item(sparsity=tree_sparsity,
+                                item='tree')            
+        print(f"Initial population of trees: {self.state.n_trees}")
+        return self.state
+    
+    def _populate_with_item(self, sparsity:int, item:str) -> SimState:
+        """Private method:
+            Populate the world with a specified item
+
+        Args:
+            sparsity (int): determine the density of populating
+            item (str):     item to populate the world with
 
         Returns:
-            SimState: simulation state after populating it
-        """
-        prop = self.get_populate_properties()
-        ANIMAL_SPARSITY: Final[int] = config["Simulation"]["animal_sparsity"]
-        DENSITY = int(prop['section_dimension']/ANIMAL_SPARSITY)
+            SimState: state of the simulation
+        """        
+        prop = self._get_populate_properties()
+        density = int(prop['section_dimension']/sparsity)
 
         for h in range(prop['horizontal_divisor']):
             x_offset = h * prop['section_horizontal_size']
             for v in range(prop['vertical_divisor']):
                 y_offset = v * prop['section_vertical_size']
 
-                num_animal_section = randint(0, DENSITY)
+                num_section = randint(0, density)
                 coordinates = sample(prop['possible_coordinates'],
-                                     num_animal_section)
+                                     num_section)
 
                 for x, y in coordinates:
-                    self.spawn_animal(coordinates=(x + x_offset,
-                                                    y + y_offset),
-                                       blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                       red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
-                                       size=Animal.INITIAL_SIZE)
-        print(f"Initial population of animal: {self.state.n_entities}")
+                    match item:
+                        case 'energy':
+                            self.create_energy(energy_type=choice(list(EnergyType)),
+                                               quantity=config['Simulation']['energy_quantity'],
+                                               coordinates=(x + x_offset,
+                                                            y + y_offset),
+                                               expiry=config['Simulation']['energy_expiry'])
+                            
+                        case 'animal':
+                            self.spawn_animal(coordinates=(x + x_offset,
+                                                           y + y_offset),
+                                              blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
+                                              red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY,
+                                              size=Animal.INITIAL_SIZE)
+                            
+                        case 'tree':
+                            self.spawn_tree(coordinates=(x + x_offset,
+                                                         y + y_offset))
+                            
         return self.state
 
     @property
@@ -1172,8 +1204,9 @@ class Simulation:
                                     SimState: simulation's state
         """
         self.state.new_cycle()
-        if self.state.cycle%50 == 0:
-            self.environment.populate_energy()
+        if  (config['Simulation']['spawn_energy']
+         and self.state.cycle%config['Simulation']['spawn_energy_frequency'] == 0):
+            self.environment._populate_energy()
 
         """ with Pool() as pool:
             pool.imap_unordered(partial(entity_update, environment=self.environment), self.state.get_entities()) """

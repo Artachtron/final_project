@@ -66,12 +66,14 @@ class Probe:
 
         self.sum_links:int = 0
         self.sum_hidden:int = 0
+        self.max_links:int = 0
+        self.max_hidden:int = 0
         entities = self.sim_state.entities.values()
         for entity in entities:
             self.set_max_brain_complexity(entity=entity)
             self.update_count_actions(entity=entity)
-            
-        count: int = max(1,len(entities))
+
+        count: int = max(1, len(entities))
         self.avg_links = self.sum_links/count
         self.avg_hidden = self.sum_hidden/count
 
@@ -133,16 +135,16 @@ class Probe:
         self.brain_complexity['links']['maximum'][cycle] = self.max_links
         self.brain_complexity['nodes']['average'][cycle] = self.avg_hidden
         self.brain_complexity['links']['average'][cycle] = self.avg_links
-        
+
     def update_death_age(self) -> None:
         age_sum: int = 0
         count: int = 0
         max_death_age: int = 0
-        
+
         cycle = self.last_cycle
         self.death_age.setdefault('average', {})
         self.death_age.setdefault('maximum', {})
-        
+
         for entity in self.sim_state.removed_entities.values():
             if entity.__class__.__name__ == 'Animal':
                 age_sum += entity.age
@@ -153,7 +155,7 @@ class Probe:
             avg_death_age = age_sum / count
             self.death_age['average'][cycle] = avg_death_age
             self.death_age['maximum'][cycle] = max_death_age
-        
+
     def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")
 
@@ -177,10 +179,10 @@ class Probe:
 
         """ if 'actions_count' in metrics:
            data.setdefault('actions_count', []).append(self.actions_count) """
-           
+
         with open(measure_file, "w+") as write_file:
             json.dump(existing_data, write_file, indent=4)
-            
+
     def graph(self, **metrics) -> None:
         if 'population' in metrics:
             self.graph_population()
@@ -192,8 +194,9 @@ class Probe:
             self.graph_actions_overtime()
         if 'death_age' in metrics:
             self.graph_death_age()
-                
+
     def graph_population(self) -> None:
+        plt.clf()
         data = self.population['animal']
         g = sns.lineplot(x=data.keys(), y=data.values())
         g.set_xlabel('Cycle')
@@ -201,9 +204,10 @@ class Probe:
         g.set_title('Population of animals over cycles')
 
         self.save_fig('population')
-        plt.show()
-        
+
+
     def graph_brain_complexity(self) -> None:
+        plt.clf()
         fig, axs = plt.subplots(nrows=2)
         data = self.brain_complexity
         g1 = sns.lineplot(x=data['nodes']['maximum'].keys(), y=data['nodes']['maximum'].values(), ax=axs[0])
@@ -216,60 +220,63 @@ class Probe:
         g2.set_ylabel('Links')
         g1.legend(labels=['Maximum hidden nodes','Average hidden nodes'])
         g2.legend(labels=['Maximum links','Average links'])
-        
+
         self.save_fig('brain_complexity')
-        plt.show()
-        
+
+
     def graph_actions_count(self) -> None:
+        plt.clf()
         data = {}
         for cycle in self.actions_count:
             for action in self.actions_count[cycle]:
                 data[action] = data.get(action, 0) + self.actions_count[cycle][action]
-           
+
         g = sns.barplot(x=list(data.keys()), y=list(data.values()), color='blue')
         g.bar_label(g.containers[0])
         g.set(yticklabels=[])
-        g.set(ylabel=None) 
+        g.set(ylabel=None)
         g.tick_params(left=False)
         g.set_xlabel('Actions')
         g.set_title('Count of each action')
         g.set_xticklabels(g.get_xticklabels(), rotation=45)
-        
+
         self.save_fig('actions_count')
-        plt.show()
+
 
     def graph_actions_overtime(self) -> None:
+        plt.clf()
         actions = {}
         for cycle in self.actions_count:
             for action in self.actions_count[cycle]:
                 actions.setdefault(action, {})
-                actions[action][cycle] = self.actions_count[cycle][action]/self.population['animal'][cycle]
-                
+                actions[action][cycle] = self.actions_count[cycle][action]/max(1, self.population['animal'][cycle])
+
         for action in actions:
             data = actions[action]
             g = sns.lineplot(x=data.keys(), y=data.values())
-            
+
         plt.title('Actions over time')
         plt.xlabel('Cycle')
         plt.ylabel('Action proportion(%)')
         plt.legend(labels = actions.keys(), title='Actions', loc='center left', bbox_to_anchor=(1, 0.5))
         self.save_fig('actions_overtime')
-        plt.show()
-            
+
+
     def graph_death_age(self) -> None:
+        plt.clf()
         data = self.death_age
-        
+
         if data['maximum']:
             g1 = sns.lineplot(x=data['maximum'].keys(), y=data['maximum'].values())
         if data['average']:
             g2 = sns.lineplot(x=data['average'].keys(), y=data['average'].values())
-        
+
         plt.legend(labels=['maximum age', 'average age'], title='Death age')
         plt.title('Age at death')
         plt.xlabel('Cycle')
         plt.ylabel('Age')
         self.save_fig('death_age')
-        plt.show()
-        
+
+
     def save_fig(self, name: str) -> None:
-        plt.savefig(f"graphs/{name}.png")
+        plt.savefig(f"graphs/{name}.png", bbox_inches = "tight")
