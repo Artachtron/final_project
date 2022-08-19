@@ -253,6 +253,7 @@ class Probe:
         plt.title('Actions over time')
         plt.xlabel('Cycle')
         plt.ylabel('Action proportion(%)')
+        sns.move_legend(g, title='Actions', loc='center left', bbox_to_anchor=(1, 0.5))
         self.save_fig('actions_overtime')
 
 

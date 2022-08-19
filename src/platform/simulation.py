@@ -672,17 +672,17 @@ class Environment:
                 entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
                                                                            radius=5)
 
-                blue_energy_stock: int = 0
-                most_suited_mate: Animal = None
+                energy_stock: int = 0
+                most_suitable_mate: Animal = None
                 for other_entity in entities_around:
-                    if other_entity.status == Status.FERTILE:
-                        if other_entity.blue_energy > blue_energy_stock:
-                            blue_energy_stock = other_entity.blue_energy
-                            most_suited_mate = other_entity
+                    # if other_entity.status == Status.FERTILE:
+                    if sum(other_entity.energies.values()) > energy_stock:
+                        energy_stock = sum(other_entity.energies.values())
+                        most_suitable_mate = other_entity
 
-                if most_suited_mate:
+                if most_suitable_mate:
                     self._reproduce_entities(parent1=animal,
-                                             parent2=most_suited_mate)
+                                             parent2=most_suitable_mate)
 
     def _on_tree_produce_energy(self, tree: Tree) -> None:
         """Private method:
@@ -821,7 +821,8 @@ class Environment:
         Returns:
             Entity: born child
         """
-        if parent1.can_reproduce() and parent2.can_reproduce():
+        if (parent1.can_reproduce() and parent2.can_reproduce() 
+            and random()<config['Simulation']['Animal']['success_reproduction']):
 
             parent1.on_reproduction()
             parent2.on_reproduction()

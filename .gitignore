@@ -3,14 +3,6 @@ experiments/
 measurements/
 profile.prof
 configuration/
-simulations/simulation
-simulations/simulation_multi_group
-simulations/simulation2
-simulations/simulation5000
-simulations/simulation10000
-simulations/simulation20000
-graphs/actions_count.png
-graphs/actions_overtime.png
-graphs/brain_complexity.png
-graphs/death_age.png
-graphs/population.png
+simulations/
+graphs/
+

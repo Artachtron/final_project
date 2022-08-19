@@ -28,7 +28,7 @@ default_settings = {
                             # Mutations
                             ## Turbo
                             "turbo_threshold": 1.0,
-                            "turbo_prob": 0.05,
+                            "turbo_prob": 0.005,
                             "turbo_factor": 10,
                             ## Link mutation
                             "disable_prob": 0.05,
@@ -59,16 +59,16 @@ default_settings = {
                         # Difficutly
                         "difficulty_max": 15,
                         "difficulty_min": 1,
-                        "diffulty_cycles_step": 50,
+                        "diffulty_cycles_step": 10,
                         "diffulty_factor_increment": 0.05,
-                        "difficulty_pop_threshold": 100,
-                        "difficulty_pop_factor": 100,
+                        "difficulty_pop_threshold": 1000,
+                        "difficulty_pop_factor": 1000,
                         "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 1000,
+                        "max_cycle": 10000,
                         # Grid
-                        "grid_width": 100,
-                        "grid_height": 100,
+                        "grid_width": 50,
+                        "grid_height": 50,
                         "block_size": 17,
                         "simulation_speed": 20,
                         # Populate
@@ -117,6 +117,7 @@ default_settings = {
                             "die_giving_birth_prob": 0.02,
                             "max_number_offsping": 10,
                             "random_action_prob": 0.05,
+                            "success_reproduction": 1.00,
                         },
 
                         "Tree":{
