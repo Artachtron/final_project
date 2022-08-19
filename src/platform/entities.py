@@ -239,7 +239,7 @@ class Entity(SimulatedObject):
         """
         self.age += amount
         if not self._is_adult:
-            if random() < 0.1:
+            if random() < 0.05:
                 self._grow()
 
         # if new age above maximum age threshold,
@@ -678,7 +678,7 @@ class Animal(Entity):
         # update self position
         self._update_position(new_position=new_position)
 
-        self._max_age += 10
+        # self._max_age += 10
 
     def _update_position(self, new_position: Tuple[int, int]) -> None:
         """Private method:
@@ -880,7 +880,10 @@ class Animal(Entity):
             outputs (np.array):         array or outputs values from brain activation
         """
         # Get the most absolute active value of all the outputs
-        most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
+        if random() < config['Simulation']['Animal']['random_action_prob']:
+            most_active_output_id = choice(list(outputs.keys()))
+        else:
+            most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
         most_active_output = self.mind.trigger_outputs[most_active_output_id]
 
         match most_active_output.name:

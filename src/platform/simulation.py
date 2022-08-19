@@ -471,7 +471,7 @@ class Environment:
         """
         prop = self._get_populate_properties()
         density = int(prop['section_dimension']/sparsity)
-
+        
         for h in range(prop['horizontal_divisor']):
             x_offset = h * prop['section_horizontal_size']
             for v in range(prop['vertical_divisor']):
@@ -828,7 +828,8 @@ class Environment:
             
             for _ in range(0, randint(0,config['Simulation']['Animal']['max_number_offsping'])):
 
-                free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
+                free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
+                                                                           radius=2)
                 birth_position = free_cells.pop() if free_cells else None
 
                 if birth_position:

@@ -29,7 +29,7 @@ default_settings = {
                             ## Turbo
                             "turbo_threshold": 1.0,
                             "turbo_prob": 0.05,
-                            "turbo_factor": 5,
+                            "turbo_factor": 10,
                             ## Link mutation
                             "disable_prob": 0.05,
                             "enable_prob": 0.1,
@@ -65,7 +65,7 @@ default_settings = {
                         "difficulty_pop_factor": 100,
                         "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 10000,
+                        "max_cycle": 1000,
                         # Grid
                         "grid_width": 100,
                         "grid_height": 100,
@@ -115,7 +115,8 @@ default_settings = {
                             "normal_energy": 10000,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
-                            "max_number_offsping": 5,
+                            "max_number_offsping": 10,
+                            "random_action_prob": 0.05,
                         },
 
                         "Tree":{

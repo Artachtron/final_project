@@ -12,6 +12,7 @@ from os.path import dirname, join, realpath
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 
@@ -41,6 +42,8 @@ class Probe:
 
     max_hidden: int = 0
     max_links: int = 0
+
+    actions: Dict = field(default_factory=list)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -103,6 +106,7 @@ class Probe:
         if hasattr(entity, 'action'):
             action = entity.action.action_type.value
             self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
+            self.actions.append((cycle, action))
 
     def update_population(self) -> None:
         cycle = self.cycle
@@ -242,20 +246,13 @@ class Probe:
 
     def graph_actions_overtime(self) -> None:
         plt.clf()
-        actions = {}
-        for cycle in self.actions_count:
-            for action in self.actions_count[cycle]:
-                actions.setdefault(action, {})
-                actions[action][cycle] = self.actions_count[cycle][action]/max(1, self.population['animal'][cycle])
-
-        for action in actions:
-            data = actions[action]
-            g = sns.lineplot(x=data.keys(), y=data.values())
+ 
+        df = pd.DataFrame(data=self.actions,columns=['cycle','action'])
+        g = sns.kdeplot(data=df,x='cycle',hue='action', multiple="fill", palette="bright")
 
         plt.title('Actions over time')
         plt.xlabel('Cycle')
         plt.ylabel('Action proportion(%)')
-        plt.legend(labels = actions.keys(), title='Actions', loc='center left', bbox_to_anchor=(1, 0.5))
         self.save_fig('actions_overtime')
 
 
