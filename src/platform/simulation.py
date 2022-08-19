@@ -682,7 +682,7 @@ class Environment:
 
                 if most_suited_mate:
                     self._reproduce_entities(parent1=animal,
-                                            parent2=most_suited_mate)
+                                             parent2=most_suited_mate)
 
     def _on_tree_produce_energy(self, tree: Tree) -> None:
         """Private method:
@@ -825,30 +825,32 @@ class Environment:
 
             parent1.on_reproduction()
             parent2.on_reproduction()
+            
+            for _ in range(0, randint(0,config['Simulation']['Animal']['max_number_offsping'])):
 
-            free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
-            birth_position = free_cells.pop() if free_cells else None
+                free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position)
+                birth_position = free_cells.pop() if free_cells else None
 
-            if birth_position:
-                init_adult_size = config['Simulation']['Animal']['init_adult_size']
-                adult_size = max(init_adult_size, int((parent1.size + parent2.size)/2))
-                difficulty = config['Simulation']['difficulty_level']
+                if birth_position:
+                    init_adult_size = config['Simulation']['Animal']['init_adult_size']
+                    adult_size = max(init_adult_size, int((parent1.size + parent2.size)/2))
+                    difficulty = config['Simulation']['difficulty_level']
 
-                child = self.spawn_animal(coordinates=birth_position,
-                                          size=1,
-                                          blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                          red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty,
-                                          adult_size=adult_size,
-                                          birthday=self.state.cycle)
+                    child = self.spawn_animal(coordinates=birth_position,
+                                            size=1,
+                                            blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
+                                            red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty,
+                                            adult_size=adult_size,
+                                            birthday=self.state.cycle)
 
-                if child:
-                    child.on_birth(parent1=parent1,
-                                   parent2=parent2)
+                    if child:
+                        child.on_birth(parent1=parent1,
+                                    parent2=parent2)
 
-                    if config['Log']['birth']:
-                        print(f"{child} was born from {parent1} and {parent2}")
+                        if config['Log']['birth']:
+                            print(f"{child} was born from {parent1} and {parent2}")
 
-                return child
+                # return child
 
     def spawn_animal(self, coordinates: Tuple[int, int], **kwargs) -> Optional[Animal]:
         """Public method:

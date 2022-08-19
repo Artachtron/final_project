@@ -32,7 +32,7 @@ class Probe:
     population: Dict = field(default_factory=dict)
 
     max_generation: Optional[int] = 0
-    last_cycle: Optional[int] = 0
+    cycle: Optional[int] = 0
 
     actions_count: Dict = field(default_factory=dict)
 
@@ -94,10 +94,10 @@ class Probe:
                 self.max_generation = entity.generation
 
     def set_cycle(self) -> None:
-        self.last_cycle = self.sim_state.cycle
+        self.cycle = self.sim_state.cycle
 
     def update_count_actions(self, entity: Entity) -> None:
-        cycle = self.last_cycle
+        cycle = self.cycle
         self.actions_count.setdefault(cycle, {})
 
         if hasattr(entity, 'action'):
@@ -105,7 +105,7 @@ class Probe:
             self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
 
     def update_population(self) -> None:
-        cycle = self.last_cycle
+        cycle = self.cycle
         self.population.setdefault('animal', {})
         self.population['animal'][cycle] = self.sim_state.n_animals
         self.population.setdefault('tree', {})
@@ -123,7 +123,7 @@ class Probe:
             self.max_links = mind.n_links
 
     def update_brain_complexity(self) -> None:
-        cycle = self.last_cycle
+        cycle = self.cycle
 
         self.brain_complexity.setdefault('nodes', {})
         self.brain_complexity.setdefault('links', {})
@@ -141,7 +141,7 @@ class Probe:
         count: int = 0
         max_death_age: int = 0
 
-        cycle = self.last_cycle
+        cycle = self.cycle
         self.death_age.setdefault('average', {})
         self.death_age.setdefault('maximum', {})
 
@@ -171,14 +171,11 @@ class Probe:
 
         data = existing_data[parameter][variation]
         if 'cycles' in metrics:
-            data.setdefault('cycles', []).append(self.last_cycle)
+            data.setdefault('cycles', []).append(self.cycle)
         if 'generations' in metrics:
             data.setdefault('generations', []).append(self.max_generation)
         if 'born_animals' in metrics:
             data.setdefault('born_animals', []).append(self.added_animals)
-
-        """ if 'actions_count' in metrics:
-           data.setdefault('actions_count', []).append(self.actions_count) """
 
         with open(measure_file, "w+") as write_file:
             json.dump(existing_data, write_file, indent=4)
@@ -280,3 +277,11 @@ class Probe:
 
     def save_fig(self, name: str) -> None:
         plt.savefig(f"graphs/{name}.png", bbox_inches = "tight")
+        
+    def print(self, all_keys: bool=False, **metrics) -> None:
+        if 'cycles' in metrics or all_keys:
+            print(f"SHUTDOWN after {self.cycle} cycles.")
+        if 'generations' in metrics or all_keys:
+            print(f"{self.max_generation} generations spawned.")
+        if 'born_animals' in metrics or all_keys:
+            print(f"{self.added_animals} animals were born.")

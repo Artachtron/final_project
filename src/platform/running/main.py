@@ -21,7 +21,7 @@ def main():
     world.init(show_grid=True)
     world.run()
     end = time()
-    print(f'It took {end - start} seconds!')
+    print(f'It took {end - start: .0f} seconds!')
     world.write_metrics()
     world.graph_metrics()
 

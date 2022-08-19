@@ -67,8 +67,8 @@ default_settings = {
                         "difficulty_level": 1,
                         "max_cycle": 10000,
                         # Grid
-                        "grid_width": 50,
-                        "grid_height": 50,
+                        "grid_width": 100,
+                        "grid_height": 100,
                         "block_size": 17,
                         "simulation_speed": 20,
                         # Populate
@@ -115,6 +115,7 @@ default_settings = {
                             "normal_energy": 10000,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
+                            "max_number_offsping": 5,
                         },
 
                         "Tree":{

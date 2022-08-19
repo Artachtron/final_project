@@ -12,7 +12,7 @@ from typing import Final, Tuple
 from .display import Display
 from .probe import Probe
 from .running.config import config
-from .simulation import Simulation
+from .simulation import SimState, Simulation
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
@@ -82,6 +82,9 @@ class World:
         Args:
             show_grid (bool, optional): Show grid's lines. Defaults to False.
         """
+        self.simulation: Simulation
+        sim_state: SimState
+        self.metrics: Probe
 
         try:
             if not config.loaded_simulation:
@@ -91,10 +94,9 @@ class World:
             self.simulation.load_innovations()
 
             World.MAX_CYCLE += sim_state.cycle
-            self.display_active = True
+            self.display_active: bool = True
             """ phase = sim_state.cycle//1000 + 1
             config.set_difficulty_range(phase=phase) """
-            # config.set_difficulty(10)
 
         except FileNotFoundError:
             if config.loaded_simulation:
@@ -122,15 +124,18 @@ class World:
             by updating simulation and
             display and draw display
         """
+        grid: Grid
+        sim_state: SimState
+
         grid, sim_state = self.simulation.update()
         self.metrics.update()
-        
+
         if self.display_active:
             self.display.update(sim_state=sim_state)
             self.display.draw(grid=grid)
 
         self.set_difficulty(sim_state=sim_state)
-        
+
         if sim_state.cycle%1000 == 0:
             self.graph_metrics()
             self.save_simulation()
@@ -139,17 +144,17 @@ class World:
             len(sim_state.entities) == 0):
             if sim_state.cycle == World.MAX_CYCLE:
                 self.save_simulation()
-            print(f"SHUTDOWN after {sim_state.cycle} cycles")
+            self.metrics.print(all_keys=True)
             self.shutdown()
-            
+
     def save_simulation(self):
         self.simulation.save()
         pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
 
     def set_difficulty(self, sim_state) -> None:
-        difficulty = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
-                      /config['Simulation']['difficulty_pop_factor']) + 1
-        diff = config.set_difficulty(difficulty)
+        difficulty: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
+                             /config['Simulation']['difficulty_pop_factor']) + 1
+        diff: float = config.set_difficulty(difficulty)
 
         print(f"{sim_state.cycle}: {sim_state.n_animals} {diff:.2f}")
 
@@ -173,18 +178,18 @@ class World:
     def write_metrics(self) -> None:
         metrics = {'cycles': True,
                    'generations': True,
-                   'born_animals':True,
+                   'born_animals': True,
                    }
-        
+
         self.metrics.write(parameter=config['Run']['parameter'],
                            variation=config['Run']['variation'],
                            **metrics)
-        
+
     def graph_metrics(self) -> None:
         metrics = {'population':True,
                    'brain_complexity':True,
                    'actions_count':True,
                    'actions_overtime':True,
                    'death_age': True}
-        
+
         self.metrics.graph(**metrics)
