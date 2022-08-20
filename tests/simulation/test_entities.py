@@ -1,5 +1,3 @@
-import os
-import sys
 
 import pytest
 from project.src.platform.actions import *
@@ -10,6 +8,8 @@ from project.src.platform.grid import Grid
 from project.src.platform.running.config import config
 from project.src.platform.simulation import Environment
 from project.src.rtNEAT.brain import Brain
+from project.src.rtNEAT.genome import Genome
+from project.src.rtNEAT.network import Network
 
 
 class TestEntity:
@@ -733,6 +733,7 @@ class TestAnimal:
 
 
             def test_activate_mind(self):
+                
                 for _ in range(100):
                     self.animal._activate_mind(environment=self.env)
 
@@ -778,3 +779,38 @@ class TestAnimal:
                 assert mind.n_inputs == config['Simulation']['Animal']['num_input']
                 assert mind.n_outputs == config['Simulation']['Animal']['num_output']
                 child._activate_mind(environment=self.env)
+
+            def test_many_hidden_nodes(self):  
+                for i in range(10):
+                    animal = self.env.spawn_animal(coordinates=(0+i,0+i))
+                    if animal:
+                        genome_data = {"complete": True,
+                                        "n_inputs": Animal.NUM_INPUTS,
+                                        "n_outputs": Animal.NUM_OUTPUTS,
+                                        "n_actions": Animal.NUM_ACTIONS,
+                                        "n_values": Animal.NUM_VALUES,
+                                        "actions":{
+                                            "move": [0,1],
+                                            "drop": [2],
+                                            "paint": [3,4,5],
+                                            "pickup": [],
+                                            "recycle": [],
+                                            "plant tree": [],
+                                            "grow": [],
+                                            "reproduce": []
+                                        }}
+                        
+                        genome = Genome.genesis(genome_id=2,
+                                                genome_data=genome_data)
+                        
+                        for _ in range(100):
+                            genome._mutate_add_node()
+                            for _ in range(10):
+                                genome._mutate_add_link()
+                                
+                            
+                        network = Network.genesis(genome=genome)
+                        
+                        assert len(network.hidden) == 100
+                    
+                        animal._activate_mind(environment=self.env)

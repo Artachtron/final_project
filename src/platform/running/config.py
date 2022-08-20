@@ -28,10 +28,10 @@ default_settings = {
                             # Mutations
                             ## Turbo
                             "turbo_threshold": 1.0,
-                            "turbo_prob": 0.005,
+                            "turbo_prob": 0.05,
                             "turbo_factor": 10,
                             ## Link mutation
-                            "disable_prob": 0.05,
+                            "disable_prob": 0.1,
                             "enable_prob": 0.1,
                             "weight_mutate_power": 0.5,
                             "link_mutate_prob": 0.1,

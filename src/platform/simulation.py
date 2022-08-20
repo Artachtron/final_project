@@ -853,15 +853,15 @@ class Environment:
                     difficulty = config['Simulation']['difficulty_level']
 
                     child = self.spawn_animal(coordinates=birth_position,
-                                            size=1,
-                                            blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                            red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty,
-                                            adult_size=adult_size,
-                                            birthday=self.state.cycle)
+                                              size=1,
+                                              blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
+                                              red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty,
+                                              adult_size=adult_size,
+                                              birthday=self.state.cycle)
 
                     if child:
                         child.on_birth(parent1=parent1,
-                                    parent2=parent2)
+                                       parent2=parent2)
 
                         if config['Log']['birth']:
                             print(f"{child} was born from {parent1} and {parent2}")

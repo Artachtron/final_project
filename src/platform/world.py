@@ -163,6 +163,7 @@ class World:
         """Public method:
             Stop the running of the simulation
         """
+        self.metrics.print(all_keys=True)
         self.running = False
 
     def run(self) -> None:
