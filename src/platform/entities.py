@@ -462,7 +462,6 @@ class Entity(SimulatedObject):
             coordinates (Tuple[int, int]):  coordinates to pick up energy from
         """
         action = PickupAction(coordinates=coordinates)
-
         self._decide_action(action=action)
 
     def on_pick_up_resource(self, resource: Resource):
@@ -678,7 +677,7 @@ class Animal(Entity):
         # update self position
         self._update_position(new_position=new_position)
 
-        # self._max_age += 10
+        self._max_age += 1
 
     def _update_position(self, new_position: Tuple[int, int]) -> None:
         """Private method:
@@ -806,7 +805,7 @@ class Animal(Entity):
         energies = environment.find_if_resources_around(coordinates=self.position,
                                                         include_self=True)
         see_energies = list(map(int, energies))
-
+   
         colors = environment.get_colors_around(coordinates=self.position,
                                                radius=2)
 

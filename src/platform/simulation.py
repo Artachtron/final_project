@@ -657,6 +657,15 @@ class Environment:
         self.decompose_entity(entity=animal)
         self._entity_died(entity=animal)
 
+    def _check_incest(self, parent1: Animal, parent2: Animal) -> bool:
+        return (parent1.ancestors == {}
+            or not (
+                       (parent1.ancestors == parent2.ancestors)
+                    or (parent1.id in parent2.ancestors)
+                    or (parent2.id in parent1.ancestors)
+                    )
+                )
+
     def _on_animal_status(self, animal: Animal) -> None:
         """Private method:
             Handle the action to overtake based on animal's status
@@ -676,9 +685,14 @@ class Environment:
                 most_suitable_mate: Animal = None
                 for other_entity in entities_around:
                     # if other_entity.status == Status.FERTILE:
-                    if sum(other_entity.energies.values()) > energy_stock:
-                        energy_stock = sum(other_entity.energies.values())
-                        most_suitable_mate = other_entity
+                    if (sum(other_entity.energies.values()) > energy_stock):
+                        
+                        if (not config['Simulation']['Animal']['incest']
+                         and self._check_incest(parent1=animal,
+                                                parent2=other_entity)):
+                            
+                            energy_stock = sum(other_entity.energies.values())
+                            most_suitable_mate = other_entity
 
                 if most_suitable_mate:
                     self._reproduce_entities(parent1=animal,
@@ -821,7 +835,7 @@ class Environment:
         Returns:
             Entity: born child
         """
-        if (parent1.can_reproduce() and parent2.can_reproduce() 
+        if (parent1.can_reproduce() and parent2.can_reproduce()
             and random()<config['Simulation']['Animal']['success_reproduction']):
 
             parent1.on_reproduction()

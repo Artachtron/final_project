@@ -34,7 +34,7 @@ default_settings = {
                             "disable_prob": 0.05,
                             "enable_prob": 0.1,
                             "weight_mutate_power": 0.5,
-                            "link_mutate_prob": 0.25,
+                            "link_mutate_prob": 0.1,
                             ## Node mutation
                             "node_mutate_prob": 0.1,
                             "mutate_bias_prob": 0.1,
@@ -118,6 +118,7 @@ default_settings = {
                             "max_number_offsping": 10,
                             "random_action_prob": 0.05,
                             "success_reproduction": 1.00,
+                            "incest": False,
                         },
 
                         "Tree":{

@@ -137,17 +137,15 @@ class World:
         self.set_difficulty(sim_state=sim_state)
 
         if sim_state.cycle%1000 == 0:
-            self.graph_metrics()
             self.save_simulation()
-
+            
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
-            if sim_state.cycle == World.MAX_CYCLE:
-                self.save_simulation()
-            self.metrics.print(all_keys=True)
             self.shutdown()
 
     def save_simulation(self):
+        self.metrics.print(all_keys=True)
+        self.graph_metrics()
         self.simulation.save()
         pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
 
