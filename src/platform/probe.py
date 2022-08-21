@@ -36,6 +36,7 @@ class Probe:
     cycle: Optional[int] = 0
 
     actions_count: Dict = field(default_factory=dict)
+    total_actions_count: Dict = field(default_factory=dict)
 
     brain_complexity: Dict = field(default_factory=dict)
     death_age: Dict = field(default_factory=dict)
@@ -107,6 +108,7 @@ class Probe:
             action = entity.action.action_type.value
             self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
             self.actions.append((cycle, action))
+            self.total_actions_count[action] = self.total_actions_count.get(action, 0) + 1
 
     def update_population(self) -> None:
         cycle = self.cycle
@@ -227,10 +229,7 @@ class Probe:
 
     def graph_actions_count(self) -> None:
         plt.clf()
-        data = {}
-        for cycle in self.actions_count:
-            for action in self.actions_count[cycle]:
-                data[action] = data.get(action, 0) + self.actions_count[cycle][action]
+        data = self.total_actions_count
 
         g = sns.barplot(x=list(data.keys()), y=list(data.values()), color='blue')
         g.bar_label(g.containers[0])
@@ -283,3 +282,13 @@ class Probe:
             print(f"{self.max_generation} generations spawned.")
         if 'born_animals' in metrics or all_keys:
             print(f"{self.added_animals} animals were born.")
+        if 'actions_count' in metrics or all_keys:
+            print(self.total_actions_count)    
+        
+    def print_actions_count(self):
+        data = {}
+        for cycle in self.actions_count:
+            for action in self.actions_count[cycle]:
+                data[action] = data.get(action, 0) + self.actions_count[cycle][action]
+                
+        print(data)

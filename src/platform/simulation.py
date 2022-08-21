@@ -679,13 +679,13 @@ class Environment:
 
             case Status.FERTILE:
                 entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
-                                                                           radius=5)
+                                                                           radius=config['Simulation']['Animal']['reproduction_range'])
 
                 energy_stock: int = 0
                 most_suitable_mate: Animal = None
                 for other_entity in entities_around:
                     # if other_entity.status == Status.FERTILE:
-                    if (sum(other_entity.energies.values()) > energy_stock):
+                    if sum(other_entity.energies.values()) > energy_stock:
                         
                         if (not config['Simulation']['Animal']['incest']
                          and self._check_incest(parent1=animal,
@@ -841,7 +841,7 @@ class Environment:
             parent1.on_reproduction()
             parent2.on_reproduction()
             
-            for _ in range(0, randint(0,config['Simulation']['Animal']['max_number_offsping'])):
+            for _ in range(1, randint(1,config['Simulation']['Animal']['max_number_offsping']) + 1):
 
                 free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
                                                                            radius=2)

@@ -597,6 +597,7 @@ class Animal(Entity):
                          appearance="animal.png")
 
         self._pocket: Optional[Seed] = None # pocket in which to store seed
+        self.fitness = 0
 
     def __repr__(self):
         return f'Animal {self.id}'
@@ -677,6 +678,7 @@ class Animal(Entity):
         # update self position
         self._update_position(new_position=new_position)
 
+        self.fitness += 1
         self._max_age += 1
 
     def _update_position(self, new_position: Tuple[int, int]) -> None:

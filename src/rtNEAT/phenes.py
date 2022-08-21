@@ -229,6 +229,7 @@ class Node(BasePhene):
         """
         return self.type == NodeType.OUTPUT
 
+    
     def get_activation(self, activation_phase: int) -> float:
         """Public method:
             Browse the list of incoming Links and calculate the activation value
@@ -243,7 +244,7 @@ class Node(BasePhene):
         # or the node is an input: then just return the value
         if self.activation_phase != activation_phase and not self.is_sensor():
 
-            values = [self.bias]
+            values = self.bias
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
             for link in self.get_incoming():
@@ -251,10 +252,9 @@ class Node(BasePhene):
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
-                    values.append(link.in_node.get_activation(activation_phase=activation_phase) * link.weight)
+                    values += link.in_node.get_activation(activation_phase=activation_phase) * link.weight
 
-            self.activation_value = self.activation_function(
-                                    self.aggregation_function(values))
+            self.activation_value = self.activation_function(values)
 
             # set the activation phase to the current one,
             # since the value is now already calculated

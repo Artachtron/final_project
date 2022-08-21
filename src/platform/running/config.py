@@ -29,7 +29,7 @@ default_settings = {
                             ## Turbo
                             "turbo_threshold": 1.0,
                             "turbo_prob": 0.05,
-                            "turbo_factor": 10,
+                            "turbo_factor": 20,
                             ## Link mutation
                             "disable_prob": 0.1,
                             "enable_prob": 0.1,
@@ -119,6 +119,7 @@ default_settings = {
                             "random_action_prob": 0.05,
                             "success_reproduction": 1.00,
                             "incest": False,
+                            "reproduction_range": 10,
                         },
 
                         "Tree":{
