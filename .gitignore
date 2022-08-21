@@ -1,2 +1,6 @@
 src/experiments.py
 experiments/
+configuration/
+graphs/
+measurements/
+simulations/
