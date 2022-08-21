@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
-from math import sqrt
+from math import acos, pi, sqrt
 from typing import Any, Tuple
 
 
@@ -67,9 +67,39 @@ class Position:
 
         return Position(pos[0] + vect[0],
                         pos[1] + vect[1])
+        
+    def norm_angle(self, other_pos: Position) -> float:
+        return self.angle(other_pos)/(2*pi)
+    
+    def angle(self, other_pos: Position) -> float:
+        x1 = self.x
+        x2 = other_pos.x
+        adj = x2 - x1
+        hyp = self.distance(other_pos)
+        
+        add = 0
+        if (self.y - other_pos.y > 0):
+            add = pi
+        
+        return acos(adj/hyp) + add
+    
+    def distance(self, other_pos: Position) -> float: 
+        distance = sqrt((self.x - other_pos.x)**2 +
+                        (self.y - other_pos.y)**2)
+        
+        return round(distance, 2)
+        
+    @staticmethod
+    def ang(object1: Any, object2: Any) -> float:
+        """ x1 = object1.position.x
+        x2 = object2.position.x
+        adj = x2 - x1
+        hyp = Position.distance(object1, object2) """
+    
+        return object1.position.angle(object2.position)
 
     @staticmethod
-    def distance(object1: Any, object2: Any) -> float:
+    def dist(object1: Any, object2: Any) -> float:
         """Static method:
             Distance between two positions
 

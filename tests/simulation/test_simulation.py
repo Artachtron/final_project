@@ -1,6 +1,4 @@
-import os
 import random
-import sys
 
 import pytest
 from project.src.platform.energies import BlueEnergy, EnergyType, RedEnergy
