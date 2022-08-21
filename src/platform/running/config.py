@@ -65,7 +65,7 @@ default_settings = {
                         "difficulty_pop_factor": 1000,
                         "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 10000,
+                        "max_cycle": 1000,
                         # Grid
                         "grid_width": 50,
                         "grid_height": 50,
@@ -77,7 +77,7 @@ default_settings = {
                         "min_vertical_size_section": 5,
                         "max_vertical_size_section": 10,
                         "animal_sparsity": 5,
-                        "spawn_energy": True,
+                        "spawn_energy": False,
                         "energy_sparsity": 1,
                         "spawn_energy_frequency":10,
                         "energy_expiry": 10,
@@ -111,11 +111,11 @@ default_settings = {
                             "reproduction_cost": 10,
                             "planting_cost": 10,
                             ## Inputs
-                            "normal_size": 100,
-                            "normal_energy": 10000,
+                            "normal_size": 10,
+                            "normal_energy": 1000,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
-                            "max_number_offsping": 10,
+                            "max_number_offsping": 20,
                             "random_action_prob": 0.05,
                             "success_reproduction": 1.00,
                             "incest": False,

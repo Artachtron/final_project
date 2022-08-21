@@ -12,11 +12,7 @@ directory = join(
             "configuration/")
 
 files = [f for f in listdir(directory) if isfile(join(directory, f))]
-""" files_info = [f.split(".")[0] for f in files]
-combinations = [tuple(f.split("_")[1:]) for f in files_info]
 
-for param, comb in combinations:
-    pass """
 for n, f in enumerate(files):
     for i in range(0, 5):
         print(f"{n} file: {f} {i}")

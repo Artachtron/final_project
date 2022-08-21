@@ -131,8 +131,8 @@ class Network:
             link.in_node = in_node
             link.out_node = out_node
             self._links[key] = link
-            if link_gene.enabled:
-                self._connect_link(link)
+
+            self._connect_link(link)
 
     def _connect_link(self, link: Link) -> None:
         """Private method:

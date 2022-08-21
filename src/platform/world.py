@@ -94,7 +94,7 @@ class World:
             self.simulation.load_innovations()
 
             World.MAX_CYCLE += sim_state.cycle
-            self.display_active: bool = True
+            self.display_active: bool = False
             """ phase = sim_state.cycle//1000 + 1
             config.set_difficulty_range(phase=phase) """
 
@@ -136,7 +136,7 @@ class World:
 
         self.set_difficulty(sim_state=sim_state)
 
-        if sim_state.cycle%1000 == 0:
+        if sim_state.cycle%500 == 0:
             self.save_simulation()
             
         if (sim_state.cycle == World.MAX_CYCLE or
@@ -163,7 +163,8 @@ class World:
         """Public method:
             Stop the running of the simulation
         """
-        self.metrics.print(all_keys=True)
+        # self.metrics.print(all_keys=True)
+        self.write_metrics()
         self.running = False
 
     def run(self) -> None:
@@ -181,7 +182,7 @@ class World:
                    }
 
         self.metrics.write(parameter=config['Run']['parameter'],
-                           variation=config['Run']['variation'],
+                           variation=config['Run']['value'],
                            **metrics)
 
     def graph_metrics(self) -> None:

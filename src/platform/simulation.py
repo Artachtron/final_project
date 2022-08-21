@@ -685,13 +685,13 @@ class Environment:
                 most_suitable_mate: Animal = None
                 for other_entity in entities_around:
                     # if other_entity.status == Status.FERTILE:
-                    if sum(other_entity.energies.values()) > energy_stock:
+                    if other_entity.fitness > energy_stock:
                         
                         if (not config['Simulation']['Animal']['incest']
                          and self._check_incest(parent1=animal,
                                                 parent2=other_entity)):
                             
-                            energy_stock = sum(other_entity.energies.values())
+                            energy_stock = other_entity.fitness
                             most_suitable_mate = other_entity
 
                 if most_suitable_mate:
@@ -844,7 +844,7 @@ class Environment:
             for _ in range(1, randint(1,config['Simulation']['Animal']['max_number_offsping']) + 1):
 
                 free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
-                                                                           radius=2)
+                                                                           radius=3)
                 birth_position = free_cells.pop() if free_cells else None
 
                 if birth_position:
@@ -855,7 +855,7 @@ class Environment:
                     child = self.spawn_animal(coordinates=birth_position,
                                               size=1,
                                               blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                              red_energy=Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty,
+                                              red_energy=int(Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty),
                                               adult_size=adult_size,
                                               birthday=self.state.cycle)
 
