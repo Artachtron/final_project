@@ -1,4 +1,5 @@
-from project.src.simulation.display import Display
+from project.src.platform.display import Display
+
 
 class TestDisplay:
     def test_create_display(self):

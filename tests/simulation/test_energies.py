@@ -1,7 +1,10 @@
-import os, sys, pytest
+import os
+import sys
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'simulation')))
-from project.src.simulation.energies import Energy, BlueEnergy, RedEnergy, EnergyType
+import pytest
+from project.src.platform.energies import (BlueEnergy, Energy, EnergyType,
+                                           RedEnergy)
+
 
 class TestEnergy:
     def test_create_energy(self):

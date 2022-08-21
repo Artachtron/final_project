@@ -1,7 +1,7 @@
-import pytest, os, sys
-
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..','..', 'src', 'rtNEAT')))
-from project.src.rtNEAT.genes import BaseGene, LinkGene, NodeGene, NodeType, ActivationFuncType, AggregationFuncType, reset_innovation_table
+import pytest
+from project.src.rtNEAT.genes import (ActivationFuncType, AggregationFuncType,
+                                      BaseGene, LinkGene, NodeGene, NodeType,
+                                      reset_innovation_table)
 
 
 class TestGene:
@@ -9,27 +9,7 @@ class TestGene:
     def setup(self):
         yield
         reset_innovation_table()
-
-        
-    def test_create_base_gene(self):
-        base_gene = BaseGene(gene_id=1,
-                             mutation_number = 0,
-                             enabled=True,
-                             frozen=False)  
-        
-        assert type(base_gene) == BaseGene 
-                
-    def test_base_gene_fields(self):
-        base_gene = BaseGene(gene_id=1,
-                             mutation_number = 0,
-                             enabled=True,
-                             frozen=False) 
-        
-        assert set(['enabled', 'frozen']).issubset(vars(base_gene))
-        assert base_gene.id == 1
-        assert base_gene.enabled == True
-        assert base_gene.frozen == False
-        
+         
     def test_create_link_gene(self):
         link_gene = LinkGene(in_node=1,
                              out_node=2)
