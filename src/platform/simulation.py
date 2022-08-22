@@ -678,7 +678,7 @@ class Environment:
                 self._on_animal_death(animal=animal)
 
             case Status.FERTILE:
-                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
+                entities_around = self.grid.find_animal_instances(coordinates=animal.position,
                                                                            radius=config['Simulation']['Animal']['reproduction_range'])
 
                 energy_stock: int = 0
@@ -705,7 +705,7 @@ class Environment:
         Args:
             tree (Tree): tree that produce energy
         """
-        trees_around = self.find_trees_around(coordinates=tree.position) or []
+        trees_around = self.find_tree_cells_around(coordinates=tree.position) or []
         count_trees_around = len(trees_around)
 
         tree.on_produce_energy(count_trees_around=count_trees_around)
@@ -1152,18 +1152,46 @@ class Environment:
         """
         self.grid.modify_cell_color(coordinates=coordinates,
                                     color=color)
+        
+    def find_animals_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Entity):
+        """Public method:
+            Find and return all the animals in a radius around a certain coordinates
 
-    def find_trees_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set[Tuple[int, int]]:
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         range of search. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int, int]]: set of animals in search area
+        """
+        return self.grid.find_animal_instances(coordinates=coordinates,
+                                               radius=radius)
+        
+    def find_energies_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Energy):
+        """Public method:
+            Find and return all the energies in a radius around a certain coordinates
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         range of search. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int, int]]: set of energies in search area
+        """
+        return self.grid.find_energy_instances(coordinates=coordinates,
+                                               radius=radius)
+
+    def find_tree_cells_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set[Tuple[int, int]]:
         """Public method:
             Find and return all the cells occupied by trees
             in a radius around a certain coordinates
 
         Args:
-            coordinates (Tuple[int, int]): _description_
-            radius (int, optional): _description_. Defaults to 1.
+            coordinates (Tuple[int, int]): coordinates to look around
+            radius (int, optional): range of search. Defaults to 1.
 
         Returns:
-            Set[Tuple[int, int]]: _description_
+            Set[Tuple[int, int]]: set of coordinates with trees in search area
         """
         return self.grid.find_occupied_cells_by_trees(coordinates=coordinates,
                                                       radius=radius)

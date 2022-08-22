@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from errno import ENETUNREACH
-from hashlib import new
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,7 +10,7 @@ if TYPE_CHECKING:
 import enum
 import inspect
 from random import choice, random
-from typing import Any, Dict, Final, Optional, Tuple
+from typing import Any, Dict, Final, Optional, Set, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -505,7 +503,32 @@ class Entity(SimulatedObject):
         # Activate mind and return the result
         self._activate_mind(environment=environment)
 
+    def _minimal_activate_mind(self, environment: Environment) -> None:
+        """Private method:
+            Activate entity's brain
+        """
+        inputs = self._minimal_normalize_inputs(environment=environment)
+        mind = self.brain.phenotype
+        outputs = mind.activate(input_values=inputs)
+        self._minimal_interpret_outputs(outputs=outputs)
+        
+    def _minimal_normalize_inputs(self, environment: Environment) -> npt.NDArray:
+        """Private method:
+            Regroup and normalize inputs to feed brain
 
+        Returns:
+            npt.NDArray: array of normalized inputs
+        """
+        return np.array([])
+
+    def _minimal_interpret_outputs(self, outputs: Dict[int, float]):
+        """Private method:
+            Take the adequate decision based on output values
+
+        Args:
+            outputs (Dict[int, float]): dictionary of output nodes' activation values
+        """
+        
     def _activate_mind(self, environment: Environment) -> None:
         """Private method:
             Activate entity's brain
@@ -632,7 +655,7 @@ class Animal(Entity):
             Create an animal brain's genotype and its associated phenotype
         """
 
-        animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
+        """ animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
                                               "n_inputs": Animal.NUM_INPUTS,
                                               "n_outputs": Animal.NUM_OUTPUTS,
                                               "n_actions": Animal.NUM_ACTIONS,
@@ -646,6 +669,16 @@ class Animal(Entity):
                                                     "plant tree": [],
                                                     "grow": [],
                                                     "reproduce": []
+                                                }} """
+                                                
+        animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
+                                                "n_inputs": Animal.NUM_INPUTS,
+                                                "n_outputs": Animal.NUM_OUTPUTS,
+                                                "n_actions": Animal.NUM_ACTIONS,
+                                                "n_values": Animal.NUM_VALUES,
+                                                "actions":{
+                                                    "move_v": [],
+                                                    "move_h": [],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
@@ -757,7 +790,6 @@ class Animal(Entity):
     def on_death(self) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
-        pass
 
     def _want_to_reproduce(self) -> None:
         """Private method:
@@ -782,7 +814,64 @@ class Animal(Entity):
         """Public method:
             Event: on paint action
         """
-        pass
+
+    def _minimal_normalize_inputs(self, environment: Environment) -> npt.NDArray:
+        """Private method:
+            Normalize input values for brain activation
+
+        Args:
+            environment (Environment): environment of the animal
+
+        Returns:
+            np.array: array containing the normalized input values
+        """
+        sight_range = config['Simulation']['Animal']['sight_range']
+        animals_around = environment.find_animals_around(coordinates=self.position,
+                                                         radius=sight_range)
+        
+        animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
+                                                                                     sight_range=sight_range)
+        
+        energies_around = environment.find_energies_around(coordinates=self.position,
+                                                           radius=sight_range)
+        
+        energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
+                                                                                     sight_range=sight_range)
+        
+        return np.array([animal_close_distance,
+                         animal_close_angle,
+                         energy_close_distance,
+                         energy_close_angle])
+        
+        
+        
+    def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
+        """Private method:
+            Find the necessary information about the closest object around,
+            return a normalized distance and angle
+
+        Args:
+            objects_around (Set[Any]):  objects in range to search for
+            sight_range (float):        maximum distance of visible objects
+
+        Returns:
+            Tuple[float, float]:    norm_distance: normalized distance of the closest object
+                                    norm_angle: normalized angle of the closest object
+        """        
+        close_distance: float = sight_range
+        closest_object = None
+        for animal in objects_around:
+            distance = self.position.distance(other_pos=animal.position)
+            if  distance <= close_distance:
+                close_distance = distance
+                closest_object = animal
+        
+        norm_angle: float = self.position.norm_angle(other_pos=closest_object.position)
+        norm_distance: float = ((sight_range - close_distance + 0.1)
+                               /(sight_range - 1 + 0.1))
+        
+        return norm_distance, norm_angle
+            
 
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:

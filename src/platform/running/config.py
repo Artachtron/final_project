@@ -113,6 +113,7 @@ default_settings = {
                             ## Inputs
                             "normal_size": 10,
                             "normal_energy": 1000,
+                            "sight_range": 3,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
                             "max_number_offsping": 20,
