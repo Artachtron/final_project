@@ -825,6 +825,11 @@ class Animal(Entity):
         Returns:
             np.array: array containing the normalized input values
         """
+        age = self.age/self._max_age
+        size = self._size/config["Simulation"]["Animal"]["normal_size"]
+        blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
+                                   for energy in self.energies.values())
+        
         sight_range = config['Simulation']['Animal']['sight_range']
         animals_around = environment.find_animals_around(coordinates=self.position,
                                                          radius=sight_range)
@@ -838,13 +843,25 @@ class Animal(Entity):
         energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
                                                                                      sight_range=sight_range)
         
-        return np.array([animal_close_distance,
+        return np.array([age,
+                         size,
+                         blue_energy,
+                         red_energy,
+                         animal_close_distance,
                          animal_close_angle,
                          energy_close_distance,
                          energy_close_angle])
         
+    def _minimal_interpret_outputs(self, outputs: Dict[int, float]) -> None:
+        """Private method:
+            Use the output values from brain activation to decide which action to perform.
+
+        Args:
+            outputs (np.array):         array or outputs values from brain activation
+        """
         
-        
+        self._decide_minimal_move()
+                
     def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
         """Private method:
             Find the necessary information about the closest object around,
@@ -912,6 +929,29 @@ class Animal(Entity):
             output (int): output chosen to trigger action
         """
         vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
+
+        if abs(vertical) > abs(horizontal):
+            if vertical > 0:
+                direction = Direction.UP
+            else:
+                direction = Direction.DOWN
+
+        else:
+            if horizontal > 0:
+                direction = Direction.LEFT
+            else:
+                direction = Direction.RIGHT
+
+        self._action_move(direction=direction)
+    
+    def _decide_minimal_move(self) -> None:
+        """Pivate method:
+            Decide on move action
+
+        Args:
+            output (int): output chosen to trigger action
+        """
+        vertical, horizontal = [output.activation_value for output in self.mind.get_outputs()[:2]]
 
         if abs(vertical) > abs(horizontal):
             if vertical > 0:
