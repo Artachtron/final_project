@@ -77,10 +77,11 @@ default_settings = {
                         "min_vertical_size_section": 5,
                         "max_vertical_size_section": 10,
                         "animal_sparsity": 5,
+                        "spawn_initial_energy": True,
                         "spawn_energy": False,
                         "energy_sparsity": 1,
                         "spawn_energy_frequency":10,
-                        "energy_expiry": 10,
+                        "energy_expiry": 1000,
                         'energy_quantity': 100,
                         "spawn_tree": False,
                         "tree_sparsity": 5,
@@ -116,7 +117,7 @@ default_settings = {
                             "sight_range": 3,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
-                            "max_number_offsping": 20,
+                            "max_number_offsping": 10,
                             "random_action_prob": 0.05,
                             "success_reproduction": 1.00,
                             "incest": False,
@@ -162,7 +163,8 @@ class ConfigManager:
         group = optparse.OptionGroup(parser, "Settings")
         group.add_option("-c", "--config", dest="my_config_file", help="configuration")
         group.add_option("-l", "--load", dest="load_simulation", help="simulation")
-
+        group.add_option("-d", "--display", action="store_true", dest="display", help="display")
+        
         self.settings: Dict[str, Any] = default_settings
         if "pytest" not in sys.modules:
             self.parse_config()
@@ -170,7 +172,7 @@ class ConfigManager:
     def parse_config(self):
         opt, args = self.parser.parse_args()
         if opt.my_config_file:
-            config_data = json.load(open(join(ConfigManager.directory, opt.my_config_file)))
+            config_data = json.load(open(join(ConfigManager.directory, opt.my_config_file), encoding="utf-8"))
 
             for key in config_data:
                 for subkey in config_data[key]:
@@ -182,6 +184,7 @@ class ConfigManager:
 
 
         self.loaded_simulation = opt.load_simulation or None
+        self.display = bool(opt.display)
 
 
     def __getitem__(self, key):
@@ -201,7 +204,7 @@ class ConfigManager:
                     else:
                         settings[key].update(configs[key])
 
-        with open(join(ConfigManager.directory,f"config_{config_letter}_{config_num}.json"), "w") as write_file:
+        with open(join(ConfigManager.directory,f"config_{config_letter}_{config_num}.json"), "w", encoding="utf-8") as write_file:
             json.dump(settings, write_file, indent=4)
 
     def set_difficulty(self, new_difficulty):

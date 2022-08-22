@@ -142,9 +142,9 @@ class Network:
         Args:
             link (Link): link to add
         """
-        in_node = self._all_nodes[link.in_node.id]
-        out_node = self._all_nodes[link.out_node.id]
-
+        in_node = link.in_node
+        out_node = link.out_node
+        
         out_node.incoming[link.id] = link
         in_node.outgoing[link.id] = link
 
@@ -202,7 +202,7 @@ class Network:
                         f"{node} is connected to {len(node.incoming)}/{len(self.inputs)}")
 
                 if {n.in_node.id for n in node.get_incoming()} != set(self.inputs.keys()):
-                    raise ValueError(f"{node} is not connected to all inputs ")
+                    raise ValueError(f"{node} is not connected to all inputs")
 
         # Inputs
         for node in self.get_inputs():
@@ -219,6 +219,47 @@ class Network:
                 if {n.out_node.id for n in node.get_outgoing()} != set(self.outputs.keys()):
                     raise ValueError(f"{node} is not connected to all outputs")
 
+    def verify_post_crossover(self):
+        """Public method:
+            Verify if the complete network's structure is correct
+
+        Raises:
+            ValueError: Outputs must be connected to all inputs
+            ValueError: Outputs incoming connections must be equal to set of inputs
+            ValueError: Outputs must not have any outgoing connections
+            ValueError: Inputs must be connected to all outputs
+            ValueError: Inputs outgoing connections must be equal to set of outputs
+            ValueError: Inputs must not have any incoming connections
+        """
+        # Outputs
+        for node in self.get_outputs():
+
+            if node.outgoing:
+                raise ValueError(f"{node} has some outgoing connections")
+
+            # Fully connected
+            if self.complete:
+                if len(node.incoming) > (len(self.inputs) + len(self.hidden)):
+                    raise ValueError(
+                        f"{node} is connected to {len(node.incoming)}/{len(self.inputs) + len(self.hidden)}")
+                
+                if len(node.incoming) < len(self.inputs):
+                    raise ValueError(f"{node} is not connected to all inputs")
+
+        # Inputs
+        for node in self.get_inputs():
+
+            if node.incoming:
+                raise ValueError(f"{node} has some incoming connections")
+
+            # Fully connected
+            if self.complete:
+                if len(node.outgoing) > (len(self.outputs) + len(self.hidden)):
+                    raise ValueError(
+                        f"{node} is connected to {len(node.outgoing)}/{len(self.outputs) + len(self.hidden)}")
+                    
+                if len(node.outgoing) < len(self.outputs):
+                    raise ValueError(f"{node} is not connected to all outputs")
 
 
     def activate(self, input_values: npt.NDArray) -> Dict[int, float]:
@@ -279,7 +320,6 @@ class Network:
             Set: set of trigger outputs
         """
         output_values: Dict[int, float] = {}
-
         for node in self.get_outputs():
             if not node.is_output():
                 raise ValueError("The node must be an output")

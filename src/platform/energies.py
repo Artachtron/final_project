@@ -98,6 +98,9 @@ class Energy(Resource):
 
         self._type: EnergyType = energy_type # BLUE or RED
         self.owner: Optional[int] = owner_id # unique identifier of owner
+        
+    def __repr__(self) -> str:
+        return f'{self._type.value.title()} {self.id}: {self.quantity}'
 
     @property
     def type(self) -> EnergyType:
@@ -137,6 +140,7 @@ class RedEnergy(Energy):
                          owner_id=owner_id,
                          expiry=expiry)
 
+
 class BlueEnergy(Energy):
     """Subclass of Energy:
         Energy for simple actions, used to survive
@@ -165,3 +169,4 @@ class BlueEnergy(Energy):
                          energy_type=EnergyType.BLUE,
                          owner_id=owner_id,
                          expiry=expiry)
+

@@ -369,7 +369,7 @@ class Environment:
         """
         self.state = self._populate_animal()
 
-        if config['Simulation']['spawn_energy']:
+        if config['Simulation']['spawn_initial_energy']:
             self.state = self._populate_energy()
 
         if config['Simulation']['spawn_tree']:
@@ -612,6 +612,35 @@ class Environment:
                 self.spawn_tree(coordinates=free_cell)
 
         animal.on_plant_tree()
+        
+    def _on_animal_reproduce(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's reproduce action
+
+        Args:
+            animal (Animal): animal that want to reproduce
+            action (Action): reproduce action
+        """
+        entities_around = self.grid.find_animal_instances(coordinates=animal.position,
+                                                          radius=config['Simulation']['Animal']['reproduction_range'])
+
+        energy_stock: int = 0
+        most_suitable_mate: Animal = None
+        for other_entity in entities_around:
+            # if other_entity.status == Status.FERTILE:
+            if other_entity.fitness > energy_stock:
+                
+                if (not config['Simulation']['Animal']['incest']
+                    and self._check_incest(parent1=animal,
+                                           parent2=other_entity)):
+                    
+                    energy_stock = other_entity.fitness
+                    most_suitable_mate = other_entity
+
+        if most_suitable_mate:
+            self._reproduce_entities(parent1=animal,
+                                     parent2=most_suitable_mate)
+        
 
 
     def _on_animal_action(self, animal: Animal) -> None:
@@ -646,6 +675,10 @@ class Environment:
             case ActionType.PLANT_TREE:
                 self._on_animal_plant_tree(animal=animal,
                                            action=action)
+                
+            case ActionType.REPRODUCE:
+                self._on_animal_reproduce(animal=animal,
+                                          action=action)
 
     def _on_animal_death(self, animal: Animal) -> None:
         """Pivate method:
@@ -679,7 +712,7 @@ class Environment:
 
             case Status.FERTILE:
                 entities_around = self.grid.find_animal_instances(coordinates=animal.position,
-                                                                           radius=config['Simulation']['Animal']['reproduction_range'])
+                                                                  radius=config['Simulation']['Animal']['reproduction_range'])
 
                 energy_stock: int = 0
                 most_suitable_mate: Animal = None
@@ -841,7 +874,7 @@ class Environment:
             parent1.on_reproduction()
             parent2.on_reproduction()
             
-            for _ in range(1, randint(1,config['Simulation']['Animal']['max_number_offsping']) + 1):
+            for _ in range(1, randint(1, config['Simulation']['Animal']['max_number_offsping']) + 1):
 
                 free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
                                                                            radius=3)

@@ -172,7 +172,7 @@ class Entity(SimulatedObject):
         """
         self.brain = brain
         self.mind = brain.phenotype
-        self.mind.verify_post_genesis()
+        self.mind.verify_post_crossover()
 
     def _decide_action(self, action: Action):
         """Private method:
@@ -501,7 +501,7 @@ class Entity(SimulatedObject):
         self._increase_age()
 
         # Activate mind and return the result
-        self._activate_mind(environment=environment)
+        self._minimal_activate_mind(environment=environment)
 
     def _minimal_activate_mind(self, environment: Environment) -> None:
         """Private method:
@@ -511,7 +511,7 @@ class Entity(SimulatedObject):
         mind = self.brain.phenotype
         outputs = mind.activate(input_values=inputs)
         self._minimal_interpret_outputs(outputs=outputs)
-        
+
     def _minimal_normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Regroup and normalize inputs to feed brain
@@ -528,7 +528,7 @@ class Entity(SimulatedObject):
         Args:
             outputs (Dict[int, float]): dictionary of output nodes' activation values
         """
-        
+
     def _activate_mind(self, environment: Environment) -> None:
         """Private method:
             Activate entity's brain
@@ -670,7 +670,7 @@ class Animal(Entity):
                                                     "grow": [],
                                                     "reproduce": []
                                                 }} """
-                                                
+
         animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
                                                 "n_inputs": Animal.NUM_INPUTS,
                                                 "n_outputs": Animal.NUM_OUTPUTS,
@@ -783,7 +783,7 @@ class Animal(Entity):
             Action: Get ready for reproduction
         """
         action = ReproduceAction()
-        self._want_to_reproduce()
+        # self._want_to_reproduce()
 
         self._decide_action(action=action)
 
@@ -829,20 +829,20 @@ class Animal(Entity):
         size = self._size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
                                    for energy in self.energies.values())
-        
+
         sight_range = config['Simulation']['Animal']['sight_range']
         animals_around = environment.find_animals_around(coordinates=self.position,
                                                          radius=sight_range)
-        
+
         animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
                                                                                      sight_range=sight_range)
-        
+
         energies_around = environment.find_energies_around(coordinates=self.position,
                                                            radius=sight_range)
-        
+
         energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
                                                                                      sight_range=sight_range)
-        
+
         return np.array([age,
                          size,
                          blue_energy,
@@ -851,7 +851,7 @@ class Animal(Entity):
                          animal_close_angle,
                          energy_close_distance,
                          energy_close_angle])
-        
+
     def _minimal_interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
@@ -859,9 +859,17 @@ class Animal(Entity):
         Args:
             outputs (np.array):         array or outputs values from brain activation
         """
+        """ if self.generation > 0:
+            self.action= IdleAction() """
+
+        if (self.can_reproduce()
+            and random() < 0.5):
+            self._decide_reproduce()
+        else:
+            self._decide_minimal_move()
+            
         
-        self._decide_minimal_move()
-                
+
     def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
         """Private method:
             Find the necessary information about the closest object around,
@@ -874,21 +882,25 @@ class Animal(Entity):
         Returns:
             Tuple[float, float]:    norm_distance: normalized distance of the closest object
                                     norm_angle: normalized angle of the closest object
-        """        
+        """
         close_distance: float = sight_range
-        closest_object = None
-        for animal in objects_around:
-            distance = self.position.distance(other_pos=animal.position)
+        closest_object: SimulatedObject = None
+        for obj in objects_around:
+            distance = self.pos_obj.distance(other_pos=obj.pos_obj)
             if  distance <= close_distance:
                 close_distance = distance
-                closest_object = animal
-        
-        norm_angle: float = self.position.norm_angle(other_pos=closest_object.position)
-        norm_distance: float = ((sight_range - close_distance + 0.1)
-                               /(sight_range - 1 + 0.1))
-        
+                closest_object = obj
+
+        if closest_object:
+            norm_angle: float = self.pos_obj.norm_angle(other_pos=closest_object.pos_obj)
+            norm_distance: float = ((sight_range - close_distance)
+                                   /(sight_range - 1))
+        else:
+            norm_angle = -1
+            norm_distance = -1
+
         return norm_distance, norm_angle
-            
+
 
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
@@ -913,7 +925,7 @@ class Animal(Entity):
         energies = environment.find_if_resources_around(coordinates=self.position,
                                                         include_self=True)
         see_energies = list(map(int, energies))
-   
+
         colors = environment.get_colors_around(coordinates=self.position,
                                                radius=2)
 
@@ -943,7 +955,7 @@ class Animal(Entity):
                 direction = Direction.RIGHT
 
         self._action_move(direction=direction)
-    
+
     def _decide_minimal_move(self) -> None:
         """Pivate method:
             Decide on move action
@@ -951,7 +963,7 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-        vertical, horizontal = [output.activation_value for output in self.mind.get_outputs()[:2]]
+        vertical, horizontal = [output.activation_value for output in list(self.mind.outputs.values())[:2]]
 
         if abs(vertical) > abs(horizontal):
             if vertical > 0:

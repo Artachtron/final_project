@@ -251,8 +251,9 @@ class Genome:
                      complete=complete,
                      n_inputs=n_inputs,
                      n_outputs=n_outputs)
-
+        
         return genome
+    
 
     @staticmethod
     def verify_post_genesis(n_inputs: int, n_outputs: int, links: Dict[int, LinkGene],
@@ -397,21 +398,21 @@ class Genome:
             
         else:
             factor = 1
-            
-        for _ in range(factor):
-            self.mutate()
 
-    def mutate(self) -> None:
+        self.mutate(factor=factor)
+
+    def mutate(self, factor: int) -> None:
         """Public method:
             Mutate the genome
-        """               
-        # Add a node to the genome
-        if random() < config["NEAT"]["add_node_prob"]:
-            self._mutate_add_node()
-        # Add a link to the genome
-        for _ in range(0, 5):
-            if random() < config["NEAT"]["add_link_prob"]:
-                self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
+        """
+        for _ in range(factor):               
+            # Add a node to the genome
+            if random() < config["NEAT"]["add_node_prob"]:
+                self._mutate_add_node()
+            # Add a link to the genome
+            for _ in range(0, 5):
+                if random() < config["NEAT"]["add_link_prob"]:
+                    self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
                 
         # Modify the weights of the links
         # and their enabled status
@@ -559,12 +560,18 @@ class Genome:
                   False if it's novel
         """
         for link in self.get_link_genes():
-            if (link.in_node == node1.id and
-                link.out_node == node2.id):
+            if (
+                (
+                    link.in_node == node1.id 
+                and link.out_node == node2.id
+                )
+             or (
+                    link.out_node == node1.id
+                and link.in_node == node2.id
+                )):
 
                 return True
-
-
+            
         return False
 
     def _new_link_gene(self, in_node: NodeGene, out_node: NodeGene) -> LinkGene:
@@ -586,8 +593,8 @@ class Genome:
                             in_node=in_node.id,
                             out_node=out_node.id,
                             link_id=the_innovation.innovation_number1,
+                            enabled=True,
                             mutation_number=0)
-
         return new_link
 
     def _is_valid_link(self, node_in: NodeGene, node_out: NodeGene) -> bool:
@@ -628,13 +635,15 @@ class Genome:
                                 Node: outgoing NodeGene
         """
         in_nodes = list(range(1, self.n_inputs + 1))
-        hiddens =  [i for i in self.node_genes if i > self.n_outputs]
-        out_nodes = list(range(self.n_inputs + 1, self.n_outputs + 1))
+        hidden_threshold = self.n_inputs + 1 + self.n_outputs
+        hiddens =  [i for i in self.node_genes if i > hidden_threshold]
+        out_nodes = list(range(self.n_inputs + 1, hidden_threshold))
         # Try until it's time to give up
-        for _ in range(tries + 1):
+        for _ in range(tries):
             # Select two NodeGenes at random
             node1 = self.node_genes[choice(in_nodes + hiddens)]
-            node2 = self.node_genes[choice(out_nodes + hiddens)]
+            node2 = self.node_genes[choice(hiddens + out_nodes)]
+
             # node1, node2 = sample(self.get_node_genes(), 2)
 
             # Check if the LinkGene is valid
@@ -667,6 +676,7 @@ class Genome:
         if node1 and node2:
             new_link = self._new_link_gene(in_node=node1,
                                            out_node=node2)
+    
             self.add_link(new_link)
             return True
 
@@ -837,7 +847,7 @@ class Genome:
         # Choose randomly which parent will be the dominant one,
         # which will transmit most of its genes
         main_genome, sub_genome  = sample([parent1, parent2], 2)
-
+        
         new_nodes: Dict[int, NodeGene] = {}
 
         # Make sure all sensors and outputs are included
@@ -877,7 +887,10 @@ class Genome:
         # The baby genome resulting from the crossover
         baby_genome = Genome(genome_id=genome_id,
                              node_genes=new_nodes,
-                             link_genes=new_links)
+                             link_genes=new_links,
+                             n_inputs=parent1.n_inputs,
+                             n_outputs=parent1.n_outputs,
+                             complete=bool(parent1.complete * parent2.complete))
 
         baby_genome.verify_post_crossover()
 

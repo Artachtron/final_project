@@ -177,6 +177,16 @@ class SimulatedObject:
             value (int): new size
         """
         self._size = value
+    
+    @property
+    def pos_obj(self) -> Position:
+        """Porperty:
+            return the position
+
+        Returns:
+            Position: position
+        """
+        return self._position
 
     @property
     def position(self) -> Tuple[int, int]:

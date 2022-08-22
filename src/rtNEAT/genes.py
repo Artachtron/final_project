@@ -256,7 +256,7 @@ class LinkGene(BaseGene):
         """
         return {'link_id':self.id, 'weight':self.weight,
                 'in_node':self.in_node, 'out_node':self.out_node,
-                 'enabled':self.enabled}
+                'enabled':self.enabled}
 
     def mutate(self) -> None:
         """Mutate the LinkGene

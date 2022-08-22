@@ -16,7 +16,7 @@ from .simulation import SimState, Simulation
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
-sys.setrecursionlimit(100000)
+# sys.setrecursionlimit(100000)
 
 class World:
     """Class:
@@ -163,8 +163,8 @@ class World:
         """Public method:
             Stop the running of the simulation
         """
-        # self.metrics.print(all_keys=True)
-        self.write_metrics()
+        self.metrics.print(all_keys=True)
+        # self.write_metrics()
         self.running = False
 
     def run(self) -> None:

@@ -243,21 +243,21 @@ class Node(BasePhene):
         # If the output was already calculated during the current phase,
         # or the node is an input: then just return the value
         if self.activation_phase != activation_phase and not self.is_sensor():
+            # set the activation phase to the current one,
+            # since the value is now already calculated
+            self.activation_phase = activation_phase
 
             values = self.bias
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
+
             for link in self.get_incoming():
                 # Only take the value of activated links
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
                     values += link.in_node.get_activation(activation_phase=activation_phase) * link.weight
-
+            
             self.activation_value = self.activation_function(values)
-
-            # set the activation phase to the current one,
-            # since the value is now already calculated
-            self.activation_phase = activation_phase
-
+            
         return self.activation_value
