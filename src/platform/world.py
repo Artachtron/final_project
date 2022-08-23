@@ -153,14 +153,18 @@ class World:
         self.metrics.pickle_frames(sim_name=sim_name)
 
     def set_difficulty(self, sim_state) -> None:
-        difficulty: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
-                             /config['Simulation']['difficulty_pop_factor']) + 1
+        if sim_state.cycle > config['Simulation']['difficulty_cycle_factor_threshold']:
+            difficulty_factor: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
+                                        /config['Simulation']['difficulty_pop_factor']) + 1
+            
+            config.set_difficulty_factor(difficulty_factor * config['Simulation']['difficulty_pop_coefficient'])
+        
+        difficulty = ((sim_state.cycle//config['Simulation']['diffulty_cycles_step'])
+                     * config['Simulation']['diffulty_factor_coefficient']) + 1
+             
         diff: float = config.set_difficulty(difficulty)
 
         print(f"{sim_state.cycle}: {sim_state.n_animals} {diff:.2f}")
-
-        difficulty_factor = sim_state.cycle//config['Simulation']['diffulty_cycles_step']
-        config.set_difficulty_factor(difficulty_factor * config['Simulation']['diffulty_factor_increment'])
 
     def shutdown(self) -> None:
         """Public method:

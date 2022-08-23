@@ -130,7 +130,7 @@ class DisplayedObject(pg.sprite.Sprite):
             entity = sim_state.entities[self.id]
             self.size = 4 + entity.size
             self.position = entity.position
-
+            
         # Scale the image based on object's size
         size = self.size * block_size/15
         self.image: pg.surface.Surface = pg.transform.scale(self.sprite, (size, size))
@@ -239,12 +239,14 @@ class Display:
             for resource in sim_state.get_resources():
                 self._add_resource(resource=resource)
                 
-    def init_from_frames(self, frames: List[Frame]):
-        for i, frame in enumerate(frames):
+    def init_from_frames(self, frames: List[Frame], first_frame: int=0, last_frame: int=0):
+        last_frame = last_frame or len(frames)
+        for i, frame in enumerate(frames[first_frame:last_frame], first_frame):
             print(f"frame: {i}")
             self._load_frame(frame=frame)
             self.draw(grid=None)
             self._clear_groups()
+            
         print("end of frames")
             
     def _clear_groups(self):
@@ -380,21 +382,21 @@ class Display:
            Args:
                 grid (Grid): grid of the world
         """
-        for x in range(0, self.window_width, self.block_size):
-            for y in range(0, self.window_height,  self.block_size):
-                rect = pg.Rect(x, y,  self.block_size,  self.block_size)
-                if grid:
-                    pg.draw.rect(self.screen,
-                                 grid.color_grid.array[ int(x / self.block_size),
-                                                        int(y / self.block_size)],
-                                 rect, 0)
-                else:
-                    pg.draw.rect(self.screen,
-                                 WHITE,
-                                 rect, 0)
+        if grid:
+            for x in range(0, self.window_width, self.block_size):
+                for y in range(0, self.window_height,  self.block_size):
+                    rect = pg.Rect(x, y,  self.block_size,  self.block_size)
                     
-                if self.show_grid:
-                    pg.draw.rect(self.screen, BLACK, rect, 1)
+                    pg.draw.rect(self.screen,
+                                grid.color_grid.array[ int(x / self.block_size),
+                                                        int(y / self.block_size)],
+                                rect, 0)
+   
+                    if self.show_grid:
+                        pg.draw.rect(self.screen, BLACK, rect, 1)
+ 
+        else:
+            self.screen.fill((0,0,0))
 
     def _draw_entities(self) -> None:
         """Private method:

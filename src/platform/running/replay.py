@@ -1,7 +1,9 @@
+import cProfile
 import pickle
 
 from ..display import Display
 from .config import config
+from .main import profile
 
 # python -m src.platform.running.play_frames -c new_config.json -l sim_frames
 
@@ -15,11 +17,13 @@ def main():
     display = Display(display_id=0,
                         dimensions=dimensions,
                         block_size=block_size,
-                        sim_speed=7,
-                        show_grid=True)
+                        sim_speed=5)
 
     display.init()
-    display.init_from_frames(frames=frames)
+    display.init_from_frames(frames=frames, first_frame=500)
 
 if __name__ == '__main__':
-    main()
+    with cProfile.Profile() as pr:
+        main()
+
+    profile(profiler=pr)

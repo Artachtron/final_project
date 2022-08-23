@@ -312,7 +312,7 @@ class Entity(SimulatedObject):
 
         self.gained_energy += quantity
 
-        if self.gained_energy/100 > self.size:
+        if self.gained_energy/50 > self.size:
             self._grow()
 
         # Add the quantity
@@ -375,7 +375,7 @@ class Entity(SimulatedObject):
         """
         difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.BLUE,
-                           quantity=int(self._action_cost/difficulty))
+                           quantity=int(self._action_cost))
 
     def has_enough_energy(self, energy_type: EnergyType, quantity: int) -> bool:
         """Public method:
@@ -649,9 +649,7 @@ class Animal(Entity):
 
         difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_COST * self._size
-                                  * self._size
-                                  * difficulty)
+                           quantity=Animal.REPRODUCTION_COST * self._size)
 
     def _create_brain(self) -> None:
         """Private method:

@@ -426,7 +426,7 @@ class Environment:
         Returns:
             SimState: state of the simulation
         """
-        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"] - 1
+        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] #+ config["Simulation"]["difficulty_level"] - 1
         self._populate_with_item(sparsity=energy_sparsity,
                                  item='energy')
         print(f"Initial population of energies: {self.state.n_energies}")
@@ -886,12 +886,11 @@ class Environment:
                 if birth_position:
                     init_adult_size = config['Simulation']['Animal']['init_adult_size']
                     adult_size = max(init_adult_size, int((parent1.size + parent2.size)/2))
-                    difficulty = config['Simulation']['difficulty_level']
 
                     child = self.spawn_animal(coordinates=birth_position,
                                               size=1,
                                               blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                              red_energy=int(Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty),
+                                              red_energy=int(Animal.INITIAL_ANIMAL_RED_ENERGY),
                                               adult_size=adult_size,
                                               birthday=self.state.cycle)
 
@@ -1254,6 +1253,7 @@ class Simulation:
         self.environment: Environment                   # environment with which entities can interact
         self.dimensions: Tuple[int, int] = dimensions   # dimensions of the world
         self.innov_table: InnovTable = InnovTable
+        self.update_counter: int = 0
 
 
     def init(self, populate: bool=True) -> SimState:
@@ -1286,14 +1286,20 @@ class Simulation:
             Tuple[Grid, SimState]:  Grid: world's state
                                     SimState: simulation's state
         """
+        self.update_counter += 1
         self.state.new_cycle()
-        if  (config['Simulation']['spawn_energy']
-         and self.state.cycle%config['Simulation']['spawn_energy_frequency'] == 0):
+        frequency = (config['Simulation']['spawn_energy_frequency']
+                   * config['Simulation']['difficulty_level'])
+        
+        config['Simulation']['energy_expiry'] = frequency
+        
+        if  (
+                config['Simulation']['spawn_energy']
+            and self.update_counter%frequency == 0
+            ):
             self.environment._populate_energy()
-
-        """ with Pool() as pool:
-            pool.imap_unordered(partial(entity_update, environment=self.environment), self.state.get_entities()) """
-
+            self.update_counter = 0
+            
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
             self.environment._event_on_action(entity=entity)
