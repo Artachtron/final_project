@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from grid import Grid
 
 import pickle
-import sys
 from typing import Final, Tuple
 
 from .display import Display
@@ -89,6 +88,7 @@ class World:
         try:
             if not config.loaded_simulation:
                 raise FileNotFoundError
+            
             self.simulation = pickle.load(open('simulations/' + config.loaded_simulation, "rb"))
             sim_state = self.simulation.state
             self.simulation.load_innovations()
@@ -115,7 +115,8 @@ class World:
                                    sim_speed=self.sim_speed,
                                    show_grid=show_grid)
 
-            self.display.init(sim_state=sim_state)
+            self.display.init()
+            self.display.init_from_sim(sim_state=sim_state)
 
 
     def _update(self) -> None:
@@ -147,7 +148,9 @@ class World:
         self.metrics.print(all_keys=True)
         self.graph_metrics()
         self.simulation.save()
-        pickle.dump(self.simulation, open('simulations/sim', "wb"))
+        sim_name = 'sim'
+        pickle.dump(self.simulation, open(f'simulations/{sim_name}', "wb"))
+        self.metrics.pickle_frames(sim_name=sim_name)
 
     def set_difficulty(self, sim_state) -> None:
         difficulty: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])

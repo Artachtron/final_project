@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Optional, Set
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     from simulation import SimState
     from entities import Entity
 
 import json
+import pickle
+from collections import namedtuple
 from dataclasses import dataclass, field
 from os.path import dirname, join, realpath
 from pathlib import Path
@@ -15,6 +17,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+Entity = namedtuple("Entity",["type","size", "position"])
+Energy = namedtuple("Energy",["type","size", "position"])
+
+@dataclass
+class Frame:
+    entities: List[Entity]
+    energies: List[Energy]
 
 @dataclass
 class Probe:
@@ -45,6 +54,8 @@ class Probe:
     max_links: int = 0
 
     actions: Dict = field(default_factory=list)
+    
+    frames: List[Frame] = field(default_factory=list)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -63,6 +74,8 @@ class Probe:
         return self.init_trees + self.added_trees
 
     def update(self) -> None:
+        self.save_frame()
+        
         self.set_added_entities()
         self.set_cycle()
 
@@ -85,6 +98,16 @@ class Probe:
         self.update_population()
         self.update_death_age()
 
+    def save_frame(self):
+        state = self.sim_state
+        entities = [Entity(entity.__class__.__name__, entity.size, entity.position) for entity in state.get_entities()]
+        energies = [Energy(energy.__class__.__name__, energy.size, energy.position) for energy in state.get_resources()]
+
+        self.frames.append(Frame(entities=entities,
+                                 energies=energies))
+        
+    def pickle_frames(self, sim_name:str = "sim"):
+        pickle.dump(self.frames, open(f'simulations/frames/{sim_name}_frames', "wb"))
 
     def set_added_entities(self) -> None:
         added_entities = self.sim_state.added_entities
@@ -292,3 +315,31 @@ class Probe:
                 data[action] = data.get(action, 0) + self.actions_count[cycle][action]
                 
         print(data)
+    
+    @staticmethod
+    def graph_from_file(file_path: str):
+        file_path = "H:\\UoL\\Semester 5\\Code\\project\\measurements\\measurements.json"
+        data = json.load(open(file_path, encoding="utf-8"))
+
+        metrics = set()
+
+        frame = []
+        for param in list(data.keys())[:1]:
+            
+            fig, axs = plt.subplots(nrows=3, figsize=(5,10), sharex=True, constrained_layout=True)
+            fig.suptitle(param, fontsize=16)
+            for var in data[param]:
+                for metric in data[param][var]:
+                    metrics.add(metric)
+                    values = data[param][var][metric]
+                    for val in values:
+                        frame.append((param, var, metric, val))
+                        
+            df = pd.DataFrame(data=frame, columns=['parameter', 'variation', 'metrics', 'value'])           
+            frame = []  
+            for i, metric in enumerate(metrics):
+                df_m = df[df['metrics'] == metric]   
+                g = sns.boxplot(data=df_m, x='variation', y='value', ax=axs[i])
+                g.set_title(metric)
+                g.set_xlabel('')
+            plt.xlabel("variation")
