@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from entities import Animal, Tree, Entity
 
 from itertools import product
+from math import ceil
 from random import choice, randint, random, sample
 from typing import Any, Dict, Final, Optional, Set, Tuple, ValuesView
 
@@ -401,8 +402,8 @@ class Environment:
         vertical_divisor = randint(num_max_section_vertical,
                                    num_min_section_vertical+1)
 
-        section_horizontal_size = int(width/horizontal_divisor)
-        section_vertical_size = int(height/vertical_divisor)
+        section_horizontal_size = ceil(width/horizontal_divisor)
+        section_vertical_size = ceil(height/vertical_divisor)
 
         possible_coordinates = set(product(range(section_horizontal_size),
                                            range(section_vertical_size)))
@@ -425,12 +426,11 @@ class Environment:
         Returns:
             SimState: state of the simulation
         """
-        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
+        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"] - 1
         self._populate_with_item(sparsity=energy_sparsity,
                                  item='energy')
         print(f"Initial population of energies: {self.state.n_energies}")
         return self.state
-
 
     def _populate_animal(self) -> SimState:
         """Private method:
@@ -482,10 +482,13 @@ class Environment:
                                      num_section)
 
                 for x, y in coordinates:
+                    
                     match item:
                         case 'energy':
+                            quantity = config['Simulation']['energy_quantity']
+                            quantity = randint(quantity/2, quantity)
                             self.create_energy(energy_type=choice(list(EnergyType)),
-                                               quantity=config['Simulation']['energy_quantity'],
+                                               quantity=quantity,
                                                coordinates=(x + x_offset,
                                                             y + y_offset),
                                                expiry=config['Simulation']['energy_expiry'])
@@ -628,13 +631,13 @@ class Environment:
         most_suitable_mate: Animal = None
         for other_entity in entities_around:
             # if other_entity.status == Status.FERTILE:
-            if other_entity.fitness > energy_stock:
+            if sum(other_entity.energies.values()) > energy_stock:
                 
                 if (not config['Simulation']['Animal']['incest']
                     and self._check_incest(parent1=animal,
                                            parent2=other_entity)):
                     
-                    energy_stock = other_entity.fitness
+                    energy_stock = sum(other_entity.energies.values())
                     most_suitable_mate = other_entity
 
         if most_suitable_mate:
@@ -1008,10 +1011,11 @@ class Environment:
         if quantity < 1:
             return None
 
-        if config['Log']['grid_resources']:
-            print(f"{energy_type}:{quantity} was created at {coordinates}")
         if not self.grid.resource_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
+        
+        if config['Log']['grid_resources']:
+            print(f"{energy_type}:{quantity} was created at {coordinates}")
 
         energy_id = self.state.get_energy_id(increment=True)
 

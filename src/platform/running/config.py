@@ -65,7 +65,7 @@ default_settings = {
                         "difficulty_pop_factor": 1000,
                         "difficulty_factor": 0.0,
                         "difficulty_level": 1,
-                        "max_cycle": 1000,
+                        "max_cycle": 10000,
                         # Grid
                         "grid_width": 50,
                         "grid_height": 50,
@@ -81,8 +81,8 @@ default_settings = {
                         "spawn_energy": False,
                         "energy_sparsity": 1,
                         "spawn_energy_frequency":10,
-                        "energy_expiry": 1000,
-                        'energy_quantity': 100,
+                        "energy_expiry": 10,
+                        "energy_quantity": 100,
                         "spawn_tree": False,
                         "tree_sparsity": 5,
 
@@ -114,14 +114,15 @@ default_settings = {
                             ## Inputs
                             "normal_size": 10,
                             "normal_energy": 1000,
-                            "sight_range": 3,
+                            "entity_sight_range":5,
+                            "energy_sight_range": 3,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
                             "max_number_offsping": 10,
                             "random_action_prob": 0.05,
                             "success_reproduction": 1.00,
                             "incest": False,
-                            "reproduction_range": 10,
+                            "reproduction_range": 1,
                         },
 
                         "Tree":{

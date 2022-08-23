@@ -76,7 +76,6 @@ class Entity(SimulatedObject):
                  generation: int = 0,
                  birthday: int = 0,
                  adult_size: int = 0,
-                 max_age: int = 0,
                  size: int = INITIAL_SIZE,
                  action_cost: int = INITIAL_ACTION_COST,
                  blue_energy: int = INITIAL_BLUE_ENERGY,
@@ -120,7 +119,7 @@ class Entity(SimulatedObject):
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self.age: int = 0                                       # time since birth
         self._max_age: int = Entity.INITIAL_MAX_AGE             # maximum longevity before dying
-
+        self.gained_energy: float = 0.0
 
         self._adult_size: int = adult_size                      # size to reach before becoming adult
         self._is_adult: bool = False                            # can reproduce only if adult
@@ -134,6 +133,7 @@ class Entity(SimulatedObject):
 
         if self.generation == 0:
             self._create_brain()
+            
 
     def _create_brain(self):
         """Private method:
@@ -237,8 +237,7 @@ class Entity(SimulatedObject):
         """
         self.age += amount
         if not self._is_adult:
-            if random() < 0.05:
-                self._grow()
+            self._grow()
 
         # if new age above maximum age threshold,
         # the entity dies
@@ -310,6 +309,11 @@ class Entity(SimulatedObject):
         # quantiy can't be negative
         if quantity < 0 :
             raise ValueError
+
+        self.gained_energy += quantity
+
+        if self.gained_energy/100 > self.size:
+            self._grow()
 
         # Add the quantity
         self._energies_stock[energy_type.value] += quantity
@@ -473,10 +477,11 @@ class Entity(SimulatedObject):
         if type(resource).__base__.__name__ == 'Energy':
             self._gain_energy(energy_type=resource.type,
                               quantity=resource.quantity)
-
+            
         # If resource is a seed
         elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
             self._store_seed(seed=resource)
+            
 
     def _die(self, cause: Optional[str]="") -> None:
         """Private method:
@@ -598,7 +603,6 @@ class Animal(Entity):
                  generation: int = 0,
                  birthday: int = 0,
                  adult_size: int = 0,
-                 max_age: int = 0,
                  size: int = 20,
                  action_cost: int = 1,
                  blue_energy: int = 10,
@@ -612,7 +616,6 @@ class Animal(Entity):
                          generation=generation,
                          birthday=birthday,
                          adult_size=adult_size,
-                         max_age=max_age,
                          size=size,
                          action_cost=action_cost,
                          blue_energy=blue_energy,
@@ -712,8 +715,7 @@ class Animal(Entity):
         self._update_position(new_position=new_position)
 
         self.fitness += 1
-        self._max_age += 1
-
+        
     def _update_position(self, new_position: Tuple[int, int]) -> None:
         """Private method:
             Update the position of the animal
@@ -830,18 +832,19 @@ class Animal(Entity):
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
                                    for energy in self.energies.values())
 
-        sight_range = config['Simulation']['Animal']['sight_range']
+        entity_sight_range = config['Simulation']['Animal']['entity_sight_range']
         animals_around = environment.find_animals_around(coordinates=self.position,
-                                                         radius=sight_range)
+                                                         radius=entity_sight_range)
 
         animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
-                                                                                     sight_range=sight_range)
+                                                                                     sight_range=entity_sight_range)
 
+        energy_sight_range = config['Simulation']['Animal']['energy_sight_range']
         energies_around = environment.find_energies_around(coordinates=self.position,
-                                                           radius=sight_range)
+                                                           radius=energy_sight_range)
 
         energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
-                                                                                     sight_range=sight_range)
+                                                                                     sight_range=energy_sight_range)
 
         return np.array([age,
                          size,
@@ -943,13 +946,13 @@ class Animal(Entity):
         vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
 
         if abs(vertical) > abs(horizontal):
-            if vertical > 0:
+            if vertical > 0.5:
                 direction = Direction.UP
             else:
                 direction = Direction.DOWN
 
         else:
-            if horizontal > 0:
+            if horizontal > 0.5:
                 direction = Direction.LEFT
             else:
                 direction = Direction.RIGHT
@@ -966,13 +969,13 @@ class Animal(Entity):
         vertical, horizontal = [output.activation_value for output in list(self.mind.outputs.values())[:2]]
 
         if abs(vertical) > abs(horizontal):
-            if vertical > 0:
+            if vertical > 0.5:
                 direction = Direction.UP
             else:
                 direction = Direction.DOWN
 
         else:
-            if horizontal > 0:
+            if horizontal > 0.5:
                 direction = Direction.LEFT
             else:
                 direction = Direction.RIGHT
@@ -1117,7 +1120,6 @@ class Tree(Entity):
                          entity_id=tree_id,
                          generation=generation,
                          adult_size=adult_size,
-                         max_age=max_age,
                          size=size,
                          action_cost=action_cost,
                          blue_energy=blue_energy,

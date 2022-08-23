@@ -94,7 +94,7 @@ class World:
             self.simulation.load_innovations()
 
             World.MAX_CYCLE += sim_state.cycle
-            self.display_active: bool = False
+            # self.display_active: bool = False
             """ phase = sim_state.cycle//1000 + 1
             config.set_difficulty_range(phase=phase) """
 
@@ -136,7 +136,7 @@ class World:
 
         self.set_difficulty(sim_state=sim_state)
 
-        if sim_state.cycle%500 == 0:
+        if sim_state.cycle%1000 == 0:
             self.save_simulation()
             
         if (sim_state.cycle == World.MAX_CYCLE or
@@ -147,7 +147,7 @@ class World:
         self.metrics.print(all_keys=True)
         self.graph_metrics()
         self.simulation.save()
-        pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
+        pickle.dump(self.simulation, open('simulations/sim', "wb"))
 
     def set_difficulty(self, sim_state) -> None:
         difficulty: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])

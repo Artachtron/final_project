@@ -282,7 +282,6 @@ class Network:
 
         # increment the activation_phase
         self.activation_phase += 1
-
         # store the input values in the input nodes
         self._activate_inputs(values=input_values)
         # travel through the network to calculate the output values

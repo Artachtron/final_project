@@ -130,7 +130,8 @@ class DisplayedObject(pg.sprite.Sprite):
             self.position = entity.position
 
         # Scale the image based on object's size
-        self.image: pg.surface.Surface = pg.transform.scale(self.sprite, (self.size, self.size))
+        size = self.size * block_size/15
+        self.image: pg.surface.Surface = pg.transform.scale(self.sprite, (size, size))
 
         # Place the sprite on the object's position
         pos_x, pos_y = self.position
