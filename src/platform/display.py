@@ -240,8 +240,17 @@ class Display:
                 self._add_resource(resource=resource)
                 
     def init_from_frames(self, frames: List[Frame], first_frame: int=0, last_frame: int=0):
-        last_frame = last_frame or len(frames)
-        for i, frame in enumerate(frames[first_frame:last_frame], first_frame):
+        size  = len(frames)
+        print(f"loaded {size} frames")
+        
+        if first_frame in range(w0,1):
+            first_frame *= size
+        
+        if last_frame in range(0,1):
+            last_frame *= size
+            
+        last_frame = last_frame or size
+        for i, frame in enumerate(frames[int(first_frame):int(last_frame)], first_frame):
             print(f"frame: {i}")
             self._load_frame(frame=frame)
             self.draw(grid=None)

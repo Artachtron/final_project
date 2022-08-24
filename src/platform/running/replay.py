@@ -20,7 +20,7 @@ def main():
                         sim_speed=5)
 
     display.init()
-    display.init_from_frames(frames=frames, first_frame=500)
+    display.init_from_frames(frames=frames, first_frame=300)
 
 if __name__ == '__main__':
     with cProfile.Profile() as pr:

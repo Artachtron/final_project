@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-Entity = namedtuple("Entity",["type","size", "position"])
-Energy = namedtuple("Energy",["type","size", "position"])
+Entity = namedtuple("Entity",["id","type","size", "position"])
+Energy = namedtuple("Energy",["id","type","size", "position"])
 
 @dataclass
 class Frame:
@@ -100,8 +100,8 @@ class Probe:
 
     def save_frame(self):
         state = self.sim_state
-        entities = [Entity(entity.__class__.__name__, entity.size, entity.position) for entity in state.get_entities()]
-        energies = [Energy(energy.__class__.__name__, energy.size, energy.position) for energy in state.get_resources()]
+        entities = [Entity(entity.id, entity.__class__.__name__, entity.size, entity.position) for entity in state.get_entities()]
+        energies = [Energy(energy.id, energy.__class__.__name__, energy.size, energy.position) for energy in state.get_resources()]
 
         self.frames.append(Frame(entities=entities,
                                  energies=energies))

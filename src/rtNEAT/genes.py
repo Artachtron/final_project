@@ -304,11 +304,11 @@ class LinkGene(BaseGene):
         Returns:
             bool: True if the two genes are the same allele
         """
-        return ((self.in_node == other_gene.in_node and
+        return (self.id == other_gene.id or
+                (self.in_node == other_gene.in_node and
                 self.out_node == other_gene.out_node) or
                 (self.out_node == other_gene.in_node and
-                self.in_node == other_gene.out_node) or
-                self.id == other_gene.id)
+                self.in_node == other_gene.out_node))
 
     def mutation_distance(self, other_gene: LinkGene) -> float:
         """Calculate the mutation distance between two genes
@@ -463,8 +463,7 @@ class NodeGene(BaseGene):
             bool: True if the two genes are the same allele
         """
         return (self.id == other_gene.id and
-                self.type == other_gene.type or
-                self.id == other_gene.id)
+                self.type == other_gene.type)
 
     def is_sensor(self) -> bool:
         """ determine if the node is a sensor (INPUT or BIAS)

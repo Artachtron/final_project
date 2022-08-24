@@ -137,7 +137,7 @@ class World:
 
         self.set_difficulty(sim_state=sim_state)
 
-        if sim_state.cycle%1000 == 0:
+        if sim_state.cycle%500 == 0:
             self.save_simulation()
             
         if (sim_state.cycle == World.MAX_CYCLE or
@@ -171,6 +171,7 @@ class World:
             Stop the running of the simulation
         """
         self.metrics.print(all_keys=True)
+        self.metrics.pickle_frames()
         # self.write_metrics()
         self.running = False
 
