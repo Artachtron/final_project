@@ -243,14 +243,14 @@ class Display:
         size  = len(frames)
         print(f"loaded {size} frames")
         
-        if first_frame in range(w0,1):
-            first_frame *= size
+        if 0 < first_frame < 1:
+            first_frame = int(first_frame * size)
         
-        if last_frame in range(0,1):
+        if 0 < last_frame < 1:
             last_frame *= size
             
-        last_frame = last_frame or size
-        for i, frame in enumerate(frames[int(first_frame):int(last_frame)], first_frame):
+        last_frame = int(last_frame) or size
+        for i, frame in enumerate(frames[first_frame:last_frame], first_frame):
             print(f"frame: {i}")
             self._load_frame(frame=frame)
             self.draw(grid=None)

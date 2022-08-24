@@ -281,7 +281,8 @@ class Entity(SimulatedObject):
             # action cost
             self._size += 1
             self._max_age += Entity.MAX_AGE_SIZE_COEFF
-            self._action_cost += 1
+            if not self._is_adult:
+                self._action_cost += 1
 
         # Check if new size
         # changes adulthood status

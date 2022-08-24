@@ -730,12 +730,12 @@ class Genome:
             bool: True if an equivalent BaseGene was found in the dictionary,
                   False if no equivalent was found
         """
-
-        for gene in chosen_genes.values():
+        return chosen_gene.id in chosen_genes
+        """ for gene in chosen_genes.values():
             if gene.is_allele(other_gene=chosen_gene):
                 return True
 
-        return False
+        return False """
 
     @staticmethod
     def _insert_non_conflict_gene(genes_dict: Dict[int, Gene],

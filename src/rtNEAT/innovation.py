@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from typing import List
+from typing import Dict
 
 from numpy.random import choice, random
 
@@ -10,8 +10,8 @@ class InnovationType(enum.Enum):
     """Enum:
         Type of genome's innovation
     """
-    NEW_NODE = 0
-    NEW_LINK = 1
+    NEW_NODE = "new_node"
+    NEW_LINK = "new_link"
 
 class InnovTableProperties(type):
     """Meta class:
@@ -83,7 +83,10 @@ class InnovTable(metaclass=InnovTableProperties):
         get_innovation:         Look if innovation already exists in table else create new one
 
     """
-    innovations: List[Innovation] = []
+    innovations: Dict = {
+                            "new_node":{},
+                            "new_link":{},
+                        }
 
     _node_number: int = 1
     _link_number: int = 1
@@ -147,14 +150,17 @@ class InnovTable(metaclass=InnovTableProperties):
         Args:
             new_innovation (Innovation): innovation to add to the list
         """
-        InnovTable.innovations.append(new_innovation)
-
+        InnovTable.innovations[new_innovation.innovation_type.value].setdefault(new_innovation.node_in_id, []).append(new_innovation)
+        
     @staticmethod
     def reset_innovation_table() -> None:
         """Static method:
             Reset the values of the innovation table
         """
-        InnovTable.innovations = []
+        InnovTable.innovations = {
+                                    "new_node":{},
+                                    "new_link":{},
+                                }
         InnovTable._node_number = 1
         InnovTable._link_number = 1
 
@@ -169,7 +175,7 @@ class InnovTable(metaclass=InnovTableProperties):
 
 
     @staticmethod
-    def _check_innovation_already_exists(the_innovation: Innovation, innovation_type: InnovationType,
+    def _check_innovation_already_exists(innovation_type: InnovationType,
                                          in_node: int, out_node: int) -> bool:
         """Private static method:
             See if an innovation already exists
@@ -183,9 +189,15 @@ class InnovTable(metaclass=InnovTableProperties):
         Returns:
             bool: the innovation already exists
         """
-        return (the_innovation.innovation_type == innovation_type and
-                the_innovation.node_in_id == in_node and
-                the_innovation.node_out_id == out_node)
+        innovations = InnovTable.innovations[innovation_type.value].get(in_node, [])
+        
+        for innovation in innovations:
+            if (innovation.innovation_type == innovation_type and
+                innovation.node_out_id == out_node):
+        
+                return innovation
+        
+        return None
 
     @staticmethod
     def _create_innovation(in_node: int, out_node: int, innovation_type: InnovationType,
@@ -260,12 +272,12 @@ class InnovTable(metaclass=InnovTableProperties):
         """
 
         # Check in history if an equivalent innovation already exists
-        for innovation in InnovTable.innovations:
-            if InnovTable._check_innovation_already_exists(the_innovation=innovation,
-                                                            innovation_type=innovation_type,
-                                                            in_node=in_node,
-                                                            out_node=out_node):
-                return innovation
+        
+        innovation = InnovTable._check_innovation_already_exists(innovation_type=innovation_type,
+                                                                 in_node=in_node,
+                                                                 out_node=out_node)
+        if innovation:
+            return innovation
 
         # No existing innovation wa corresponding
         else:

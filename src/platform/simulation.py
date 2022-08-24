@@ -631,13 +631,13 @@ class Environment:
         most_suitable_mate: Animal = None
         for other_entity in entities_around:
             # if other_entity.status == Status.FERTILE:
-            if sum(other_entity.energies.values()) > energy_stock:
+            if other_entity.size > energy_stock:
                 
                 if (not config['Simulation']['Animal']['incest']
                     and self._check_incest(parent1=animal,
                                            parent2=other_entity)):
                     
-                    energy_stock = sum(other_entity.energies.values())
+                    energy_stock = other_entity.size
                     most_suitable_mate = other_entity
 
         if most_suitable_mate:
