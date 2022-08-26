@@ -179,7 +179,7 @@ class SimulatedObject:
         self._size = value
     
     @property
-    def pos_obj(self) -> Position:
+    def pos(self) -> Position:
         """Porperty:
             return the position
 

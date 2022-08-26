@@ -150,7 +150,8 @@ class Entity(SimulatedObject):
             parent1 (Entity): first parent
             parent2 (Entity): second parent
         """
-        self.ancestors: Dict[int, Entity] = ({parent1.id: parent1, parent2.id: parent2}
+        self.ancestors: Dict[int, Entity] = ({parent1.id: parent1,
+                                              parent2.id: parent2}
                                             | parent1.ancestors
                                             | parent2.ancestors)
 
@@ -281,7 +282,7 @@ class Entity(SimulatedObject):
             # action cost
             self._size += 1
             self._max_age += Entity.MAX_AGE_SIZE_COEFF
-            if not self._is_adult:
+            if self._action_cost < 5:
                 self._action_cost += 1
 
         # Check if new size
@@ -312,9 +313,6 @@ class Entity(SimulatedObject):
             raise ValueError
 
         self.gained_energy += quantity
-
-        if self.gained_energy/50 > self.size:
-            self._grow()
 
         # Add the quantity
         self._energies_stock[energy_type.value] += quantity
@@ -625,9 +623,13 @@ class Animal(Entity):
 
         self._pocket: Optional[Seed] = None # pocket in which to store seed
         self.fitness = 0
+        self.animals_in_range: Set[Animal]
 
     def __repr__(self):
         return f'Animal {self.id}'
+
+    def reset(self):
+        self.animals_in_range = set()
 
     def can_reproduce(self) -> bool:
         """Public method:
@@ -834,6 +836,8 @@ class Animal(Entity):
         entity_sight_range = config['Simulation']['Animal']['entity_sight_range']
         animals_around = environment.find_animals_around(coordinates=self.position,
                                                          radius=entity_sight_range)
+        
+        self.animals_in_range = animals_around
 
         animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
                                                                                      sight_range=entity_sight_range)
@@ -868,7 +872,10 @@ class Animal(Entity):
             and random() < 0.5):
             self._decide_reproduce()
         else:
-            self._decide_minimal_move()
+            if self.gained_energy/100 > self.size:
+                self._decide_grow()
+            else:
+                self._decide_minimal_move()
             
         
 
@@ -888,13 +895,13 @@ class Animal(Entity):
         close_distance: float = sight_range
         closest_object: SimulatedObject = None
         for obj in objects_around:
-            distance = self.pos_obj.distance(other_pos=obj.pos_obj)
+            distance = self.pos.distance(other_pos=obj.pos)
             if  distance <= close_distance:
                 close_distance = distance
                 closest_object = obj
 
         if closest_object:
-            norm_angle: float = self.pos_obj.norm_angle(other_pos=closest_object.pos_obj)
+            norm_angle: float = self.pos.norm_angle(other_pos=closest_object.pos)
             norm_distance: float = ((sight_range - close_distance)
                                    /(sight_range - 1))
         else:

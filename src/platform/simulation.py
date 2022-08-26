@@ -471,7 +471,7 @@ class Environment:
         """
         prop = self._get_populate_properties()
         density = int(prop['section_dimension']/sparsity)
-        
+
         for h in range(prop['horizontal_divisor']):
             x_offset = h * prop['section_horizontal_size']
             for v in range(prop['vertical_divisor']):
@@ -482,11 +482,13 @@ class Environment:
                                      num_section)
 
                 for x, y in coordinates:
-                    
+
                     match item:
                         case 'energy':
-                            quantity = config['Simulation']['energy_quantity']
-                            quantity = randint(quantity/2, quantity)
+                            quantity =  int(config['Simulation']['energy_quantity']
+                                          * config['Simulation']['difficulty_level'])
+
+                            quantity = randint(int(quantity/2), quantity)
                             self.create_energy(energy_type=choice(list(EnergyType)),
                                                quantity=quantity,
                                                coordinates=(x + x_offset,
@@ -615,7 +617,7 @@ class Environment:
                 self.spawn_tree(coordinates=free_cell)
 
         animal.on_plant_tree()
-        
+
     def _on_animal_reproduce(self, animal: Animal, action: Action) -> None:
         """Private method:
             Handle animal's reproduce action
@@ -624,26 +626,30 @@ class Environment:
             animal (Animal): animal that want to reproduce
             action (Action): reproduce action
         """
-        entities_around = self.grid.find_animal_instances(coordinates=animal.position,
-                                                          radius=config['Simulation']['Animal']['reproduction_range'])
+        """ entities_around = self.grid.find_animal_instances(coordinates=animal.position,
+                                                          radius=config['Simulation']['Animal']['reproduction_range']) """
 
+
+        reproduction_range = config['Simulation']['Animal']['reproduction_range']
         energy_stock: int = 0
         most_suitable_mate: Animal = None
-        for other_entity in entities_around:
+        for other_entity in animal.animals_in_range:
             # if other_entity.status == Status.FERTILE:
-            if other_entity.size > energy_stock:
-                
+            if (other_entity.size > energy_stock
+                and animal.pos.distance(other_entity.pos)
+                <= reproduction_range):
+
                 if (not config['Simulation']['Animal']['incest']
                     and self._check_incest(parent1=animal,
                                            parent2=other_entity)):
-                    
+
                     energy_stock = other_entity.size
                     most_suitable_mate = other_entity
-
+                    
         if most_suitable_mate:
             self._reproduce_entities(parent1=animal,
                                      parent2=most_suitable_mate)
-        
+
 
 
     def _on_animal_action(self, animal: Animal) -> None:
@@ -678,7 +684,7 @@ class Environment:
             case ActionType.PLANT_TREE:
                 self._on_animal_plant_tree(animal=animal,
                                            action=action)
-                
+
             case ActionType.REPRODUCE:
                 self._on_animal_reproduce(animal=animal,
                                           action=action)
@@ -722,11 +728,11 @@ class Environment:
                 for other_entity in entities_around:
                     # if other_entity.status == Status.FERTILE:
                     if other_entity.fitness > energy_stock:
-                        
+
                         if (not config['Simulation']['Animal']['incest']
                          and self._check_incest(parent1=animal,
                                                 parent2=other_entity)):
-                            
+
                             energy_stock = other_entity.fitness
                             most_suitable_mate = other_entity
 
@@ -834,11 +840,12 @@ class Environment:
         if isinstance(entity, Animal):
             self._on_animal_action(animal=entity)
             self._on_animal_status(animal=entity)
+            entity.reset()
 
         elif isinstance(entity,Tree):
             self._on_tree_action(tree=entity)
             self._on_tree_status(tree=entity)
-
+            
 
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
@@ -876,7 +883,7 @@ class Environment:
 
             parent1.on_reproduction()
             parent2.on_reproduction()
-            
+
             for _ in range(1, randint(1, config['Simulation']['Animal']['max_number_offsping']) + 1):
 
                 free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
@@ -1012,7 +1019,7 @@ class Environment:
 
         if not self.grid.resource_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
-        
+
         if config['Log']['grid_resources']:
             print(f"{energy_type}:{quantity} was created at {coordinates}")
 
@@ -1188,7 +1195,7 @@ class Environment:
         """
         self.grid.modify_cell_color(coordinates=coordinates,
                                     color=color)
-        
+
     def find_animals_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Entity):
         """Public method:
             Find and return all the animals in a radius around a certain coordinates
@@ -1202,7 +1209,7 @@ class Environment:
         """
         return self.grid.find_animal_instances(coordinates=coordinates,
                                                radius=radius)
-        
+
     def find_energies_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Energy):
         """Public method:
             Find and return all the energies in a radius around a certain coordinates
@@ -1290,16 +1297,16 @@ class Simulation:
         self.state.new_cycle()
         frequency = (config['Simulation']['spawn_energy_frequency']
                    * config['Simulation']['difficulty_level'])
-        
+
         config['Simulation']['energy_expiry'] = frequency
-        
+
         if  (
                 config['Simulation']['spawn_energy']
             and self.update_counter%frequency == 0
             ):
             self.environment._populate_energy()
             self.update_counter = 0
-            
+
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
             self.environment._event_on_action(entity=entity)
@@ -1327,7 +1334,3 @@ class Simulation:
             int: simulation's id
         """
         return self.__id
-
-def entity_update(environment: Environment, entity: Entity):
-    entity.update(environment=environment)
-    environment._event_on_action(entity=entity)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+from functools import lru_cache
 from itertools import combinations
 from random import sample
 from typing import Any, Optional, Set, Tuple, Type
@@ -306,13 +307,14 @@ class SubGrid:
         """
 
         instances = set()
-        search_interval = list(range(-radius, radius + 1))  # List from (-radius, radius)
+        search_interval = np.arange(-radius, radius + 1)  # List from (-radius, radius)
+        a, b = coordinates
         for x in search_interval:
             for y in search_interval:
                 if not include_self and x == 0 and y == 0:
                     continue
 
-                position = tuple(np.add(coordinates, (x, y)))
+                position = (a+x, b+y)
                 obj = self.get_cell_value(coordinates=position)
                 if obj:
                     if Grid.is_subclass(derived=obj,
@@ -439,7 +441,7 @@ class SubGrid:
             if coordinates[0] < 0 or coordinates[1] < 0:
                 raise IndexError
 
-            return self._array[tuple(coordinates)]
+            return self._array[coordinates]
 
         except IndexError:
             # print(f"{coordinates} is out of bounds")
@@ -614,6 +616,7 @@ class Grid:
         """
         return self.dimensions[1]
 
+    @lru_cache
     @staticmethod
     def is_subclass(derived: Any, base_class: Type) -> bool:
         """Static public method:

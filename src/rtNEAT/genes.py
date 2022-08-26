@@ -7,6 +7,7 @@ from functools import partial
 from typing import Dict, Optional, Set
 
 import numpy as np
+from numba import njit
 from numpy.random import random, uniform
 from project.src.platform.running.config import config
 
@@ -29,7 +30,8 @@ class OutputType(enum.Enum):
     """
     TRIGGER = 0
     VALUE = 1
-
+    
+@njit(fastmath=True) 
 def sigmoid(x):
     """ Sigmoid activation function, Logistic activation with a range of 0 to 1
 
@@ -39,10 +41,8 @@ def sigmoid(x):
     Returns:
         float: output value
     """
-    try:
-        return (1.0 / (1.0 + np.exp(-x)))
-    except OverflowError:
-        return 0 if x < 0 else 1
+    return (1.0 / (1.0 + np.exp(-x)))
+
 
 
 def relu(x):
