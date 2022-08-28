@@ -323,6 +323,62 @@ class SubGrid:
                         instances.add(obj)
 
         return instances
+    
+    def find_closest_instances_baseclass(
+        self, base_class: Any,
+        coordinates: Tuple[int, int],
+        radius: int = 1,
+    ) -> Set[Any]:
+
+        """Private method:
+            Find all the instances of a certain base class around and
+            return a set containing them
+
+            Args:
+                coordinates (Tuple[int, int]):  coordinates to search around
+                base_class (Type):              base class as reference for the search
+                include_self (bool, optional):  include the coordinates in the search. Defaults to False.
+                radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set of instances of the base class around
+        """
+        def find_instance(position:Tuple[int, int], instances: Set, base_class: Any):
+            obj = self.get_cell_value(coordinates=position)
+            if obj:
+                if Grid.is_subclass(derived=obj,
+                                    base_class=base_class):
+
+                    instances.add(obj)
+        
+        instances = set()
+        a, b = coordinates
+        for n in range(1, radius):
+            for x in (-n, n):
+                for y in range(-n+1, n):
+                    find_instance(position=(a+x, b+y),
+                                  instances=instances,
+                                  base_class=base_class)
+
+                    find_instance(position=(a+y, b+x),
+                                  instances=instances,
+                                  base_class=base_class)
+  
+                find_instance(position=(a+x, b+x),
+                              instances=instances,
+                              base_class=base_class)
+                
+                find_instance(position=(a+x, b-x),
+                              instances=instances,
+                              base_class=base_class)
+
+            if instances:
+                break
+            
+        return instances
+
+        
+        
 
     def find_free_coordinates(
         self, coordinates: Tuple[int, int], radius: int = 1
@@ -711,6 +767,26 @@ class Grid:
                 radius=radius,
                 base_class=Animal
             )
+    
+    def find_close_animal_instances(self, coordinates: Tuple[int, int],
+                                    radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the animals in a radius around given coordinates,
+            return a set of all the animals found
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set containing all the animals found
+        """
+        return self.entity_grid.find_closest_instances_baseclass(
+                coordinates=coordinates,
+                radius=radius,
+                base_class=Animal
+            ) 
+        
         
     def find_energy_instances(self, coordinates: Tuple[int, int],
                               radius: int = 1) -> Set[Any]:
@@ -730,6 +806,25 @@ class Grid:
                 radius=radius,
                 base_class=Energy
             )
+        
+    def find_close_energy_instances(self, coordinates: Tuple[int, int],
+                                    radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the energies in a radius around given coordinates,
+            return a set of all the energies found
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set containing all the energies found
+        """
+        return self.entity_grid.find_closest_instances_baseclass(
+                coordinates=coordinates,
+                radius=radius,
+                base_class=Energy
+            ) 
                 
     def find_occupied_cells_by_animals(self, coordinates: Tuple[int, int],
                                        radius: int = 1) -> Set[Any]:

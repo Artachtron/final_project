@@ -306,9 +306,7 @@ class LinkGene(BaseGene):
         """
         return (self.id == other_gene.id or
                 (self.in_node == other_gene.in_node and
-                self.out_node == other_gene.out_node) or
-                (self.out_node == other_gene.in_node and
-                self.in_node == other_gene.out_node))
+                self.out_node == other_gene.out_node))
 
     def mutation_distance(self, other_gene: LinkGene) -> float:
         """Calculate the mutation distance between two genes

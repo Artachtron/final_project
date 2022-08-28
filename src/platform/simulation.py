@@ -631,9 +631,11 @@ class Environment:
 
 
         reproduction_range = config['Simulation']['Animal']['reproduction_range']
+        animals_around = self. find_animals_around(coordinates=animal.position,
+                                                   radius=config['Simulation']['Animal']['reproduction_range'])
         energy_stock: int = 0
         most_suitable_mate: Animal = None
-        for other_entity in animal.animals_in_range:
+        for other_entity in animals_around:
             # if other_entity.status == Status.FERTILE:
             if (other_entity.size > energy_stock
                 and animal.pos.distance(other_entity.pos)
@@ -840,7 +842,6 @@ class Environment:
         if isinstance(entity, Animal):
             self._on_animal_action(animal=entity)
             self._on_animal_status(animal=entity)
-            entity.reset()
 
         elif isinstance(entity,Tree):
             self._on_tree_action(tree=entity)
@@ -1207,8 +1208,8 @@ class Environment:
         Returns:
             Set[Tuple[int, int]]: set of animals in search area
         """
-        return self.grid.find_animal_instances(coordinates=coordinates,
-                                               radius=radius)
+        return self.grid.find_close_animal_instances(coordinates=coordinates,
+                                                     radius=radius)
 
     def find_energies_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Energy):
         """Public method:

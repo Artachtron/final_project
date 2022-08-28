@@ -261,22 +261,31 @@ class Entity(SimulatedObject):
 
         self._grow()
 
-    def _grow(self) -> None:
+    def _can_grow(self) -> bool:
         """Private method:
-            Action: Grow the entity to bigger size,
-                    consumming red energy
-        """
-        # Red energy cost depend on adulthood status,
-        # cost less energy for a child
+            Check if the entity can grow
+
+        Returns:
+            bool:   True if it has enough energy
+                    False if energy is lacking
+        """        
         if self._is_adult:
             energy_required = self._size * Entity.GROWTH_ENERGY_REQUIRED
 
         else:
             energy_required = self._size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
 
+        
+        return self._can_perform_action(energy_type=EnergyType.RED,
+                                        quantity=energy_required)
+
+    def _grow(self) -> None:
+        """Private method:
+            Action: Grow the entity to bigger size,
+                    consumming red energy
+        """
         # Perfrom action if possible: if enough energy is available
-        if self._can_perform_action(energy_type=EnergyType.RED,
-                                    quantity=energy_required):
+        if self._can_grow():
             # Increase size,
             # maximum age,
             # action cost
@@ -623,13 +632,9 @@ class Animal(Entity):
 
         self._pocket: Optional[Seed] = None # pocket in which to store seed
         self.fitness = 0
-        self.animals_in_range: Set[Animal]
-
+ 
     def __repr__(self):
         return f'Animal {self.id}'
-
-    def reset(self):
-        self.animals_in_range = set()
 
     def can_reproduce(self) -> bool:
         """Public method:
@@ -837,14 +842,12 @@ class Animal(Entity):
         animals_around = environment.find_animals_around(coordinates=self.position,
                                                          radius=entity_sight_range)
         
-        self.animals_in_range = animals_around
-
         animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
                                                                                      sight_range=entity_sight_range)
 
         energy_sight_range = config['Simulation']['Animal']['energy_sight_range']
-        energies_around = environment.find_energies_around(coordinates=self.position,
-                                                           radius=energy_sight_range)
+        energies_around = environment.find_close_energy_instances(coordinates=self.position,
+                                                                  radius=energy_sight_range)
 
         energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
                                                                                      sight_range=energy_sight_range)
@@ -868,14 +871,18 @@ class Animal(Entity):
         """ if self.generation > 0:
             self.action= IdleAction() """
 
-        if (self.can_reproduce()
+        if (self._is_adult
+            and self.gained_energy/50 > self.size
+            and self._can_grow()
+            and random() < 0.5):
+                self._decide_grow()
+
+        elif (self.can_reproduce()
             and random() < 0.5):
             self._decide_reproduce()
+        
         else:
-            if self.gained_energy/100 > self.size:
-                self._decide_grow()
-            else:
-                self._decide_minimal_move()
+            self._decide_minimal_move()
             
         
 
