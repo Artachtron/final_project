@@ -89,6 +89,7 @@ class BaseGene(ABC):
             is_allele:          check if two genes are different versions of the same allele
             mutation_distance:  calculate the mutation distance between two genes
     """
+    __slots__ = '__id', 'name', 'frozen', 'enabled', 'mutation_number'
     def __init__(self,
                  gene_id: int,
                  name: Optional[str],
@@ -211,6 +212,7 @@ class LinkGene(BaseGene):
             is_allele:          check if two genes are different versions of the same allele
             mutation_distance:  calculate the mutation distance between two genes """
 
+    __slots__ = 'in_node', 'out_node', 'weight'
     def __init__(self,
                  in_node: int,
                  out_node: int,
@@ -340,6 +342,7 @@ class NodeGene(BaseGene):
             distance:           Calculate the distance between two NodeGenes based on their properties
             is_sensor:          Indicate if the node is an input
             """
+    __slots__ = 'type', 'bias', 'activation_function', 'aggregation_function'
     def __init__(self,
                  node_id: int = 0,
                  name: Optional[str] = None,

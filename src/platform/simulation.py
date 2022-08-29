@@ -1111,13 +1111,13 @@ class Environment:
         if red_cell:
             self.create_energy(energy_type=EnergyType.RED,
                                 coordinates=red_cell,
-                                quantity=entity.energies[EnergyType.RED.value]/difficulty)
+                                quantity=entity.energies_stock[EnergyType.RED.value]/difficulty)
 
         # Blue energy
         if blue_cell:
             self.create_energy(energy_type=EnergyType.BLUE,
                                coordinates=blue_cell,
-                               quantity=entity.energies[EnergyType.BLUE.value])
+                               quantity=entity.energies_stock[EnergyType.BLUE.value])
 
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
         """Public method:
@@ -1222,8 +1222,8 @@ class Environment:
         Returns:
             Set[Tuple[int, int]]: set of energies in search area
         """
-        return self.grid.find_energy_instances(coordinates=coordinates,
-                                               radius=radius)
+        return self.grid.find_close_energy_instances(coordinates=coordinates,
+                                                     radius=radius)
 
     def find_tree_cells_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set[Tuple[int, int]]:
         """Public method:

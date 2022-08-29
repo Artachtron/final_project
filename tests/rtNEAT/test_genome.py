@@ -26,8 +26,8 @@ class TestGenome:
         assert {'_node_genes','_link_genes'}.issubset(vars(genome))
 
         assert genome.id == 0
-        assert genome._node_genes == nodes
-        assert genome._link_genes == genes
+        assert genome.node_genes == nodes
+        assert genome.link_genes == genes
 
     def test_complete_genesis(self):
         gen_data = {'complete': True,
@@ -45,10 +45,10 @@ class TestGenome:
         genome2 = Genome.genesis(   genome_id=2,
                                     genome_data=gen_data)
 
-        for id1, id2 in zip(genome._node_genes, genome2._node_genes):
+        for id1, id2 in zip(genome.node_genes, genome2.node_genes):
             assert id1 == id2
 
-        for id1, id2 in zip(genome._link_genes, genome2._link_genes):
+        for id1, id2 in zip(genome.link_genes, genome2.link_genes):
             assert id1 == id2
             
     def test_incomplete_genesis(self):
@@ -146,42 +146,42 @@ class TestGenome:
                                     link_genes={})
 
                 assert nodes_dict == {1: node}
-                assert genome._node_genes == {}
+                assert genome.node_genes == {}
 
                 genome.add_node(node=node)
-                assert genome._node_genes == nodes_dict
+                assert genome.node_genes == nodes_dict
 
             def test_genetic_gene_distance(self):
                 # Node distance
                 ## Excess nodes
-                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1._node_genes,
-                                                      gene_dict2 = self.genome2._node_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1.node_genes,
+                                                      gene_dict2 = self.genome2.node_genes)
                 assert dist == 2
 
                 ## Disjoint
-                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome3._node_genes,
-                                                      gene_dict2 = self.genome4._node_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome3.node_genes,
+                                                      gene_dict2 = self.genome4.node_genes)
                 assert dist == 1
 
                 ## Mutation
-                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome2._node_genes,
-                                                      gene_dict2 = self.genome2_extended._node_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome2.node_genes,
+                                                      gene_dict2 = self.genome2_extended.node_genes)
                 assert dist == 0.5/4
 
                 # Link distance
                 ## Excess nodes
-                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1._link_genes,
-                                                      gene_dict2 = self.genome2._link_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome1.link_genes,
+                                                      gene_dict2 = self.genome2.link_genes)
                 assert dist == 2
 
                 ## Disjoint
-                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome3._link_genes,
-                                                      gene_dict2 = self.genome4._link_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome3.link_genes,
+                                                      gene_dict2 = self.genome4.link_genes)
                 assert dist == 1
 
                 ## Mutation
-                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome2._link_genes,
-                                                      gene_dict2 = self.genome2_extended._link_genes)
+                dist = Genome._genetic_gene_distance( gene_dict1 = self.genome2.link_genes,
+                                                      gene_dict2 = self.genome2_extended.link_genes)
                 assert dist == 0.5/2
 
             def test_genetic_distance(self):
@@ -279,10 +279,10 @@ class TestGenome:
                 assert not link
 
                 # only one valid link to choose from
-                self.genome1._link_genes[2].enabled = True
+                self.genome1.link_genes[2].enabled = True
                 for _ in range(100):
                     link = self.genome1._find_random_link()
-                    assert link == self.genome1._link_genes[2]
+                    assert link == self.genome1.link_genes[2]
 
             def test_create_new_node(self):
                 in_node, out_node = list(self.nodes.values())[:2]
@@ -306,7 +306,7 @@ class TestGenome:
 
             def test_new_node_innovation(self):
                 # New innovation
-                link = self.genome1._link_genes[1]
+                link = self.genome1.link_genes[1]
                 current_node = self.genome1.get_last_node_id()
                 current_link = self.genome1.get_last_link_id()
                 new_node, new_link1, new_link2 = self.genome1._new_node_innovation(old_link=link)
@@ -318,14 +318,14 @@ class TestGenome:
                 assert new_link2.weight == link.weight
 
                 # New innovation2
-                link = self.genome1._link_genes[2]
+                link = self.genome1.link_genes[2]
                 new_node, new_link1, new_link2 = self.genome1._new_node_innovation(old_link=link)
                 assert new_node.id == current_node + 2
                 assert new_link1.id == current_link + 3
                 assert new_link2.id == current_link + 4
 
                 # Same innovation as first one
-                link = self.genome2._link_genes[1]
+                link = self.genome2.link_genes[1]
                 link.weight = 0.5
                 new_node, new_link1, new_link2 = self.genome1._new_node_innovation(old_link=link)
                 assert new_node.id == current_node + 1
@@ -349,14 +349,14 @@ class TestGenome:
                 assert len(genome1.node_genes) == 2
                 assert genome1.n_link_genes == 1
                 success = genome1._mutate_add_node()
-                assert genome1._link_genes[4].enabled == False
+                assert genome1.link_genes[4].enabled == False
                 assert success
                 assert genome1.get_last_link_id() == initial_link+2
                 assert genome1.get_last_node_id() == initial_node+1
                 assert len(genome1.node_genes) == 3
                 assert genome1.n_link_genes == 3
                 nodes = {node.id: node for node in self.nodes.values() if node.id > 4}
-                assert list(set(genome1._node_genes.keys()) - set(nodes.keys()))[0] == 7
+                assert list(set(genome1.node_genes.keys()) - set(nodes.keys()))[0] == 7
 
                 # Innovation exists
                 links = {link.id: link for link in self.links.values() if link.id > 3}
@@ -364,7 +364,7 @@ class TestGenome:
                                 node_genes=nodes,
                                 link_genes=links)
 
-                genome2._link_genes[4].enabled = True
+                genome2.link_genes[4].enabled = True
                 #assert genome2.get_last_link_id() == initial_innov+2
                 new_link = LinkGene(in_node=1,
                                     out_node=2)

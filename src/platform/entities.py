@@ -108,7 +108,7 @@ class Entity(SimulatedObject):
 
         self.status: Status = Status.ALIVE                      # current status
 
-        self._energies_stock: Dict[str, int] = {                # energy currently owned
+        self.energies_stock: Dict[str, int] = {                # energy currently owned
             EnergyType.BLUE.value: blue_energy,
             EnergyType.RED.value: red_energy
             }
@@ -189,23 +189,13 @@ class Entity(SimulatedObject):
         self._perform_action()
 
     @property
-    def energies(self) -> Dict[str, int]:
-        """Public property:
-
-        Returns:
-            Dict[str, int]:     dictionary summarising owned energies,
-                                arranged by EnergyType
-        """
-        return self._energies_stock
-
-    @property
     def blue_energy(self) -> int:
         """Public property:
 
         Returns:
             int: amount of blue energy owned
         """
-        return self._energies_stock[EnergyType.BLUE.value]
+        return self.energies_stock[EnergyType.BLUE.value]
 
     @property
     def red_energy(self) -> int:
@@ -214,7 +204,7 @@ class Entity(SimulatedObject):
         Returns:
             int: amount of red energy owned
         """
-        return self._energies_stock[EnergyType.RED.value]
+        return self.energies_stock[EnergyType.RED.value]
 
     def _change_status(self, new_status: Status, *statuses: Status):
         """Private method:
@@ -324,7 +314,7 @@ class Entity(SimulatedObject):
         self.gained_energy += quantity
 
         # Add the quantity
-        self._energies_stock[energy_type.value] += quantity
+        self.energies_stock[energy_type.value] += quantity
 
     def _quantity_from_stock(self, energy_type: EnergyType, quantity: int) -> int:
         """Private method:
@@ -345,7 +335,7 @@ class Entity(SimulatedObject):
         if quantity < 0 :
             raise ValueError
 
-        energy_amount: int = self._energies_stock[energy_type.value]
+        energy_amount: int = self.energies_stock[energy_type.value]
 
         return min(quantity, energy_amount)
 
@@ -368,10 +358,10 @@ class Entity(SimulatedObject):
         quantity = self._quantity_from_stock(energy_type=energy_type,
                                              quantity=quantity)
 
-        self._energies_stock[energy_type.value] -= quantity
+        self.energies_stock[energy_type.value] -= quantity
 
         # dies if the entity run out of blue energy
-        if self._energies_stock[EnergyType.BLUE.value] <= 0:
+        if self.energies_stock[EnergyType.BLUE.value] <= 0:
             self._die(cause="lack of energy")
 
         # effective quantity lost
@@ -397,7 +387,7 @@ class Entity(SimulatedObject):
             bool: True the entity had enough energy
                   False if it does not
         """
-        return self.energies[energy_type.value] >= quantity
+        return self.energies_stock[energy_type.value] >= quantity
 
     def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
         """Private method:
@@ -836,7 +826,7 @@ class Animal(Entity):
         age = self.age/self._max_age
         size = self._size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
-                                   for energy in self.energies.values())
+                                   for energy in self.energies_stock.values())
 
         entity_sight_range = config['Simulation']['Animal']['entity_sight_range']
         animals_around = environment.find_animals_around(coordinates=self.position,
@@ -846,8 +836,8 @@ class Animal(Entity):
                                                                                      sight_range=entity_sight_range)
 
         energy_sight_range = config['Simulation']['Animal']['energy_sight_range']
-        energies_around = environment.find_close_energy_instances(coordinates=self.position,
-                                                                  radius=energy_sight_range)
+        energies_around = environment.find_energies_around(coordinates=self.position,
+                                                           radius=energy_sight_range)
 
         energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
                                                                                      sight_range=energy_sight_range)
@@ -901,8 +891,9 @@ class Animal(Entity):
         """
         close_distance: float = sight_range
         closest_object: SimulatedObject = None
+        own_distance = self.pos.distance
         for obj in objects_around:
-            distance = self.pos.distance(other_pos=obj.pos)
+            distance = own_distance(other_pos=obj.pos)
             if  distance <= close_distance:
                 close_distance = distance
                 closest_object = obj
@@ -933,7 +924,7 @@ class Animal(Entity):
         age = self.age/self._max_age
         size = self._size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
-                                   for energy in self.energies.values())
+                                   for energy in self.energies_stock.values())
         ## Perceptions
         entities = environment.find_if_entities_around(coordinates=self.position,
                                                        include_self=False)
@@ -1275,7 +1266,7 @@ class Tree(Entity):
         age = self.age/self._max_age
         size = self._size/config["Simulation"]["Tree"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Tree"]["normal_energy"]
-                                   for energy in self.energies.values())
+                                   for energy in self.energies_stock.values())
         ## Perceptions
         energies = environment.find_if_resources_around(coordinates=self.position,
                                                         include_self=True)

@@ -48,8 +48,8 @@ class Genome:
                  n_outputs:int = 0):
 
         self.__id: int = genome_id                                  # unique identifier
-        self._node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
-        self._link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
+        self.node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
+        self.link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
         #self.ancestors: Set = {}                                   # set of ancestors
         self.complete = complete                                    # wheter the network is fully connected
         self.n_inputs = n_inputs                                    # number of input nodes
@@ -66,31 +66,13 @@ class Genome:
         return self.__id
 
     @property
-    def node_genes(self) -> Dict[int, NodeGene]:
-        """Return the dictionary of NodeGenes
-
-        Returns:
-            Dict[int, NodeGene]: dictionary of NodeGenes
-        """
-        return self._node_genes
-
-    @property
-    def link_genes(self) -> Dict[int, LinkGene]:
-        """Return the dictionary of LinkGenes
-
-        Returns:
-            Dict[int, LinkGene]: dictionary of LinkGenes
-        """
-        return self._link_genes
-
-    @property
     def n_node_genes(self) -> int:
         """Return the number of NodeGenes
 
         Returns:
             int: number of NodeGenes
         """
-        return len(self._node_genes)
+        return len(self.node_genes)
 
     @property
     def n_link_genes(self) -> int:
@@ -99,7 +81,7 @@ class Genome:
         Returns:
             int: number of LinkGenes
         """
-        return len(self._link_genes)
+        return len(self.link_genes)
 
     @property
     def size(self) -> Dict[str, int]:
@@ -119,7 +101,7 @@ class Genome:
         Args:
             link (LinkGene): LinkGene to add
         """
-        self._link_genes[link.id] = link
+        self.link_genes[link.id] = link
 
     def add_node(self, node: NodeGene) -> None:
         """Public method:
@@ -128,7 +110,7 @@ class Genome:
         Args:
             link (NodeGene): NodeGene to add
         """
-        self._node_genes[node.id] = node
+        self.node_genes[node.id] = node
 
     @staticmethod
     def insert_gene(genes_dict: Dict[int, Gene],
@@ -152,7 +134,7 @@ class Genome:
         Returns:
             np.array[LinkGene]: Array of LinkGenes
         """
-        return set(self._link_genes.values())
+        return set(self.link_genes.values())
 
     def get_node_genes(self) ->  Set[NodeGene]:
         """Return only the NodeGenes values from the dictionary
@@ -160,7 +142,7 @@ class Genome:
         Returns:
             np.array[NodeGene]: Array of NodeGenes
         """
-        return set(self._node_genes.values())
+        return set(self.node_genes.values())
 
     @classmethod
     def genesis(cls, genome_id: int, genome_data: Dict[str, Any]) -> Genome:
@@ -196,12 +178,14 @@ class Genome:
 
         # Initialize outputs
         outputs: Dict[int, NodeGene] = {}  # dictionary of outputs
+        acion_names = list(actions.keys())
+        action_values = list(actions.values())
         last_trigger_id: int = count_node_id + n_actions
         for i in range(n_outputs):
             if i < n_actions:
                 output_type = OutputType.TRIGGER
-                associated_values = [node_id + last_trigger_id for node_id in list(actions.values())[i]]
-                name = list(actions.keys())[i]
+                associated_values = [node_id + last_trigger_id for node_id in action_values[i]]
+                name = acion_names[i]
             else:
                 output_type = OutputType.VALUE
                 name = None

@@ -43,14 +43,14 @@ class Network:
 
         self.__id: int = network_id                 # Unique identifier
 
-        self._inputs: Dict[int, Node] = {}          # Dictionary of input nodes
-        self._outputs: Dict[int, Node] = {}         # Dictionary of output nodes
-        self._trigger_outputs: Dict[int, Node] = {} # outputs to decide which action
-        self._value_outputs: Dict[int, Node] = {}   # outputs with actions' values
-        self._hidden: Dict[int, Node] = {}          # Dictionary of hidden nodes
-        self._all_nodes: Dict[int, Node] = {}       # Dictionary of all nodes
+        self.inputs: Dict[int, Node] = {}          # Dictionary of input nodes
+        self.outputs: Dict[int, Node] = {}         # Dictionary of output nodes
+        self.trigger_outputs: Dict[int, Node] = {} # outputs to decide which action
+        self.value_outputs: Dict[int, Node] = {}   # outputs with actions' values
+        self.hidden: Dict[int, Node] = {}          # Dictionary of hidden nodes
+        self.all_nodes: Dict[int, Node] = {}       # Dictionary of all nodes
 
-        self._links: Dict[int, Link] = {}           # Dictionary of all links
+        self.links: Dict[int, Link] = {}           # Dictionary of all links
 
         self.activation_phase: int = 0              # Current activation phase
         self.frozen: bool = frozen                  # Frozen state (can't modify weights)
@@ -117,8 +117,8 @@ class Network:
         for key, link_gene in link_genes.items():
             link = Link.synthesis(link_gene.transcript())
             # Replace id  by the actual Node
-            in_node = self._all_nodes[link_gene.in_node]
-            out_node = self._all_nodes[link_gene.out_node]
+            in_node = self.all_nodes[link_gene.in_node]
+            out_node = self.all_nodes[link_gene.out_node]
 
             if in_node.is_output():
                 raise ValueError(
@@ -130,7 +130,7 @@ class Network:
 
             link.in_node = in_node
             link.out_node = out_node
-            self._links[key] = link
+            self.links[key] = link
 
             self._connect_link(link)
 
@@ -164,18 +164,18 @@ class Network:
             # in their dictionary
             match node.type.name:
                 case 'INPUT':
-                    self._inputs[key] = node
+                    self.inputs[key] = node
                 case 'OUTPUT':
-                    self._outputs[key] = node
+                    self.outputs[key] = node
                     if node.output_type == OutputType.TRIGGER:
-                        self._trigger_outputs[key] = node
+                        self.trigger_outputs[key] = node
                     else:
-                        self._value_outputs[key] = node
+                        self.value_outputs[key] = node
                 case 'HIDDEN':
-                    self._hidden[key] = node
+                    self.hidden[key] = node
 
             # Keep track of all nodes
-            self._all_nodes[key] = node
+            self.all_nodes[key] = node
 
     def verify_post_genesis(self):
         """Public method:
@@ -276,9 +276,9 @@ class Network:
             np.array: activated values coming out of outputs nodes
         """
         # Compare the size of input values given to the network's inputs
-        if input_values.size != len(self._inputs):
+        if input_values.size != len(self.inputs):
             raise ValueError(f"""Input values {(input_values.size)} does not correspond
-                             to number of input nodes {len(self._inputs)}""")
+                             to number of input nodes {len(self.inputs)}""")
 
         # increment the activation_phase
         self.activation_phase += 1
@@ -341,7 +341,7 @@ class Network:
         Returns:
             int: number of input Nodes
         """
-        return len(self._inputs)
+        return len(self.inputs)
 
     @property
     def n_outputs(self) -> int:
@@ -351,7 +351,7 @@ class Network:
         Returns:
             int: number of output Nodes
         """
-        return len(self._outputs)
+        return len(self.outputs)
 
     @property
     def n_nodes(self) -> int:
@@ -361,7 +361,7 @@ class Network:
         Returns:
             int: number of Nodes
         """
-        return len(self._all_nodes)
+        return len(self.all_nodes)
 
     @property
     def n_links(self) -> int:
@@ -371,7 +371,7 @@ class Network:
         Returns:
             int: number of Links
         """
-        return len(self._links)
+        return len(self.links)
     
     @property
     def n_hidden(self) -> int:
@@ -383,76 +383,6 @@ class Network:
         """
         return len(self.hidden)
 
-    @property
-    def inputs(self) -> Dict[int, Node]:
-        """Property:
-            Return the dictionary of input Nodes
-
-        Returns:
-            Dict[int, Node]: dictionary of input Nodes
-        """
-        return self._inputs
-
-    @property
-    def outputs(self) -> Dict[int, Node]:
-        """Property:
-            Return the dictionary of output Nodes
-
-        Returns:
-            Dict[int, Node]: dictionary of output Nodes
-        """
-        return self._outputs
-
-    @property
-    def trigger_outputs(self) -> Dict[int, Node]:
-        """Property:
-            Return the dictionary of trigger output Nodes
-
-        Returns:
-            Dict[int, Node]: dictionary of trigger output Nodes
-        """
-        return self._trigger_outputs
-
-    @property
-    def value_outputs(self) -> Dict[int, Node]:
-        """Property:
-            Return the dictionary of value output Nodes
-
-        Returns:
-            Dict[int, Node]: dictionary of value output Nodes
-        """
-        return self._value_outputs
-
-    @property
-    def hidden(self) -> Dict[int, Node]:
-        """Property:
-            Return the dictionary of hidden Nodes
-
-        Returns:
-            Dict[int, Node]: dictionary of hidden Nodes
-        """
-        return self._hidden
-
-    @property
-    def all_nodes(self) -> Dict[int, Node]:
-        """Property:
-            Return the dictionary of Nodes
-
-        Returns:
-            Dict[int, Node]: dictionary of Nodes
-        """
-        return self._all_nodes
-
-    @property
-    def links(self) -> Dict[int, Link]:
-        """Property:
-            Return the dictionary of Links
-
-        Returns:
-            Dict[int, Node]: dictionary of Links
-        """
-        return self._links
-
     def get_inputs(self) -> Set[Node]:
         """Getter:
             Return only the Nodes values from the dictionary
@@ -460,7 +390,7 @@ class Network:
         Returns:
             Set[Node]: Set of input Nodes
         """
-        return set(self._inputs.values())
+        return set(self.inputs.values())
 
     def get_outputs(self) -> Set[Node]:
         """Return only the Nodes values from the dictionary
@@ -468,7 +398,7 @@ class Network:
         Returns:
             Set[Node]: Set of output Nodes
         """
-        return set(self._outputs.values())
+        return set(self.outputs.values())
 
     def get_hidden(self) -> Set[Node]:
         """Return only the Nodes values from the dictionary
@@ -476,7 +406,7 @@ class Network:
         Returns:
             Set[Node]: Set of hidden Nodes
         """
-        return set(self._hidden.values())
+        return set(self.hidden.values())
 
     def get_all_nodes(self) -> Set[Node]:
         """Return only the Nodes values from the dictionary
@@ -484,7 +414,7 @@ class Network:
         Returns:
             Set[Node]: Set of all Nodes
         """
-        return set(self._all_nodes.values())
+        return set(self.all_nodes.values())
 
     def get_links(self) -> Set[Link]:
         """Return only the Nodes values from the dictionary
@@ -492,4 +422,4 @@ class Network:
         Returns:
             Set[Link]: Set of Links
         """
-        return set(self._links.values())
+        return set(self.links.values())

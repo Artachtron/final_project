@@ -39,7 +39,7 @@ class TestEntity:
         assert entity.age == 0
         assert entity._size == 13
         assert entity._action_cost == 1
-        assert entity._energies_stock == {'blue energy': 12, 'red energy': 27}
+        assert entity.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert entity._is_adult == False
 
     class TestEntityMethods:
@@ -188,7 +188,7 @@ class TestEntity:
             def test_drop_energy(self):
                 assert self.entity._loose_energy(energy_type=EnergyType.BLUE,
                                                  quantity=5)
-                assert self.entity.energies == {"blue energy": 5, "red energy": 10}
+                assert self.entity.energies_stock == {"blue energy": 5, "red energy": 10}
                 assert self.entity.blue_energy == 5
                 self.entity._action_cost = 0
 
@@ -199,7 +199,7 @@ class TestEntity:
                                                 quantity=1,
                                                 coordinates=blue_cell)
                 self.env._event_on_action(entity=self.entity)
-                assert self.entity.energies == {"blue energy": 4, "red energy": 10}
+                assert self.entity.energies_stock == {"blue energy": 4, "red energy": 10}
                 assert self.entity.blue_energy == 4
                 blue_energy = self.grid.resource_grid.get_cell_value(coordinates=blue_cell)
                 assert blue_energy != None
@@ -215,7 +215,7 @@ class TestEntity:
                                                 coordinates=red_cell)
                 self.env._event_on_action(entity=self.entity)
 
-                assert self.entity.energies == {"blue energy": 4, "red energy": 7}
+                assert self.entity.energies_stock == {"blue energy": 4, "red energy": 7}
                 assert self.entity.red_energy == 7
                 red_energy = self.grid.resource_grid.get_cell_value(coordinates=red_cell)
                 assert red_energy != None
@@ -227,7 +227,7 @@ class TestEntity:
                                                 quantity=1,
                                                 coordinates=red_cell)
                 self.env._event_on_action(entity=self.entity)
-                assert self.entity.energies == {"blue energy": 4, "red energy": 7}
+                assert self.entity.energies_stock == {"blue energy": 4, "red energy": 7}
                 assert self.entity.blue_energy == 4
                 red_energy2 = self.grid.resource_grid.get_cell_value(coordinates=red_cell)
                 assert red_energy2 != None
@@ -242,7 +242,7 @@ class TestEntity:
                                                 quantity=10,
                                                 coordinates=red_cell2)
                 self.env._event_on_action(entity=self.entity)
-                assert self.entity.energies == {"blue energy": 4, "red energy": 0}
+                assert self.entity.energies_stock == {"blue energy": 4, "red energy": 0}
                 assert self.entity.red_energy == 0
                 red_energy2 = self.grid.resource_grid.get_cell_value(coordinates=red_cell2)
                 assert red_energy2.quantity == 7
@@ -279,7 +279,7 @@ class TestTree:
         assert tree.age == 0
         assert tree._size == 13
         assert tree._action_cost == 1
-        assert tree._energies_stock == {'blue energy': 12, 'red energy': 27}
+        assert tree.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert tree._is_adult == False
         assert tree._production_type == EnergyType.BLUE
 
@@ -376,7 +376,7 @@ class TestAnimal:
         assert animal.age == 0
         assert animal._size == 13
         assert animal._action_cost == 1
-        assert animal._energies_stock == {'blue energy': 12, 'red energy': 27}
+        assert animal.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert animal._is_adult == False
         assert animal._pocket == None
 
@@ -454,7 +454,7 @@ class TestAnimal:
                                  red_energy=10,)
 
             self.animal._is_adult = True
-            assert self.animal.energies == {"blue energy": 5, "red energy": 10}
+            assert self.animal.energies_stock == {"blue energy": 5, "red energy": 10}
             assert self.animal.red_energy == 10
             assert self.animal.size == 1
             assert self.animal._max_age == self.animal.size*5

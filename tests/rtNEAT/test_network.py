@@ -29,9 +29,9 @@ class TestNetwork:
             
             yield 
             
-            self.genome._node_genes = {}
-            self.genome._link_genes = {}
-            self.mind._links = {}
+            self.genome.node_genes = {}
+            self.genome.link_genes = {}
+            self.mind.links = {}
             if self.genome:
                 self.genome.node_genes.clear()
                 self.genome.link_genes.clear()
@@ -54,7 +54,7 @@ class TestNetwork:
             
             self.mind._synthetize_nodes(node_genes=node_genes)
             
-            for i, node in self.mind._all_nodes.items():
+            for i, node in self.mind.all_nodes.items():
                 assert node.id == i
                 assert node.__class__.__name__ == "Node"
                 assert node.type == node_types[i]
@@ -74,20 +74,20 @@ class TestNetwork:
                 self.genome.add_node(NodeGene()) #node_type=choice(list(NodeType))
                 
             for _ in range(10):
-                in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
+                in_node, out_node = choice(list(self.genome.node_genes.values()), 2)
                 self.genome.add_link(LinkGene(in_node=in_node.id,
                                                 out_node=out_node.id))
                 
-            self.mind._synthetize_nodes(node_genes=self.genome._node_genes)
-            self.mind._synthetize_links(link_genes=self.genome._link_genes)
+            self.mind._synthetize_nodes(node_genes=self.genome.node_genes)
+            self.mind._synthetize_links(link_genes=self.genome.link_genes)
             
-            assert len(self.mind._links) == 10
-            for link in self.mind._links.values():
+            assert len(self.mind.links) == 10
+            for link in self.mind.links.values():
                 assert link.__class__.__name__ == 'Link'
                 
             # ALl link have been attributed to incoming and outgoing links
-            assert sum([len(node.incoming) for node in self.mind._all_nodes.values()]) == 10
-            assert sum([len(node.outgoing) for node in self.mind._all_nodes.values()]) == 10
+            assert sum([len(node.incoming) for node in self.mind.all_nodes.values()]) == 10
+            assert sum([len(node.outgoing) for node in self.mind.all_nodes.values()]) == 10
             
             assert self.mind.n_links == 10
             assert self.mind.n_nodes == 50
@@ -101,7 +101,7 @@ class TestNetwork:
             self.genome.add_node(hidden_node)
                 
             for _ in range(1000):
-                in_node, out_node = choice(list(self.genome._node_genes.values()), 2)
+                in_node, out_node = choice(list(self.genome.node_genes.values()), 2)
                 if in_node.type == NodeType.OUTPUT:
                     in_node = hidden_node
                 if out_node.type == NodeType.INPUT or NodeType.BIAS:
