@@ -25,6 +25,6 @@ class TestEnergy:
         assert energy.id == 0
         assert energy.type == EnergyType.BLUE
         assert energy._position.vect == (20,20)
-        assert 5 < energy._size < 10 
+        assert 5 < energy.size < 10 
         assert energy.quantity > 0
         

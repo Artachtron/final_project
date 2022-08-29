@@ -260,10 +260,10 @@ class Entity(SimulatedObject):
                     False if energy is lacking
         """        
         if self._is_adult:
-            energy_required = self._size * Entity.GROWTH_ENERGY_REQUIRED
+            energy_required = self.size * Entity.GROWTH_ENERGY_REQUIRED
 
         else:
-            energy_required = self._size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
+            energy_required = self.size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
 
         
         return self._can_perform_action(energy_type=EnergyType.RED,
@@ -279,7 +279,7 @@ class Entity(SimulatedObject):
             # Increase size,
             # maximum age,
             # action cost
-            self._size += 1
+            self.size += 1
             self._max_age += Entity.MAX_AGE_SIZE_COEFF
             if self._action_cost < 5:
                 self._action_cost += 1
@@ -294,7 +294,7 @@ class Entity(SimulatedObject):
             Check if the entity reached maturity size and
             assign the result in the is_adult instance variable
         """
-        self._is_adult = self._size >= self._adult_size
+        self._is_adult = self.size >= self._adult_size
 
     def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Private method:
@@ -636,7 +636,7 @@ class Animal(Entity):
         """
         return (self._is_adult and
                 self.has_enough_energy(energy_type=EnergyType.RED,
-                                       quantity=Animal.REPRODUCTION_COST * self._size))
+                                       quantity=Animal.REPRODUCTION_COST * self.size))
 
     def on_reproduction(self) -> None:
         """Public method:
@@ -647,7 +647,7 @@ class Animal(Entity):
 
         difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_COST * self._size)
+                           quantity=Animal.REPRODUCTION_COST * self.size)
 
     def _create_brain(self) -> None:
         """Private method:
@@ -824,7 +824,7 @@ class Animal(Entity):
             np.array: array containing the normalized input values
         """
         age = self.age/self._max_age
-        size = self._size/config["Simulation"]["Animal"]["normal_size"]
+        size = self.size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
                                    for energy in self.energies_stock.values())
 
@@ -922,7 +922,7 @@ class Animal(Entity):
         #Inputs
         ## Internal properties
         age = self.age/self._max_age
-        size = self._size/config["Simulation"]["Animal"]["normal_size"]
+        size = self.size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
                                    for energy in self.energies_stock.values())
         ## Perceptions
@@ -1235,7 +1235,7 @@ class Tree(Entity):
             pass
 
         self._gain_energy(energy_type=self._production_type,
-                         quantity=int((5 * self._size) / 2**count_trees_around))
+                         quantity=int((5 * self.size) / 2**count_trees_around))
 
     def _decide_pickup(self, output: Node) -> None:
         """Pivate method:
@@ -1264,7 +1264,7 @@ class Tree(Entity):
         #Inputs
         ## Internal properties
         age = self.age/self._max_age
-        size = self._size/config["Simulation"]["Tree"]["normal_size"]
+        size = self.size/config["Simulation"]["Tree"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Tree"]["normal_energy"]
                                    for energy in self.energies_stock.values())
         ## Perceptions

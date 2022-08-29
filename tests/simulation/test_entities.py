@@ -37,7 +37,7 @@ class TestEntity:
         assert entity._adult_size == 15
         assert entity._max_age == 100
         assert entity.age == 0
-        assert entity._size == 13
+        assert entity.size == 13
         assert entity._action_cost == 1
         assert entity.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert entity._is_adult == False
@@ -65,13 +65,13 @@ class TestEntity:
             assert self.entity.age == 1
 
         def test_grow(self):
-            assert self.entity._size == 13
+            assert self.entity.size == 13
             self.entity._grow()
-            assert self.entity._size == 14
+            assert self.entity.size == 14
 
         def test_reached_adulthood(self):
             for _ in range(10):
-                if self.entity._size < self.entity._adult_size:
+                if self.entity.size < self.entity._adult_size:
                     assert not self.entity._is_adult
                 else:
                     assert self.entity._is_adult
@@ -277,7 +277,7 @@ class TestTree:
         assert tree._adult_size == 15
         assert tree._max_age == 100
         assert tree.age == 0
-        assert tree._size == 13
+        assert tree.size == 13
         assert tree._action_cost == 1
         assert tree.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert tree._is_adult == False
@@ -374,7 +374,7 @@ class TestAnimal:
         assert animal._adult_size == 15
         assert animal._max_age == 100
         assert animal.age == 0
-        assert animal._size == 13
+        assert animal.size == 13
         assert animal._action_cost == 1
         assert animal.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert animal._is_adult == False
