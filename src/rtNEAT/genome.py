@@ -48,8 +48,8 @@ class Genome:
                  n_outputs:int = 0):
 
         self.__id: int = genome_id                                  # unique identifier
-        self.node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
-        self.link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
+        self.node_genes: Dict[int, NodeGene] | None = node_genes    # list of network's nodes
+        self.link_genes: Dict[int, LinkGene] | None = link_genes    # list of link's genes
         #self.ancestors: Set = {}                                   # set of ancestors
         self.complete = complete                                    # wheter the network is fully connected
         self.n_inputs = n_inputs                                    # number of input nodes
@@ -235,9 +235,9 @@ class Genome:
                      complete=complete,
                      n_inputs=n_inputs,
                      n_outputs=n_outputs)
-        
+
         return genome
-    
+
 
     @staticmethod
     def verify_post_genesis(n_inputs: int, n_outputs: int, links: Dict[int, LinkGene],
@@ -377,9 +377,9 @@ class Genome:
                 )
             and random() < config['NEAT']['turbo_prob']
             ):
-            
+
             factor = config['NEAT']['turbo_factor']
-            
+
         else:
             factor = 1
 
@@ -389,7 +389,7 @@ class Genome:
         """Public method:
             Mutate the genome
         """
-        for _ in range(factor):               
+        for _ in range(factor):
             # Add a node to the genome
             if random() < config["NEAT"]["add_node_prob"]:
                 self._mutate_add_node()
@@ -397,7 +397,7 @@ class Genome:
             for _ in range(0, 5):
                 if random() < config["NEAT"]["add_link_prob"]:
                     self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
-                
+
         # Modify the weights of the links
         # and their enabled status
         self._mutate_links()
@@ -546,7 +546,7 @@ class Genome:
         for link in self.get_link_genes():
             if (
                 (
-                    link.in_node == node1.id 
+                    link.in_node == node1.id
                 and link.out_node == node2.id
                 )
              or (
@@ -555,7 +555,7 @@ class Genome:
                 )):
 
                 return True
-            
+
         return False
 
     def _new_link_gene(self, in_node: NodeGene, out_node: NodeGene) -> LinkGene:
@@ -660,7 +660,7 @@ class Genome:
         if node1 and node2:
             new_link = self._new_link_gene(in_node=node1,
                                            out_node=node2)
-    
+
             self.add_link(new_link)
             return True
 
@@ -831,7 +831,7 @@ class Genome:
         # Choose randomly which parent will be the dominant one,
         # which will transmit most of its genes
         main_genome, sub_genome  = sample([parent1, parent2], 2)
-        
+
         new_nodes: Dict[int, NodeGene] = {}
 
         # Make sure all sensors and outputs are included

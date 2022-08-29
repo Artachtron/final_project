@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractclassmethod, abstractmethod
 from functools import partial
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, ValuesView
 
 from .genes import ActivationFuncType, AggregationFuncType, NodeType, sigmoid
 
@@ -18,6 +18,7 @@ class BasePhene(ABC):
     Abstract class methods:
         synthesis: Create a phene from gene information
     """
+    __slots__ = '__id', 'name', 'enabled'
     def __init__(self,
                  phene_id: int,
                  name: Optional[str] = None,
@@ -42,7 +43,7 @@ class BasePhene(ABC):
         return self.id == other.id
 
     def __hash__(self):
-        return hash(self.id)
+        return hash(self.__id)
 
     @abstractclassmethod
     def synthesis(cls, kwargs):
@@ -67,6 +68,7 @@ class Link(BasePhene):
     class method:
         synthesis: create a link from LinkGene's information
     """
+    __slots__ = 'weight', 'in_node', 'out_node'
     def __init__(self,
                 link_id: int,
                 weight: float,
@@ -135,6 +137,10 @@ class Node(BasePhene):
     class method:
         synthesis: synthesize a Node from a NodeGene
     """
+    __slots__ = ('activation_phase', 'activation_value', 'activation_function',
+                'aggregation_function', 'incoming', 'outgoing', 'type','bias',
+                'associated_values', 'output_type')
+    
     def __init__(self,
                   node_id: int,
                   activation_function,
@@ -179,7 +185,7 @@ class Node(BasePhene):
     def __repr__(self):
         return f"{self.type} {self.id}"
 
-    def get_incoming(self)  ->  Set[Link]:
+    def get_incoming(self)  -> ValuesView:
         """Public method:
             Return only the Links values from
             the incoming dictionary
@@ -187,9 +193,9 @@ class Node(BasePhene):
         Returns:
             Set[Link]: set of incoming links
         """
-        return set(self.incoming.values())
+        return self.incoming.values()
 
-    def get_outgoing(self)  ->  Set[Link]:
+    def get_outgoing(self)  ->  ValuesView:
         """Public method:
             Return only the Links values from
             the outgoing dictionary
@@ -197,7 +203,7 @@ class Node(BasePhene):
         Returns:
             Set[Link]: set of outgoing links
         """
-        return set(self.outgoing.values())
+        return self.outgoing.values()
 
     @classmethod
     def synthesis(cls, kwargs) -> Node:
@@ -217,8 +223,7 @@ class Node(BasePhene):
         Returns:
             bool: Node is a sensor
         """
-        return (self.type == NodeType.INPUT or
-                self.type == NodeType.BIAS)
+        return self.type in {NodeType.INPUT, NodeType.BIAS}
 
     def is_output(self) -> bool:
         """Public method:
