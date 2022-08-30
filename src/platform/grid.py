@@ -355,20 +355,23 @@ class SubGrid:
         a, b = coordinates
         for n in range(1, radius):
             for x in (-n, n):
+                x1 = a+x
+                y1 = b+x
                 for y in range(-n+1, n):
-                    find_instance(position=(a+x, b+y),
+                    
+                    find_instance(position=(x1, b+y),
                                   instances=instances,
                                   base_class=base_class)
 
-                    find_instance(position=(a+y, b+x),
+                    find_instance(position=(a+y, y1),
                                   instances=instances,
                                   base_class=base_class)
   
-                find_instance(position=(a+x, b+x),
+                find_instance(position=(x1, y1),
                               instances=instances,
                               base_class=base_class)
                 
-                find_instance(position=(a+x, b-x),
+                find_instance(position=(x1, b-x),
                               instances=instances,
                               base_class=base_class)
 

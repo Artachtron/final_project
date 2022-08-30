@@ -223,7 +223,8 @@ class Node(BasePhene):
         Returns:
             bool: Node is a sensor
         """
-        return self.type in {NodeType.INPUT, NodeType.BIAS}
+        return (self.type == NodeType.INPUT or
+                self.type == NodeType.BIAS)
 
     def is_output(self) -> bool:
         """Public method:

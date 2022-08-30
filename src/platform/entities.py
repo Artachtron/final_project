@@ -678,6 +678,7 @@ class Animal(Entity):
                                                 "actions":{
                                                     "move_v": [],
                                                     "move_h": [],
+                                                    # "grow": [],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
