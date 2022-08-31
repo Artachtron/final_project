@@ -227,6 +227,7 @@ class Entity(SimulatedObject):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
         self.age += amount
+        # if config['Simulation']['cycle'] < 500:
         if not self._is_adult:
             self._grow()
 
@@ -371,7 +372,7 @@ class Entity(SimulatedObject):
         """Private method:
             Consume blue energy when performing an action
         """
-        difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
+        # difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.BLUE,
                            quantity=int(self._action_cost))
 
@@ -645,7 +646,7 @@ class Animal(Entity):
         if random() < Animal.DIE_GIVING_BIRTH_PROB:
             self._die(cause="giving birth")
 
-        difficulty = config['Simulation']['difficulty_level']
+        # difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
                            quantity=Animal.REPRODUCTION_COST * self.size)
 
@@ -676,9 +677,9 @@ class Animal(Entity):
                                                 "n_actions": Animal.NUM_ACTIONS,
                                                 "n_values": Animal.NUM_VALUES,
                                                 "actions":{
-                                                    "move_v": [],
-                                                    "move_h": [],
-                                                    # "grow": [],
+                                                    "move": [0,1],
+                                                    "grow": [],
+                                                    "reproduce": [],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
@@ -859,21 +860,38 @@ class Animal(Entity):
         Args:
             outputs (np.array):         array or outputs values from brain activation
         """
-        """ if self.generation > 0:
-            self.action= IdleAction() """
-
-        if (self._is_adult
+        actions = []
+        # Get the most absolute active value of all the outputs
+        if random() < config['Simulation']['Animal']['random_action_prob']:
+            most_active_output_id = choice(list(outputs.keys()))
+        else:
+            most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
+        most_active_output = self.mind.trigger_outputs[most_active_output_id]
+        
+        for key, value in outputs.items():
+            if value >= 0.5:
+                match self.mind.trigger_outputs[key].name:
+                    case 'move':
+                        self._decide_move(output=most_active_output)
+                    
+                    case 'grow':
+                        self._decide_grow()
+                        
+                    case 'reproduce':
+                        self._decide_reproduce()
+                        
+                
+        """ if (self._is_adult
             and self.gained_energy/50 > self.size
             and self._can_grow()
-            and random() < 0.5):
-                self._decide_grow()
-
-        elif (self.can_reproduce()
+            and random() < 0.5): """
+                
+        """ elif (self.can_reproduce()
             and random() < 0.5):
             self._decide_reproduce()
         
         else:
-            self._decide_minimal_move()
+            self._decide_minimal_move() """
             
         
 

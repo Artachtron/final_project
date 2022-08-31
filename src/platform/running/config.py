@@ -225,5 +225,8 @@ class ConfigManager:
     def set_difficulty_range(self, phase: int):
         self.settings['Simulation']['difficulty_max'] *= phase
         self.settings['Simulation']['difficulty_min'] *= phase
+        
+    def set_cycle(self, cycle):
+        self.settings['Simulation']['cycle'] = cycle
 
 config = ConfigManager()

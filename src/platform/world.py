@@ -129,6 +129,7 @@ class World:
         sim_state: SimState
 
         grid, sim_state = self.simulation.update()
+        config.set_cycle(sim_state.cycle)
         self.metrics.update()
 
         if self.display_active:

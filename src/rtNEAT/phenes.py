@@ -183,6 +183,8 @@ class Node(BasePhene):
         self.output_type: Optional[str] = output_type                   # Type of output
 
     def __repr__(self):
+        if self.name:
+            return f"{self.name} {self.id}"
         return f"{self.type} {self.id}"
 
     def get_incoming(self)  -> ValuesView:
