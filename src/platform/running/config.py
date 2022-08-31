@@ -53,7 +53,7 @@ default_settings = {
                             "link_diff_coeff": 0.5,
                             "mutation_difference_coeff": 0.5,
                             "compatibility_threshod": 3.0,
-                        },
+                        },#21
 
                     "Simulation":{
                         # Difficutly
@@ -85,7 +85,7 @@ default_settings = {
                         "energy_quantity": 100,
                         "spawn_tree": False,
                         "tree_sparsity": 5,
-
+                        #26
                         "Entity":{
                             "initial_size": 10,
                             "init_max_age": 50,
@@ -95,7 +95,7 @@ default_settings = {
                             "max_age_size_coeff": 5,
                             "growth_energy_required": 10,
                             "child_energy_cost_divisor": 2,
-                        },
+                        }, #8
 
                         "Animal":{
                             # Animal
@@ -123,7 +123,13 @@ default_settings = {
                             "success_reproduction": 1.00,
                             "incest": False,
                             "reproduction_range": 1,
-                        },
+                            "move_threshold": 0.1,
+                            "grow_threshold": 0.5,
+                            "reproduction_threshold": 0.5,
+                            "plant_threshold": 0.5,
+                            "drop_threshold": 0.5,
+                            "paint_threshold": 0.5,
+                        }, #25
 
                         "Tree":{
                             #Tree
@@ -139,9 +145,9 @@ default_settings = {
                             ## Inputs
                             "normal_size": 100,
                             "normal_energy": 10000,
-                        },
+                        }, #9
                         "Resource":{
-                            "expiry_date": 20
+                            "expiry_date": 20 #1
                         }
                     }
                 }

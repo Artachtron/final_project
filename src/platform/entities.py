@@ -127,13 +127,14 @@ class Entity(SimulatedObject):
 
         self._action_cost: int = action_cost * self.size        # blue energy cost of each action
         self.action: Action                                     # action of this turn decided by brain
+        self.actions = []
 
         self.brain: Brain                                       # brain containing genotype and mind
         self.mind: Network                                      # neural network
 
         if self.generation == 0:
             self._create_brain()
-            
+
 
     def _create_brain(self):
         """Private method:
@@ -183,7 +184,7 @@ class Entity(SimulatedObject):
         Args:
             action (Action): action to set
         """
-        self.action = action
+        self.actions.append(action)
 
         # Energy cost of action
         self._perform_action()
@@ -259,14 +260,14 @@ class Entity(SimulatedObject):
         Returns:
             bool:   True if it has enough energy
                     False if energy is lacking
-        """        
+        """
         if self._is_adult:
             energy_required = self.size * Entity.GROWTH_ENERGY_REQUIRED
 
         else:
             energy_required = self.size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
 
-        
+
         return self._can_perform_action(energy_type=EnergyType.RED,
                                         quantity=energy_required)
 
@@ -476,11 +477,11 @@ class Entity(SimulatedObject):
         if type(resource).__base__.__name__ == 'Energy':
             self._gain_energy(energy_type=resource.type,
                               quantity=resource.quantity)
-            
+
         # If resource is a seed
         elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
             self._store_seed(seed=resource)
-            
+
 
     def _die(self, cause: Optional[str]="") -> None:
         """Private method:
@@ -501,6 +502,7 @@ class Entity(SimulatedObject):
         """
         # Reset status
         self._change_status(new_status=Status.ALIVE)
+        self.actions = []
         # Increase age by 1
         self._increase_age()
 
@@ -623,7 +625,7 @@ class Animal(Entity):
 
         self._pocket: Optional[Seed] = None # pocket in which to store seed
         self.fitness = 0
- 
+
     def __repr__(self):
         return f'Animal {self.id}'
 
@@ -713,7 +715,7 @@ class Animal(Entity):
         self._update_position(new_position=new_position)
 
         self.fitness += 1
-        
+
     def _update_position(self, new_position: Tuple[int, int]) -> None:
         """Private method:
             Update the position of the animal
@@ -833,7 +835,7 @@ class Animal(Entity):
         entity_sight_range = config['Simulation']['Animal']['entity_sight_range']
         animals_around = environment.find_animals_around(coordinates=self.position,
                                                          radius=entity_sight_range)
-        
+
         animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
                                                                                      sight_range=entity_sight_range)
 
@@ -860,40 +862,34 @@ class Animal(Entity):
         Args:
             outputs (np.array):         array or outputs values from brain activation
         """
-        actions = []
-        # Get the most absolute active value of all the outputs
-        if random() < config['Simulation']['Animal']['random_action_prob']:
-            most_active_output_id = choice(list(outputs.keys()))
-        else:
-            most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
-        most_active_output = self.mind.trigger_outputs[most_active_output_id]
-        
         for key, value in outputs.items():
-            if value >= 0.5:
-                match self.mind.trigger_outputs[key].name:
-                    case 'move':
-                        self._decide_move(output=most_active_output)
-                    
-                    case 'grow':
+            output = self.mind.trigger_outputs[key]
+            match output.name:
+                case 'move':
+                    if value >= 0.1:
+                        self._decide_move(output=output)
+
+                case 'grow':
+                    if value >= 0.5:
                         self._decide_grow()
-                        
-                    case 'reproduce':
+
+                case 'reproduce':
+                    if value >= 0.5:
                         self._decide_reproduce()
-                        
-                
+
         """ if (self._is_adult
             and self.gained_energy/50 > self.size
             and self._can_grow()
             and random() < 0.5): """
-                
+
         """ elif (self.can_reproduce()
             and random() < 0.5):
             self._decide_reproduce()
-        
+
         else:
             self._decide_minimal_move() """
-            
-        
+
+
 
     def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
         """Private method:

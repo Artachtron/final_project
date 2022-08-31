@@ -127,11 +127,12 @@ class Probe:
         cycle = self.cycle
         self.actions_count.setdefault(cycle, {})
 
-        if hasattr(entity, 'action'):
-            action = entity.action.action_type.value
-            self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
-            self.actions.append((cycle, action))
-            self.total_actions_count[action] = self.total_actions_count.get(action, 0) + 1
+        if hasattr(entity, 'actions'):
+            for action in entity.actions:
+                action = action.action_type.value
+                self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
+                self.actions.append((cycle, action))
+                self.total_actions_count[action] = self.total_actions_count.get(action, 0) + 1
 
     def update_population(self) -> None:
         cycle = self.cycle

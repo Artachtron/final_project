@@ -138,7 +138,7 @@ class World:
 
         self.set_difficulty(sim_state=sim_state)
 
-        if sim_state.cycle%500 == 0:
+        if sim_state.cycle%1000 == 0:
             self.save_simulation()
             
         if (sim_state.cycle == World.MAX_CYCLE or

@@ -661,36 +661,36 @@ class Environment:
         Args:
             animal (Animal): animal with action to handle
         """
-        action = animal.action
-        match action.action_type:
-            case ActionType.MOVE:
-                self._on_animal_move(animal=animal,
-                                     action=action)
-
-            case ActionType.PAINT:
-                self._on_animal_paint(animal=animal,
-                                      action=action)
-
-            case ActionType.DROP:
-                self._on_animal_drop(animal=animal,
-                                     action=action)
-
-            case ActionType.PICKUP:
-                self._on_animal_pickup(animal=animal,
-                                       action=action)
-
-            case ActionType.RECYCLE:
-                self._on_animal_recycle(animal=animal,
+        for action in animal.actions:
+            match action.action_type:
+                case ActionType.MOVE:
+                    self._on_animal_move(animal=animal,
                                         action=action)
 
-            case ActionType.PLANT_TREE:
-                self._on_animal_plant_tree(animal=animal,
-                                           action=action)
+                case ActionType.PAINT:
+                    self._on_animal_paint(animal=animal,
+                                        action=action)
 
-            case ActionType.REPRODUCE:
-                self._on_animal_reproduce(animal=animal,
-                                          action=action)
+                case ActionType.DROP:
+                    self._on_animal_drop(animal=animal,
+                                        action=action)
 
+                case ActionType.PICKUP:
+                    self._on_animal_pickup(animal=animal,
+                                        action=action)
+
+                case ActionType.RECYCLE:
+                    self._on_animal_recycle(animal=animal,
+                                            action=action)
+
+                case ActionType.PLANT_TREE:
+                    self._on_animal_plant_tree(animal=animal,
+                                            action=action)
+
+                case ActionType.REPRODUCE:
+                    self._on_animal_reproduce(animal=animal,
+                                            action=action)
+                    
     def _on_animal_death(self, animal: Animal) -> None:
         """Pivate method:
             Handle animal death
