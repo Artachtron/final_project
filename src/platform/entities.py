@@ -229,8 +229,8 @@ class Entity(SimulatedObject):
         """
         self.age += amount
         # if config['Simulation']['cycle'] < 500:
-        if not self._is_adult:
-            self._grow()
+        """ if not self._is_adult:
+            self._grow() """
 
         # if new age above maximum age threshold,
         # the entity dies
@@ -374,6 +374,7 @@ class Entity(SimulatedObject):
             Consume blue energy when performing an action
         """
         # difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
+                
         self._loose_energy(energy_type=EnergyType.BLUE,
                            quantity=int(self._action_cost))
 
@@ -866,15 +867,15 @@ class Animal(Entity):
             output = self.mind.trigger_outputs[key]
             match output.name:
                 case 'move':
-                    if value >= 0.1:
+                    if value >= config['Simulation']['Animal']['move_threshold']:
                         self._decide_move(output=output)
 
                 case 'grow':
-                    if value >= 0.5:
+                    if value >= config['Simulation']['Animal']['grow_threshold']:
                         self._decide_grow()
 
                 case 'reproduce':
-                    if value >= 0.5:
+                    if value >= config['Simulation']['Animal']['reproduction_threshold']:
                         self._decide_reproduce()
 
         """ if (self._is_adult
