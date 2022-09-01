@@ -143,8 +143,9 @@ default_settings = {
                             "num_tree_output": 8,
                             "num_tree_action": 4,
                             ## Inputs
+                            "energy_sight_range": 1,
                             "normal_size": 100,
-                            "normal_energy": 10000,
+                            "normal_energy": 1000,
                         }, #9
                         "Resource":{
                             "expiry_date": 20 #1

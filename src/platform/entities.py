@@ -38,7 +38,7 @@ class Entity(SimulatedObject):
 
     Attributes:
         status (Status):                    # current status
-        _energies_stock (Dict[str, int]):   # energy currently owned
+        energies_stock (Dict[str, int]):   # energy currently owned
         generation (int):                   # generation the entity was born in
         birthday (int):                     # cycle in which the entity was born
         species (int):                      # species the entity is part of
@@ -508,33 +508,7 @@ class Entity(SimulatedObject):
         self._increase_age()
 
         # Activate mind and return the result
-        self._minimal_activate_mind(environment=environment)
-
-    def _minimal_activate_mind(self, environment: Environment) -> None:
-        """Private method:
-            Activate entity's brain
-        """
-        inputs = self._minimal_normalize_inputs(environment=environment)
-        mind = self.brain.phenotype
-        outputs = mind.activate(input_values=inputs)
-        self._minimal_interpret_outputs(outputs=outputs)
-
-    def _minimal_normalize_inputs(self, environment: Environment) -> npt.NDArray:
-        """Private method:
-            Regroup and normalize inputs to feed brain
-
-        Returns:
-            npt.NDArray: array of normalized inputs
-        """
-        return np.array([])
-
-    def _minimal_interpret_outputs(self, outputs: Dict[int, float]):
-        """Private method:
-            Take the adequate decision based on output values
-
-        Args:
-            outputs (Dict[int, float]): dictionary of output nodes' activation values
-        """
+        self._activate_mind(environment=environment)
 
     def _activate_mind(self, environment: Environment) -> None:
         """Private method:
@@ -561,6 +535,47 @@ class Entity(SimulatedObject):
         Args:
             outputs (Dict[int, float]): dictionary of output nodes' activation values
         """
+
+    def _activate_mind(self, environment: Environment) -> None:
+        """Private method:
+            Activate entity's brain
+        """
+        inputs = self._normalize_inputs(environment=environment)
+        mind = self.brain.phenotype
+        outputs = mind.activate(input_values=inputs)
+        self._interpret_outputs(outputs=outputs)
+        
+    def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
+        """Private method:
+            Find the necessary information about the closest object around,
+            return a normalized distance and angle
+
+        Args:
+            objects_around (Set[Any]):  objects in range to search for
+            sight_range (float):        maximum distance of visible objects
+
+        Returns:
+            Tuple[float, float]:    norm_distance: normalized distance of the closest object
+                                    norm_angle: normalized angle of the closest object
+        """
+        close_distance: float = sight_range
+        closest_object: SimulatedObject = None
+        own_distance = self.pos.distance
+        for obj in objects_around:
+            distance = own_distance(other_pos=obj.pos)
+            if  distance <= close_distance:
+                close_distance = distance
+                closest_object = obj
+
+        if closest_object:
+            norm_angle: float = self.pos.norm_angle(other_pos=closest_object.pos)
+            norm_distance: float = ((sight_range - close_distance)
+                                   /(sight_range - 1))
+        else:
+            norm_angle = -1
+            norm_distance = -1
+
+        return norm_distance, norm_angle
 
     def on_death(self) -> None:
         """Public method:
@@ -683,6 +698,7 @@ class Animal(Entity):
                                                     "move": [0,1],
                                                     "grow": [],
                                                     "reproduce": [],
+                                                    "plant": [],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
@@ -818,7 +834,7 @@ class Animal(Entity):
             Event: on paint action
         """
 
-    def _minimal_normalize_inputs(self, environment: Environment) -> npt.NDArray:
+    def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Normalize input values for brain activation
 
@@ -856,7 +872,7 @@ class Animal(Entity):
                          energy_close_distance,
                          energy_close_angle])
 
-    def _minimal_interpret_outputs(self, outputs: Dict[int, float]) -> None:
+    def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
 
@@ -878,6 +894,10 @@ class Animal(Entity):
                     if value >= config['Simulation']['Animal']['reproduction_threshold']:
                         self._decide_reproduce()
 
+                case 'plant':
+                    if value >= config['Simulation']['Animal']['plant_threshold']:
+                        self._decide_plant_tree()
+
         """ if (self._is_adult
             and self.gained_energy/50 > self.size
             and self._can_grow()
@@ -891,41 +911,7 @@ class Animal(Entity):
             self._decide_minimal_move() """
 
 
-
-    def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
-        """Private method:
-            Find the necessary information about the closest object around,
-            return a normalized distance and angle
-
-        Args:
-            objects_around (Set[Any]):  objects in range to search for
-            sight_range (float):        maximum distance of visible objects
-
-        Returns:
-            Tuple[float, float]:    norm_distance: normalized distance of the closest object
-                                    norm_angle: normalized angle of the closest object
-        """
-        close_distance: float = sight_range
-        closest_object: SimulatedObject = None
-        own_distance = self.pos.distance
-        for obj in objects_around:
-            distance = own_distance(other_pos=obj.pos)
-            if  distance <= close_distance:
-                close_distance = distance
-                closest_object = obj
-
-        if closest_object:
-            norm_angle: float = self.pos.norm_angle(other_pos=closest_object.pos)
-            norm_distance: float = ((sight_range - close_distance)
-                                   /(sight_range - 1))
-        else:
-            norm_angle = -1
-            norm_distance = -1
-
-        return norm_distance, norm_angle
-
-
-    def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
+    def _old_normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Normalize input values for brain activation
 
@@ -1037,7 +1023,7 @@ class Animal(Entity):
         """
         self._action_pick_up_resource(coordinates=coordinates)
 
-    def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
+    def _old_interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
 
@@ -1201,8 +1187,8 @@ class Tree(Entity):
         # Work on the parameter that need some custom transformation
         genetic_data['tree_id'] = original_dict['_SimulatedObject__id']
         genetic_data['position'] = genetic_data['position']()
-        genetic_data['blue_energy'] = original_dict['_energies_stock'][EnergyType.BLUE.value]
-        genetic_data['red_energy'] = original_dict['_energies_stock'][EnergyType.RED.value]
+        genetic_data['blue_energy'] = original_dict['energies_stock'][EnergyType.BLUE.value]
+        genetic_data['red_energy'] = original_dict['energies_stock'][EnergyType.RED.value]
 
         # Extra given data from environment
         for key, value in data.items():
@@ -1284,16 +1270,19 @@ class Tree(Entity):
         blue_energy, red_energy = (energy/config["Simulation"]["Tree"]["normal_energy"]
                                    for energy in self.energies_stock.values())
         ## Perceptions
-        energies = environment.find_if_resources_around(coordinates=self.position,
-                                                        include_self=True)
-        see_energies = list(map(int, energies))
+        energy_sight_range = config['Simulation']['Tree']['energy_sight_range']
+        energies_around = environment.find_energies_around(coordinates=self.position,
+                                                           radius=energy_sight_range)
+        
+        energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
+                                                                                     sight_range=energy_sight_range)
 
-        colors = environment.get_colors_around(coordinates=self.position,
+        """ colors = environment.get_colors_around(coordinates=self.position,
                                                radius=2)
 
-        see_colors = (1 - colors.flatten()/255).tolist()
+        see_colors = (1 - colors.flatten()/255).tolist() """
 
-        return np.array([age, size, blue_energy, red_energy] + see_energies + see_colors)
+        return np.array([age, size, blue_energy, red_energy, energy_close_distance, energy_close_angle])
 
     def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
@@ -1304,25 +1293,27 @@ class Tree(Entity):
             environment (Environment):  environment of the tree
         """
 
-        # Get the most absolute active value of all the outputs
-        most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
-        most_active_output = self.mind.trigger_outputs[most_active_output_id]
+        for key, value in outputs.items():
+            output = self.mind.trigger_outputs[key]
+            match output.name:
+                ## Simple actions ##
+                # Produce energy
+                case 'produce':
+                    if value >= 0.1:
+                        self._decide_produce()
+                # Drop energy
+                case 'drop':
+                    if value >= 0.1:
+                        self._decide_drop(output=output)
 
-        match most_active_output.name:
-            ## Simple actions ##
-            # Produce energy
-            case 'produce':
-                self._decide_produce()
-            # Drop energy
-            case 'drop':
-                self._decide_drop(output=most_active_output)
-
-            # Pick up resource
-            case 'pickup':
-                self._decide_pickup(output=most_active_output)
-            #Grow
-            case 'grow':
-                self._decide_grow()
+                # Pick up resource
+                case 'pickup':
+                    if value >= 0.5:
+                        self._decide_pickup(output=output)
+                #Grow
+                case 'grow':
+                    if value >= 0.5:
+                        self._decide_grow()
 
 
 class Seed(Resource):

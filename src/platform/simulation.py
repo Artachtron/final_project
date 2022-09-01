@@ -797,18 +797,18 @@ class Environment:
         Args:
             tree (Tree): tree with action to handle
         """
-        action = tree.action
-        match action.action_type:
-            case ActionType.PRODUCE_ENERGY:
-                self._on_tree_produce_energy(tree=tree)
+        for action in tree.actions:
+            match action.action_type:
+                case ActionType.PRODUCE_ENERGY:
+                    self._on_tree_produce_energy(tree=tree)
 
-            case ActionType.DROP:
-                self._on_tree_drop(tree=tree,
-                                   action=action)
+                case ActionType.DROP:
+                    self._on_tree_drop(tree=tree,
+                                    action=action)
 
-            case ActionType.PICKUP:
-                self._on_tree_pickup(tree=tree,
-                                     action=action)
+                case ActionType.PICKUP:
+                    self._on_tree_pickup(tree=tree,
+                                        action=action)
 
     def _on_tree_death(self, tree: Tree) -> None:
         """Pivate method:
