@@ -633,11 +633,11 @@ class Environment:
         reproduction_range = config['Simulation']['Animal']['reproduction_range']
         animals_around = self. find_animals_around(coordinates=animal.position,
                                                    radius=config['Simulation']['Animal']['reproduction_range'])
-        energy_stock: int = 0
+        fitness: int = 0
         most_suitable_mate: Animal = None
         for other_entity in animals_around:
             # if other_entity.status == Status.FERTILE:
-            if (other_entity.size > energy_stock
+            if (other_entity.size > fitness
                 and animal.pos.distance(other_entity.pos)
                 <= reproduction_range):
 
@@ -645,13 +645,12 @@ class Environment:
                     and self._check_incest(parent1=animal,
                                            parent2=other_entity)):
 
-                    energy_stock = other_entity.size
+                    fitness = other_entity.size
                     most_suitable_mate = other_entity
                     
         if most_suitable_mate:
             self._reproduce_entities(parent1=animal,
                                      parent2=most_suitable_mate)
-
 
 
     def _on_animal_action(self, animal: Animal) -> None:

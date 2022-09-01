@@ -639,7 +639,7 @@ class Animal(Entity):
         """
         return (self._is_adult and
                 self.has_enough_energy(energy_type=EnergyType.RED,
-                                       quantity=Animal.REPRODUCTION_COST * self.size))
+                                       quantity=Animal.REPRODUCTION_COST * 5))
 
     def on_reproduction(self) -> None:
         """Public method:
@@ -650,7 +650,7 @@ class Animal(Entity):
 
         # difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_COST * self.size)
+                           quantity=Animal.REPRODUCTION_COST * 5)
 
     def _create_brain(self) -> None:
         """Private method:
