@@ -586,7 +586,6 @@ class Environment:
             animal (Animal): animal that recycle a seed
             action (Action): recycle action
         """
-
         # Drop energy from seed on the ground
         action.tree.position = animal.position
         self.decompose_entity(entity=action.tree)
@@ -761,14 +760,14 @@ class Environment:
             tree (Tree): tree that drop a resource
             action (Action): drop action
         """
-        free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+        free_cells = self.grid.resource_grid.select_free_coordinates(coordinates=action.coordinates)
         free_cell = free_cells.pop() if free_cells else None
 
         if free_cell:
             # Create the energy
             if self.create_energy(energy_type=action.energy_type,
-                                coordinates=free_cell,
-                                quantity=action.quantity):
+                                  coordinates=free_cell,
+                                  quantity=action.quantity):
 
                 tree.on_drop_energy(energy_type=action.energy_type,
                                     quantity=action.quantity)
@@ -969,7 +968,7 @@ class Environment:
         """
 
         # Create a seed from a tree
-        seed = tree.create_seed(data={'size': 5,
+        seed = tree.create_seed(data={'size': 10,
                                       'action_cost': 1})
 
         # Add the seed to the world

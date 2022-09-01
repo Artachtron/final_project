@@ -314,7 +314,7 @@ class Probe:
         for cycle in self.actions_count:
             for action in self.actions_count[cycle]:
                 data[action] = data.get(action, 0) + self.actions_count[cycle][action]
-                
+        
         print(data)
     
     @staticmethod

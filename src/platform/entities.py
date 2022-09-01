@@ -80,6 +80,7 @@ class Entity(SimulatedObject):
                  action_cost: int = INITIAL_ACTION_COST,
                  blue_energy: int = INITIAL_BLUE_ENERGY,
                  red_energy: int = INITIAL_RED_ENERGY,
+                 max_age: int = 0,
                  appearance: str = "",
                  ):
         """Super constructor:
@@ -118,7 +119,7 @@ class Entity(SimulatedObject):
         self.species: int = 0                                   # species the entity is part of
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self.age: int = 0                                       # time since birth
-        self._max_age: int = Entity.INITIAL_MAX_AGE             # maximum longevity before dying
+        self._max_age: int = max_age or Entity.INITIAL_MAX_AGE  # maximum longevity before dying
         self.gained_energy: float = 0.0
 
         self._adult_size: int = adult_size                      # size to reach before becoming adult
@@ -429,8 +430,8 @@ class Entity(SimulatedObject):
 
         quantity = int(abs(energy)*10)
         self._action_drop_energy(energy_type=energy_type,
-                                    quantity=quantity,
-                                    coordinates=self.position)
+                                 quantity=quantity,
+                                 coordinates=self.position)
 
     def _action_drop_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Private method:
@@ -455,7 +456,7 @@ class Entity(SimulatedObject):
     def on_drop_energy(self, energy_type: EnergyType, quantity: int):
         # Remove energy amount from stock
         self._loose_energy(energy_type=energy_type,
-                            quantity=quantity)
+                           quantity=quantity)
 
     def _action_pick_up_resource(self, coordinates: Tuple[int, int]):
         """Private method:
@@ -1084,7 +1085,8 @@ class Tree(Entity):
             on_death:       event on tree death
             create_seed:    create a seed on current position
     """
-    INIT_ADULT_SIZE: Final[int] = config['Simulation']["Tree"]['init_adult_size']
+    INIT_ADULT_SIZE: Final[int] = config['Simulation']['Tree']['init_adult_size']
+    INIT_MAX_AGE: Final[int] = config['Simulation']['Tree']['init_max_age']
 
     COMPLETE_NETWORK: Final[bool] = config['Simulation']['Tree']['complete']
     NUM_TREE_INPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_input"]
@@ -1121,6 +1123,7 @@ class Tree(Entity):
         """
 
         adult_size = adult_size or Tree.INIT_ADULT_SIZE
+        max_age = max_age or Tree.INIT_MAX_AGE
 
         super().__init__(position=position,
                          entity_id=tree_id,
@@ -1335,7 +1338,7 @@ class Seed(Resource):
                                    position=position,
                                    appearance="seed.png",
                                    quantity=1,
-                                   expiry=50)
+                                   expiry=1)
 
         self.genetic_data = genetic_data
 

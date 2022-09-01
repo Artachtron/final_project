@@ -135,6 +135,7 @@ default_settings = {
                             #Tree
                             ## Initial attributes
                             "init_adult_size": 5,
+                            "init_max_age": 20,
                             "init_blue_energy": 100,
                             "init_red_energy": 100,
                             ## Brain

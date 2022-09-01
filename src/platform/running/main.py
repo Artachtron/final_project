@@ -23,7 +23,7 @@ def main():
     try:
         world.run()
     except Exception as e:
-        print(e)
+        print(f"exception: {repr(e)}")
     end = time()
     print(f'It took {(end - start)/60: .0f} minutes!')
     """ world.save_simulation()

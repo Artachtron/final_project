@@ -885,11 +885,11 @@ class Genome:
         for link in main_links:
             if link in sub_links:
                 if main_links[link].in_node != sub_links[link].in_node:
-                    print(f"{link}")
+                    print(f"link: {link}")
                     raise ValueError(f"in node: {main_links[link].in_node} != {sub_links[link].in_node}")
 
                 if main_links[link].out_node != sub_links[link].out_node:
-                    print(f"{link}")
+                    print(f"link: {link}")
                     raise ValueError(f"out node: {main_links[link].out_node} != {sub_links[link].out_node}")
 
 

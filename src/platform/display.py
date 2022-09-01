@@ -274,7 +274,6 @@ class Display:
                                                     assets_path=self.assets_path,
                                                     sim_obj=entity,
                                                     assets=self.assets)
-
         self.entities[entity.id] = dis_entity
         self.entity_group.add(dis_entity)
 
@@ -299,7 +298,7 @@ class Display:
                                                       assets_path=self.assets_path,
                                                       sim_obj=resource,
                                                       assets=self.assets)
-
+        
         self.resources[resource.id] = dis_resource
         self.resource_group.add(dis_resource)
 
@@ -310,8 +309,11 @@ class Display:
         Args:
             resource (Resource): resource to remove
         """
-        dis_resource = self.resources.pop(resource.id)
-        self.resource_group.remove(dis_resource)
+        try:
+            dis_resource = self.resources.pop(resource.id)
+            self.resource_group.remove(dis_resource)
+        except KeyError:
+            print(f"{resource.id} is not in the list" )
 
 
     def update(self, sim_state: SimState) -> None:
