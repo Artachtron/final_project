@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
-    from simulation import SimState
+    from probe import Probe
 
 import json
 from dataclasses import dataclass
@@ -55,7 +55,7 @@ def parameters_tuning():
         
 @dataclass 
 class Evaluator: 
-    sim_state: SimState
+    probe: Probe
     
     max_replant: int = 0
     sum_replant: int = 0            
@@ -68,7 +68,7 @@ class Evaluator:
     def evaluate_trade(self) -> Tuple[int, int]:
         trade_count: int = 0
         max_trade_count: int = 0
-        entities = self.sim_state.entities
+        entities = self.probe.entities
         for entity in entities:
             for partner in entity.trade_partners:
                 if entity.id in entities[partner].trade_partners:

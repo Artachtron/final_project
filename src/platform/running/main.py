@@ -16,7 +16,8 @@ from .config import config
 def main():
     start = time()
     world = World(world_id=0,
-                  display_active=config.display)
+                  display_active=config.display,
+                  probe=True)
 
     world.init(show_grid=True)
     

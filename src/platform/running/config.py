@@ -2,6 +2,7 @@ import copy
 import json
 import optparse
 import sys
+from functools import cached_property
 from os.path import dirname, join, realpath
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -239,5 +240,9 @@ class ConfigManager:
         
     def set_cycle(self, cycle):
         self.settings['Simulation']['cycle'] = cycle
+      
+    @cached_property  
+    def evaluate(self) -> bool:
+        return self.settings['Simulation']['evaluate']
 
 config = ConfigManager()

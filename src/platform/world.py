@@ -50,18 +50,21 @@ class World:
                                                 GRID_WIDTH),
                  block_size: int = BLOCK_SIZE,
                  sim_speed: int = SIMULATION_SPEED,
-                 display_active: bool = False):
+                 display_active: bool = False,
+                 probe: bool = False):
 
         self.__id: int = world_id
         self.dimensions: Tuple[int, int] = dimensions
         self.block_size: int = block_size
         self.sim_speed: int = sim_speed
         self.display_active: bool = display_active
+        self.probe: bool = probe
         self.running: bool = False
 
         self.simulation: Simulation
         self.display: Display
         self.metrics: Probe
+        
 
     @property
     def id(self) -> int:
@@ -105,8 +108,8 @@ class World:
                                          dimensions=self.dimensions)
             sim_state = self.simulation.init()
 
-
-        self.metrics = Probe(sim_state=sim_state)
+        if self.probe:
+            self.metrics = Probe(sim_state=sim_state)
 
         if self.display_active:
             self.display = Display(display_id=self.id,
@@ -130,7 +133,8 @@ class World:
 
         grid, sim_state = self.simulation.update()
         config.set_cycle(sim_state.cycle)
-        self.metrics.update()
+        if self.probe:
+            self.metrics.update()
 
         if self.display_active:
             self.display.update(sim_state=sim_state)
@@ -145,13 +149,20 @@ class World:
             len(sim_state.entities) == 0):
             self.shutdown()
 
+    def save_metrics(self, sim_name: str="sim"):
+            self.metrics.print(all_keys=True)
+            # self.graph_metrics()
+            # self.metrics.pickle_frames(sim_name=sim_name)
+            
     def save_simulation(self):
-        self.metrics.print(all_keys=True)
-        self.graph_metrics()
-        self.simulation.save()
         sim_name = 'sim'
+        
+        if self.probe:
+            self.save_metrics(sim_name=sim_name)
+            
+        self.simulation.save()
         pickle.dump(self.simulation, open(f'simulations/{sim_name}', "wb"))
-        self.metrics.pickle_frames(sim_name=sim_name)
+        
 
     def set_difficulty(self, sim_state) -> None:
         if sim_state.cycle > config['Simulation']['difficulty_cycle_factor_threshold']:
@@ -171,9 +182,9 @@ class World:
         """Public method:
             Stop the running of the simulation
         """
-        self.metrics.print(all_keys=True)
-        self.graph_metrics()
-        self.metrics.pickle_frames()
+        if self.probe:
+            self.save_metrics()
+            
         # self.write_metrics()
         self.running = False
 

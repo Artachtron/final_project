@@ -477,7 +477,7 @@ class Entity(SimulatedObject):
             resource (Resource): resource picked up
         """
         # Keep track of owner of resources picked up
-        if config['Simulation']['evaluate']:
+        if config.evaluate:
             if resource.owner:
                 self.trade_partners.get(resource.owner, 0) + 1
         
