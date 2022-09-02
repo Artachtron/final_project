@@ -1242,7 +1242,7 @@ class Tree(Entity):
             pass
 
         self._gain_energy(energy_type=self._production_type,
-                         quantity=int((10 * self.size) / 2**count_trees_around))
+                         quantity=int((20 * self.size) / 2**count_trees_around))
 
     def _decide_pickup(self, output: Node) -> None:
         """Pivate method:

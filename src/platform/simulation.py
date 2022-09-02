@@ -968,7 +968,7 @@ class Environment:
         """
 
         # Create a seed from a tree
-        seed = tree.create_seed(data={'size': 10,
+        seed = tree.create_seed(data={'size': Tree.INITIAL_SIZE,
                                       'action_cost': 1})
 
         # Add the seed to the world

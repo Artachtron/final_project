@@ -830,7 +830,7 @@ class Genome:
         """
         # Choose randomly which parent will be the dominant one,
         # which will transmit most of its genes
-        main_genome, sub_genome  = sample([parent1, parent2], 2)
+        main_genome, sub_genome  = parent1, parent2#sample([parent1, parent2], 2)
 
         new_nodes: Dict[int, NodeGene] = {}
 

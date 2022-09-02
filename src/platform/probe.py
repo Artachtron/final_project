@@ -225,10 +225,13 @@ class Probe:
     def graph_population(self) -> None:
         plt.clf()
         data = self.population['animal']
+        sns.lineplot(x=data.keys(), y=data.values())
+        data = self.population['tree']
         g = sns.lineplot(x=data.keys(), y=data.values())
         g.set_xlabel('Cycle')
-        g.set_ylabel('Animal population')
-        g.set_title('Population of animals over cycles')
+        g.set_ylabel('Population')
+        g.set_title('Population over cycles')
+        plt.legend(labels=['Animals', 'Trees'])
 
         self.save_fig('population')
 
