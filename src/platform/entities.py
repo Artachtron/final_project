@@ -422,13 +422,13 @@ class Entity(SimulatedObject):
             output (Node): output chosen to trigger action
         """
         energy = self.mind.value_outputs[output.associated_values[0]].activation_value
-        if energy > 0:
+        if energy >= 0.5:
             energy_type = EnergyType.BLUE
 
         else:
             energy_type = EnergyType.RED
 
-        quantity = int(abs(energy)*10)
+        quantity = int(abs(energy)*100)
         self._action_drop_energy(energy_type=energy_type,
                                  quantity=quantity,
                                  coordinates=self.position)
@@ -445,7 +445,7 @@ class Entity(SimulatedObject):
 
         # Calculate the energy capable of being dropped
         quantity = self._quantity_from_stock(energy_type=energy_type,
-                                             quantity=quantity)
+                                             quantity=quantity) * 2
 
         action = DropAction(coordinates=coordinates,
                             energy_type=energy_type,
@@ -1087,6 +1087,8 @@ class Tree(Entity):
     """
     INIT_ADULT_SIZE: Final[int] = config['Simulation']['Tree']['init_adult_size']
     INIT_MAX_AGE: Final[int] = config['Simulation']['Tree']['init_max_age']
+    INITIAL_TREE_BLUE_ENERGY: Final[int] = config['Simulation']["Tree"]['init_blue_energy']
+    INITIAL_TREEL_RED_ENERGY: Final[int] = config['Simulation']["Tree"]['init_red_energy']
 
     COMPLETE_NETWORK: Final[bool] = config['Simulation']['Tree']['complete']
     NUM_TREE_INPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_input"]
@@ -1100,10 +1102,10 @@ class Tree(Entity):
                  generation: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
-                 size: int = 10,
+                 size: int = 5,
                  action_cost: int = 1,
-                 blue_energy: int = 10,
-                 red_energy: int = 10,
+                 blue_energy: int = INITIAL_TREE_BLUE_ENERGY,
+                 red_energy: int = INITIAL_TREEL_RED_ENERGY,
                  production_type: Optional[EnergyType] = None,
                  ):
         """Constructor:
@@ -1240,7 +1242,7 @@ class Tree(Entity):
             pass
 
         self._gain_energy(energy_type=self._production_type,
-                         quantity=int((5 * self.size) / 2**count_trees_around))
+                         quantity=int((10 * self.size) / 2**count_trees_around))
 
     def _decide_pickup(self, output: Node) -> None:
         """Pivate method:
@@ -1295,7 +1297,6 @@ class Tree(Entity):
             outputs (np.array):         array or outputs values from brain activation
             environment (Environment):  environment of the tree
         """
-
         for key, value in outputs.items():
             output = self.mind.trigger_outputs[key]
             match output.name:
@@ -1304,6 +1305,7 @@ class Tree(Entity):
                 case 'produce':
                     if value >= 0.1:
                         self._decide_produce()
+                        
                 # Drop energy
                 case 'drop':
                     if value >= 0.1:
@@ -1311,13 +1313,14 @@ class Tree(Entity):
 
                 # Pick up resource
                 case 'pickup':
-                    if value >= 0.5:
+                    if value >= 0.9:
                         self._decide_pickup(output=output)
+                        
                 #Grow
                 case 'grow':
                     if value >= 0.5:
                         self._decide_grow()
-
+                        
 
 class Seed(Resource):
     """Subclass of Resource:
@@ -1338,7 +1341,7 @@ class Seed(Resource):
                                    position=position,
                                    appearance="seed.png",
                                    quantity=1,
-                                   expiry=1)
+                                   expiry=20)
 
         self.genetic_data = genetic_data
 
