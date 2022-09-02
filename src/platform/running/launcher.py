@@ -13,8 +13,8 @@ directory = join(
 
 files = [f for f in listdir(directory) if isfile(join(directory, f))]
 
-for n, f in enumerate(files[38:]):
-    for i in range(0, 5):
+for n, f in enumerate(files[:-3]):
+    for i in range(0, 10):
         print(f"{n} file: {f} {i}")
         os.system(f"python -m src.platform.running.main --c {f}")
 

@@ -57,18 +57,20 @@ default_settings = {
 
                     "Simulation":{
                         # Difficutly
-                        "difficulty_max": 15,
+                        "difficulty_max": 10,
                         "difficulty_min": 1,
-                        "diffulty_cycles_step": 10,
-                        "diffulty_factor_increment": 0.05,
-                        "difficulty_pop_threshold": 1000,
-                        "difficulty_pop_factor": 1000,
-                        "difficulty_factor": 0.0,
+                        "diffulty_cycles_step": 150,
+                        "diffulty_factor_coefficient": 0.1,
+                        "difficulty_cycle_factor_threshold": 5000,
+                        "difficulty_pop_threshold": 100,
+                        "difficulty_pop_factor": 50,
+                        "difficulty_pop_coefficient": 0.1,
+                        "difficulty_factor": 1.0,
                         "difficulty_level": 1,
-                        "max_cycle": 10000,
+                        "max_cycle": 1000,
                         # Grid
-                        "grid_width": 50,
-                        "grid_height": 50,
+                        "grid_width": 40,
+                        "grid_height": 40,
                         "block_size": 17,
                         "simulation_speed": 20,
                         # Populate
@@ -76,7 +78,7 @@ default_settings = {
                         "max_horizontal_size_section": 10,
                         "min_vertical_size_section": 5,
                         "max_vertical_size_section": 10,
-                        "animal_sparsity": 5,
+                        "animal_sparsity": 1,
                         "spawn_initial_energy": True,
                         "spawn_energy": False,
                         "energy_sparsity": 1,
@@ -87,30 +89,30 @@ default_settings = {
                         "tree_sparsity": 5,
                         #26
                         "Entity":{
-                            "initial_size": 10,
-                            "init_max_age": 50,
+                            "initial_size": 1,
+                            "init_max_age": 10,
                             "init_blue_energy": 100,
                             "init_red_energy": 100,
                             "init_action_cost": 1,
-                            "max_age_size_coeff": 5,
-                            "growth_energy_required": 10,
-                            "child_energy_cost_divisor": 2,
+                            "max_age_size_coeff": 10,
+                            "growth_energy_required": 40,
+                            "child_energy_cost_divisor": 100,
                         }, #8
 
                         "Animal":{
                             # Animal
                             ## Initial attributes
-                            "init_adult_size": 5,
-                            "init_blue_energy": 1000,
-                            "init_red_energy": 100,
+                            "init_adult_size": 4,
+                            "init_blue_energy": 50,
+                            "init_red_energy": 0,
                             ## Brain
                             "complete": False,
-                            "num_input": 96,
-                            "num_output": 15,
-                            "num_action": 8,
+                            "num_input": 8,
+                            "num_output": 6,
+                            "num_action": 4,
                             ## Energy
-                            "reproduction_cost": 10,
-                            "planting_cost": 10,
+                            "reproduction_cost": 3,
+                            "planting_cost": 1,
                             ## Inputs
                             "normal_size": 10,
                             "normal_energy": 1000,
@@ -118,17 +120,17 @@ default_settings = {
                             "energy_sight_range": 3,
                             ## Actions
                             "die_giving_birth_prob": 0.02,
-                            "max_number_offsping": 10,
+                            "max_number_offsping": 5,
                             "random_action_prob": 0.05,
                             "success_reproduction": 1.00,
                             "incest": False,
-                            "reproduction_range": 1,
+                            "reproduction_range": 3,
                             "move_threshold": 0.1,
                             "grow_threshold": 0.5,
                             "reproduction_threshold": 0.5,
                             "plant_threshold": 0.5,
                             "drop_threshold": 0.5,
-                            "paint_threshold": 0.5,
+                            "paint_threshold": 0.5
                         }, #25
 
                         "Tree":{
@@ -140,7 +142,7 @@ default_settings = {
                             "init_red_energy": 100,
                             ## Brain
                             "complete": False,
-                            "num_tree_input": 88,
+                            "num_tree_input": 6,
                             "num_tree_output": 8,
                             "num_tree_action": 4,
                             ## Inputs

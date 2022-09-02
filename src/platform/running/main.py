@@ -26,6 +26,7 @@ def main():
         print(f"exception: {repr(e)}")
     end = time()
     print(f'It took {(end - start)/60: .0f} minutes!')
+    world.write_metrics()
     """ world.save_simulation()
     world.write_metrics()
     world.graph_metrics() """
