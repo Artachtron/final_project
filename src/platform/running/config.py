@@ -56,6 +56,7 @@ default_settings = {
                         },#21
 
                     "Simulation":{
+                        "evaluate": True,
                         # Difficutly
                         "difficulty_max": 10,
                         "difficulty_min": 1,

@@ -56,6 +56,9 @@ class Probe:
     actions: Dict = field(default_factory=list)
     
     frames: List[Frame] = field(default_factory=list)
+    
+    all_animals: Dict = field(default_factory=dict)
+    all_trees: Dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -72,6 +75,10 @@ class Probe:
     @property
     def total_trees(self) -> int:
         return self.init_trees + self.added_trees
+    
+    @property
+    def all_entites(self) -> Dict:
+        return self.all_animals | self.all_trees
 
     def update(self) -> None:
         self.save_frame()
@@ -97,6 +104,8 @@ class Probe:
         self.update_brain_complexity()
         self.update_population()
         self.update_death_age()
+        
+        self.register_entities()
 
     def save_frame(self):
         state = self.sim_state
@@ -108,6 +117,13 @@ class Probe:
         
     def pickle_frames(self, sim_name:str = "sim"):
         pickle.dump(self.frames, open(f'simulations/frames/{sim_name}_frames', "wb"))
+
+    def register_entities(self):
+        for key, entity in self.sim_state.removed_entities.items():
+            if entity.__class__.__name__ == 'Animal':
+                self.all_animals[key] = entity
+            elif entity.__class__.__name__ == 'Tree':
+                self.all_trees[key] = entity
 
     def set_added_entities(self) -> None:
         added_entities = self.sim_state.added_entities

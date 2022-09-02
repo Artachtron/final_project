@@ -24,6 +24,7 @@ class Resource(SimulatedObject):
                  appearance: str = "",
                  quantity: int = 0,
                  expiry: int = DEFAULTY_EXPIRY,
+                 owner_id: Optional[int] = None
                  ):
         """Super constructor:
             Get the necessary information for a resource
@@ -39,7 +40,8 @@ class Resource(SimulatedObject):
         size: int = int(5 + log(quantity, 2))
         self.age: int = 0
         self.expiry: int = expiry
-                # size = size/50 if size > 50 else size
+        
+        self.owner: Optional[int] = owner_id # unique identifier of owner
 
         appearance = "models/resources/" + appearance
         super().__init__(sim_obj_id=resource_id,
@@ -74,7 +76,7 @@ class Energy(Resource):
                  position: Tuple[int,int],
                  quantity: int = 10,
                  appearance: str = "",
-                 owner_id: Optional[int] = 0,
+                 owner_id: Optional[int] = None,
                  expiry: int = Resource.DEFAULTY_EXPIRY,
                  ):
         """Super constructor:
@@ -94,10 +96,10 @@ class Energy(Resource):
                          position=position,
                          appearance=appearance,
                          quantity=quantity,
-                         expiry=expiry)
+                         expiry=expiry,
+                         owner_id=owner_id)
 
         self._type: EnergyType = energy_type # BLUE or RED
-        self.owner: Optional[int] = owner_id # unique identifier of owner
         
     def __repr__(self) -> str:
         return f'{self._type.value.title()} {self.id}: {self.quantity}'

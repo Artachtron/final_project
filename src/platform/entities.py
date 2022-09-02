@@ -128,7 +128,8 @@ class Entity(SimulatedObject):
 
         self._action_cost: int = action_cost * self.size        # blue energy cost of each action
         self.action: Action                                     # action of this turn decided by brain
-        self.actions = []
+        self.actions = []                                       # list of actions of current turn
+        self.trade_partners = {}                                # dictionary of trade partners
 
         self.brain: Brain                                       # brain containing genotype and mind
         self.mind: Network                                      # neural network
@@ -475,6 +476,11 @@ class Entity(SimulatedObject):
         Args:
             resource (Resource): resource picked up
         """
+        # Keep track of owner of resources picked up
+        if config['Simulation']['evaluate']:
+            if resource.owner:
+                self.trade_partners.get(resource.owner, 0) + 1
+        
         # If resource is an energy
         if type(resource).__base__.__name__ == 'Energy':
             self._gain_energy(energy_type=resource.type,
@@ -1107,6 +1113,7 @@ class Tree(Entity):
                  blue_energy: int = INITIAL_TREE_BLUE_ENERGY,
                  red_energy: int = INITIAL_TREEL_RED_ENERGY,
                  production_type: Optional[EnergyType] = None,
+                 planted_times: int = 1,
                  ):
         """Constructor:
             Initialize a tree
@@ -1139,6 +1146,8 @@ class Tree(Entity):
 
         self._production_type: EnergyType = (production_type or         # Type of energy produced by the tree
                                              choice(list(EnergyType)))
+
+        self.planted_times: int = planted_times                         # Number of times the tree was planted
 
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'
@@ -1194,6 +1203,7 @@ class Tree(Entity):
         genetic_data['position'] = genetic_data['position']()
         genetic_data['blue_energy'] = original_dict['energies_stock'][EnergyType.BLUE.value]
         genetic_data['red_energy'] = original_dict['energies_stock'][EnergyType.RED.value]
+        genetic_data['planted_times'] = original_dict['planted_times'] + 1
 
         # Extra given data from environment
         for key, value in data.items():

@@ -1,4 +1,10 @@
+from typing import TYPE_CHECKING, Tuple
+
+if TYPE_CHECKING:
+    from simulation import SimState
+
 import json
+from dataclasses import dataclass
 from os.path import dirname, join, realpath
 from pathlib import Path
 from statistics import mean
@@ -6,7 +12,7 @@ from statistics import mean
 import pandas as pd
 
 
-def main():
+def parameters_tuning():
     directory = join(
             Path(
                 dirname(
@@ -46,6 +52,43 @@ def main():
     
     for best in best_params:
         print(f"{best}: {best_params[best]}")
+        
+@dataclass 
+class Evaluator: 
+    sim_state: SimState
+    
+    max_replant: int = 0
+    sum_replant: int = 0            
+    count_tree: int = 0
+    replant: Dict =  field(default_factory=dict)
+    
+    def evaluate(self):
+        pass
+
+    def evaluate_trade(self) -> Tuple[int, int]:
+        trade_count: int = 0
+        max_trade_count: int = 0
+        entities = self.sim_state.entities
+        for entity in entities:
+            for partner in entity.trade_partners:
+                if entity.id in entities[partner].trade_partners:
+                    trade_value = entity.trade_partners[partner]
+                    trade_count += trade_value
+                    if trade_value > max_trade_count:
+                        max_trade_count = trade_value
+
+        return trade_count, max_trade_count
+    
+    def evaluate_replant(self) -> Tuple[int,int]:
+        self.replant[tree] = tree.replant_times
+        for replant_times in self.replant.values():
+            self.sum_replant += replant_times
+            self.count_trees += 1
+            if replant_times > self.max_replant:
+                self.max_replant = replant_times
+            
+        
+
         
 """ animal_sparsity = [1, 2, 3, 4, 5]
 
