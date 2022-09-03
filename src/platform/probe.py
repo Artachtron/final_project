@@ -61,6 +61,8 @@ class Probe:
     
     all_animals: Dict = field(default_factory=dict)
     all_trees: Dict = field(default_factory=dict)
+    
+    replant: Dict =  field(default_factory=dict)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -200,6 +202,9 @@ class Probe:
                 count += 1
                 if entity.age > max_death_age:
                     max_death_age = entity.age
+            elif entity.__class__.__name__ == 'Tree':
+                self.replant[entity.id] = entity.replant_times       
+            
         if count > 0:
             avg_death_age = age_sum / count
             self.death_age['average'][cycle] = avg_death_age

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
-    from probe import Probe
+    from ..probe import Probe
 
 import json
 from dataclasses import dataclass
@@ -10,6 +10,8 @@ from pathlib import Path
 from statistics import mean
 
 import pandas as pd
+
+from ..probe import Probe
 
 
 def parameters_tuning():
@@ -57,18 +59,14 @@ def parameters_tuning():
 class Evaluator: 
     probe: Probe
     
-    max_replant: int = 0
-    sum_replant: int = 0            
-    count_tree: int = 0
-    replant: Dict =  field(default_factory=dict)
-    
     def evaluate(self):
-        pass
+        print(self.evaluate_trade())
+        print(self.evaluate_replant())
 
     def evaluate_trade(self) -> Tuple[int, int]:
         trade_count: int = 0
         max_trade_count: int = 0
-        entities = self.probe.entities
+        entities = self.probe.all_entities
         for entity in entities:
             for partner in entity.trade_partners:
                 if entity.id in entities[partner].trade_partners:
@@ -80,12 +78,13 @@ class Evaluator:
         return trade_count, max_trade_count
     
     def evaluate_replant(self) -> Tuple[int,int]:
-        self.replant[tree] = tree.replant_times
-        for replant_times in self.replant.values():
-            self.sum_replant += replant_times
-            self.count_trees += 1
+        for replant_times in self.probe.replant.values():
+            sum_replant += replant_times
             if replant_times > self.max_replant:
-                self.max_replant = replant_times
+                max_replant = replant_times
+        
+        avg_replant = sum_replant/len(self.probe.replant)
+        return avg_replant, max_replant
             
         
 

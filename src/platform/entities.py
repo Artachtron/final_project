@@ -486,7 +486,7 @@ class Entity(SimulatedObject):
             if resource.tree_planter:
                 if (resource.tree_planter == self.id
                     or resource.tree_planter in self.ancestors):
-                    quantity += 10
+                    quantity += 5 * self.size
     
             self._gain_energy(energy_type=resource.type,
                               quantity=quantity)
@@ -836,6 +836,9 @@ class Animal(Entity):
         """
         action = PaintAction(coordinates=self.position,
                              color=color)
+        
+        self._gain_energy(energy_type=EnergyType.BLUE,
+                          quantity=self._action_cost)
 
         self._decide_action(action=action)
 

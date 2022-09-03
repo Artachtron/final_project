@@ -10,6 +10,7 @@ from typing import Final, Tuple
 
 from .display import Display
 from .probe import Probe
+from .running.analyze import Evaluator
 from .running.config import config
 from .simulation import SimState, Simulation
 
@@ -154,11 +155,16 @@ class World:
             self.graph_metrics()
             self.probe.pickle_frames(sim_name=sim_name)
             
+    def evaluate_results(self):
+        evaluator = Evaluator(probe=self.probe)
+        evaluator.evaluate()
+            
     def save_simulation(self):
         sim_name = 'sim'
         
         if self.probe_active:
             self.save_metrics(sim_name=sim_name)
+            self.evaluate_results()
             
         self.simulation.save()
         pickle.dump(self.simulation, open(f'simulations/{sim_name}', "wb"))
