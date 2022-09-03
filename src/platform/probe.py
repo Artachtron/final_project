@@ -51,6 +51,7 @@ class Probe:
 
     brain_complexity: Dict = field(default_factory=dict)
     death_age: Dict = field(default_factory=dict)
+    energy_gain: Dict = field(default_factory=dict)
 
     max_hidden: int = 0
     max_links: int = 0
@@ -63,6 +64,8 @@ class Probe:
     all_trees: Dict = field(default_factory=dict)
     
     replant: Dict =  field(default_factory=dict)
+    colors: Dict =  field(default_factory=dict)
+    colors_cycle: Dict =  field(default_factory=dict)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -107,7 +110,7 @@ class Probe:
 
         self.update_brain_complexity()
         self.update_population()
-        self.update_death_age()
+        self.update_on_death()
         
         self.register_entities()
 
@@ -150,11 +153,20 @@ class Probe:
 
         if hasattr(entity, 'actions'):
             for action in entity.actions:
-                action = action.action_type.value
-                self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
-                self.actions.append((cycle, action))
-                self.total_actions_count[action] = self.total_actions_count.get(action, 0) + 1
+                action_type = action.action_type.value
+                if action_type == 'paint':
+                    self.update_colors(action)
+                self.actions_count[cycle][action_type] = self.actions_count[cycle].get(action_type, 0) + 1
+                self.actions.append((cycle, action_type))
+                self.total_actions_count[action_type] = self.total_actions_count.get(action_type, 0) + 1
 
+    def update_colors(self, action):
+        color = action.color
+        cycle = self.cycle
+        self.colors_cycle.setdefault(cycle, {})
+        self.colors[color] = self.colors.get(color, 0) + 1
+        self.colors_cycle[color] = self.colors.get(color, 0) + 1
+        
     def update_population(self) -> None:
         cycle = self.cycle
         self.population.setdefault('animal', {})
@@ -187,21 +199,29 @@ class Probe:
         self.brain_complexity['nodes']['average'][cycle] = self.avg_hidden
         self.brain_complexity['links']['average'][cycle] = self.avg_links
 
-    def update_death_age(self) -> None:
+    def update_on_death(self) -> None:
         age_sum: int = 0
+        energy_gain_sum: int = 0
         count: int = 0
         max_death_age: int = 0
+        max_energy_gain: int = 0
 
         cycle = self.cycle
         self.death_age.setdefault('average', {})
         self.death_age.setdefault('maximum', {})
+        self.energy_gain.setdefault('average', {})
+        self.energy_gain.setdefault('maximum', {})
 
         for entity in self.sim_state.removed_entities.values():
             if entity.__class__.__name__ == 'Animal':
                 age_sum += entity.age
+                energy_gain_sum += entity.gained_energy
                 count += 1
                 if entity.age > max_death_age:
                     max_death_age = entity.age
+                if entity.gained_energy > max_energy_gain:
+                    max_energy_gain = entity.gained_energy
+                    
             elif entity.__class__.__name__ == 'Tree':
                 self.replant[entity.id] = entity.planted_times       
             
@@ -209,6 +229,9 @@ class Probe:
             avg_death_age = age_sum / count
             self.death_age['average'][cycle] = avg_death_age
             self.death_age['maximum'][cycle] = max_death_age
+            avg_energy_gain = energy_gain_sum / count
+            self.energy_gain['average'][cycle] = avg_energy_gain
+            self.energy_gain['maximum'][cycle] = max_energy_gain
 
     def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")
@@ -245,6 +268,8 @@ class Probe:
             self.graph_actions_overtime()
         if 'death_age' in metrics:
             self.graph_death_age()
+        if 'energy_gain' in metrics:
+            self.graph_energy_gain()
 
     def graph_population(self) -> None:
         plt.clf()
@@ -321,6 +346,21 @@ class Probe:
         plt.xlabel('Cycle')
         plt.ylabel('Age')
         self.save_fig('death_age')
+        
+    def graph_energy_gain(self) -> None:
+        plt.clf()
+        data = self.energy_gain
+
+        if data['maximum']:
+            g1 = sns.lineplot(x=data['maximum'].keys(), y=data['maximum'].values())
+        if data['average']:
+            g2 = sns.lineplot(x=data['average'].keys(), y=data['average'].values())
+
+        plt.legend(labels=['maximum energy', 'average energy'], title='Energy gained')
+        plt.title('Energy gained through lifetime')
+        plt.xlabel('Cycle')
+        plt.ylabel('Energy gained')
+        self.save_fig('energy_gain')
 
 
     def save_fig(self, name: str) -> None:

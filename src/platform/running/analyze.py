@@ -62,6 +62,7 @@ class Evaluator:
     def evaluate(self):
         print(self.evaluate_trade())
         print(self.evaluate_replant())
+        print(self.evaluate_colors())
 
     def evaluate_trade(self) -> Tuple[int, int]:
         trade_count: int = 0
@@ -87,9 +88,13 @@ class Evaluator:
         
         avg_replant = sum_replant/len(self.probe.replant)
         return avg_replant, max_replant
-            
-        
-
+    
+    def evaluate_colors(self):
+        colors = self.probe.colors
+        count_color = len(colors)
+        max_color = max(list(colors.values()))
+      
+        return count_color, max_color
         
 """ animal_sparsity = [1, 2, 3, 4, 5]
 

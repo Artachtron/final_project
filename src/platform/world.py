@@ -217,6 +217,7 @@ class World:
                    'brain_complexity':True,
                    'actions_count':True,
                    'actions_overtime':True,
-                   'death_age': True}
+                   'death_age':True,
+                   'energy_gain':True}
 
         self.probe.graph(**metrics)
