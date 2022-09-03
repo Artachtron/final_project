@@ -81,7 +81,7 @@ class Probe:
         return self.init_trees + self.added_trees
     
     @property
-    def all_entites(self) -> Dict:
+    def all_entities(self) -> Dict:
         return self.all_animals | self.all_trees
 
     def update(self, cells) -> None:
@@ -203,7 +203,7 @@ class Probe:
                 if entity.age > max_death_age:
                     max_death_age = entity.age
             elif entity.__class__.__name__ == 'Tree':
-                self.replant[entity.id] = entity.replant_times       
+                self.replant[entity.id] = entity.planted_times       
             
         if count > 0:
             avg_death_age = age_sum / count

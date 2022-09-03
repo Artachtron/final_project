@@ -66,7 +66,7 @@ class Evaluator:
     def evaluate_trade(self) -> Tuple[int, int]:
         trade_count: int = 0
         max_trade_count: int = 0
-        entities = self.probe.all_entities
+        entities = self.probe.all_entities.values()
         for entity in entities:
             for partner in entity.trade_partners:
                 if entity.id in entities[partner].trade_partners:
@@ -78,9 +78,11 @@ class Evaluator:
         return trade_count, max_trade_count
     
     def evaluate_replant(self) -> Tuple[int,int]:
+        sum_replant: int = 0
+        max_replant: int = 0
         for replant_times in self.probe.replant.values():
             sum_replant += replant_times
-            if replant_times > self.max_replant:
+            if replant_times > max_replant:
                 max_replant = replant_times
         
         avg_replant = sum_replant/len(self.probe.replant)
