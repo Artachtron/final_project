@@ -40,7 +40,7 @@ class Resource(SimulatedObject):
         size: int = int(5 + log(quantity, 2))
         self.age: int = 0
         self.expiry: int = expiry
-        
+
         self.owner: Optional[int] = owner_id # unique identifier of owner
 
         appearance = "models/resources/" + appearance
@@ -49,7 +49,14 @@ class Resource(SimulatedObject):
                          size=size,
                          appearance=appearance)
 
-    def update(self, environment):
+    def update(self, environment) -> None:
+        """Public method:
+            Increase the life time of 1 cycle,
+            remove if reached expiry date
+
+        Args:
+            environment (Environment): energy's environment
+        """
         self.age += 1
         if self.age >= self.expiry:
             environment.remove_resource(resource=self)
@@ -100,7 +107,7 @@ class Energy(Resource):
                          owner_id=owner_id)
 
         self._type: EnergyType = energy_type # BLUE or RED
-        
+
     def __repr__(self) -> str:
         return f'{self._type.value.title()} {self.id}: {self.quantity}'
 
@@ -171,4 +178,3 @@ class BlueEnergy(Energy):
                          energy_type=EnergyType.BLUE,
                          owner_id=owner_id,
                          expiry=expiry)
-
