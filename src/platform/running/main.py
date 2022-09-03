@@ -26,9 +26,9 @@ def main():
     except Exception as e:
         print(f"exception: {repr(e)}")
     end = time()
-    print(f'It took {(end - start)/60: .0f} minutes!')
-    """ world.save_simulation()
-    world.write_metrics()
+    print(f'It took{(end - start)/60: .0f} minutes!')
+    world.save_simulation()
+    """ world.write_metrics()
     world.graph_metrics() """
 
 def profile(profiler: Profile):

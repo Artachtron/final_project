@@ -613,7 +613,8 @@ class Environment:
                 self.sprout_tree(seed=action.seed,
                                  position=free_cell)
             else:
-                self.spawn_tree(coordinates=free_cell)
+                self.spawn_tree(coordinates=free_cell,
+                                planter=animal.id)
 
         animal.on_plant_tree()
 
@@ -767,7 +768,8 @@ class Environment:
             # Create the energy
             if self.create_energy(energy_type=action.energy_type,
                                   coordinates=free_cell,
-                                  quantity=action.quantity):
+                                  quantity=action.quantity,
+                                  tree_planter=tree.planter):
 
                 tree.on_drop_energy(energy_type=action.energy_type,
                                     quantity=action.quantity)
@@ -1104,12 +1106,11 @@ class Environment:
         elif len(free_cells) == 1:
             red_cell, = free_cells
 
-        difficulty = config['Simulation']['difficulty_level']
         # Red energy
         if red_cell:
             self.create_energy(energy_type=EnergyType.RED,
                                 coordinates=red_cell,
-                                quantity=entity.energies_stock[EnergyType.RED.value]/difficulty)
+                                quantity=entity.energies_stock[EnergyType.RED.value])
 
         # Blue energy
         if blue_cell:

@@ -16,6 +16,7 @@ from os.path import dirname, join, realpath
 from pathlib import Path
 from typing import Tuple
 
+import numpy.typing as npt
 import pygame as pg
 
 BLACK = (0, 0, 0)
@@ -253,7 +254,7 @@ class Display:
         for i, frame in enumerate(frames[first_frame:last_frame], first_frame):
             print(f"frame: {i}")
             self._load_frame(frame=frame)
-            self.draw(grid=None)
+            self.draw(cells=frame.cells)
             self._clear_groups()
             
         print("end of frames")
@@ -352,7 +353,7 @@ class Display:
         # self.resource_group.update(block_size=self.block_size,
         #                            sim_state=sim_state)
 
-    def draw(self, grid: Grid) -> None:
+    def draw(self, cells: npt.NDArray) -> None:
         """Public method:
             Draw the display
 
@@ -366,7 +367,7 @@ class Display:
                     sys.exit()
 
         # Draw the world
-        self._draw_world(grid)
+        self._draw_world(cells)
         # Update display
         pg.display.update()
 
@@ -375,39 +376,39 @@ class Display:
         if self.tick_counter == self.sim_speed:
             self.tick_counter = 0
 
-    def _draw_world(self, grid: Grid=None) -> None:
+    def _draw_world(self, cells: npt.NDArray=None) -> None:
         """Private method:
             Draw the world, grid and entities
 
             Args:
                 grid (Grid): grid of the world
         """
-        self._draw_grid(grid)
+        self._draw_grid(cells)
         self._draw_entities()
         self._draw_resources()
 
-    def _draw_grid(self, grid=None) -> None:
+    def _draw_grid(self, cells: npt.NDArray=None) -> None:
         """Private method:
             Draw the grid
 
            Args:
                 grid (Grid): grid of the world
         """
-        if grid:
-            for x in range(0, self.window_width, self.block_size):
-                for y in range(0, self.window_height,  self.block_size):
-                    rect = pg.Rect(x, y,  self.block_size,  self.block_size)
-                    
-                    pg.draw.rect(self.screen,
-                                grid.color_grid.array[ int(x / self.block_size),
-                                                        int(y / self.block_size)],
-                                rect, 0)
-   
-                    if self.show_grid:
-                        pg.draw.rect(self.screen, BLACK, rect, 1)
+        
+        for x in range(0, self.window_width, self.block_size):
+            for y in range(0, self.window_height,  self.block_size):
+                rect = pg.Rect(x, y,  self.block_size,  self.block_size)
+                
+                pg.draw.rect(self.screen,
+                                cells[int(x / self.block_size),
+                                    int(y / self.block_size)],
+                            rect, 0)
+
+                if self.show_grid:
+                    pg.draw.rect(self.screen, BLACK, rect, 1)
  
-        else:
-            self.screen.fill((0,0,0))
+        """ else:
+            self.screen.fill((0,0,0))  """       
 
     def _draw_entities(self) -> None:
         """Private method:

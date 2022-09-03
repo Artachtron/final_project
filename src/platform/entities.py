@@ -374,9 +374,7 @@ class Entity(SimulatedObject):
     def _perform_action(self) -> None:
         """Private method:
             Consume blue energy when performing an action
-        """
-        # difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
-                
+        """               
         self._loose_energy(energy_type=EnergyType.BLUE,
                            quantity=int(self._action_cost))
 
@@ -429,7 +427,8 @@ class Entity(SimulatedObject):
         else:
             energy_type = EnergyType.RED
 
-        quantity = int(abs(energy)*100)
+        difficulty = config['Simulation']['difficulty_level']
+        quantity = int(abs(energy)*250/difficulty)
         self._action_drop_energy(energy_type=energy_type,
                                  quantity=quantity,
                                  coordinates=self.position)
@@ -446,7 +445,7 @@ class Entity(SimulatedObject):
 
         # Calculate the energy capable of being dropped
         quantity = self._quantity_from_stock(energy_type=energy_type,
-                                             quantity=quantity) * 2
+                                             quantity=quantity)
 
         action = DropAction(coordinates=coordinates,
                             energy_type=energy_type,
@@ -483,8 +482,14 @@ class Entity(SimulatedObject):
         
         # If resource is an energy
         if type(resource).__base__.__name__ == 'Energy':
+            quantity = resource.quantity
+            if resource.tree_planter:
+                if (resource.tree_planter == self.id
+                    or resource.tree_planter in self.ancestors):
+                    quantity += 10
+    
             self._gain_energy(energy_type=resource.type,
-                              quantity=resource.quantity)
+                              quantity=quantity)
 
         # If resource is a seed
         elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
@@ -670,7 +675,6 @@ class Animal(Entity):
         if random() < Animal.DIE_GIVING_BIRTH_PROB:
             self._die(cause="giving birth")
 
-        # difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
                            quantity=Animal.REPRODUCTION_COST * 5)
 
@@ -705,6 +709,8 @@ class Animal(Entity):
                                                     "grow": [],
                                                     "reproduce": [],
                                                     "plant": [],
+                                                    "drop":[2],
+                                                    "paint": [3],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
@@ -753,7 +759,7 @@ class Animal(Entity):
         # Verifiy that enough enough energy is available
         if self._can_perform_action(energy_type=EnergyType.RED,
                                     quantity=Animal.PLANTING_COST):
-
+            
             action = PlantTreeAction(coordinates=self.position,
                                      seed=self._pocket)
 
@@ -901,6 +907,14 @@ class Animal(Entity):
                 case 'plant':
                     if value >= config['Simulation']['Animal']['plant_threshold']:
                         self._decide_plant_tree()
+                        
+                case 'drop':
+                    if value >= config['Simulation']['Animal']['drop_threshold']:
+                        self._decide_drop(output=output)
+                        
+                case 'paint':
+                    if value >= config['Simulation']['Animal']['paint_threshold']:
+                        self._decide_paint(output=output)
 
         """ if (self._is_adult
             and self.gained_energy/50 > self.size
@@ -999,7 +1013,8 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-        color = tuple(int(self.mind.value_outputs[i].activation_value*255) for i in output.associated_values)
+        color = int(self.mind.value_outputs[output.associated_values[0]].activation_value*255)        
+        color = (color,) *3
 
         self._action_paint(color=color)
 
@@ -1111,6 +1126,7 @@ class Tree(Entity):
                  red_energy: int = INITIAL_TREEL_RED_ENERGY,
                  production_type: Optional[EnergyType] = None,
                  planted_times: int = 1,
+                 planter: int = 0,
                  ):
         """Constructor:
             Initialize a tree
@@ -1145,6 +1161,7 @@ class Tree(Entity):
                                              choice(list(EnergyType)))
 
         self.planted_times: int = planted_times                         # Number of times the tree was planted
+        self.planter: int = planter                                     # Identifier of the planter
 
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'

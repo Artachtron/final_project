@@ -14,6 +14,7 @@ from os.path import dirname, join, realpath
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy.typing as npt
 import pandas as pd
 import seaborn as sns
 
@@ -24,6 +25,7 @@ Energy = namedtuple("Energy",["id","type","size", "position"])
 class Frame:
     entities: List[Entity]
     energies: List[Energy]
+    cells: npt.NDArray
 
 @dataclass
 class Probe:
@@ -80,8 +82,8 @@ class Probe:
     def all_entites(self) -> Dict:
         return self.all_animals | self.all_trees
 
-    def update(self) -> None:
-        self.save_frame()
+    def update(self, cells) -> None:
+        self.save_frame(cells=cells)
         
         self.set_added_entities()
         self.set_cycle()
@@ -107,13 +109,14 @@ class Probe:
         
         self.register_entities()
 
-    def save_frame(self):
+    def save_frame(self, cells):
         state = self.sim_state
         entities = [Entity(entity.id, entity.__class__.__name__, entity.size, entity.position) for entity in state.get_entities()]
         energies = [Energy(energy.id, energy.__class__.__name__, energy.size, energy.position) for energy in state.get_resources()]
 
         self.frames.append(Frame(entities=entities,
-                                 energies=energies))
+                                 energies=energies,
+                                 cells=cells))
         
     def pickle_frames(self, sim_name:str = "sim"):
         pickle.dump(self.frames, open(f'simulations/frames/{sim_name}_frames', "wb"))

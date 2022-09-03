@@ -85,6 +85,7 @@ class Energy(Resource):
                  appearance: str = "",
                  owner_id: Optional[int] = None,
                  expiry: int = Resource.DEFAULTY_EXPIRY,
+                 tree_planter: Optional[int] = None
                  ):
         """Super constructor:
             Get the necessary information for an energy
@@ -106,7 +107,8 @@ class Energy(Resource):
                          expiry=expiry,
                          owner_id=owner_id)
 
-        self._type: EnergyType = energy_type # BLUE or RED
+        self._type: EnergyType = energy_type    # BLUE or RED
+        self.tree_planter: int = tree_planter   # Planter id from which the energy comes from
 
     def __repr__(self) -> str:
         return f'{self._type.value.title()} {self.id}: {self.quantity}'
@@ -130,7 +132,8 @@ class RedEnergy(Energy):
                  energy_id: int = 0,
                  quantity: int = 10,
                  owner_id: Optional[int] = 0,
-                 expiry: int = Resource.DEFAULTY_EXPIRY):
+                 expiry: int = Resource.DEFAULTY_EXPIRY,
+                 tree_planter: Optional[int] = None):
         """Constructor:
             Create a red energy
 
@@ -147,7 +150,8 @@ class RedEnergy(Energy):
                          appearance="red_energy.png",
                          energy_type=EnergyType.RED,
                          owner_id=owner_id,
-                         expiry=expiry)
+                         expiry=expiry,
+                         tree_planter=tree_planter)
 
 
 class BlueEnergy(Energy):
@@ -159,7 +163,8 @@ class BlueEnergy(Energy):
                  energy_id: int = 0,
                  quantity: int = 10,
                  owner_id: Optional[int] = 0,
-                 expiry: int = Resource.DEFAULTY_EXPIRY
+                 expiry: int = Resource.DEFAULTY_EXPIRY,
+                 tree_planter: Optional[int] = None,
                  ):
         """Constructor:
             Create a blue energy
@@ -177,4 +182,5 @@ class BlueEnergy(Energy):
                          appearance="blue_energy.png",
                          energy_type=EnergyType.BLUE,
                          owner_id=owner_id,
-                         expiry=expiry)
+                         expiry=expiry,
+                         tree_planter=tree_planter)

@@ -58,12 +58,12 @@ class World:
         self.block_size: int = block_size
         self.sim_speed: int = sim_speed
         self.display_active: bool = display_active
-        self.probe: bool = probe
+        self.probe_active: bool = probe
         self.running: bool = False
 
         self.simulation: Simulation
         self.display: Display
-        self.metrics: Probe
+        self.probe: Probe
         
 
     @property
@@ -86,7 +86,7 @@ class World:
         """
         self.simulation: Simulation
         sim_state: SimState
-        self.metrics: Probe
+        self.probe: Probe
 
         try:
             if not config.loaded_simulation:
@@ -108,8 +108,8 @@ class World:
                                          dimensions=self.dimensions)
             sim_state = self.simulation.init()
 
-        if self.probe:
-            self.metrics = Probe(sim_state=sim_state)
+        if self.probe_active:
+            self.probe = Probe(sim_state=sim_state)
 
         if self.display_active:
             self.display = Display(display_id=self.id,
@@ -133,31 +133,31 @@ class World:
 
         grid, sim_state = self.simulation.update()
         config.set_cycle(sim_state.cycle)
-        if self.probe:
-            self.metrics.update()
+        if self.probe_active:
+            self.probe.update(cells=grid.color_grid.array)
 
         if self.display_active:
             self.display.update(sim_state=sim_state)
-            self.display.draw(grid=grid)
+            self.display.draw(cells=grid.color_grid.array)
 
         self.set_difficulty(sim_state=sim_state)
 
-        if sim_state.cycle%1001 == 0:
-            self.save_simulation()
+        """ if sim_state.cycle%1000 == 0:
+            self.save_simulation() """
             
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
             self.shutdown()
 
     def save_metrics(self, sim_name: str="sim"):
-            self.metrics.print(all_keys=True)
+            self.probe.print(all_keys=True)
             self.graph_metrics()
-            self.metrics.pickle_frames(sim_name=sim_name)
+            self.probe.pickle_frames(sim_name=sim_name)
             
     def save_simulation(self):
         sim_name = 'sim'
         
-        if self.probe:
+        if self.probe_active:
             self.save_metrics(sim_name=sim_name)
             
         self.simulation.save()
@@ -182,8 +182,8 @@ class World:
         """Public method:
             Stop the running of the simulation
         """
-        if self.probe:
-            self.save_metrics()
+        """ if self.probe:
+            self.save_metrics() """
             
         # self.write_metrics()
         self.running = False
@@ -202,7 +202,7 @@ class World:
                    'born_animals': True,
                    }
 
-        self.metrics.write(parameter=config['Run']['parameter'],
+        self.probe.write(parameter=config['Run']['parameter'],
                            variation=config['Run']['value'],
                            **metrics)
 
@@ -213,4 +213,4 @@ class World:
                    'actions_overtime':True,
                    'death_age': True}
 
-        self.metrics.graph(**metrics)
+        self.probe.graph(**metrics)
