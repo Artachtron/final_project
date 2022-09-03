@@ -151,8 +151,8 @@ class World:
 
     def save_metrics(self, sim_name: str="sim"):
             self.metrics.print(all_keys=True)
-            # self.graph_metrics()
-            # self.metrics.pickle_frames(sim_name=sim_name)
+            self.graph_metrics()
+            self.metrics.pickle_frames(sim_name=sim_name)
             
     def save_simulation(self):
         sim_name = 'sim'

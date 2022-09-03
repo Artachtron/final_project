@@ -121,7 +121,7 @@ for num, val in enumerate(add_link_prob, 1):
                 variation=num,
                 value=val)
     
-for num, val in enumerate(skip, 1):
+for num, val in enumerate(add_node_prob, 1):
     create_config(category="NEAT",
                 name="add_node_prob",
                 variation=num,

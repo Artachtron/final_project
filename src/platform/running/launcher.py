@@ -13,7 +13,10 @@ directory = join(
 
 files = [f for f in listdir(directory) if isfile(join(directory, f))]
 
-for n, f in enumerate(files[16:-3]):
+for n, f in enumerate(files[:-3]):
+    if f != 'config_add_node_prob_0.05.json' and  f != 'config_add_node_prob_0.1.json':
+        continue
+    
     for i in range(0, 10):
         print(f"{n} file: {f} {i}")
         os.system(f"python -m src.platform.running.main --c {f}")
