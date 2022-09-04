@@ -558,10 +558,11 @@ class Environment:
         # Create the energy
         if self.create_energy(energy_type=action.energy_type,
                               coordinates=action.coordinates,
-                              quantity=action.quantity):
+                              quantity=action.quantity,
+                              owner_id=animal.id):
 
             animal.on_drop_energy(energy_type=action.energy_type,
-                                    quantity=action.quantity)
+                                  quantity=action.quantity)
 
     def _on_animal_pickup(self, animal: Animal, action: Action) -> None:
         """Private method:
@@ -769,7 +770,8 @@ class Environment:
             if self.create_energy(energy_type=action.energy_type,
                                   coordinates=free_cell,
                                   quantity=action.quantity,
-                                  tree_planter=tree.planter):
+                                  tree_planter=tree.planter,
+                                  owner_id=tree.id):
 
                 tree.on_drop_energy(energy_type=action.energy_type,
                                     quantity=action.quantity)

@@ -26,11 +26,15 @@ class Direction(enum.Enum):
     """Enum:
         Cardinal direction
     """
-    RIGHT   =   (1, 0)
-    LEFT    =   (-1, 0)
-    DOWN    =   (0, 1)
     UP      =   (0, -1)
-
+    TOP_RIGHT = (1,-1)
+    RIGHT   =   (1, 0)
+    BOT_RIGHT = (1, 1)
+    DOWN    =   (0, 1)
+    BOT_LEFT =  (-1, 1)
+    LEFT    =   (-1, 0)
+    TOP_LEFT =  (-1,-1)
+    
 class Entity(SimulatedObject):
     """Subclass of simulated object:
         Simulated object that interact with the world,
@@ -705,12 +709,12 @@ class Animal(Entity):
                                                 "n_actions": Animal.NUM_ACTIONS,
                                                 "n_values": Animal.NUM_VALUES,
                                                 "actions":{
-                                                    "move": [0,1],
+                                                    "move": [0],
                                                     "grow": [],
                                                     "reproduce": [],
                                                     "plant": [],
-                                                    "drop":[2],
-                                                    "paint": [3],
+                                                    "drop":[1],
+                                                    "paint": [2],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
@@ -970,21 +974,16 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-        vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
+        move_angle = self.mind.value_outputs[output.associated_values[0]].activation_value * 360
 
-        if abs(vertical) > abs(horizontal):
-            if vertical > 0.5:
-                direction = Direction.UP
-            else:
-                direction = Direction.DOWN
+        for angle, direction in zip(reversed(range(0,360, int(360/len(Direction)))), Direction):
+            """ print(move_angle)
+            print(angle, direction) """
+            if move_angle > angle:
+                self._action_move(direction=direction)
+                break     
 
-        else:
-            if horizontal > 0.5:
-                direction = Direction.LEFT
-            else:
-                direction = Direction.RIGHT
-
-        self._action_move(direction=direction)
+        
 
     def _decide_minimal_move(self) -> None:
         """Pivate method:
