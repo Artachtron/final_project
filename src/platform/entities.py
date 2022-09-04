@@ -483,15 +483,15 @@ class Entity(SimulatedObject):
         if config.evaluate:
             if resource.owner:
                 self.trade_partners.get(resource.owner, 0) + 1
-        
+
         # If resource is an energy
         if type(resource).__base__.__name__ == 'Energy':
             quantity = resource.quantity
             if resource.tree_planter:
                 if (resource.tree_planter == self.id
                     or resource.tree_planter in self.ancestors):
-                    quantity += 5 * self.size
-    
+                    quantity += 10 * self.size
+
             self._gain_energy(energy_type=resource.type,
                               quantity=quantity)
 

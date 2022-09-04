@@ -486,7 +486,8 @@ class OutputNodeGene(NodeGene):
     def __post_init__(self):
         super().__init__(node_id=self.node_id,
                          name=self.name,
-                         node_type=self.node_type)
+                         node_type=self.node_type,
+                         activation_function=partial(sigmoid))
 
     def is_trigger(self) -> bool:
         return self.output_type == OutputType.TRIGGER

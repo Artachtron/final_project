@@ -173,7 +173,7 @@ class Node(BasePhene):
         self.type: NodeType = node_type             # HIDDEN, INPUT, OUTPUT
         self.bias: float = bias                     # Bias value
 
-        self.activation_function: ActivationFuncType = partial(sigmoid)
+        self.activation_function: ActivationFuncType = activation_function
         self.aggregation_function: AggregationFuncType = sum
 
         self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links

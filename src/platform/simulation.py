@@ -886,8 +886,8 @@ class Environment:
 
             parent1.on_reproduction()
             parent2.on_reproduction()
-
-            for _ in range(1, randint(1, config['Simulation']['Animal']['max_number_offsping']) + 1):
+            # config['Simulation']['Animal']['max_number_offsping']
+            for _ in range(1, randint(1, parent1.size) + 1):
 
                 free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
                                                                            radius=3)
@@ -911,7 +911,7 @@ class Environment:
                         if config['Log']['birth']:
                             print(f"{child} was born from {parent1} and {parent2}")
 
-            return child
+            # return child
 
     def spawn_animal(self, coordinates: Tuple[int, int], **kwargs) -> Optional[Animal]:
         """Public method:
