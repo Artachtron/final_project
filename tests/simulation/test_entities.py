@@ -28,9 +28,9 @@ class TestEntity:
                         blue_energy=12,
                         red_energy=27)
 
-        assert {'_position', '_adult_size', '_age',
-                '_max_age', '_size', '_action_cost', '_is_adult',
-                '_energies_stock'}.issubset(vars(entity))
+        assert {'_position', '_adult_size', 'age',
+                '_max_age', 'size', '_action_cost', '_is_adult',
+                'energies_stock'}.issubset(vars(entity))
 
         assert entity.id == 3
         assert entity.position == (20,10)
@@ -38,7 +38,7 @@ class TestEntity:
         assert entity._max_age == 100
         assert entity.age == 0
         assert entity.size == 13
-        assert entity._action_cost == 1
+        assert entity._action_cost == 13
         assert entity.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert entity._is_adult == False
 
@@ -268,17 +268,17 @@ class TestTree:
                         red_energy=27,
                         production_type=EnergyType.BLUE)
 
-        assert {'_position', '_adult_size', '_age',
-                '_max_age', '_size', '_action_cost', '_is_adult',
-                '_energies_stock', '_production_type'}.issubset(vars(tree))
+        assert {'_position', '_adult_size', 'age',
+                '_max_age', 'size', '_action_cost', '_is_adult',
+                'energies_stock', '_production_type'}.issubset(vars(tree))
 
         assert tree.id == 3
         assert tree.position == (20,10)
         assert tree._adult_size == 15
-        assert tree._max_age == 100
+        assert tree._max_age == 10
         assert tree.age == 0
         assert tree.size == 13
-        assert tree._action_cost == 1
+        assert tree._action_cost == 13
         assert tree.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert tree._is_adult == False
         assert tree._production_type == EnergyType.BLUE
@@ -329,7 +329,7 @@ class TestTree:
 
             tree._decide_produce()
             self.env._event_on_action(entity=tree)
-            action = tree.action
+            action = tree.actions[0]
             assert action.action_type.name == ActionType.PRODUCE_ENERGY.name
             assert action.energy_type == EnergyType.RED
 
@@ -343,7 +343,7 @@ class TestTree:
 
             tree2._decide_produce()
             self.env._event_on_action(entity=tree2)
-            action = tree2.action
+            action = tree2.actions[0]
             assert action.action_type.name == ActionType.PRODUCE_ENERGY.name
             assert action.energy_type == EnergyType.BLUE
 
@@ -359,23 +359,22 @@ class TestAnimal:
         animal = Animal(position=(20,10),
                         animal_id=3,
                         adult_size=15,
-                        max_age=100,
                         size=13,
                         action_cost=1,
                         blue_energy=12,
                         red_energy=27)
 
-        assert {'_position', '_adult_size', '_age', 'brain', 'mind',
-                '_max_age', '_size', '_action_cost', '_is_adult',
-                '_energies_stock', '_pocket'}.issubset(vars(animal))
+        assert {'_position', '_adult_size', 'age', 'brain', 'mind',
+                '_max_age', 'size', '_action_cost', '_is_adult',
+                'energies_stock', '_pocket'}.issubset(vars(animal))
 
         assert animal.id == 3
         assert animal.position == (20,10)
         assert animal._adult_size == 15
-        assert animal._max_age == 100
+        assert animal._max_age == 10
         assert animal.age == 0
         assert animal.size == 13
-        assert animal._action_cost == 1
+        assert animal._action_cost == 13
         assert animal.energies_stock == {'blue energy': 12, 'red energy': 27}
         assert animal._is_adult == False
         assert animal._pocket == None
@@ -389,8 +388,8 @@ class TestAnimal:
         assert net.id == animal.id
         assert gen.id == animal.id
 
-        assert len(net.inputs) == 96
-        assert len(net.outputs) == 15
+        """ assert len(net.inputs) == 96
+        assert len(net.outputs) == 15 """
 
     class TestAnimalMethods:
         @pytest.fixture(autouse=True)
@@ -422,28 +421,28 @@ class TestAnimal:
             # Down
             assert self.entity_grid.get_cell_value(coordinates=(3,4)) == None
             animal._action_move(Direction.DOWN)
-            action = animal.action
+            action = animal.actions[0]
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (3,4)
 
             # Up
             animal._action_move(Direction.UP)
 
-            action = animal.action
+            action = animal.actions[1]
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (3,2)
 
             # Left
             animal._action_move(Direction.LEFT)
 
-            action = animal.action
+            action = animal.actions[2]
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (2,3)
 
             # Right
             animal._action_move(Direction.RIGHT)
 
-            action = animal.action
+            action = animal.actions[3]
             assert action.action_type.name == ActionType.MOVE.name
             assert action.coordinates == (4,3)
 
@@ -451,20 +450,20 @@ class TestAnimal:
             self.animal = Animal(size=1,
                                  position=(0,0),
                                  blue_energy=5,
-                                 red_energy=10,)
+                                 red_energy=100,)
 
             self.animal._is_adult = True
-            assert self.animal.energies_stock == {"blue energy": 5, "red energy": 10}
-            assert self.animal.red_energy == 10
+            assert self.animal.energies_stock == {"blue energy": 5, "red energy": 100}
+            assert self.animal.red_energy == 100
             assert self.animal.size == 1
-            assert self.animal._max_age == self.animal.size*5
+            assert self.animal._max_age == self.animal.size*5 + 5
             assert self.animal._action_cost == 1
 
             # Grow
             self.animal._grow()
-            assert self.animal.red_energy == 0
+            assert self.animal.red_energy == 60
             assert self.animal.size == 2
-            assert self.animal._max_age == 10
+            assert self.animal._max_age == 20
             assert self.animal._action_cost == 2
 
         def test_age(self):
@@ -512,8 +511,8 @@ class TestAnimal:
             animal = self.env.spawn_animal(coordinates=(5,5))
             assert animal.red_energy == 10
             animal._action_plant_tree()
-            assert animal.red_energy == 0
-            assert animal.action.action_type.name == ActionType.PLANT_TREE.name
+            assert animal.red_energy == 9
+            assert animal.actions[0].action_type.name == ActionType.PLANT_TREE.name
             # No free cells
 
             # env2 = Environment(env_id=2)
@@ -535,7 +534,7 @@ class TestAnimal:
             self.animal._action_pick_up_resource(coordinates=position)
 
             assert self.animal.blue_energy <= blue_stock
-            action = self.animal.action
+            action = self.animal.actions[0]
             assert action.action_type.name == ActionType.PICKUP.name
 
         def test_pick_up_seed(self):
@@ -551,7 +550,7 @@ class TestAnimal:
 
             animal._action_pick_up_resource(coordinates=position)
 
-            assert animal.action.action_type.name == ActionType.PICKUP.name
+            assert animal.actions[0].action_type.name == ActionType.PICKUP.name
 
         def test_recycle_seed(self):
             tree = self.env.spawn_tree(coordinates=(3,2),
@@ -565,12 +564,12 @@ class TestAnimal:
             assert animal._pocket
             animal._action_recycle_seed()
 
-            assert animal.action.action_type.name == ActionType.RECYCLE.name
+            assert animal.actions[0].action_type.name == ActionType.RECYCLE.name
 
         def test_replant_seed(self):
             self.animal._action_plant_tree()
 
-            assert self.animal.action.action_type.name == ActionType.PLANT_TREE.name
+            assert self.animal.actions[0].action_type.name == ActionType.PLANT_TREE.name
 
 
         def test_decompose(self):
@@ -614,7 +613,7 @@ class TestAnimal:
             new_color = (177,125,234)
 
             self.animal._action_paint(color=new_color)
-            action = self.animal.action
+            action = self.animal.actions[0]
             assert action.action_type.name == ActionType.PAINT.name
             assert action.color == new_color
 
@@ -641,6 +640,7 @@ class TestAnimal:
 
             # Paint cell
             animal._action_paint(color=(125,12,32))
+            animal._action_move(direction=Direction.UP)
             assert animal.blue_energy == 98
             assert animal.red_energy == 100
 
@@ -664,25 +664,25 @@ class TestAnimal:
             # Recycle
             animal._action_plant_tree()
             assert animal.blue_energy == 94
-            assert animal.red_energy == 90
+            assert animal.red_energy == 99
 
             # Grow child
             animal._action_grow()
             assert animal.blue_energy == 93
-            assert animal.red_energy == 85
+            assert animal.red_energy == 99
 
             # Grow adult
             animal._action_grow()
             assert animal.blue_energy == 91
-            assert animal.red_energy == 65
+            assert animal.red_energy == 19
 
             # Reproduce
             animal._action_reproduce()
             assert animal.blue_energy == 88
-            assert animal.red_energy == 65
+            assert animal.red_energy == 19
             animal.on_reproduction()
             assert animal.blue_energy == 88
-            assert animal.red_energy == 35
+            assert animal.red_energy == 4
 
 
         class TestAnimalMind:
@@ -693,7 +693,6 @@ class TestAnimal:
                 self.animal = self.env.spawn_animal(coordinates=(5,5),
                                                      blue_energy=157,
                                                      red_energy=122,
-                                                     max_age=24,
                                                      size=37)
 
                 self.animal._increase_age(amount=12)
@@ -703,14 +702,14 @@ class TestAnimal:
                 # Empty grid
                 inputs = self.animal._normalize_inputs(environment=self.env)
 
-                assert len(inputs) == 96
-                assert inputs[0] == 0.5
-                assert inputs[1] == 37/100
-                assert round(inputs[2],5) == 157/10000
-                assert round(inputs[3],5) == 122/10000
-                assert sum(inputs[4:12]) == 0
+                assert len(inputs) == 8
+                assert inputs[0] == 1.2
+                assert inputs[1] == 37/10
+                assert round(inputs[2],5) == 157/1000
+                assert round(inputs[3],5) == 122/1000
+                """ assert sum(inputs[4:12]) == 0
                 assert sum(inputs[12:21]) == 0
-                assert sum(inputs[21:]) == 75*0
+                assert sum(inputs[21:]) == 75*0 """
 
                 # Non-empty grid
                 self.env.spawn_tree(coordinates=(5,6))
@@ -727,9 +726,9 @@ class TestAnimal:
                 inputs = self.animal._normalize_inputs(environment=self.env)
 
 
-                assert sum(inputs[4:12]) == 1
+                """ assert sum(inputs[4:12]) == 1
                 assert sum(inputs[12:21]) == 3
-                assert sum(inputs[21:]) == 75*0
+                assert sum(inputs[21:]) == 75*0 """
 
 
             def test_activate_mind(self):

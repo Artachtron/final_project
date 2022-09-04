@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from typing import Dict
+from typing import Dict, Optional
 
 from numpy.random import choice, random
 
@@ -176,7 +176,7 @@ class InnovTable(metaclass=InnovTableProperties):
 
     @staticmethod
     def _check_innovation_already_exists(innovation_type: InnovationType,
-                                         in_node: int, out_node: int) -> bool:
+                                         in_node: int, out_node: int) -> Optional[Innovation]:
         """Private static method:
             See if an innovation already exists
 
@@ -187,7 +187,7 @@ class InnovTable(metaclass=InnovTableProperties):
             out_node (int):                     outgoing node's id
 
         Returns:
-            bool: the innovation already exists
+            Optional[Innovation]: the innovation if it exists
         """
         innovations = InnovTable.innovations[innovation_type.value].get(in_node, [])
         

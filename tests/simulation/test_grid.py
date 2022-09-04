@@ -59,61 +59,61 @@ class TestGrid:
             red_energy = RedEnergy(position=(2,2))
 
             # Animal
-            assert self.grid.is_subclass(derived=animal,
+            assert Grid.is_subclass(derived=animal,
                                          base_class=Animal)
 
-            assert self.grid.is_subclass(derived=animal,
+            assert Grid.is_subclass(derived=animal,
                                          base_class=Entity)
 
-            assert not self.grid.is_subclass(derived=animal,
+            assert not Grid.is_subclass(derived=animal,
                                              base_class=Tree)
 
-            assert not self.grid.is_subclass(derived=animal,
+            assert not Grid.is_subclass(derived=animal,
                                              base_class=Energy)
 
             # Tree
-            assert self.grid.is_subclass(derived=tree,
+            assert Grid.is_subclass(derived=tree,
                                          base_class=Tree)
 
-            assert self.grid.is_subclass(derived=tree,
+            assert Grid.is_subclass(derived=tree,
                                          base_class=Entity)
 
-            assert not self.grid.is_subclass(derived=tree,
+            assert not Grid.is_subclass(derived=tree,
                                              base_class=Animal)
 
-            assert not self.grid.is_subclass(derived=tree,
+            assert not Grid.is_subclass(derived=tree,
                                              base_class=Energy)
 
             # Blue Energy
-            assert self.grid.is_subclass(derived=blue_energy,
+            assert Grid.is_subclass(derived=blue_energy,
                                          base_class=BlueEnergy)
 
-            assert self.grid.is_subclass(derived=blue_energy,
+            assert Grid.is_subclass(derived=blue_energy,
                                          base_class=Energy)
 
-            assert self.grid.is_subclass(derived=blue_energy,
+            assert Grid.is_subclass(derived=blue_energy,
                                          base_class=Resource)
 
-            assert not self.grid.is_subclass(derived=blue_energy,
+            assert not Grid.is_subclass(derived=blue_energy,
                                              base_class=Entity)
 
-            assert not self.grid.is_subclass(derived=blue_energy,
+            assert not Grid.is_subclass(derived=blue_energy,
                                              base_class=RedEnergy)
 
             # Red Energy
-            assert self.grid.is_subclass(derived=red_energy,
+            assert Grid.is_subclass(derived=red_energy,
                                          base_class=RedEnergy)
 
-            assert self.grid.is_subclass(derived=red_energy,
+            assert Grid.is_subclass(derived=red_energy,
                                          base_class=Energy)
 
-            assert self.grid.is_subclass(derived=red_energy,
+            assert Grid.is_subclass(derived=red_energy,
                                          base_class=Resource)
 
-            assert not self.grid.is_subclass(derived=red_energy,
+            assert not Grid.is_subclass(derived=red_energy,
                                              base_class=Entity)
 
-            assert not self.grid.is_subclass(derived=red_energy,
+            assert not Grid.is_subclass(derived=red_energy,
                                              base_class=BlueEnergy)
 
         def test_find_occupied_cells_by_animals(self):
@@ -192,9 +192,9 @@ class TestSubGrid:
             assert self.grid.__class__.__name__ == 'Grid'
 
         def test_dimensions_grid(self):
-            assert self.grid.width == 50
-            assert self.grid.height == 50
-            assert self.grid.dimensions == (50,50)
+            assert self.grid.width == 40
+            assert self.grid.height == 40
+            assert self.grid.dimensions == (40,40)
 
         def test_empty_cell(self):
             animal = Animal(animal_id=0,

@@ -15,8 +15,8 @@ class TestNetwork:
         network = Network()
         
         assert type(network) == Network
-        assert {'_inputs', '_outputs','_hidden',
-                '_all_nodes', 'activation_phase',
+        assert {'inputs', 'outputs','hidden',
+                'all_nodes', 'activation_phase',
                 'frozen'}.issubset(vars(network))
         
     class TestNetworkMethods:
@@ -123,6 +123,7 @@ class TestNetwork:
                             'n_outputs':10,
                             'n_actions':0,
                             'actions':{}}
+            
             gen2_data = {'n_inputs':10,
                             'n_outputs':10,
                             'n_actions':0,
@@ -136,14 +137,15 @@ class TestNetwork:
             net2 = Network.genesis(genome=gen2)
              
             assert gen1 != gen2
-            assert gen1.link_genes != gen2.link_genes 
-                       
+            assert [id(link) for link in gen1.link_genes.values()] != [id(link) for link in gen2.link_genes.values()] 
+         
             assert net1 != net2
             assert net1.id != net2.id
-            assert net1.all_nodes != net2.all_nodes
-            assert net1.inputs != net2.inputs
-            assert net1.outputs != net2.outputs
-            assert net1.links != net2.links
+            assert [id(link) for link in net1.all_nodes.values()] != [id(link) for link in net2.all_nodes.values()] 
+            assert [id(link) for link in net1.inputs.values()] != [id(link) for link in net2.inputs.values()] 
+            assert [id(link) for link in net1.outputs.values()] != [id(link) for link in net2.outputs.values()] 
+            assert [id(link) for link in net1.links.values()] != [id(link) for link in net2.links.values()] 
+
             
         def test_brain_structure(self):
             reset_innovation_table()
@@ -188,8 +190,8 @@ class TestNetwork:
         def test_activate_callable_functions(self):
             values = [1,2,3,4,5]
             node = Node(node_id=1)
-            node.aggregation_function.value(values) == sum(values)
-            node.activation_function.value(node.aggregation_function.value(values)) == sigmoid(sum(values))
+            node.aggregation_function(values) == sum(values)
+            node.activation_function(node.aggregation_function(values)) == sigmoid(sum(values))
             
         def test_activate_complete_no_hidden_nodes(self):
             n_inputs, n_outputs = np.random.randint(3,10,2)

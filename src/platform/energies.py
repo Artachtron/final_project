@@ -24,7 +24,8 @@ class Resource(SimulatedObject):
                  appearance: str = "",
                  quantity: int = 0,
                  expiry: int = DEFAULTY_EXPIRY,
-                 owner_id: Optional[int] = None
+                 owner_id: Optional[int] = None,
+                 size: Optional[int] = None,
                  ):
         """Super constructor:
             Get the necessary information for a resource
@@ -37,7 +38,7 @@ class Resource(SimulatedObject):
         """
 
         self.quantity: int = quantity or randint(10,100) # collectible amount of resources
-        size: int = int(5 + log(quantity, 2))
+        size: int = size or int(1 + log(quantity, 2))
         self.age: int = 0
         self.expiry: int = expiry
 

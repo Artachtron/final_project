@@ -143,8 +143,8 @@ class Node(BasePhene):
     
     def __init__(self,
                   node_id: int,
-                  activation_function,
-                  aggregation_function,
+                  activation_function = None,
+                  aggregation_function = None,
                   name: Optional[str] = None,
                   node_type: NodeType = NodeType.HIDDEN,
                   bias: float = 1.0,

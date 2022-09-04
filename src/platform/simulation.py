@@ -911,7 +911,7 @@ class Environment:
                         if config['Log']['birth']:
                             print(f"{child} was born from {parent1} and {parent2}")
 
-                # return child
+            return child
 
     def spawn_animal(self, coordinates: Tuple[int, int], **kwargs) -> Optional[Animal]:
         """Public method:

@@ -68,9 +68,10 @@ class TestInnovTable:
                                     innovation_type=innovation_type,
                                     new_weight=weight,
                                     innovation_number1=innovation_number1)
+            
+            InnovTable.add_innovation(innovation)
 
-            exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
-                                                                    innovation_type=innovation_type,
+            exists = InnovTable._check_innovation_already_exists(innovation_type=innovation_type,
                                                                     in_node=node1.id,
                                                                     out_node=node2.id)
             assert exists
@@ -78,14 +79,12 @@ class TestInnovTable:
 
             # Not exists
 
-            exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
-                                                                    innovation_type=innovation_type,
+            exists = InnovTable._check_innovation_already_exists(innovation_type=innovation_type,
                                                                     in_node=node2.id,
                                                                     out_node=node1.id)
             assert not exists
 
-            exists = InnovTable._check_innovation_already_exists(the_innovation=innovation,
-                                                                    innovation_type=InnovationType.NEW_NODE,
+            exists = InnovTable._check_innovation_already_exists(innovation_type=InnovationType.NEW_NODE,
                                                                     in_node=node1.id,
                                                                     out_node=3)
             assert not exists

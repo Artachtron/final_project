@@ -977,8 +977,6 @@ class Animal(Entity):
         move_angle = self.mind.value_outputs[output.associated_values[0]].activation_value * 360
 
         for angle, direction in zip(reversed(range(0,360, int(360/len(Direction)))), Direction):
-            """ print(move_angle)
-            print(angle, direction) """
             if move_angle > angle:
                 self._action_move(direction=direction)
                 break     
@@ -1367,7 +1365,8 @@ class Seed(Resource):
                                    position=position,
                                    appearance="seed.png",
                                    quantity=1,
-                                   expiry=20)
+                                   expiry=20,
+                                   size=5)
 
         self.genetic_data = genetic_data
 

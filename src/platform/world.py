@@ -102,9 +102,9 @@ class World:
             """ phase = sim_state.cycle//1000 + 1
             config.set_difficulty_range(phase=phase) """
 
-        except FileNotFoundError:
-            if config.loaded_simulation:
-                print(f"the file {config.loaded_simulation} does not exist")
+        except (FileNotFoundError, AttributeError):
+            """ if config.loaded_simulation:
+                print(f"the file {config.loaded_simulation} does not exist") """
             self.simulation = Simulation(sim_id=self.id,
                                          dimensions=self.dimensions)
             sim_state = self.simulation.init()
@@ -217,7 +217,7 @@ class World:
                    'brain_complexity':True,
                    'actions_count':True,
                    'actions_overtime':True,
-                   'death_age':True,
+                   'death_age':True,    
                    'energy_gain':True}
 
         self.probe.graph(**metrics)
