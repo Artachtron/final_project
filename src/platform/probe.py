@@ -112,7 +112,7 @@ class Probe:
         self.update_population()
         self.update_on_death()
         
-        self.register_entities()
+        # self.register_entities()
 
     def save_frame(self, cells):
         state = self.sim_state
