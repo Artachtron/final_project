@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from entities import Animal, Tree, Entity
 
 from itertools import product
+from math import ceil
 from random import choice, randint, random, sample
 from typing import Any, Dict, Final, Optional, Set, Tuple, ValuesView
 
@@ -369,7 +370,7 @@ class Environment:
         """
         self.state = self._populate_animal()
 
-        if config['Simulation']['spawn_energy']:
+        if config['Simulation']['spawn_initial_energy']:
             self.state = self._populate_energy()
 
         if config['Simulation']['spawn_tree']:
@@ -401,8 +402,8 @@ class Environment:
         vertical_divisor = randint(num_max_section_vertical,
                                    num_min_section_vertical+1)
 
-        section_horizontal_size = int(width/horizontal_divisor)
-        section_vertical_size = int(height/vertical_divisor)
+        section_horizontal_size = ceil(width/horizontal_divisor)
+        section_vertical_size = ceil(height/vertical_divisor)
 
         possible_coordinates = set(product(range(section_horizontal_size),
                                            range(section_vertical_size)))
@@ -425,12 +426,11 @@ class Environment:
         Returns:
             SimState: state of the simulation
         """
-        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] + config["Simulation"]["difficulty_level"]
+        energy_sparsity: Final[int] = config["Simulation"]["energy_sparsity"] #+ config["Simulation"]["difficulty_level"] - 1
         self._populate_with_item(sparsity=energy_sparsity,
                                  item='energy')
         print(f"Initial population of energies: {self.state.n_energies}")
         return self.state
-
 
     def _populate_animal(self) -> SimState:
         """Private method:
@@ -471,7 +471,7 @@ class Environment:
         """
         prop = self._get_populate_properties()
         density = int(prop['section_dimension']/sparsity)
-        
+
         for h in range(prop['horizontal_divisor']):
             x_offset = h * prop['section_horizontal_size']
             for v in range(prop['vertical_divisor']):
@@ -482,10 +482,15 @@ class Environment:
                                      num_section)
 
                 for x, y in coordinates:
+
                     match item:
                         case 'energy':
+                            quantity =  int(config['Simulation']['energy_quantity']
+                                          * config['Simulation']['difficulty_level'])
+
+                            quantity = randint(int(quantity/2), quantity)
                             self.create_energy(energy_type=choice(list(EnergyType)),
-                                               quantity=config['Simulation']['energy_quantity'],
+                                               quantity=quantity,
                                                coordinates=(x + x_offset,
                                                             y + y_offset),
                                                expiry=config['Simulation']['energy_expiry'])
@@ -553,10 +558,11 @@ class Environment:
         # Create the energy
         if self.create_energy(energy_type=action.energy_type,
                               coordinates=action.coordinates,
-                              quantity=action.quantity):
+                              quantity=action.quantity,
+                              owner_id=animal.id):
 
             animal.on_drop_energy(energy_type=action.energy_type,
-                                    quantity=action.quantity)
+                                  quantity=action.quantity)
 
     def _on_animal_pickup(self, animal: Animal, action: Action) -> None:
         """Private method:
@@ -581,7 +587,6 @@ class Environment:
             animal (Animal): animal that recycle a seed
             action (Action): recycle action
         """
-
         # Drop energy from seed on the ground
         action.tree.position = animal.position
         self.decompose_entity(entity=action.tree)
@@ -609,9 +614,44 @@ class Environment:
                 self.sprout_tree(seed=action.seed,
                                  position=free_cell)
             else:
-                self.spawn_tree(coordinates=free_cell)
+                self.spawn_tree(coordinates=free_cell,
+                                planter=animal.id)
 
         animal.on_plant_tree()
+
+    def _on_animal_reproduce(self, animal: Animal, action: Action) -> None:
+        """Private method:
+            Handle animal's reproduce action
+
+        Args:
+            animal (Animal): animal that want to reproduce
+            action (Action): reproduce action
+        """
+        """ entities_around = self.grid.find_animal_instances(coordinates=animal.position,
+                                                          radius=config['Simulation']['Animal']['reproduction_range']) """
+
+
+        reproduction_range = config['Simulation']['Animal']['reproduction_range']
+        animals_around = self. find_animals_around(coordinates=animal.position,
+                                                   radius=config['Simulation']['Animal']['reproduction_range'])
+        fitness: int = 0
+        most_suitable_mate: Animal = None
+        for other_entity in animals_around:
+            # if other_entity.status == Status.FERTILE:
+            if (other_entity.size > fitness
+                and animal.pos.distance(other_entity.pos)
+                <= reproduction_range):
+
+                if (not config['Simulation']['Animal']['incest']
+                    and self._check_incest(parent1=animal,
+                                           parent2=other_entity)):
+
+                    fitness = other_entity.size
+                    most_suitable_mate = other_entity
+                    
+        if most_suitable_mate:
+            self._reproduce_entities(parent1=animal,
+                                     parent2=most_suitable_mate)
 
 
     def _on_animal_action(self, animal: Animal) -> None:
@@ -621,32 +661,36 @@ class Environment:
         Args:
             animal (Animal): animal with action to handle
         """
-        action = animal.action
-        match action.action_type:
-            case ActionType.MOVE:
-                self._on_animal_move(animal=animal,
-                                     action=action)
-
-            case ActionType.PAINT:
-                self._on_animal_paint(animal=animal,
-                                      action=action)
-
-            case ActionType.DROP:
-                self._on_animal_drop(animal=animal,
-                                     action=action)
-
-            case ActionType.PICKUP:
-                self._on_animal_pickup(animal=animal,
-                                       action=action)
-
-            case ActionType.RECYCLE:
-                self._on_animal_recycle(animal=animal,
+        for action in animal.actions:
+            match action.action_type:
+                case ActionType.MOVE:
+                    self._on_animal_move(animal=animal,
                                         action=action)
 
-            case ActionType.PLANT_TREE:
-                self._on_animal_plant_tree(animal=animal,
-                                           action=action)
+                case ActionType.PAINT:
+                    self._on_animal_paint(animal=animal,
+                                        action=action)
 
+                case ActionType.DROP:
+                    self._on_animal_drop(animal=animal,
+                                        action=action)
+
+                case ActionType.PICKUP:
+                    self._on_animal_pickup(animal=animal,
+                                        action=action)
+
+                case ActionType.RECYCLE:
+                    self._on_animal_recycle(animal=animal,
+                                            action=action)
+
+                case ActionType.PLANT_TREE:
+                    self._on_animal_plant_tree(animal=animal,
+                                            action=action)
+
+                case ActionType.REPRODUCE:
+                    self._on_animal_reproduce(animal=animal,
+                                            action=action)
+                    
     def _on_animal_death(self, animal: Animal) -> None:
         """Pivate method:
             Handle animal death
@@ -678,19 +722,19 @@ class Environment:
                 self._on_animal_death(animal=animal)
 
             case Status.FERTILE:
-                entities_around = self.grid.find_occupied_cells_by_animals(coordinates=animal.position,
-                                                                           radius=config['Simulation']['Animal']['reproduction_range'])
+                entities_around = self.grid.find_animal_instances(coordinates=animal.position,
+                                                                  radius=config['Simulation']['Animal']['reproduction_range'])
 
                 energy_stock: int = 0
                 most_suitable_mate: Animal = None
                 for other_entity in entities_around:
                     # if other_entity.status == Status.FERTILE:
                     if other_entity.fitness > energy_stock:
-                        
+
                         if (not config['Simulation']['Animal']['incest']
                          and self._check_incest(parent1=animal,
                                                 parent2=other_entity)):
-                            
+
                             energy_stock = other_entity.fitness
                             most_suitable_mate = other_entity
 
@@ -705,7 +749,7 @@ class Environment:
         Args:
             tree (Tree): tree that produce energy
         """
-        trees_around = self.find_trees_around(coordinates=tree.position) or []
+        trees_around = self.find_tree_cells_around(coordinates=tree.position) or []
         count_trees_around = len(trees_around)
 
         tree.on_produce_energy(count_trees_around=count_trees_around)
@@ -718,14 +762,16 @@ class Environment:
             tree (Tree): tree that drop a resource
             action (Action): drop action
         """
-        free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=action.coordinates)
+        free_cells = self.grid.resource_grid.select_free_coordinates(coordinates=action.coordinates)
         free_cell = free_cells.pop() if free_cells else None
 
         if free_cell:
             # Create the energy
             if self.create_energy(energy_type=action.energy_type,
-                                coordinates=free_cell,
-                                quantity=action.quantity):
+                                  coordinates=free_cell,
+                                  quantity=action.quantity,
+                                  tree_planter=tree.planter,
+                                  owner_id=tree.id):
 
                 tree.on_drop_energy(energy_type=action.energy_type,
                                     quantity=action.quantity)
@@ -754,18 +800,18 @@ class Environment:
         Args:
             tree (Tree): tree with action to handle
         """
-        action = tree.action
-        match action.action_type:
-            case ActionType.PRODUCE_ENERGY:
-                self._on_tree_produce_energy(tree=tree)
+        for action in tree.actions:
+            match action.action_type:
+                case ActionType.PRODUCE_ENERGY:
+                    self._on_tree_produce_energy(tree=tree)
 
-            case ActionType.DROP:
-                self._on_tree_drop(tree=tree,
-                                   action=action)
+                case ActionType.DROP:
+                    self._on_tree_drop(tree=tree,
+                                    action=action)
 
-            case ActionType.PICKUP:
-                self._on_tree_pickup(tree=tree,
-                                     action=action)
+                case ActionType.PICKUP:
+                    self._on_tree_pickup(tree=tree,
+                                        action=action)
 
     def _on_tree_death(self, tree: Tree) -> None:
         """Pivate method:
@@ -802,7 +848,7 @@ class Environment:
         elif isinstance(entity,Tree):
             self._on_tree_action(tree=entity)
             self._on_tree_status(tree=entity)
-
+            
 
     def _add_new_resource_to_world(self, new_resource: Resource):
         """Private method:
@@ -840,8 +886,8 @@ class Environment:
 
             parent1.on_reproduction()
             parent2.on_reproduction()
-            
-            for _ in range(1, randint(1,config['Simulation']['Animal']['max_number_offsping']) + 1):
+            # config['Simulation']['Animal']['max_number_offsping']
+            for _ in range(1, randint(1, parent1.size) + 1):
 
                 free_cells = self.grid.entity_grid.select_free_coordinates(coordinates=parent1.position,
                                                                            radius=3)
@@ -850,12 +896,11 @@ class Environment:
                 if birth_position:
                     init_adult_size = config['Simulation']['Animal']['init_adult_size']
                     adult_size = max(init_adult_size, int((parent1.size + parent2.size)/2))
-                    difficulty = config['Simulation']['difficulty_level']
 
                     child = self.spawn_animal(coordinates=birth_position,
                                               size=1,
                                               blue_energy=Animal.INITIAL_ANIMAL_BLUE_ENERGY,
-                                              red_energy=int(Animal.INITIAL_ANIMAL_RED_ENERGY/difficulty),
+                                              red_energy=int(Animal.INITIAL_ANIMAL_RED_ENERGY),
                                               adult_size=adult_size,
                                               birthday=self.state.cycle)
 
@@ -866,7 +911,7 @@ class Environment:
                         if config['Log']['birth']:
                             print(f"{child} was born from {parent1} and {parent2}")
 
-                # return child
+            # return child
 
     def spawn_animal(self, coordinates: Tuple[int, int], **kwargs) -> Optional[Animal]:
         """Public method:
@@ -927,7 +972,7 @@ class Environment:
         """
 
         # Create a seed from a tree
-        seed = tree.create_seed(data={'size': 5,
+        seed = tree.create_seed(data={'size': Tree.INITIAL_SIZE,
                                       'action_cost': 1})
 
         # Add the seed to the world
@@ -975,10 +1020,11 @@ class Environment:
         if quantity < 1:
             return None
 
-        if config['Log']['grid_resources']:
-            print(f"{energy_type}:{quantity} was created at {coordinates}")
         if not self.grid.resource_grid.are_vacant_coordinates(coordinates=coordinates):
             return None
+
+        if config['Log']['grid_resources']:
+            print(f"{energy_type}:{quantity} was created at {coordinates}")
 
         energy_id = self.state.get_energy_id(increment=True)
 
@@ -1062,18 +1108,17 @@ class Environment:
         elif len(free_cells) == 1:
             red_cell, = free_cells
 
-        difficulty = config['Simulation']['difficulty_level']
         # Red energy
         if red_cell:
             self.create_energy(energy_type=EnergyType.RED,
                                 coordinates=red_cell,
-                                quantity=entity.energies[EnergyType.RED.value]/difficulty)
+                                quantity=entity.energies_stock[EnergyType.RED.value])
 
         # Blue energy
         if blue_cell:
             self.create_energy(energy_type=EnergyType.BLUE,
                                coordinates=blue_cell,
-                               quantity=entity.energies[EnergyType.BLUE.value])
+                               quantity=entity.energies_stock[EnergyType.BLUE.value])
 
     def get_resource_at(self, coordinates: Tuple[int, int]) -> Resource:
         """Public method:
@@ -1153,17 +1198,45 @@ class Environment:
         self.grid.modify_cell_color(coordinates=coordinates,
                                     color=color)
 
-    def find_trees_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set[Tuple[int, int]]:
+    def find_animals_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Entity):
+        """Public method:
+            Find and return all the animals in a radius around a certain coordinates
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         range of search. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int, int]]: set of animals in search area
+        """
+        return self.grid.find_close_animal_instances(coordinates=coordinates,
+                                                     radius=radius)
+
+    def find_energies_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set(Energy):
+        """Public method:
+            Find and return all the energies in a radius around a certain coordinates
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         range of search. Defaults to 1.
+
+        Returns:
+            Set[Tuple[int, int]]: set of energies in search area
+        """
+        return self.grid.find_close_energy_instances(coordinates=coordinates,
+                                                     radius=radius)
+
+    def find_tree_cells_around(self, coordinates: Tuple[int, int], radius: int=1) -> Set[Tuple[int, int]]:
         """Public method:
             Find and return all the cells occupied by trees
             in a radius around a certain coordinates
 
         Args:
-            coordinates (Tuple[int, int]): _description_
-            radius (int, optional): _description_. Defaults to 1.
+            coordinates (Tuple[int, int]): coordinates to look around
+            radius (int, optional): range of search. Defaults to 1.
 
         Returns:
-            Set[Tuple[int, int]]: _description_
+            Set[Tuple[int, int]]: set of coordinates with trees in search area
         """
         return self.grid.find_occupied_cells_by_trees(coordinates=coordinates,
                                                       radius=radius)
@@ -1189,6 +1262,7 @@ class Simulation:
         self.environment: Environment                   # environment with which entities can interact
         self.dimensions: Tuple[int, int] = dimensions   # dimensions of the world
         self.innov_table: InnovTable = InnovTable
+        self.update_counter: int = 0
 
 
     def init(self, populate: bool=True) -> SimState:
@@ -1221,13 +1295,19 @@ class Simulation:
             Tuple[Grid, SimState]:  Grid: world's state
                                     SimState: simulation's state
         """
+        self.update_counter += 1
         self.state.new_cycle()
-        if  (config['Simulation']['spawn_energy']
-         and self.state.cycle%config['Simulation']['spawn_energy_frequency'] == 0):
-            self.environment._populate_energy()
+        frequency = (config['Simulation']['spawn_energy_frequency']
+                   * config['Simulation']['difficulty_level'])
 
-        """ with Pool() as pool:
-            pool.imap_unordered(partial(entity_update, environment=self.environment), self.state.get_entities()) """
+        config['Simulation']['energy_expiry'] = frequency
+
+        if  (
+                config['Simulation']['spawn_energy']
+            and self.update_counter%frequency == 0
+            ):
+            self.environment._populate_energy()
+            self.update_counter = 0
 
         for entity in self.state.get_entities():
             entity.update(environment=self.environment)
@@ -1256,7 +1336,3 @@ class Simulation:
             int: simulation's id
         """
         return self.__id
-
-def entity_update(environment: Environment, entity: Entity):
-    entity.update(environment=environment)
-    environment._event_on_action(entity=entity)

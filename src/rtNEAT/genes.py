@@ -7,6 +7,7 @@ from functools import partial
 from typing import Dict, Optional, Set
 
 import numpy as np
+from numba import njit
 from numpy.random import random, uniform
 from project.src.platform.running.config import config
 
@@ -29,7 +30,8 @@ class OutputType(enum.Enum):
     """
     TRIGGER = 0
     VALUE = 1
-
+    
+@njit(fastmath=True) 
 def sigmoid(x):
     """ Sigmoid activation function, Logistic activation with a range of 0 to 1
 
@@ -39,10 +41,8 @@ def sigmoid(x):
     Returns:
         float: output value
     """
-    try:
-        return (1.0 / (1.0 + np.exp(-x)))
-    except OverflowError:
-        return 0 if x < 0 else 1
+    return (1.0 / (1.0 + np.exp(-x)))
+
 
 
 def relu(x):
@@ -89,6 +89,7 @@ class BaseGene(ABC):
             is_allele:          check if two genes are different versions of the same allele
             mutation_distance:  calculate the mutation distance between two genes
     """
+    __slots__ = '__id', 'name', 'frozen', 'enabled', 'mutation_number'
     def __init__(self,
                  gene_id: int,
                  name: Optional[str],
@@ -137,7 +138,7 @@ class BaseGene(ABC):
         return self.id == other.id
 
     def __hash__(self):
-        return hash(self.id)
+        return hash(self.__id)
 
     @abstractmethod
     def transcript(self) -> Dict:
@@ -211,6 +212,7 @@ class LinkGene(BaseGene):
             is_allele:          check if two genes are different versions of the same allele
             mutation_distance:  calculate the mutation distance between two genes """
 
+    __slots__ = 'in_node', 'out_node', 'weight'
     def __init__(self,
                  in_node: int,
                  out_node: int,
@@ -256,7 +258,7 @@ class LinkGene(BaseGene):
         """
         return {'link_id':self.id, 'weight':self.weight,
                 'in_node':self.in_node, 'out_node':self.out_node,
-                 'enabled':self.enabled}
+                'enabled':self.enabled}
 
     def mutate(self) -> None:
         """Mutate the LinkGene
@@ -304,11 +306,9 @@ class LinkGene(BaseGene):
         Returns:
             bool: True if the two genes are the same allele
         """
-        return ((self.in_node == other_gene.in_node and
-                self.out_node == other_gene.out_node) or
-                (self.out_node == other_gene.in_node and
-                self.in_node == other_gene.out_node) or
-                self.id == other_gene.id)
+        return (self.id == other_gene.id or
+                (self.in_node == other_gene.in_node and
+                self.out_node == other_gene.out_node))
 
     def mutation_distance(self, other_gene: LinkGene) -> float:
         """Calculate the mutation distance between two genes
@@ -342,6 +342,7 @@ class NodeGene(BaseGene):
             distance:           Calculate the distance between two NodeGenes based on their properties
             is_sensor:          Indicate if the node is an input
             """
+    __slots__ = 'type', 'bias', 'activation_function', 'aggregation_function'
     def __init__(self,
                  node_id: int = 0,
                  name: Optional[str] = None,
@@ -463,8 +464,7 @@ class NodeGene(BaseGene):
             bool: True if the two genes are the same allele
         """
         return (self.id == other_gene.id and
-                self.type == other_gene.type or
-                self.id == other_gene.id)
+                self.type == other_gene.type)
 
     def is_sensor(self) -> bool:
         """ determine if the node is a sensor (INPUT or BIAS)
@@ -486,7 +486,8 @@ class OutputNodeGene(NodeGene):
     def __post_init__(self):
         super().__init__(node_id=self.node_id,
                          name=self.name,
-                         node_type=self.node_type)
+                         node_type=self.node_type,
+                         activation_function=partial(sigmoid))
 
     def is_trigger(self) -> bool:
         return self.output_type == OutputType.TRIGGER

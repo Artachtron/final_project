@@ -6,17 +6,17 @@ if TYPE_CHECKING:
     from grid import Grid
 
 import pickle
-import sys
 from typing import Final, Tuple
 
 from .display import Display
 from .probe import Probe
+from .running.analyze import Evaluator
 from .running.config import config
 from .simulation import SimState, Simulation
 
 INITIAL_ANIMAL_POPULATION: Final[int] = 10
 INITIAL_TREE_POPULATION: Final[int] = 2
-sys.setrecursionlimit(100000)
+# sys.setrecursionlimit(100000)
 
 class World:
     """Class:
@@ -51,18 +51,21 @@ class World:
                                                 GRID_WIDTH),
                  block_size: int = BLOCK_SIZE,
                  sim_speed: int = SIMULATION_SPEED,
-                 display_active: bool = False):
+                 display_active: bool = False,
+                 probe: bool = False):
 
         self.__id: int = world_id
         self.dimensions: Tuple[int, int] = dimensions
         self.block_size: int = block_size
         self.sim_speed: int = sim_speed
         self.display_active: bool = display_active
+        self.probe_active: bool = probe
         self.running: bool = False
 
         self.simulation: Simulation
         self.display: Display
-        self.metrics: Probe
+        self.probe: Probe
+        
 
     @property
     def id(self) -> int:
@@ -84,29 +87,30 @@ class World:
         """
         self.simulation: Simulation
         sim_state: SimState
-        self.metrics: Probe
+        self.probe: Probe
 
         try:
             if not config.loaded_simulation:
                 raise FileNotFoundError
+            
             self.simulation = pickle.load(open('simulations/' + config.loaded_simulation, "rb"))
             sim_state = self.simulation.state
             self.simulation.load_innovations()
 
             World.MAX_CYCLE += sim_state.cycle
-            self.display_active: bool = False
+            # self.display_active: bool = False
             """ phase = sim_state.cycle//1000 + 1
             config.set_difficulty_range(phase=phase) """
 
-        except FileNotFoundError:
-            if config.loaded_simulation:
-                print(f"the file {config.loaded_simulation} does not exist")
+        except (FileNotFoundError, AttributeError):
+            """ if config.loaded_simulation:
+                print(f"the file {config.loaded_simulation} does not exist") """
             self.simulation = Simulation(sim_id=self.id,
                                          dimensions=self.dimensions)
             sim_state = self.simulation.init()
 
-
-        self.metrics = Probe(sim_state=sim_state)
+        if self.probe_active:
+            self.probe = Probe(sim_state=sim_state)
 
         if self.display_active:
             self.display = Display(display_id=self.id,
@@ -115,7 +119,8 @@ class World:
                                    sim_speed=self.sim_speed,
                                    show_grid=show_grid)
 
-            self.display.init(sim_state=sim_state)
+            self.display.init()
+            self.display.init_from_sim(sim_state=sim_state)
 
 
     def _update(self) -> None:
@@ -128,43 +133,65 @@ class World:
         sim_state: SimState
 
         grid, sim_state = self.simulation.update()
-        self.metrics.update()
+        config.set_cycle(sim_state.cycle)
+        if self.probe_active:
+            self.probe.update(cells=grid.color_grid.array)
 
         if self.display_active:
             self.display.update(sim_state=sim_state)
-            self.display.draw(grid=grid)
+            self.display.draw(cells=grid.color_grid.array)
 
         self.set_difficulty(sim_state=sim_state)
 
-        if sim_state.cycle%500 == 0:
-            self.save_simulation()
+        """ if sim_state.cycle%1000 == 0:
+            self.save_simulation() """
             
         if (sim_state.cycle == World.MAX_CYCLE or
             len(sim_state.entities) == 0):
             self.shutdown()
 
+    def save_metrics(self, sim_name: str="sim"):
+            self.probe.print(all_keys=True)
+            self.graph_metrics()
+            self.probe.pickle_frames(sim_name=sim_name)
+            
+    def evaluate_results(self):
+        evaluator = Evaluator(probe=self.probe)
+        evaluator.evaluate()
+            
     def save_simulation(self):
-        self.metrics.print(all_keys=True)
-        self.graph_metrics()
+        sim_name = 'sim'
+        
+        if self.probe_active:
+            self.save_metrics(sim_name=sim_name)
+            self.evaluate_results()
+            
         self.simulation.save()
-        pickle.dump(self.simulation, open('simulations/simulation2', "wb"))
+        pickle.dump(self.simulation, open(f'simulations/{sim_name}', "wb"))
+        
 
     def set_difficulty(self, sim_state) -> None:
-        difficulty: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
-                             /config['Simulation']['difficulty_pop_factor']) + 1
+        if sim_state.cycle > config['Simulation']['difficulty_cycle_factor_threshold']:
+            difficulty_factor: float = ((sim_state.n_animals  - config['Simulation']['difficulty_pop_threshold'])
+                                        /config['Simulation']['difficulty_pop_factor']) + 1
+            
+            config.set_difficulty_factor(difficulty_factor * config['Simulation']['difficulty_pop_coefficient'])
+        
+        difficulty = ((sim_state.cycle//config['Simulation']['diffulty_cycles_step'])
+                     * config['Simulation']['diffulty_factor_coefficient']) + 1
+             
         diff: float = config.set_difficulty(difficulty)
 
         print(f"{sim_state.cycle}: {sim_state.n_animals} {diff:.2f}")
-
-        difficulty_factor = sim_state.cycle//config['Simulation']['diffulty_cycles_step']
-        config.set_difficulty_factor(difficulty_factor * config['Simulation']['diffulty_factor_increment'])
 
     def shutdown(self) -> None:
         """Public method:
             Stop the running of the simulation
         """
-        # self.metrics.print(all_keys=True)
-        self.write_metrics()
+        """ if self.probe:
+            self.save_metrics() """
+            
+        # self.write_metrics()
         self.running = False
 
     def run(self) -> None:
@@ -181,7 +208,7 @@ class World:
                    'born_animals': True,
                    }
 
-        self.metrics.write(parameter=config['Run']['parameter'],
+        self.probe.write(parameter=config['Run']['parameter'],
                            variation=config['Run']['value'],
                            **metrics)
 
@@ -190,6 +217,7 @@ class World:
                    'brain_complexity':True,
                    'actions_count':True,
                    'actions_overtime':True,
-                   'death_age': True}
+                   'death_age':True,    
+                   'energy_gain':True}
 
-        self.metrics.graph(**metrics)
+        self.probe.graph(**metrics)

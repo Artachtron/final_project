@@ -16,18 +16,19 @@ from .config import config
 def main():
     start = time()
     world = World(world_id=0,
-                  display_active=False)
+                  display_active=config.display,
+                  probe=True)
 
     world.init(show_grid=True)
     
     try:
         world.run()
     except Exception as e:
-        print(e)
+        print(f"exception: {repr(e)}")
     end = time()
-    print(f'It took {(end - start)/60: .0f} minutes!')
-    """ world.save_simulation()
-    world.write_metrics()
+    print(f'It took{(end - start)/60: .0f} minutes!')
+    world.save_simulation()
+    """ world.write_metrics()
     world.graph_metrics() """
 
 def profile(profiler: Profile):

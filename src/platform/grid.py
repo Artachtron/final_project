@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+from functools import lru_cache
 from itertools import combinations
 from random import sample
 from typing import Any, Optional, Set, Tuple, Type
@@ -8,7 +9,7 @@ from typing import Any, Optional, Set, Tuple, Type
 import numpy as np
 import numpy.typing as npt
 
-from .energies import Resource
+from .energies import Energy, Resource
 from .entities import Animal, Entity, Tree
 
 
@@ -306,13 +307,14 @@ class SubGrid:
         """
 
         instances = set()
-        search_interval = list(range(-radius, radius + 1))  # List from (-radius, radius)
+        search_interval = np.arange(-radius, radius + 1)  # List from (-radius, radius)
+        a, b = coordinates
         for x in search_interval:
             for y in search_interval:
                 if not include_self and x == 0 and y == 0:
                     continue
 
-                position = tuple(np.add(coordinates, (x, y)))
+                position = (a+x, b+y)
                 obj = self.get_cell_value(coordinates=position)
                 if obj:
                     if Grid.is_subclass(derived=obj,
@@ -321,6 +323,65 @@ class SubGrid:
                         instances.add(obj)
 
         return instances
+    
+    def find_closest_instances_baseclass(
+        self, base_class: Any,
+        coordinates: Tuple[int, int],
+        radius: int = 1,
+    ) -> Set[Any]:
+
+        """Private method:
+            Find all the instances of a certain base class around and
+            return a set containing them
+
+            Args:
+                coordinates (Tuple[int, int]):  coordinates to search around
+                base_class (Type):              base class as reference for the search
+                include_self (bool, optional):  include the coordinates in the search. Defaults to False.
+                radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set of instances of the base class around
+        """
+        def find_instance(position:Tuple[int, int], instances: Set, base_class: Any):
+            obj = self.get_cell_value(coordinates=position)
+            if obj:
+                if Grid.is_subclass(derived=obj,
+                                    base_class=base_class):
+
+                    instances.add(obj)
+        
+        instances = set()
+        a, b = coordinates
+        for n in range(1, radius):
+            for x in (-n, n):
+                x1 = a+x
+                y1 = b+x
+                for y in range(-n+1, n):
+                    
+                    find_instance(position=(x1, b+y),
+                                  instances=instances,
+                                  base_class=base_class)
+
+                    find_instance(position=(a+y, y1),
+                                  instances=instances,
+                                  base_class=base_class)
+  
+                find_instance(position=(x1, y1),
+                              instances=instances,
+                              base_class=base_class)
+                
+                find_instance(position=(x1, b-x),
+                              instances=instances,
+                              base_class=base_class)
+
+            if instances:
+                break
+            
+        return instances
+
+        
+        
 
     def find_free_coordinates(
         self, coordinates: Tuple[int, int], radius: int = 1
@@ -439,7 +500,7 @@ class SubGrid:
             if coordinates[0] < 0 or coordinates[1] < 0:
                 raise IndexError
 
-            return self._array[tuple(coordinates)]
+            return self._array[coordinates]
 
         except IndexError:
             # print(f"{coordinates} is out of bounds")
@@ -614,6 +675,7 @@ class Grid:
         """
         return self.dimensions[1]
 
+    @lru_cache
     @staticmethod
     def is_subclass(derived: Any, base_class: Type) -> bool:
         """Static public method:
@@ -678,8 +740,8 @@ class Grid:
         """  
         self.entity_grid.empty_cell(coordinates=entity.position) 
 
-    def modify_cell_color(
-        self, coordinates: Tuple[int, int], color: Tuple[int, int, int]) -> None:
+    def modify_cell_color(self, coordinates: Tuple[int, int],
+                          color: Tuple[int, int, int]) -> None:
         """Public method:
             Modify the color of a cell in the color grid
 
@@ -690,9 +752,85 @@ class Grid:
         if self.color_grid.are_coordinates_in_bounds(coordinates=coordinates):
             self.color_grid.array[coordinates] = color
 
-    def find_occupied_cells_by_animals(
-        self, coordinates: Tuple[int, int], radius: int = 1
-    ) -> Set[Any]:
+    def find_animal_instances(self, coordinates: Tuple[int, int],
+                              radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the animals in a radius around given coordinates,
+            return a set of all the animals found
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set containing all the animals found
+        """
+        return self.entity_grid.find_instances_baseclass_around(
+                coordinates=coordinates,
+                radius=radius,
+                base_class=Animal
+            )
+    
+    def find_close_animal_instances(self, coordinates: Tuple[int, int],
+                                    radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the animals in a radius around given coordinates,
+            return a set of all the animals found
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set containing all the animals found
+        """
+        return self.entity_grid.find_closest_instances_baseclass(
+                coordinates=coordinates,
+                radius=radius,
+                base_class=Animal
+            ) 
+        
+        
+    def find_energy_instances(self, coordinates: Tuple[int, int],
+                              radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the energies in a radius around given coordinates,
+            return a set of all the energies found
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set containing all the energies found
+        """
+        return self.resource_grid.find_instances_baseclass_around(
+                coordinates=coordinates,
+                radius=radius,
+                base_class=Energy
+            )
+        
+    def find_close_energy_instances(self, coordinates: Tuple[int, int],
+                                    radius: int = 1) -> Set[Any]:
+        """Private method:
+            Find all the energies in a radius around given coordinates,
+            return a set of all the energies found
+
+        Args:
+            coordinates (Tuple[int, int]):  coordinates to look around
+            radius (int, optional):         radius of search. Defaults to 1.
+
+        Returns:
+            Set[Any]: set containing all the energies found
+        """
+        return self.entity_grid.find_closest_instances_baseclass(
+                coordinates=coordinates,
+                radius=radius,
+                base_class=Energy
+            ) 
+                
+    def find_occupied_cells_by_animals(self, coordinates: Tuple[int, int],
+                                       radius: int = 1) -> Set[Any]:
         """Private method:
             Find all the cells occupied by animals in a radius around given coordinates,
             return a set of all the cells found
@@ -704,7 +842,7 @@ class Grid:
         Returns:
             Set[Any]: set containing all the cells found
         """
-        return self.entity_grid.find_instances_baseclass_around(
+        return self.entity_grid._find_coordinates_baseclass(
                 coordinates=coordinates,
                 radius=radius,
                 base_class=Animal

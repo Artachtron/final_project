@@ -143,10 +143,10 @@ class SimulatedObject:
 
 
         self.__id: int = sim_obj_id
-        self._size: int = size
+        self.size: int = size
         self._position: Position = Position(*position)
 
-        self._appearance: str = appearance
+        self.appearance: str = appearance
 
     @property
     def id(self) -> int:
@@ -157,26 +157,16 @@ class SimulatedObject:
             int: simulated object's id
         """
         return self.__id
-
+    
     @property
-    def size(self) -> int:
-        """Property:
-            Return the scaling factor
+    def pos(self) -> Position:
+        """Porperty:
+            return the position
 
         Returns:
-            int: scaling factor
+            Position: position
         """
-        return self._size
-
-    @size.setter
-    def size(self, value: int) -> None:
-        """Setter:
-            Modify the size
-
-        Args:
-            value (int): new size
-        """
-        self._size = value
+        return self._position
 
     @property
     def position(self) -> Tuple[int, int]:
@@ -197,13 +187,3 @@ class SimulatedObject:
             value (Tuple[int, int]): new position
         """
         self._position = Position(*value)
-
-    @property
-    def appearance(self) -> str:
-        """Property:
-            Return the path to the sprite's image
-
-        Returns:
-            str: path to the sprite's image
-        """
-        return self._appearance

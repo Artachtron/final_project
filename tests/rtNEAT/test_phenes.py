@@ -13,16 +13,16 @@ class TestPhenes:
                     node_type=NodeType.BIAS,
                     enabled=False)
         
-        assert {'type', 'enabled',
-                'activation_function','aggregation_function',
-                'activation_phase', 'activation_value',
-                'incoming','outgoing'}.issubset(vars(node))
+        assert node.__slots__ == ('activation_phase', 'activation_value',
+                                  'activation_function', 'aggregation_function',
+                                  'incoming', 'outgoing', 'type', 'bias',
+                                  'associated_values', 'output_type')
         
         assert node.id == 1
         assert node.type == NodeType.BIAS
         assert node.enabled == False
-        assert node.aggregation_function.name == AggregationFuncType.SUM.name
-        assert node.activation_function.name == ActivationFuncType.SIGMOID.name
+        assert node.aggregation_function == sum
+        # assert node.activation_function == sigmoid
         assert node.activation_phase == 0
         assert node.activation_value == 0.0
         assert node.incoming == {}
@@ -43,8 +43,7 @@ class TestPhenes:
                     out_node=Node(1),
                     enabled=False)
         
-        assert {'weight', 'in_node', 'out_node',
-                'enabled'}.issubset(vars(link))
+        assert link.__slots__ == ('weight', 'in_node', 'out_node')
         
         assert link.id == 1
         assert link.weight == 0.5

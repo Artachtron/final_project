@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Optional
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     from grid import Grid
@@ -8,12 +9,14 @@ if TYPE_CHECKING:
     from entities import Entity
     from energies import Resource
     from universal import SimulatedObject
+    from probe import Frame
 
 import sys
 from os.path import dirname, join, realpath
 from pathlib import Path
 from typing import Tuple
 
+import numpy.typing as npt
 import pygame as pg
 
 BLACK = (0, 0, 0)
@@ -128,9 +131,10 @@ class DisplayedObject(pg.sprite.Sprite):
             entity = sim_state.entities[self.id]
             self.size = 4 + entity.size
             self.position = entity.position
-
+            
         # Scale the image based on object's size
-        self.image: pg.surface.Surface = pg.transform.scale(self.sprite, (self.size, self.size))
+        size = self.size * block_size/15
+        self.image: pg.surface.Surface = pg.transform.scale(self.sprite, (size, size))
 
         # Place the sprite on the object's position
         pos_x, pos_y = self.position
@@ -213,7 +217,7 @@ class Display:
         self.entity_group: pg.sprite.Group = pg.sprite.Group()  # group of entites' sprite
         self.resource_group: pg.sprite.Group = pg.sprite.Group()# group of resources' sprite
 
-    def init(self, sim_state: Optional[SimState]=None) -> None:
+    def init(self) -> None:
         """Public method:
             Initialize a display
 
@@ -224,16 +228,41 @@ class Display:
 
         self.screen = pg.display.set_mode((self.window_width, self.window_height))
 
+        self.clock = pg.time.Clock()
+
+    def init_from_sim(self, sim_state:SimState):
         # Add entities and resources
         # from the simulation to the display
         if sim_state:
             for entity in sim_state.get_entities():
-                self._add_entity(entity)
+                self._add_entity(entity=entity)
 
             for resource in sim_state.get_resources():
-                self._add_resource(resource)
-
-        self.clock = pg.time.Clock()
+                self._add_resource(resource=resource)
+                
+    def init_from_frames(self, frames: List[Frame], first_frame: int=0, last_frame: int=0):
+        size  = len(frames)
+        print(f"loaded {size} frames")
+        
+        if 0 < first_frame < 1:
+            first_frame = int(first_frame * size)
+        
+        if 0 < last_frame < 1:
+            last_frame *= size
+            
+        last_frame = int(last_frame) or size
+        for i, frame in enumerate(frames[first_frame:last_frame], first_frame):
+            print(f"frame: {i}")
+            self._load_frame(frame=frame)
+            self.draw(cells=frame.cells)
+            self._clear_groups()
+            
+        print("end of frames")
+            
+    def _clear_groups(self):
+        self.entity_group = pg.sprite.Group()
+        self.resource_group = pg.sprite.Group()
+                
 
     def _add_entity(self, entity: Entity) -> None:
         """Private method:
@@ -246,7 +275,6 @@ class Display:
                                                     assets_path=self.assets_path,
                                                     sim_obj=entity,
                                                     assets=self.assets)
-
         self.entities[entity.id] = dis_entity
         self.entity_group.add(dis_entity)
 
@@ -271,7 +299,7 @@ class Display:
                                                       assets_path=self.assets_path,
                                                       sim_obj=resource,
                                                       assets=self.assets)
-
+        
         self.resources[resource.id] = dis_resource
         self.resource_group.add(dis_resource)
 
@@ -282,8 +310,11 @@ class Display:
         Args:
             resource (Resource): resource to remove
         """
-        dis_resource = self.resources.pop(resource.id)
-        self.resource_group.remove(dis_resource)
+        try:
+            dis_resource = self.resources.pop(resource.id)
+            self.resource_group.remove(dis_resource)
+        except KeyError:
+            print(f"{resource.id} is not in the list" )
 
 
     def update(self, sim_state: SimState) -> None:
@@ -322,7 +353,7 @@ class Display:
         # self.resource_group.update(block_size=self.block_size,
         #                            sim_state=sim_state)
 
-    def draw(self, grid: Grid) -> None:
+    def draw(self, cells: npt.NDArray) -> None:
         """Public method:
             Draw the display
 
@@ -336,7 +367,7 @@ class Display:
                     sys.exit()
 
         # Draw the world
-        self._draw_world(grid)
+        self._draw_world(cells)
         # Update display
         pg.display.update()
 
@@ -345,35 +376,39 @@ class Display:
         if self.tick_counter == self.sim_speed:
             self.tick_counter = 0
 
-    def _draw_world(self, grid: Grid) -> None:
+    def _draw_world(self, cells: npt.NDArray=None) -> None:
         """Private method:
             Draw the world, grid and entities
 
             Args:
                 grid (Grid): grid of the world
         """
-        self._draw_grid(grid)
+        self._draw_grid(cells)
         self._draw_entities()
         self._draw_resources()
 
-    def _draw_grid(self, grid) -> None:
+    def _draw_grid(self, cells: npt.NDArray=None) -> None:
         """Private method:
             Draw the grid
 
            Args:
                 grid (Grid): grid of the world
         """
-        #SCREEN.fill(WHITE)
-        color_grid = grid.color_grid.array
+        
         for x in range(0, self.window_width, self.block_size):
             for y in range(0, self.window_height,  self.block_size):
                 rect = pg.Rect(x, y,  self.block_size,  self.block_size)
+                
                 pg.draw.rect(self.screen,
-                             color_grid[int(x / self.block_size),
-                                        int(y / self.block_size)],
-                             rect, 0)
+                                cells[int(x / self.block_size),
+                                    int(y / self.block_size)],
+                            rect, 0)
+
                 if self.show_grid:
                     pg.draw.rect(self.screen, BLACK, rect, 1)
+ 
+        """ else:
+            self.screen.fill((0,0,0))  """       
 
     def _draw_entities(self) -> None:
         """Private method:
@@ -384,6 +419,47 @@ class Display:
         """Private method:
             Draw the energies"""
         self.resource_group.draw(self.screen)
+        
+    def _load_frame(self, frame: Frame):
+        self._load_entities_frame(frame)
+        for i, energy in enumerate(frame.energies):
+            appearance = "models/resources/energies/"
+            if energy.type == "BlueEnergy":
+                appearance += "blue_energy.png"
+            else:
+                appearance += "red_energy.png"
+
+            dis_energy = DisplayedObject(dis_obj_id=i,
+                                    appearance=appearance,
+                                    size=energy.size,
+                                    position=energy.position)
+
+            # Load the sprite and display it on the world
+            dis_energy.init(block_size=self.block_size,
+                        assets_path=self.assets_path,
+                        assets=self.assets)
+            
+            self.resource_group.add(dis_energy)
+
+    def _load_entities_frame(self, frame):
+        for i, entity in enumerate(frame.entities):
+            appearance = "models/entities/"
+            if entity.type == "Animal":
+                appearance += "animal.png"
+            else:
+                appearance += "plant.png"
+
+            dis_entity = DisplayedObject(dis_obj_id=i,
+                                    appearance=appearance,
+                                    size=entity.size,
+                                    position=entity.position)
+
+            # Load the sprite and display it on the world
+            dis_entity.init(block_size=self.block_size,
+                        assets_path=self.assets_path,
+                        assets=self.assets)
+            
+            self.entity_group.add(dis_entity)
 
     @property
     def id(self) -> int:
@@ -394,3 +470,5 @@ class Display:
             int: display's id
         """
         return self.__id
+
+

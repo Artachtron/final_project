@@ -1,20 +1,31 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Optional, Set
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     from simulation import SimState
     from entities import Entity
 
 import json
+import pickle
+from collections import namedtuple
 from dataclasses import dataclass, field
 from os.path import dirname, join, realpath
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy.typing as npt
 import pandas as pd
 import seaborn as sns
 
+Entity = namedtuple("Entity",["id","type","size", "position"])
+Energy = namedtuple("Energy",["id","type","size", "position"])
+
+@dataclass
+class Frame:
+    entities: List[Entity]
+    energies: List[Energy]
+    cells: npt.NDArray
 
 @dataclass
 class Probe:
@@ -40,11 +51,21 @@ class Probe:
 
     brain_complexity: Dict = field(default_factory=dict)
     death_age: Dict = field(default_factory=dict)
+    energy_gain: Dict = field(default_factory=dict)
 
     max_hidden: int = 0
     max_links: int = 0
 
     actions: Dict = field(default_factory=list)
+    
+    frames: List[Frame] = field(default_factory=list)
+    
+    all_animals: Dict = field(default_factory=dict)
+    all_trees: Dict = field(default_factory=dict)
+    
+    replant: Dict =  field(default_factory=dict)
+    colors: Dict =  field(default_factory=dict)
+    colors_cycle: Dict =  field(default_factory=dict)
 
     def __post_init__(self):
         self.init_animals = len(self.sim_state.animals)
@@ -61,8 +82,14 @@ class Probe:
     @property
     def total_trees(self) -> int:
         return self.init_trees + self.added_trees
+    
+    @property
+    def all_entities(self) -> Dict:
+        return self.all_animals | self.all_trees
 
-    def update(self) -> None:
+    def update(self, cells) -> None:
+        self.save_frame(cells=cells)
+        
         self.set_added_entities()
         self.set_cycle()
 
@@ -83,8 +110,28 @@ class Probe:
 
         self.update_brain_complexity()
         self.update_population()
-        self.update_death_age()
+        self.update_on_death()
+        
+        # self.register_entities()
 
+    def save_frame(self, cells):
+        state = self.sim_state
+        entities = [Entity(entity.id, entity.__class__.__name__, entity.size, entity.position) for entity in state.get_entities()]
+        energies = [Energy(energy.id, energy.__class__.__name__, energy.size, energy.position) for energy in state.get_resources()]
+
+        self.frames.append(Frame(entities=entities,
+                                 energies=energies,
+                                 cells=cells))
+        
+    def pickle_frames(self, sim_name:str = "sim"):
+        pickle.dump(self.frames, open(f'simulations/frames/{sim_name}_frames', "wb"))
+
+    def register_entities(self):
+        for key, entity in self.sim_state.removed_entities.items():
+            if entity.__class__.__name__ == 'Animal':
+                self.all_animals[key] = entity
+            elif entity.__class__.__name__ == 'Tree':
+                self.all_trees[key] = entity
 
     def set_added_entities(self) -> None:
         added_entities = self.sim_state.added_entities
@@ -104,12 +151,22 @@ class Probe:
         cycle = self.cycle
         self.actions_count.setdefault(cycle, {})
 
-        if hasattr(entity, 'action'):
-            action = entity.action.action_type.value
-            self.actions_count[cycle][action] = self.actions_count[cycle].get(action, 0) + 1
-            self.actions.append((cycle, action))
-            self.total_actions_count[action] = self.total_actions_count.get(action, 0) + 1
+        if hasattr(entity, 'actions'):
+            for action in entity.actions:
+                action_type = action.action_type.value
+                if action_type == 'paint':
+                    self.update_colors(action)
+                self.actions_count[cycle][action_type] = self.actions_count[cycle].get(action_type, 0) + 1
+                self.actions.append((cycle, action_type))
+                self.total_actions_count[action_type] = self.total_actions_count.get(action_type, 0) + 1
 
+    def update_colors(self, action):
+        color = action.color
+        cycle = self.cycle
+        self.colors_cycle.setdefault(cycle, {})
+        self.colors[color] = self.colors.get(color, 0) + 1
+        self.colors_cycle[color] = self.colors.get(color, 0) + 1
+        
     def update_population(self) -> None:
         cycle = self.cycle
         self.population.setdefault('animal', {})
@@ -142,25 +199,39 @@ class Probe:
         self.brain_complexity['nodes']['average'][cycle] = self.avg_hidden
         self.brain_complexity['links']['average'][cycle] = self.avg_links
 
-    def update_death_age(self) -> None:
+    def update_on_death(self) -> None:
         age_sum: int = 0
+        energy_gain_sum: int = 0
         count: int = 0
         max_death_age: int = 0
+        max_energy_gain: int = 0
 
         cycle = self.cycle
         self.death_age.setdefault('average', {})
         self.death_age.setdefault('maximum', {})
+        self.energy_gain.setdefault('average', {})
+        self.energy_gain.setdefault('maximum', {})
 
         for entity in self.sim_state.removed_entities.values():
             if entity.__class__.__name__ == 'Animal':
                 age_sum += entity.age
+                energy_gain_sum += entity.gained_energy
                 count += 1
                 if entity.age > max_death_age:
                     max_death_age = entity.age
+                if entity.gained_energy > max_energy_gain:
+                    max_energy_gain = entity.gained_energy
+                    
+            elif entity.__class__.__name__ == 'Tree':
+                self.replant[entity.id] = entity.planted_times       
+            
         if count > 0:
             avg_death_age = age_sum / count
             self.death_age['average'][cycle] = avg_death_age
             self.death_age['maximum'][cycle] = max_death_age
+            avg_energy_gain = energy_gain_sum / count
+            self.energy_gain['average'][cycle] = avg_energy_gain
+            self.energy_gain['maximum'][cycle] = max_energy_gain
 
     def write(self, parameter: str, variation: str, **metrics) -> None:
         measure_file = join(Probe.directory, "measurements.json")
@@ -197,14 +268,19 @@ class Probe:
             self.graph_actions_overtime()
         if 'death_age' in metrics:
             self.graph_death_age()
+        if 'energy_gain' in metrics:
+            self.graph_energy_gain()
 
     def graph_population(self) -> None:
         plt.clf()
         data = self.population['animal']
+        sns.lineplot(x=data.keys(), y=data.values())
+        data = self.population['tree']
         g = sns.lineplot(x=data.keys(), y=data.values())
         g.set_xlabel('Cycle')
-        g.set_ylabel('Animal population')
-        g.set_title('Population of animals over cycles')
+        g.set_ylabel('Population')
+        g.set_title('Population over cycles')
+        plt.legend(labels=['Animals', 'Trees'])
 
         self.save_fig('population')
 
@@ -270,6 +346,21 @@ class Probe:
         plt.xlabel('Cycle')
         plt.ylabel('Age')
         self.save_fig('death_age')
+        
+    def graph_energy_gain(self) -> None:
+        plt.clf()
+        data = self.energy_gain
+
+        if data['maximum']:
+            g1 = sns.lineplot(x=data['maximum'].keys(), y=data['maximum'].values())
+        if data['average']:
+            g2 = sns.lineplot(x=data['average'].keys(), y=data['average'].values())
+
+        plt.legend(labels=['maximum energy', 'average energy'], title='Energy gained')
+        plt.title('Energy gained through lifetime')
+        plt.xlabel('Cycle')
+        plt.ylabel('Energy gained')
+        self.save_fig('energy_gain')
 
 
     def save_fig(self, name: str) -> None:
@@ -290,5 +381,33 @@ class Probe:
         for cycle in self.actions_count:
             for action in self.actions_count[cycle]:
                 data[action] = data.get(action, 0) + self.actions_count[cycle][action]
-                
+        
         print(data)
+    
+    @staticmethod
+    def graph_from_file(file_path: str):
+        file_path = "H:\\UoL\\Semester 5\\Code\\project\\measurements\\measurements.json"
+        data = json.load(open(file_path, encoding="utf-8"))
+
+        metrics = set()
+
+        frame = []
+        for param in list(data.keys())[:1]:
+            
+            fig, axs = plt.subplots(nrows=3, figsize=(5,10), sharex=True, constrained_layout=True)
+            fig.suptitle(param, fontsize=16)
+            for var in data[param]:
+                for metric in data[param][var]:
+                    metrics.add(metric)
+                    values = data[param][var][metric]
+                    for val in values:
+                        frame.append((param, var, metric, val))
+                        
+            df = pd.DataFrame(data=frame, columns=['parameter', 'variation', 'metrics', 'value'])           
+            frame = []  
+            for i, metric in enumerate(metrics):
+                df_m = df[df['metrics'] == metric]   
+                g = sns.boxplot(data=df_m, x='variation', y='value', ax=axs[i])
+                g.set_title(metric)
+                g.set_xlabel('')
+            plt.xlabel("variation")

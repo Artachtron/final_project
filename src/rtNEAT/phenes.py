@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractclassmethod, abstractmethod
 from functools import partial
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, ValuesView
 
 from .genes import ActivationFuncType, AggregationFuncType, NodeType, sigmoid
 
@@ -18,6 +18,7 @@ class BasePhene(ABC):
     Abstract class methods:
         synthesis: Create a phene from gene information
     """
+    __slots__ = '__id', 'name', 'enabled'
     def __init__(self,
                  phene_id: int,
                  name: Optional[str] = None,
@@ -42,7 +43,7 @@ class BasePhene(ABC):
         return self.id == other.id
 
     def __hash__(self):
-        return hash(self.id)
+        return hash(self.__id)
 
     @abstractclassmethod
     def synthesis(cls, kwargs):
@@ -67,6 +68,7 @@ class Link(BasePhene):
     class method:
         synthesis: create a link from LinkGene's information
     """
+    __slots__ = 'weight', 'in_node', 'out_node'
     def __init__(self,
                 link_id: int,
                 weight: float,
@@ -135,10 +137,14 @@ class Node(BasePhene):
     class method:
         synthesis: synthesize a Node from a NodeGene
     """
+    __slots__ = ('activation_phase', 'activation_value', 'activation_function',
+                'aggregation_function', 'incoming', 'outgoing', 'type','bias',
+                'associated_values', 'output_type')
+    
     def __init__(self,
                   node_id: int,
-                  activation_function,
-                  aggregation_function,
+                  activation_function = None,
+                  aggregation_function = None,
                   name: Optional[str] = None,
                   node_type: NodeType = NodeType.HIDDEN,
                   bias: float = 1.0,
@@ -167,7 +173,7 @@ class Node(BasePhene):
         self.type: NodeType = node_type             # HIDDEN, INPUT, OUTPUT
         self.bias: float = bias                     # Bias value
 
-        self.activation_function: ActivationFuncType = partial(sigmoid)
+        self.activation_function: ActivationFuncType = activation_function
         self.aggregation_function: AggregationFuncType = sum
 
         self.incoming: Dict[int, Link] = {}          # Dictionary of incoming links
@@ -177,9 +183,11 @@ class Node(BasePhene):
         self.output_type: Optional[str] = output_type                   # Type of output
 
     def __repr__(self):
+        if self.name:
+            return f"{self.name} {self.id}"
         return f"{self.type} {self.id}"
 
-    def get_incoming(self)  ->  Set[Link]:
+    def get_incoming(self)  -> ValuesView:
         """Public method:
             Return only the Links values from
             the incoming dictionary
@@ -187,9 +195,9 @@ class Node(BasePhene):
         Returns:
             Set[Link]: set of incoming links
         """
-        return set(self.incoming.values())
+        return self.incoming.values()
 
-    def get_outgoing(self)  ->  Set[Link]:
+    def get_outgoing(self)  ->  ValuesView:
         """Public method:
             Return only the Links values from
             the outgoing dictionary
@@ -197,7 +205,7 @@ class Node(BasePhene):
         Returns:
             Set[Link]: set of outgoing links
         """
-        return set(self.outgoing.values())
+        return self.outgoing.values()
 
     @classmethod
     def synthesis(cls, kwargs) -> Node:
@@ -243,21 +251,21 @@ class Node(BasePhene):
         # If the output was already calculated during the current phase,
         # or the node is an input: then just return the value
         if self.activation_phase != activation_phase and not self.is_sensor():
+            # set the activation phase to the current one,
+            # since the value is now already calculated
+            self.activation_phase = activation_phase
 
             values = self.bias
             # Loop through the list of incoming links and
             # calculate the sum of its incoming activation
+
             for link in self.get_incoming():
                 # Only take the value of activated links
                 if link.enabled:
                     # Recurrence call to calculate all the
                     # necessary incoming activation values
                     values += link.in_node.get_activation(activation_phase=activation_phase) * link.weight
-
+            
             self.activation_value = self.activation_function(values)
-
-            # set the activation phase to the current one,
-            # since the value is now already calculated
-            self.activation_phase = activation_phase
-
+            
         return self.activation_value

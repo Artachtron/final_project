@@ -24,6 +24,8 @@ class Resource(SimulatedObject):
                  appearance: str = "",
                  quantity: int = 0,
                  expiry: int = DEFAULTY_EXPIRY,
+                 owner_id: Optional[int] = None,
+                 size: Optional[int] = None,
                  ):
         """Super constructor:
             Get the necessary information for a resource
@@ -36,10 +38,11 @@ class Resource(SimulatedObject):
         """
 
         self.quantity: int = quantity or randint(10,100) # collectible amount of resources
-        size: int = int(5 + log(quantity, 2))
+        size: int = size or int(1 + log(quantity, 2))
         self.age: int = 0
         self.expiry: int = expiry
-                # size = size/50 if size > 50 else size
+
+        self.owner: Optional[int] = owner_id # unique identifier of owner
 
         appearance = "models/resources/" + appearance
         super().__init__(sim_obj_id=resource_id,
@@ -47,7 +50,14 @@ class Resource(SimulatedObject):
                          size=size,
                          appearance=appearance)
 
-    def update(self, environment):
+    def update(self, environment) -> None:
+        """Public method:
+            Increase the life time of 1 cycle,
+            remove if reached expiry date
+
+        Args:
+            environment (Environment): energy's environment
+        """
         self.age += 1
         if self.age >= self.expiry:
             environment.remove_resource(resource=self)
@@ -74,8 +84,9 @@ class Energy(Resource):
                  position: Tuple[int,int],
                  quantity: int = 10,
                  appearance: str = "",
-                 owner_id: Optional[int] = 0,
+                 owner_id: Optional[int] = None,
                  expiry: int = Resource.DEFAULTY_EXPIRY,
+                 tree_planter: Optional[int] = None
                  ):
         """Super constructor:
             Get the necessary information for an energy
@@ -94,10 +105,14 @@ class Energy(Resource):
                          position=position,
                          appearance=appearance,
                          quantity=quantity,
-                         expiry=expiry)
+                         expiry=expiry,
+                         owner_id=owner_id)
 
-        self._type: EnergyType = energy_type # BLUE or RED
-        self.owner: Optional[int] = owner_id # unique identifier of owner
+        self._type: EnergyType = energy_type    # BLUE or RED
+        self.tree_planter: int = tree_planter   # Planter id from which the energy comes from
+
+    def __repr__(self) -> str:
+        return f'{self._type.value.title()} {self.id}: {self.quantity}'
 
     @property
     def type(self) -> EnergyType:
@@ -118,7 +133,8 @@ class RedEnergy(Energy):
                  energy_id: int = 0,
                  quantity: int = 10,
                  owner_id: Optional[int] = 0,
-                 expiry: int = Resource.DEFAULTY_EXPIRY):
+                 expiry: int = Resource.DEFAULTY_EXPIRY,
+                 tree_planter: Optional[int] = None):
         """Constructor:
             Create a red energy
 
@@ -135,7 +151,9 @@ class RedEnergy(Energy):
                          appearance="red_energy.png",
                          energy_type=EnergyType.RED,
                          owner_id=owner_id,
-                         expiry=expiry)
+                         expiry=expiry,
+                         tree_planter=tree_planter)
+
 
 class BlueEnergy(Energy):
     """Subclass of Energy:
@@ -146,7 +164,8 @@ class BlueEnergy(Energy):
                  energy_id: int = 0,
                  quantity: int = 10,
                  owner_id: Optional[int] = 0,
-                 expiry: int = Resource.DEFAULTY_EXPIRY
+                 expiry: int = Resource.DEFAULTY_EXPIRY,
+                 tree_planter: Optional[int] = None,
                  ):
         """Constructor:
             Create a blue energy
@@ -164,4 +183,5 @@ class BlueEnergy(Energy):
                          appearance="blue_energy.png",
                          energy_type=EnergyType.BLUE,
                          owner_id=owner_id,
-                         expiry=expiry)
+                         expiry=expiry,
+                         tree_planter=tree_planter)

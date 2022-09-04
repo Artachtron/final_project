@@ -48,8 +48,8 @@ class Genome:
                  n_outputs:int = 0):
 
         self.__id: int = genome_id                                  # unique identifier
-        self._node_genes: Dict[int, NodeGene] | None = node_genes   # list of network's nodes
-        self._link_genes: Dict[int, LinkGene] | None = link_genes   # list of link's genes
+        self.node_genes: Dict[int, NodeGene] | None = node_genes    # list of network's nodes
+        self.link_genes: Dict[int, LinkGene] | None = link_genes    # list of link's genes
         #self.ancestors: Set = {}                                   # set of ancestors
         self.complete = complete                                    # wheter the network is fully connected
         self.n_inputs = n_inputs                                    # number of input nodes
@@ -66,31 +66,13 @@ class Genome:
         return self.__id
 
     @property
-    def node_genes(self) -> Dict[int, NodeGene]:
-        """Return the dictionary of NodeGenes
-
-        Returns:
-            Dict[int, NodeGene]: dictionary of NodeGenes
-        """
-        return self._node_genes
-
-    @property
-    def link_genes(self) -> Dict[int, LinkGene]:
-        """Return the dictionary of LinkGenes
-
-        Returns:
-            Dict[int, LinkGene]: dictionary of LinkGenes
-        """
-        return self._link_genes
-
-    @property
     def n_node_genes(self) -> int:
         """Return the number of NodeGenes
 
         Returns:
             int: number of NodeGenes
         """
-        return len(self._node_genes)
+        return len(self.node_genes)
 
     @property
     def n_link_genes(self) -> int:
@@ -99,7 +81,7 @@ class Genome:
         Returns:
             int: number of LinkGenes
         """
-        return len(self._link_genes)
+        return len(self.link_genes)
 
     @property
     def size(self) -> Dict[str, int]:
@@ -119,7 +101,7 @@ class Genome:
         Args:
             link (LinkGene): LinkGene to add
         """
-        self._link_genes[link.id] = link
+        self.link_genes[link.id] = link
 
     def add_node(self, node: NodeGene) -> None:
         """Public method:
@@ -128,7 +110,7 @@ class Genome:
         Args:
             link (NodeGene): NodeGene to add
         """
-        self._node_genes[node.id] = node
+        self.node_genes[node.id] = node
 
     @staticmethod
     def insert_gene(genes_dict: Dict[int, Gene],
@@ -152,7 +134,7 @@ class Genome:
         Returns:
             np.array[LinkGene]: Array of LinkGenes
         """
-        return set(self._link_genes.values())
+        return set(self.link_genes.values())
 
     def get_node_genes(self) ->  Set[NodeGene]:
         """Return only the NodeGenes values from the dictionary
@@ -160,7 +142,7 @@ class Genome:
         Returns:
             np.array[NodeGene]: Array of NodeGenes
         """
-        return set(self._node_genes.values())
+        return set(self.node_genes.values())
 
     @classmethod
     def genesis(cls, genome_id: int, genome_data: Dict[str, Any]) -> Genome:
@@ -196,12 +178,14 @@ class Genome:
 
         # Initialize outputs
         outputs: Dict[int, NodeGene] = {}  # dictionary of outputs
+        acion_names = list(actions.keys())
+        action_values = list(actions.values())
         last_trigger_id: int = count_node_id + n_actions
         for i in range(n_outputs):
             if i < n_actions:
                 output_type = OutputType.TRIGGER
-                associated_values = [node_id + last_trigger_id for node_id in list(actions.values())[i]]
-                name = list(actions.keys())[i]
+                associated_values = [node_id + last_trigger_id for node_id in action_values[i]]
+                name = acion_names[i]
             else:
                 output_type = OutputType.VALUE
                 name = None
@@ -253,6 +237,7 @@ class Genome:
                      n_outputs=n_outputs)
 
         return genome
+
 
     @staticmethod
     def verify_post_genesis(n_inputs: int, n_outputs: int, links: Dict[int, LinkGene],
@@ -392,27 +377,27 @@ class Genome:
                 )
             and random() < config['NEAT']['turbo_prob']
             ):
-            
+
             factor = config['NEAT']['turbo_factor']
-            
+
         else:
             factor = 1
-            
-        for _ in range(factor):
-            self.mutate()
 
-    def mutate(self) -> None:
+        self.mutate(factor=factor)
+
+    def mutate(self, factor: int) -> None:
         """Public method:
             Mutate the genome
-        """               
-        # Add a node to the genome
-        if random() < config["NEAT"]["add_node_prob"]:
-            self._mutate_add_node()
-        # Add a link to the genome
-        for _ in range(0, 5):
-            if random() < config["NEAT"]["add_link_prob"]:
-                self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
-                
+        """
+        for _ in range(factor):
+            # Add a node to the genome
+            if random() < config["NEAT"]["add_node_prob"]:
+                self._mutate_add_node()
+            # Add a link to the genome
+            for _ in range(0, 5):
+                if random() < config["NEAT"]["add_link_prob"]:
+                    self._mutate_add_link(tries=config["NEAT"]["add_link_tries"])
+
         # Modify the weights of the links
         # and their enabled status
         self._mutate_links()
@@ -559,11 +544,17 @@ class Genome:
                   False if it's novel
         """
         for link in self.get_link_genes():
-            if (link.in_node == node1.id and
-                link.out_node == node2.id):
+            if (
+                (
+                    link.in_node == node1.id
+                and link.out_node == node2.id
+                )
+             or (
+                    link.out_node == node1.id
+                and link.in_node == node2.id
+                )):
 
                 return True
-
 
         return False
 
@@ -586,8 +577,8 @@ class Genome:
                             in_node=in_node.id,
                             out_node=out_node.id,
                             link_id=the_innovation.innovation_number1,
+                            enabled=True,
                             mutation_number=0)
-
         return new_link
 
     def _is_valid_link(self, node_in: NodeGene, node_out: NodeGene) -> bool:
@@ -628,13 +619,15 @@ class Genome:
                                 Node: outgoing NodeGene
         """
         in_nodes = list(range(1, self.n_inputs + 1))
-        hiddens =  [i for i in self.node_genes if i > self.n_outputs]
-        out_nodes = list(range(self.n_inputs + 1, self.n_outputs + 1))
+        hidden_threshold = self.n_inputs + 1 + self.n_outputs
+        hiddens =  [i for i in self.node_genes if i > hidden_threshold]
+        out_nodes = list(range(self.n_inputs + 1, hidden_threshold))
         # Try until it's time to give up
-        for _ in range(tries + 1):
+        for _ in range(tries):
             # Select two NodeGenes at random
             node1 = self.node_genes[choice(in_nodes + hiddens)]
-            node2 = self.node_genes[choice(out_nodes + hiddens)]
+            node2 = self.node_genes[choice(hiddens + out_nodes)]
+
             # node1, node2 = sample(self.get_node_genes(), 2)
 
             # Check if the LinkGene is valid
@@ -667,6 +660,7 @@ class Genome:
         if node1 and node2:
             new_link = self._new_link_gene(in_node=node1,
                                            out_node=node2)
+
             self.add_link(new_link)
             return True
 
@@ -720,12 +714,12 @@ class Genome:
             bool: True if an equivalent BaseGene was found in the dictionary,
                   False if no equivalent was found
         """
-
-        for gene in chosen_genes.values():
+        return chosen_gene.id in chosen_genes
+        """ for gene in chosen_genes.values():
             if gene.is_allele(other_gene=chosen_gene):
                 return True
 
-        return False
+        return False """
 
     @staticmethod
     def _insert_non_conflict_gene(genes_dict: Dict[int, Gene],
@@ -836,7 +830,7 @@ class Genome:
         """
         # Choose randomly which parent will be the dominant one,
         # which will transmit most of its genes
-        main_genome, sub_genome  = sample([parent1, parent2], 2)
+        main_genome, sub_genome  = parent1, parent2#sample([parent1, parent2], 2)
 
         new_nodes: Dict[int, NodeGene] = {}
 
@@ -877,7 +871,10 @@ class Genome:
         # The baby genome resulting from the crossover
         baby_genome = Genome(genome_id=genome_id,
                              node_genes=new_nodes,
-                             link_genes=new_links)
+                             link_genes=new_links,
+                             n_inputs=parent1.n_inputs,
+                             n_outputs=parent1.n_outputs,
+                             complete=bool(parent1.complete * parent2.complete))
 
         baby_genome.verify_post_crossover()
 
@@ -888,11 +885,11 @@ class Genome:
         for link in main_links:
             if link in sub_links:
                 if main_links[link].in_node != sub_links[link].in_node:
-                    print(f"{link}")
+                    print(f"link: {link}")
                     raise ValueError(f"in node: {main_links[link].in_node} != {sub_links[link].in_node}")
 
                 if main_links[link].out_node != sub_links[link].out_node:
-                    print(f"{link}")
+                    print(f"link: {link}")
                     raise ValueError(f"out node: {main_links[link].out_node} != {sub_links[link].out_node}")
 
 

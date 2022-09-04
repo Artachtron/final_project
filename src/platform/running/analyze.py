@@ -1,12 +1,20 @@
+from typing import TYPE_CHECKING, Tuple
+
+if TYPE_CHECKING:
+    from ..probe import Probe
+
 import json
+from dataclasses import dataclass
 from os.path import dirname, join, realpath
 from pathlib import Path
 from statistics import mean
 
 import pandas as pd
 
+from ..probe import Probe
 
-def main():
+
+def parameters_tuning():
     directory = join(
             Path(
                 dirname(
@@ -46,6 +54,47 @@ def main():
     
     for best in best_params:
         print(f"{best}: {best_params[best]}")
+        
+@dataclass 
+class Evaluator: 
+    probe: Probe
+    
+    def evaluate(self):
+        print(self.evaluate_trade())
+        print(self.evaluate_replant())
+        print(self.evaluate_colors())
+
+    def evaluate_trade(self) -> Tuple[int, int]:
+        trade_count: int = 0
+        max_trade_count: int = 0
+        entities = self.probe.all_entities.values()
+        for entity in entities:
+            for partner in entity.trade_partners:
+                if entity.id in entities[partner].trade_partners:
+                    trade_value = entity.trade_partners[partner]
+                    trade_count += trade_value
+                    if trade_value > max_trade_count:
+                        max_trade_count = trade_value
+
+        return trade_count, max_trade_count
+    
+    def evaluate_replant(self) -> Tuple[int,int]:
+        sum_replant: int = 0
+        max_replant: int = 0
+        for replant_times in self.probe.replant.values():
+            sum_replant += replant_times
+            if replant_times > max_replant:
+                max_replant = replant_times
+        
+        avg_replant = sum_replant/len(self.probe.replant)
+        return avg_replant, max_replant
+    
+    def evaluate_colors(self):
+        colors = self.probe.colors
+        count_color = len(colors)
+        max_color = max(list(colors.values()))
+      
+        return count_color, max_color
         
 """ animal_sparsity = [1, 2, 3, 4, 5]
 

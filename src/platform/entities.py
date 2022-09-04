@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from errno import ENETUNREACH
-from hashlib import new
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,7 +10,7 @@ if TYPE_CHECKING:
 import enum
 import inspect
 from random import choice, random
-from typing import Any, Dict, Final, Optional, Tuple
+from typing import Any, Dict, Final, Optional, Set, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -28,11 +26,15 @@ class Direction(enum.Enum):
     """Enum:
         Cardinal direction
     """
-    RIGHT   =   (1, 0)
-    LEFT    =   (-1, 0)
-    DOWN    =   (0, 1)
     UP      =   (0, -1)
-
+    TOP_RIGHT = (1,-1)
+    RIGHT   =   (1, 0)
+    BOT_RIGHT = (1, 1)
+    DOWN    =   (0, 1)
+    BOT_LEFT =  (-1, 1)
+    LEFT    =   (-1, 0)
+    TOP_LEFT =  (-1,-1)
+    
 class Entity(SimulatedObject):
     """Subclass of simulated object:
         Simulated object that interact with the world,
@@ -40,7 +42,7 @@ class Entity(SimulatedObject):
 
     Attributes:
         status (Status):                    # current status
-        _energies_stock (Dict[str, int]):   # energy currently owned
+        energies_stock (Dict[str, int]):   # energy currently owned
         generation (int):                   # generation the entity was born in
         birthday (int):                     # cycle in which the entity was born
         species (int):                      # species the entity is part of
@@ -78,11 +80,11 @@ class Entity(SimulatedObject):
                  generation: int = 0,
                  birthday: int = 0,
                  adult_size: int = 0,
-                 max_age: int = 0,
                  size: int = INITIAL_SIZE,
                  action_cost: int = INITIAL_ACTION_COST,
                  blue_energy: int = INITIAL_BLUE_ENERGY,
                  red_energy: int = INITIAL_RED_ENERGY,
+                 max_age: int = 0,
                  appearance: str = "",
                  ):
         """Super constructor:
@@ -111,7 +113,7 @@ class Entity(SimulatedObject):
 
         self.status: Status = Status.ALIVE                      # current status
 
-        self._energies_stock: Dict[str, int] = {                # energy currently owned
+        self.energies_stock: Dict[str, int] = {                # energy currently owned
             EnergyType.BLUE.value: blue_energy,
             EnergyType.RED.value: red_energy
             }
@@ -121,8 +123,8 @@ class Entity(SimulatedObject):
         self.species: int = 0                                   # species the entity is part of
         self.ancestors: Dict[int, Entity] = {}                  # ancestors
         self.age: int = 0                                       # time since birth
-        self._max_age: int = Entity.INITIAL_MAX_AGE             # maximum longevity before dying
-
+        self._max_age: int = max_age or Entity.INITIAL_MAX_AGE  # maximum longevity before dying
+        self.gained_energy: float = 0.0
 
         self._adult_size: int = adult_size                      # size to reach before becoming adult
         self._is_adult: bool = False                            # can reproduce only if adult
@@ -130,12 +132,15 @@ class Entity(SimulatedObject):
 
         self._action_cost: int = action_cost * self.size        # blue energy cost of each action
         self.action: Action                                     # action of this turn decided by brain
+        self.actions = []                                       # list of actions of current turn
+        self.trade_partners = {}                                # dictionary of trade partners
 
         self.brain: Brain                                       # brain containing genotype and mind
         self.mind: Network                                      # neural network
 
         if self.generation == 0:
             self._create_brain()
+
 
     def _create_brain(self):
         """Private method:
@@ -152,7 +157,8 @@ class Entity(SimulatedObject):
             parent1 (Entity): first parent
             parent2 (Entity): second parent
         """
-        self.ancestors: Dict[int, Entity] = ({parent1.id: parent1, parent2.id: parent2}
+        self.ancestors: Dict[int, Entity] = ({parent1.id: parent1,
+                                              parent2.id: parent2}
                                             | parent1.ancestors
                                             | parent2.ancestors)
 
@@ -174,7 +180,7 @@ class Entity(SimulatedObject):
         """
         self.brain = brain
         self.mind = brain.phenotype
-        self.mind.verify_post_genesis()
+        self.mind.verify_post_crossover()
 
     def _decide_action(self, action: Action):
         """Private method:
@@ -184,20 +190,10 @@ class Entity(SimulatedObject):
         Args:
             action (Action): action to set
         """
-        self.action = action
+        self.actions.append(action)
 
         # Energy cost of action
         self._perform_action()
-
-    @property
-    def energies(self) -> Dict[str, int]:
-        """Public property:
-
-        Returns:
-            Dict[str, int]:     dictionary summarising owned energies,
-                                arranged by EnergyType
-        """
-        return self._energies_stock
 
     @property
     def blue_energy(self) -> int:
@@ -206,7 +202,7 @@ class Entity(SimulatedObject):
         Returns:
             int: amount of blue energy owned
         """
-        return self._energies_stock[EnergyType.BLUE.value]
+        return self.energies_stock[EnergyType.BLUE.value]
 
     @property
     def red_energy(self) -> int:
@@ -215,7 +211,7 @@ class Entity(SimulatedObject):
         Returns:
             int: amount of red energy owned
         """
-        return self._energies_stock[EnergyType.RED.value]
+        return self.energies_stock[EnergyType.RED.value]
 
     def _change_status(self, new_status: Status, *statuses: Status):
         """Private method:
@@ -238,9 +234,9 @@ class Entity(SimulatedObject):
             amount (int, optional): amount to increase age by. Defaults to 1.
         """
         self.age += amount
-        if not self._is_adult:
-            if random() < 0.05:
-                self._grow()
+        # if config['Simulation']['cycle'] < 500:
+        """ if not self._is_adult:
+            self._grow() """
 
         # if new age above maximum age threshold,
         # the entity dies
@@ -263,28 +259,38 @@ class Entity(SimulatedObject):
 
         self._grow()
 
+    def _can_grow(self) -> bool:
+        """Private method:
+            Check if the entity can grow
+
+        Returns:
+            bool:   True if it has enough energy
+                    False if energy is lacking
+        """
+        if self._is_adult:
+            energy_required = self.size * Entity.GROWTH_ENERGY_REQUIRED
+
+        else:
+            energy_required = self.size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
+
+
+        return self._can_perform_action(energy_type=EnergyType.RED,
+                                        quantity=energy_required)
+
     def _grow(self) -> None:
         """Private method:
             Action: Grow the entity to bigger size,
                     consumming red energy
         """
-        # Red energy cost depend on adulthood status,
-        # cost less energy for a child
-        if self._is_adult:
-            energy_required = self._size * Entity.GROWTH_ENERGY_REQUIRED
-
-        else:
-            energy_required = self._size * Entity.CHILD_GROWTH_ENERGY_REQUIRED
-
         # Perfrom action if possible: if enough energy is available
-        if self._can_perform_action(energy_type=EnergyType.RED,
-                                    quantity=energy_required):
+        if self._can_grow():
             # Increase size,
             # maximum age,
             # action cost
-            self._size += 1
+            self.size += 1
             self._max_age += Entity.MAX_AGE_SIZE_COEFF
-            self._action_cost += 1
+            if self._action_cost < 5:
+                self._action_cost += 1
 
         # Check if new size
         # changes adulthood status
@@ -296,7 +302,7 @@ class Entity(SimulatedObject):
             Check if the entity reached maturity size and
             assign the result in the is_adult instance variable
         """
-        self._is_adult = self._size >= self._adult_size
+        self._is_adult = self.size >= self._adult_size
 
     def _gain_energy(self, energy_type: EnergyType, quantity: int) -> None:
         """Private method:
@@ -313,8 +319,10 @@ class Entity(SimulatedObject):
         if quantity < 0 :
             raise ValueError
 
+        self.gained_energy += quantity
+
         # Add the quantity
-        self._energies_stock[energy_type.value] += quantity
+        self.energies_stock[energy_type.value] += quantity
 
     def _quantity_from_stock(self, energy_type: EnergyType, quantity: int) -> int:
         """Private method:
@@ -335,7 +343,7 @@ class Entity(SimulatedObject):
         if quantity < 0 :
             raise ValueError
 
-        energy_amount: int = self._energies_stock[energy_type.value]
+        energy_amount: int = self.energies_stock[energy_type.value]
 
         return min(quantity, energy_amount)
 
@@ -358,10 +366,10 @@ class Entity(SimulatedObject):
         quantity = self._quantity_from_stock(energy_type=energy_type,
                                              quantity=quantity)
 
-        self._energies_stock[energy_type.value] -= quantity
+        self.energies_stock[energy_type.value] -= quantity
 
         # dies if the entity run out of blue energy
-        if self._energies_stock[EnergyType.BLUE.value] <= 0:
+        if self.energies_stock[EnergyType.BLUE.value] <= 0:
             self._die(cause="lack of energy")
 
         # effective quantity lost
@@ -370,10 +378,9 @@ class Entity(SimulatedObject):
     def _perform_action(self) -> None:
         """Private method:
             Consume blue energy when performing an action
-        """
-        difficulty = config['Simulation']['difficulty_max'] + 1 - config['Simulation']['difficulty_level']
+        """               
         self._loose_energy(energy_type=EnergyType.BLUE,
-                           quantity=int(self._action_cost/difficulty))
+                           quantity=int(self._action_cost))
 
     def has_enough_energy(self, energy_type: EnergyType, quantity: int) -> bool:
         """Public method:
@@ -387,7 +394,7 @@ class Entity(SimulatedObject):
             bool: True the entity had enough energy
                   False if it does not
         """
-        return self.energies[energy_type.value] >= quantity
+        return self.energies_stock[energy_type.value] >= quantity
 
     def _can_perform_action(self, energy_type: EnergyType, quantity: int) -> bool:
         """Private method:
@@ -418,16 +425,17 @@ class Entity(SimulatedObject):
             output (Node): output chosen to trigger action
         """
         energy = self.mind.value_outputs[output.associated_values[0]].activation_value
-        if energy > 0:
+        if energy >= 0.5:
             energy_type = EnergyType.BLUE
 
         else:
             energy_type = EnergyType.RED
 
-        quantity = int(abs(energy)*10)
+        difficulty = config['Simulation']['difficulty_level']
+        quantity = int(abs(energy)*250/difficulty)
         self._action_drop_energy(energy_type=energy_type,
-                                    quantity=quantity,
-                                    coordinates=self.position)
+                                 quantity=quantity,
+                                 coordinates=self.position)
 
     def _action_drop_energy(self, energy_type: EnergyType, quantity: int, coordinates: Tuple[int, int]):
         """Private method:
@@ -452,7 +460,7 @@ class Entity(SimulatedObject):
     def on_drop_energy(self, energy_type: EnergyType, quantity: int):
         # Remove energy amount from stock
         self._loose_energy(energy_type=energy_type,
-                            quantity=quantity)
+                           quantity=quantity)
 
     def _action_pick_up_resource(self, coordinates: Tuple[int, int]):
         """Private method:
@@ -471,14 +479,26 @@ class Entity(SimulatedObject):
         Args:
             resource (Resource): resource picked up
         """
+        # Keep track of owner of resources picked up
+        if config.evaluate:
+            if resource.owner:
+                self.trade_partners.get(resource.owner, 0) + 1
+
         # If resource is an energy
         if type(resource).__base__.__name__ == 'Energy':
+            quantity = resource.quantity
+            if resource.tree_planter:
+                if (resource.tree_planter == self.id
+                    or resource.tree_planter in self.ancestors):
+                    quantity += 10 * self.size
+
             self._gain_energy(energy_type=resource.type,
-                              quantity=resource.quantity)
+                              quantity=quantity)
 
         # If resource is a seed
         elif resource.__class__.__name__ == "Seed" and isinstance(self, Animal):
             self._store_seed(seed=resource)
+
 
     def _die(self, cause: Optional[str]="") -> None:
         """Private method:
@@ -499,12 +519,12 @@ class Entity(SimulatedObject):
         """
         # Reset status
         self._change_status(new_status=Status.ALIVE)
+        self.actions = []
         # Increase age by 1
         self._increase_age()
 
         # Activate mind and return the result
         self._activate_mind(environment=environment)
-
 
     def _activate_mind(self, environment: Environment) -> None:
         """Private method:
@@ -531,6 +551,47 @@ class Entity(SimulatedObject):
         Args:
             outputs (Dict[int, float]): dictionary of output nodes' activation values
         """
+
+    def _activate_mind(self, environment: Environment) -> None:
+        """Private method:
+            Activate entity's brain
+        """
+        inputs = self._normalize_inputs(environment=environment)
+        mind = self.brain.phenotype
+        outputs = mind.activate(input_values=inputs)
+        self._interpret_outputs(outputs=outputs)
+        
+    def _find_closest_object_inputs(self, objects_around: Set[Any], sight_range: float) -> Tuple[float, float]:
+        """Private method:
+            Find the necessary information about the closest object around,
+            return a normalized distance and angle
+
+        Args:
+            objects_around (Set[Any]):  objects in range to search for
+            sight_range (float):        maximum distance of visible objects
+
+        Returns:
+            Tuple[float, float]:    norm_distance: normalized distance of the closest object
+                                    norm_angle: normalized angle of the closest object
+        """
+        close_distance: float = sight_range
+        closest_object: SimulatedObject = None
+        own_distance = self.pos.distance
+        for obj in objects_around:
+            distance = own_distance(other_pos=obj.pos)
+            if  distance <= close_distance:
+                close_distance = distance
+                closest_object = obj
+
+        if closest_object:
+            norm_angle: float = self.pos.norm_angle(other_pos=closest_object.pos)
+            norm_distance: float = ((sight_range - close_distance)
+                                   /(sight_range - 1))
+        else:
+            norm_angle = -1
+            norm_distance = -1
+
+        return norm_distance, norm_angle
 
     def on_death(self) -> None:
         """Public method:
@@ -575,7 +636,6 @@ class Animal(Entity):
                  generation: int = 0,
                  birthday: int = 0,
                  adult_size: int = 0,
-                 max_age: int = 0,
                  size: int = 20,
                  action_cost: int = 1,
                  blue_energy: int = 10,
@@ -589,7 +649,6 @@ class Animal(Entity):
                          generation=generation,
                          birthday=birthday,
                          adult_size=adult_size,
-                         max_age=max_age,
                          size=size,
                          action_cost=action_cost,
                          blue_energy=blue_energy,
@@ -597,7 +656,6 @@ class Animal(Entity):
                          appearance="animal.png")
 
         self._pocket: Optional[Seed] = None # pocket in which to store seed
-        self.fitness = 0
 
     def __repr__(self):
         return f'Animal {self.id}'
@@ -612,7 +670,7 @@ class Animal(Entity):
         """
         return (self._is_adult and
                 self.has_enough_energy(energy_type=EnergyType.RED,
-                                       quantity=Animal.REPRODUCTION_COST * self._size))
+                                       quantity=Animal.REPRODUCTION_COST * 5))
 
     def on_reproduction(self) -> None:
         """Public method:
@@ -621,18 +679,15 @@ class Animal(Entity):
         if random() < Animal.DIE_GIVING_BIRTH_PROB:
             self._die(cause="giving birth")
 
-        difficulty = config['Simulation']['difficulty_level']
         self._loose_energy(energy_type=EnergyType.RED,
-                           quantity=Animal.REPRODUCTION_COST * self._size
-                                  * self._size
-                                  * difficulty)
+                           quantity=Animal.REPRODUCTION_COST * 5)
 
     def _create_brain(self) -> None:
         """Private method:
             Create an animal brain's genotype and its associated phenotype
         """
 
-        animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
+        """ animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
                                               "n_inputs": Animal.NUM_INPUTS,
                                               "n_outputs": Animal.NUM_OUTPUTS,
                                               "n_actions": Animal.NUM_ACTIONS,
@@ -646,6 +701,20 @@ class Animal(Entity):
                                                     "plant tree": [],
                                                     "grow": [],
                                                     "reproduce": []
+                                                }} """
+
+        animal_genome_data: Dict[str, Any] = {"complete": Animal.COMPLETE_NETWORK,
+                                                "n_inputs": Animal.NUM_INPUTS,
+                                                "n_outputs": Animal.NUM_OUTPUTS,
+                                                "n_actions": Animal.NUM_ACTIONS,
+                                                "n_values": Animal.NUM_VALUES,
+                                                "actions":{
+                                                    "move": [0],
+                                                    "grow": [],
+                                                    "reproduce": [],
+                                                    "plant": [],
+                                                    "drop":[1],
+                                                    "paint": [2],
                                                 }}
 
         self.brain = Brain.genesis(brain_id=self.id,
@@ -678,9 +747,6 @@ class Animal(Entity):
         # update self position
         self._update_position(new_position=new_position)
 
-        self.fitness += 1
-        self._max_age += 1
-
     def _update_position(self, new_position: Tuple[int, int]) -> None:
         """Private method:
             Update the position of the animal
@@ -697,7 +763,7 @@ class Animal(Entity):
         # Verifiy that enough enough energy is available
         if self._can_perform_action(energy_type=EnergyType.RED,
                                     quantity=Animal.PLANTING_COST):
-
+            
             action = PlantTreeAction(coordinates=self.position,
                                      seed=self._pocket)
 
@@ -750,14 +816,13 @@ class Animal(Entity):
             Action: Get ready for reproduction
         """
         action = ReproduceAction()
-        self._want_to_reproduce()
+        # self._want_to_reproduce()
 
         self._decide_action(action=action)
 
     def on_death(self) -> None:
         """Private method:
             Event: on animal death, release energy on cells around death position"""
-        pass
 
     def _want_to_reproduce(self) -> None:
         """Private method:
@@ -775,6 +840,9 @@ class Animal(Entity):
         """
         action = PaintAction(coordinates=self.position,
                              color=color)
+        
+        self._gain_energy(energy_type=EnergyType.BLUE,
+                          quantity=self._action_cost)
 
         self._decide_action(action=action)
 
@@ -782,9 +850,93 @@ class Animal(Entity):
         """Public method:
             Event: on paint action
         """
-        pass
 
     def _normalize_inputs(self, environment: Environment) -> npt.NDArray:
+        """Private method:
+            Normalize input values for brain activation
+
+        Args:
+            environment (Environment): environment of the animal
+
+        Returns:
+            np.array: array containing the normalized input values
+        """
+        age = self.age/self._max_age
+        size = self.size/config["Simulation"]["Animal"]["normal_size"]
+        blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
+                                   for energy in self.energies_stock.values())
+
+        entity_sight_range = config['Simulation']['Animal']['entity_sight_range']
+        animals_around = environment.find_animals_around(coordinates=self.position,
+                                                         radius=entity_sight_range)
+
+        animal_close_distance, animal_close_angle = self._find_closest_object_inputs(objects_around=animals_around,
+                                                                                     sight_range=entity_sight_range)
+
+        energy_sight_range = config['Simulation']['Animal']['energy_sight_range']
+        energies_around = environment.find_energies_around(coordinates=self.position,
+                                                           radius=energy_sight_range)
+
+        energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
+                                                                                     sight_range=energy_sight_range)
+
+        return np.array([age,
+                         size,
+                         blue_energy,
+                         red_energy,
+                         animal_close_distance,
+                         animal_close_angle,
+                         energy_close_distance,
+                         energy_close_angle])
+
+    def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
+        """Private method:
+            Use the output values from brain activation to decide which action to perform.
+
+        Args:
+            outputs (np.array):         array or outputs values from brain activation
+        """
+        for key, value in outputs.items():
+            output = self.mind.trigger_outputs[key]
+            match output.name:
+                case 'move':
+                    if value >= config['Simulation']['Animal']['move_threshold']:
+                        self._decide_move(output=output)
+
+                case 'grow':
+                    if value >= config['Simulation']['Animal']['grow_threshold']:
+                        self._decide_grow()
+
+                case 'reproduce':
+                    if value >= config['Simulation']['Animal']['reproduction_threshold']:
+                        self._decide_reproduce()
+
+                case 'plant':
+                    if value >= config['Simulation']['Animal']['plant_threshold']:
+                        self._decide_plant_tree()
+                        
+                case 'drop':
+                    if value >= config['Simulation']['Animal']['drop_threshold']:
+                        self._decide_drop(output=output)
+                        
+                case 'paint':
+                    if value >= config['Simulation']['Animal']['paint_threshold']:
+                        self._decide_paint(output=output)
+
+        """ if (self._is_adult
+            and self.gained_energy/50 > self.size
+            and self._can_grow()
+            and random() < 0.5): """
+
+        """ elif (self.can_reproduce()
+            and random() < 0.5):
+            self._decide_reproduce()
+
+        else:
+            self._decide_minimal_move() """
+
+
+    def _old_normalize_inputs(self, environment: Environment) -> npt.NDArray:
         """Private method:
             Normalize input values for brain activation
 
@@ -797,9 +949,9 @@ class Animal(Entity):
         #Inputs
         ## Internal properties
         age = self.age/self._max_age
-        size = self._size/config["Simulation"]["Animal"]["normal_size"]
+        size = self.size/config["Simulation"]["Animal"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Animal"]["normal_energy"]
-                                   for energy in self.energies.values())
+                                   for energy in self.energies_stock.values())
         ## Perceptions
         entities = environment.find_if_entities_around(coordinates=self.position,
                                                        include_self=False)
@@ -807,7 +959,7 @@ class Animal(Entity):
         energies = environment.find_if_resources_around(coordinates=self.position,
                                                         include_self=True)
         see_energies = list(map(int, energies))
-   
+
         colors = environment.get_colors_around(coordinates=self.position,
                                                radius=2)
 
@@ -822,16 +974,32 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-        vertical, horizontal = [self.mind.value_outputs[i].activation_value for i in output.associated_values]
+        move_angle = self.mind.value_outputs[output.associated_values[0]].activation_value * 360
+
+        for angle, direction in zip(reversed(range(0,360, int(360/len(Direction)))), Direction):
+            if move_angle > angle:
+                self._action_move(direction=direction)
+                break     
+
+        
+
+    def _decide_minimal_move(self) -> None:
+        """Pivate method:
+            Decide on move action
+
+        Args:
+            output (int): output chosen to trigger action
+        """
+        vertical, horizontal = [output.activation_value for output in list(self.mind.outputs.values())[:2]]
 
         if abs(vertical) > abs(horizontal):
-            if vertical > 0:
+            if vertical > 0.5:
                 direction = Direction.UP
             else:
                 direction = Direction.DOWN
 
         else:
-            if horizontal > 0:
+            if horizontal > 0.5:
                 direction = Direction.LEFT
             else:
                 direction = Direction.RIGHT
@@ -845,7 +1013,8 @@ class Animal(Entity):
         Args:
             output (int): output chosen to trigger action
         """
-        color = tuple(int(self.mind.value_outputs[i].activation_value*255) for i in output.associated_values)
+        color = int(self.mind.value_outputs[output.associated_values[0]].activation_value*255)        
+        color = (color,) *3
 
         self._action_paint(color=color)
 
@@ -873,7 +1042,7 @@ class Animal(Entity):
         """
         self._action_pick_up_resource(coordinates=coordinates)
 
-    def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
+    def _old_interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
             Use the output values from brain activation to decide which action to perform.
 
@@ -934,7 +1103,10 @@ class Tree(Entity):
             on_death:       event on tree death
             create_seed:    create a seed on current position
     """
-    INIT_ADULT_SIZE: Final[int] = config['Simulation']["Tree"]['init_adult_size']
+    INIT_ADULT_SIZE: Final[int] = config['Simulation']['Tree']['init_adult_size']
+    INIT_MAX_AGE: Final[int] = config['Simulation']['Tree']['init_max_age']
+    INITIAL_TREE_BLUE_ENERGY: Final[int] = config['Simulation']["Tree"]['init_blue_energy']
+    INITIAL_TREEL_RED_ENERGY: Final[int] = config['Simulation']["Tree"]['init_red_energy']
 
     COMPLETE_NETWORK: Final[bool] = config['Simulation']['Tree']['complete']
     NUM_TREE_INPUTS: Final[int] = config["Simulation"]["Tree"]["num_tree_input"]
@@ -948,11 +1120,13 @@ class Tree(Entity):
                  generation: int = 0,
                  adult_size: int = 0,
                  max_age: int = 0,
-                 size: int = 10,
+                 size: int = 5,
                  action_cost: int = 1,
-                 blue_energy: int = 10,
-                 red_energy: int = 10,
+                 blue_energy: int = INITIAL_TREE_BLUE_ENERGY,
+                 red_energy: int = INITIAL_TREEL_RED_ENERGY,
                  production_type: Optional[EnergyType] = None,
+                 planted_times: int = 1,
+                 planter: int = 0,
                  ):
         """Constructor:
             Initialize a tree
@@ -971,12 +1145,12 @@ class Tree(Entity):
         """
 
         adult_size = adult_size or Tree.INIT_ADULT_SIZE
+        max_age = max_age or Tree.INIT_MAX_AGE
 
         super().__init__(position=position,
                          entity_id=tree_id,
                          generation=generation,
                          adult_size=adult_size,
-                         max_age=max_age,
                          size=size,
                          action_cost=action_cost,
                          blue_energy=blue_energy,
@@ -985,6 +1159,9 @@ class Tree(Entity):
 
         self._production_type: EnergyType = (production_type or         # Type of energy produced by the tree
                                              choice(list(EnergyType)))
+
+        self.planted_times: int = planted_times                         # Number of times the tree was planted
+        self.planter: int = planter                                     # Identifier of the planter
 
     def __repr__(self) -> str:
         return f'Tree {self.id}: {self._production_type}'
@@ -1038,8 +1215,9 @@ class Tree(Entity):
         # Work on the parameter that need some custom transformation
         genetic_data['tree_id'] = original_dict['_SimulatedObject__id']
         genetic_data['position'] = genetic_data['position']()
-        genetic_data['blue_energy'] = original_dict['_energies_stock'][EnergyType.BLUE.value]
-        genetic_data['red_energy'] = original_dict['_energies_stock'][EnergyType.RED.value]
+        genetic_data['blue_energy'] = original_dict['energies_stock'][EnergyType.BLUE.value]
+        genetic_data['red_energy'] = original_dict['energies_stock'][EnergyType.RED.value]
+        genetic_data['planted_times'] = original_dict['planted_times'] + 1
 
         # Extra given data from environment
         for key, value in data.items():
@@ -1088,7 +1266,7 @@ class Tree(Entity):
             pass
 
         self._gain_energy(energy_type=self._production_type,
-                         quantity=int((5 * self._size) / 2**count_trees_around))
+                         quantity=int((20 * self.size) / 2**count_trees_around))
 
     def _decide_pickup(self, output: Node) -> None:
         """Pivate method:
@@ -1117,20 +1295,23 @@ class Tree(Entity):
         #Inputs
         ## Internal properties
         age = self.age/self._max_age
-        size = self._size/config["Simulation"]["Tree"]["normal_size"]
+        size = self.size/config["Simulation"]["Tree"]["normal_size"]
         blue_energy, red_energy = (energy/config["Simulation"]["Tree"]["normal_energy"]
-                                   for energy in self.energies.values())
+                                   for energy in self.energies_stock.values())
         ## Perceptions
-        energies = environment.find_if_resources_around(coordinates=self.position,
-                                                        include_self=True)
-        see_energies = list(map(int, energies))
+        energy_sight_range = config['Simulation']['Tree']['energy_sight_range']
+        energies_around = environment.find_energies_around(coordinates=self.position,
+                                                           radius=energy_sight_range)
+        
+        energy_close_distance, energy_close_angle = self._find_closest_object_inputs(objects_around=energies_around,
+                                                                                     sight_range=energy_sight_range)
 
-        colors = environment.get_colors_around(coordinates=self.position,
+        """ colors = environment.get_colors_around(coordinates=self.position,
                                                radius=2)
 
-        see_colors = (1 - colors.flatten()/255).tolist()
+        see_colors = (1 - colors.flatten()/255).tolist() """
 
-        return np.array([age, size, blue_energy, red_energy] + see_energies + see_colors)
+        return np.array([age, size, blue_energy, red_energy, energy_close_distance, energy_close_angle])
 
     def _interpret_outputs(self, outputs: Dict[int, float]) -> None:
         """Private method:
@@ -1140,27 +1321,30 @@ class Tree(Entity):
             outputs (np.array):         array or outputs values from brain activation
             environment (Environment):  environment of the tree
         """
+        for key, value in outputs.items():
+            output = self.mind.trigger_outputs[key]
+            match output.name:
+                ## Simple actions ##
+                # Produce energy
+                case 'produce':
+                    if value >= 0.1:
+                        self._decide_produce()
+                        
+                # Drop energy
+                case 'drop':
+                    if value >= 0.1:
+                        self._decide_drop(output=output)
 
-        # Get the most absolute active value of all the outputs
-        most_active_output_id = max(outputs, key = lambda k : abs(outputs.get(k, 0.0)))
-        most_active_output = self.mind.trigger_outputs[most_active_output_id]
-
-        match most_active_output.name:
-            ## Simple actions ##
-            # Produce energy
-            case 'produce':
-                self._decide_produce()
-            # Drop energy
-            case 'drop':
-                self._decide_drop(output=most_active_output)
-
-            # Pick up resource
-            case 'pickup':
-                self._decide_pickup(output=most_active_output)
-            #Grow
-            case 'grow':
-                self._decide_grow()
-
+                # Pick up resource
+                case 'pickup':
+                    if value >= 0.9:
+                        self._decide_pickup(output=output)
+                        
+                #Grow
+                case 'grow':
+                    if value >= 0.5:
+                        self._decide_grow()
+                        
 
 class Seed(Resource):
     """Subclass of Resource:
@@ -1181,7 +1365,8 @@ class Seed(Resource):
                                    position=position,
                                    appearance="seed.png",
                                    quantity=1,
-                                   expiry=50)
+                                   expiry=20,
+                                   size=5)
 
         self.genetic_data = genetic_data
 
