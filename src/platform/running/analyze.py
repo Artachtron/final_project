@@ -95,35 +95,6 @@ class Evaluator:
         max_color = max(list(colors.values()))
       
         return count_color, max_color
-        
-""" animal_sparsity = [1, 2, 3, 4, 5]
-
-initial_size = [5, 10, 20, 50, 100]
-initial_action_cost = [0, 1, 2, 3, 4, 5]
-max_age_size_coeff = [1, 5, 10, 100]
-growth_energy_required = [1, 5, 10, 100]
-child_energy_cost_divisor = [1, 2, 5, 10]
-
-init_adult_size = [1, 5, 10, 100]
-init_blue_energy = [100, 1000, 10000, 100000]
-init_red_energy = [100, 1000, 10000, 100000]
-reproduction_cost = [1, 2, 3]
-planting_cost = [1, 5, 10]
-
-animal_sparsity = 3
-initial_size = 5
-initial_action_cost = 0
-max_age_size_coeff = 10
-growth_energy_required = 5
-child_energy_cost_divisor = 10
-init_adult_size = 5
-animal_init_blue_energy = 1000
-animal_red_energy  = 10000
-reproduction_cost = 1
-planting_cost = 10
-tree_init_blue_energy = 1000
-tree_init_red_energy = 1000 """
-
 
 if __name__ == '__main__':
     main()
