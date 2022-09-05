@@ -104,14 +104,14 @@ default_settings = {
                         "Animal":{
                             # Animal
                             ## Initial attributes
-                            "init_adult_size": 4,
-                            "init_blue_energy": 50,
+                            "init_adult_size": 5,
+                            "init_blue_energy": 150,
                             "init_red_energy": 0,
                             ## Brain
                             "complete": False,
                             "num_input": 8,
-                            "num_output": 6,
-                            "num_action": 4,
+                            "num_output": 9,
+                            "num_action": 6,
                             ## Energy
                             "reproduction_cost": 3,
                             "planting_cost": 1,
@@ -130,17 +130,17 @@ default_settings = {
                             "move_threshold": 0.1,
                             "grow_threshold": 0.5,
                             "reproduction_threshold": 0.5,
-                            "plant_threshold": 0.5,
-                            "drop_threshold": 0.5,
+                            "plant_threshold": 0.3,
+                            "drop_threshold": 0.9,
                             "paint_threshold": 0.5
                         }, #25
 
                         "Tree":{
                             #Tree
                             ## Initial attributes
-                            "init_adult_size": 5,
-                            "init_max_age": 20,
-                            "init_blue_energy": 100,
+                            "init_adult_size": 3,
+                            "init_max_age": 50,
+                            "init_blue_energy": 150,
                             "init_red_energy": 100,
                             ## Brain
                             "complete": False,

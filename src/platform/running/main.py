@@ -6,12 +6,7 @@ from time import time
 from ..world import World
 from .config import config
 
-# py-spy record -o profile.svg --subprocesses -- python -m src.platform.main
-# python -m cProfile -m src.platform.main
-# python -m src.platform.main
-# python -m src.platform.running.main --c config_A_5.json
-# snakeviz ./profile.prof
-
+# python -m src.platform.running.main --c best_config.json -d
 
 def main():
     start = time()
@@ -28,8 +23,6 @@ def main():
     end = time()
     print(f'It took{(end - start)/60: .0f} minutes!')
     world.save_simulation()
-    """ world.write_metrics()
-    world.graph_metrics() """
 
 def profile(profiler: Profile):
     """Function:
